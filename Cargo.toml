@@ -1,0 +1,26 @@
+[package]
+name = "pepe"
+version = "0.1.0"
+authors = ["thiolliere <guillaume.thiolliere@opmbx.org>"]
+
+[dependencies]
+vulkano = "0.5"
+vulkano-shader-derive = "0.5"
+vulkano-win = "0.5"
+winit = "0.7"
+fps_clock = "1"
+nalgebra = "0.12"
+ncollide = "0.12"
+specs = "0.9"
+alga = "0.5"
+
+# app_dirs = "1"
+# mut_static = "5"
+# lazy_static = "0.2"
+# serde_derive = "1.0"
+# serde_yaml = "0.7"
+# serde = "1.0"
+
+# cgmath = "0.14.1"
+# image = "0.14.0"
+# time = "0.1.37"
