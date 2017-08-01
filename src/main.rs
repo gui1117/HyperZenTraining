@@ -419,13 +419,12 @@ fn main() {
         // Poll events
         let mut done = false;
         events_loop.poll_events(|ev| match ev {
-            // TODO: get mouse from axis and check if there are differences
+            // TODO: get mouse from axis and check if there are differences because of acceleration
             winit::Event::WindowEvent { event: winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, .. } => {
                 window.window().set_cursor_position(width as i32 / 2, height as i32 / 2).unwrap();
                 x += (dx as f32 - width as f32 / 2.0) / 5000.0;
                 y += (dy as f32 - height as f32 / 2.0) / 5000.0;
                 y = y.min(::std::f32::consts::FRAC_PI_2).max(-::std::f32::consts::FRAC_PI_2);
-                println!("{}, {}", x, y);
             },
             winit::Event::WindowEvent { event: winit::WindowEvent::KeyboardInput { input, .. }, .. } => {
                 let direction = match input.scancode {
@@ -463,8 +462,8 @@ fn main() {
             }
         }
         if move_vector != na::zero() {
-            let move_vector = move_vector.normalize();
-            let move_vector = na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) * move_vector;
+            let mut move_vector = 0.01f32 * move_vector.normalize();
+            move_vector = na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) * move_vector;
 
             let pos = {
                 let mut character = world.collision_object(0).unwrap();
@@ -479,13 +478,13 @@ fn main() {
         {
             let mut buffer = view_uniform_buffer.write().unwrap();
             let pos = world.collision_object(0).unwrap().position;
-            let dir = na::Rotation3::new(Vector3::new(0.0, y, 0.0)) * na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) * Vector3::new(1.0, 0.0, 0.0);
+            let dir = na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) * na::Rotation3::new(Vector3::new(0.0, -y, 0.0)) * Vector3::new(1.0, 0.0, 0.0);
             let view_matrix = {
                 let i: na::Transform3<f32> =
                     na::Similarity3::look_at_rh(
                         &na::PointBase::from_coordinates(pos.translation.vector.into()),
                         &na::PointBase::from_coordinates(Vector3::from(pos.translation.vector) + dir),
-                        &[0.0, 0.0, 1.0].into(),
+                        &[0.0, 0.0, 1.0].into(), // FIXME: this will result in NaN if y is PI/2 isn't it ?
                         0.1,
                         ).to_superset();
                 i.unwrap()
