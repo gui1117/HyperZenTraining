@@ -14,7 +14,6 @@ use vulkano_win::VkSurfaceBuild;
 
 use vulkano::buffer::BufferUsage;
 use vulkano::buffer::CpuAccessibleBuffer;
-use vulkano::buffer::ImmutableBuffer;
 use vulkano::command_buffer::AutoCommandBufferBuilder;
 use vulkano::command_buffer::DynamicState;
 use vulkano::device::Device;
@@ -31,23 +30,19 @@ use vulkano::swapchain::PresentMode;
 use vulkano::swapchain::SurfaceTransform;
 use vulkano::swapchain::Swapchain;
 use vulkano::swapchain::CompositeAlpha;
-use vulkano::swapchain::ColorSpace;
 use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 
-use na::{Vector3, Point3};
+use na::Vector3;
 use ncollide::world::{CollisionWorld, CollisionGroups, GeometricQueryType, CollisionObject3};
 use ncollide::narrow_phase::{ProximityHandler, ContactHandler, ContactAlgorithm3};
 use ncollide::shape::{Plane, Ball, Cylinder, Cuboid, ShapeHandle3};
 use ncollide::query::Proximity;
-use ncollide::transformation::ToTriMesh;
 use alga::general::SubsetOf;
-use alga::general::SupersetOf;
+use alga::linear::AffineTransformation;
 
 use std::iter;
 use std::sync::Arc;
-use std::time::Duration;
-use std::cell::Cell;
 
 #[derive(Debug, Clone)]
 struct Vertex {
@@ -74,9 +69,7 @@ layout(set = 1, binding = 0) uniform World {
 
 
 void main() {
-    mat4 worldview = view.view * world.world;
-    // gl_Position = view.proj * worldview * vec4(position, 1.0);
-    gl_Position = worldview * vec4(position, 1.0);
+    gl_Position = view.proj * view.view * world.world * vec4(position, 1.0);
 }
 "]
     struct Dummy;
@@ -101,6 +94,30 @@ void main() {
     struct Dummy;
 }
 
+#[derive(Clone, Copy, PartialEq)]
+enum Direction {
+    Forward,
+    Backward,
+    Left,
+    Right,
+}
+
+impl Direction {
+    #[inline]
+    fn orthogonal(self, other: Self) -> bool {
+        use Direction::*;
+        match (self, other) {
+            (Forward, Forward) | (Forward, Backward) | (Backward, Forward) | (Backward, Backward) => false,
+            _ => true,
+        }
+    }
+
+    #[inline]
+    fn perpendicular(self, other: Self) -> bool {
+        !self.orthogonal(other)
+    }
+}
+
 fn main() {
     let instance = {
         let extensions = vulkano_win::required_extensions();
@@ -117,6 +134,8 @@ fn main() {
     let window = winit::WindowBuilder::new()
         .build_vk_surface(&events_loop, instance.clone())
         .unwrap();
+    window.window().set_cursor(winit::MouseCursor::NoneCursor);
+    window.window().set_cursor_state(winit::CursorState::Grab).unwrap();
 
     let queue = physical
         .queue_families()
@@ -177,42 +196,42 @@ fn main() {
         BufferUsage::vertex_buffer(),
         Some(queue.family()),
         [
-            Vertex { position: [-1.0f32, -1.0, -1.0] },
-            Vertex { position: [-1.0, -1.0, 1.0] },
-            Vertex { position: [-1.0, 1.0, 1.0] },
-            Vertex { position: [1.0, 1.0, -1.0] },
-            Vertex { position: [-1.0, -1.0, -1.0] },
-            Vertex { position: [-1.0, 1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, 1.0] },
-            Vertex { position: [-1.0, -1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, -1.0] },
-            Vertex { position: [1.0, 1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, -1.0] },
-            Vertex { position: [-1.0, -1.0, -1.0] },
-            Vertex { position: [-1.0, -1.0, -1.0] },
-            Vertex { position: [-1.0, 1.0, 1.0] },
-            Vertex { position: [-1.0, 1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, 1.0] },
-            Vertex { position: [-1.0, -1.0, 1.0] },
-            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0f32, 1.0, -1.0] },
             Vertex { position: [-1.0, 1.0, 1.0] },
             Vertex { position: [-1.0, -1.0, 1.0] },
-            Vertex { position: [1.0, -1.0, 1.0] },
-            Vertex { position: [1.0, 1.0, 1.0] },
             Vertex { position: [1.0, -1.0, -1.0] },
-            Vertex { position: [1.0, 1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, -1.0] },
-            Vertex { position: [1.0, 1.0, 1.0] },
-            Vertex { position: [1.0, -1.0, 1.0] },
-            Vertex { position: [1.0, 1.0, 1.0] },
-            Vertex { position: [1.0, 1.0, -1.0] },
             Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, -1.0] },
             Vertex { position: [1.0, 1.0, 1.0] },
             Vertex { position: [-1.0, 1.0, -1.0] },
-            Vertex { position: [-1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, -1.0, -1.0] },
             Vertex { position: [1.0, 1.0, 1.0] },
             Vertex { position: [-1.0, 1.0, 1.0] },
-            Vertex { position: [1.0, -1.0, 1.] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, 1.] },
         ].iter()
             .cloned(),
     ).expect("failed to create buffer");
@@ -243,6 +262,9 @@ fn main() {
     ).unwrap(),
     );
 
+    let width = images[0].dimensions()[0];
+    let height = images[0].dimensions()[1];
+
     let pipeline = Arc::new(
         GraphicsPipeline::start()
             .vertex_input_single_buffer()
@@ -250,10 +272,7 @@ fn main() {
             .viewports(iter::once(Viewport {
                 origin: [0.0, 0.0],
                 depth_range: 0.0..1.0,
-                dimensions: [
-                    images[0].dimensions()[0] as f32,
-                    images[0].dimensions()[1] as f32,
-                ],
+                dimensions: [width as f32, height as f32],
             }))
             .fragment_shader(fs.main_entry_point(), ())
             .depth_stencil_simple_depth()
@@ -284,9 +303,36 @@ fn main() {
     let mut world = CollisionWorld::new(0.02, false);
 
     let character = ShapeHandle3::new(Cylinder::new(0.5f32, 0.3));
-    let character_pos = na::Isometry3::new(Vector3::new(0.0, 0.0, 0.5), na::zero());
-    let mut character_groups = CollisionGroups::new();
+    let character_pos = na::Isometry3::new(Vector3::new(1.0, 0.0, 0.0), na::ColumnVector::z());
+    let character_groups = CollisionGroups::new();
     world.deferred_add(0, character_pos, character, character_groups, GeometricQueryType::Contacts(0.0), ());
+
+    let proj_matrix = na::Perspective3::new(
+        images[0].dimensions()[1] as f32 / images[0].dimensions()[0] as f32,
+        ::std::f32::consts::FRAC_PI_3,
+        0.01,
+        100.0,
+    ).unwrap();
+
+    let view_uniform_buffer =
+        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<vs::ty::View>::from_data(
+            device.clone(),
+            vulkano::buffer::BufferUsage::uniform_buffer(),
+            Some(queue.family()),
+            vs::ty::View {
+                view: na::Matrix4::identity().into(), // This is computed at each frame
+                proj: proj_matrix.into(),
+            },
+        ).expect("failed to create buffer");
+
+    let view_set =
+        Arc::new(
+            vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(pipeline.clone(), 0)
+                .add_buffer(view_uniform_buffer.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
 
     let mut wall_kind_groups = CollisionGroups::new();
     wall_kind_groups.set_membership(&[2]);
@@ -339,8 +385,8 @@ fn main() {
 
     let wall_shape = Cuboid::new(Vector3::new(0.5f32, 0.5, 0.5));
     let wall = ShapeHandle3::new(wall_shape);
-    let wall_pos = na::Isometry3::new(Vector3::new(10.0, 0.0, 0.5), na::zero());
-    world.deferred_add(0, wall_pos, wall, wall_kind_groups, GeometricQueryType::Contacts(0.0), ());
+    let wall_pos = na::Isometry3::new(Vector3::new(4.0, 0.0, 0.0), na::zero());
+    world.deferred_add(1, wall_pos, wall, wall_kind_groups, GeometricQueryType::Contacts(0.0), ());
 
     let wall_world_trans: na::Transform3<f32> = na::Similarity3::from_isometry(wall_pos, 0.5f32)
         .to_superset();
@@ -362,65 +408,90 @@ fn main() {
                 .unwrap(),
         );
 
-    let view = {
-        let i: na::Transform3<f32> =
-            na::Similarity3::look_at_lh(
-                &na::PointBase::from_coordinates([0.0, 0.0, 0.5].into()),
-                &na::PointBase::from_coordinates([1.0, 0.0, 0.5].into()),
-                &[0.0, 0.0, 1.0].into(),
-                0.01,
-                ).to_superset();
-        i.unwrap()
-    };
-    let view_uniform_buffer =
-        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<vs::ty::View>::from_data(
-            device.clone(),
-            vulkano::buffer::BufferUsage::uniform_buffer(),
-            Some(queue.family()),
-            vs::ty::View {
-                view: view.into(),
-                proj: na::Perspective3::new(
-                    images[0].dimensions()[1] as f32 / images[0].dimensions()[0] as f32,
-                    ::std::f32::consts::FRAC_PI_3,
-                    0.01,
-                    100.0,
-                ).unwrap()
-                    .into(),
-            },
-        ).expect("failed to create buffer");
+    let mut x = 0.;
+    let mut y = 0.;
 
-    let view_set =
-        Arc::new(
-            vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(pipeline.clone(), 0)
-                .add_buffer(view_uniform_buffer.clone())
-                .unwrap()
-                .build()
-                .unwrap(),
-        );
+    let mut directions = vec!();
 
-    let p = [
-            na::Vector4::new(0.0f32, -1.0, -1.0, 1.0),
-            na::Vector4::new(0.0f32, 1.0, 1.0, 1.0),
-            na::Vector4::new(0.0f32, -1.0, 1.0, 1.0),
-    ];
-    println!("{:#?}", view);
-    for p in p.iter() {
-    println!("{:#?}", view * wall_world_trans.unwrap() * p);
-    }
+    world.update();
 
     loop {
         // Poll events
         let mut done = false;
         events_loop.poll_events(|ev| match ev {
+            // TODO: get mouse from axis and check if there are differences
+            winit::Event::WindowEvent { event: winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, .. } => {
+                window.window().set_cursor_position(width as i32 / 2, height as i32 / 2).unwrap();
+                x += (dx as f32 - width as f32 / 2.0) / 5000.0;
+                y += (dy as f32 - height as f32 / 2.0) / 5000.0;
+                y = y.min(::std::f32::consts::FRAC_PI_2).max(-::std::f32::consts::FRAC_PI_2);
+                println!("{}, {}", x, y);
+            },
+            winit::Event::WindowEvent { event: winit::WindowEvent::KeyboardInput { input, .. }, .. } => {
+                let direction = match input.scancode {
+                    25 => Some(Direction::Forward),
+                    38 => Some(Direction::Left),
+                    39 => Some(Direction::Backward),
+                    40 => Some(Direction::Right),
+                    _ => None,
+                };
+                if let Some(direction) = direction {
+                    directions.retain(|&elt| elt != direction);
+                    if let winit::ElementState::Pressed = input.state {
+                        directions.push(direction);
+                    }
+                }
+            },
             winit::Event::WindowEvent { event: winit::WindowEvent::Closed, .. } => done = true,
+            winit::Event::WindowEvent { event: winit::WindowEvent::Focused(true), .. } => {
+                window.window().set_cursor_state(winit::CursorState::Normal).unwrap();
+                window.window().set_cursor_state(winit::CursorState::Grab).unwrap();
+            },
             _ => (),
         });
         if done {
             return;
         }
 
+        let mut move_vector = Vector3::new(0.0, 0.0, 0.0);
+        for &direction in &directions {
+            match direction {
+                Direction::Forward => move_vector[0] = 1.0,
+                Direction::Backward => move_vector[0] = -1.0,
+                Direction::Left => move_vector[1] = 1.0,
+                Direction::Right => move_vector[1] = -1.0,
+            }
+        }
+        if move_vector != na::zero() {
+            let move_vector = move_vector.normalize();
+            let move_vector = na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) * move_vector;
+
+            let pos = {
+                let mut character = world.collision_object(0).unwrap();
+                na::Translation3::from_vector(move_vector) * character.position
+            };
+            world.deferred_set_position(0, pos);
+        }
+
         // Update world
-        // world.update();
+        world.update();
+
+        {
+            let mut buffer = view_uniform_buffer.write().unwrap();
+            let pos = world.collision_object(0).unwrap().position;
+            let dir = na::Rotation3::new(Vector3::new(0.0, y, 0.0)) * na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) * Vector3::new(1.0, 0.0, 0.0);
+            let view_matrix = {
+                let i: na::Transform3<f32> =
+                    na::Similarity3::look_at_rh(
+                        &na::PointBase::from_coordinates(pos.translation.vector.into()),
+                        &na::PointBase::from_coordinates(Vector3::from(pos.translation.vector) + dir),
+                        &[0.0, 0.0, 1.0].into(),
+                        0.1,
+                        ).to_superset();
+                i.unwrap()
+            };
+            buffer.view = view_matrix.into();
+        }
 
         // Render world
         previous_frame_end.cleanup_finished();
