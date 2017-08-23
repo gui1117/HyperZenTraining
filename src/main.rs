@@ -81,14 +81,14 @@ mod fs {
     #[src = "
 #version 450
 
-// layout(location = 0) out vec4 f_color;
+layout(location = 0) out vec4 f_color;
 
 layout(push_constant) uniform Group {
     uint group;
 } group;
 
 void main() {
-    // f_color = vec4(1.0, 0.0, 0.0, 1.0);
+    f_color = vec4(1.0, 0.0, 0.0, 1.0);
 }
 "]
     struct Dummy;
@@ -243,7 +243,7 @@ fn main() {
         ordered_passes_renderpass!(device.clone(),
         attachments: {
             color: {
-                load: DontCare,
+                load: Clear,
                 store: Store,
                 format: swapchain.format(),
                 samples: 1,
@@ -257,13 +257,8 @@ fn main() {
         },
         passes: [
             {
-                color: [],
-                depth_stencil: {depth},
-                input: []
-            },
-            {
                 color: [color],
-                depth_stencil: {},
+                depth_stencil: {depth},
                 input: []
             }
         ]
@@ -285,21 +280,6 @@ fn main() {
             .fragment_shader(fs.main_entry_point(), ())
             .depth_stencil_simple_depth()
             .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
-            .build(device.clone())
-            .unwrap(),
-    );
-
-    let final_pipeline = Arc::new(
-        GraphicsPipeline::start()
-            .vertex_input_single_buffer::<Vertex>()
-            .vertex_shader(vs.main_entry_point(), ())
-            .viewports(iter::once(Viewport {
-                origin: [0.0, 0.0],
-                depth_range: 0.0..1.0,
-                dimensions: [width as f32, height as f32],
-            }))
-            .fragment_shader(fs.main_entry_point(), ())
-            .render_pass(Subpass::from(render_pass.clone(), 1).unwrap())
             .build(device.clone())
             .unwrap(),
     );
@@ -524,7 +504,7 @@ fn main() {
                 .begin_render_pass(
                     framebuffers[image_num].clone(),
                     false,
-                    vec![1f32.into()],
+                    vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
                 )
                 .unwrap();
 
@@ -557,10 +537,6 @@ fn main() {
         //         fs::ty::Group { group: 1 },
         //     )
         //     .unwrap();
-
-        command_buffer_builder = command_buffer_builder
-            .next_subpass(false)
-            .unwrap();
 
         let command_buffer = command_buffer_builder
             .end_render_pass()
