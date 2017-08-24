@@ -67,7 +67,6 @@ layout(set = 1, binding = 0) uniform World {
     mat4 world;
 } world;
 
-
 void main() {
     gl_Position = view.proj * view.view * world.world * vec4(position, 1.0);
 }
@@ -76,6 +75,48 @@ void main() {
 }
 
 mod fs {
+    #[derive(VulkanoShader)]
+    #[ty = "fragment"]
+    #[src = "
+#version 450
+
+// layout(pixel_center_integer) in vec4 gl_FragCoord;
+
+layout(location = 0) out vec4 f_color;
+
+layout(push_constant) uniform Group {
+    uint group;
+} group;
+
+void main() {
+    f_color = vec4(1.0, 0.0, 0.0, 1.0);
+}
+"]
+    struct Dummy;
+}
+
+#[derive(Debug, Clone)]
+struct SecondVertex {
+    position: [f32; 2],
+}
+impl_vertex!(SecondVertex, position);
+
+mod second_vs {
+    #[derive(VulkanoShader)]
+    #[ty = "vertex"]
+    #[src = "
+#version 450
+
+layout(location = 0) in vec2 position;
+
+void main() {
+    gl_Position = vec4(position, 1.0, 1.0);
+}
+"]
+    struct Dummy;
+}
+
+mod second_fs {
     #[derive(VulkanoShader)]
     #[ty = "fragment"]
     #[src = "
@@ -90,12 +131,12 @@ layout(push_constant) uniform Group {
 } group;
 
 void main() {
-    if (gl_FragCoord[0] > 100) {
-        f_color = vec4(0.0, 0.0, 0.0, 1.0);
-    } else {
-        f_color = vec4(gl_FragCoord[0], gl_FragCoord[1], gl_FragCoord[2], 1.0);
-    }
-
+    f_color = vec4(1.0, 0.0, 0.0, 1.0);
+    // if (gl_FragCoord[0] > 100) {
+    //     f_color = vec4(0.0, 0.0, 0.0, 1.0);
+    // } else {
+    //     f_color = vec4(gl_FragCoord[0], gl_FragCoord[1], gl_FragCoord[2], 1.0);
+    // }
 }
 "]
     struct Dummy;
@@ -204,7 +245,7 @@ fn main() {
         .. ImageUsage::none()
     };
 
-    let tmp_image = vulkano::image::attachment::AttachmentImage::with_usage(device.clone(), images[0].dimensions(), vulkano::format::D16Unorm, tmp_image_usage).unwrap();
+    let tmp_image = vulkano::image::attachment::AttachmentImage::with_usage(device.clone(), images[0].dimensions(), swapchain.format(), tmp_image_usage).unwrap();
 
     let cuboid_vertex_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
@@ -251,13 +292,37 @@ fn main() {
             .cloned(),
     ).expect("failed to create buffer");
 
+    let screen_second_vertex_buffer = CpuAccessibleBuffer::from_iter(
+        device.clone(),
+        BufferUsage::vertex_buffer(),
+        Some(queue.family()),
+        [
+            SecondVertex { position: [-1.0f32, -1.0] },
+            SecondVertex { position: [1.0, -1.0] },
+            SecondVertex { position: [-1.0, 1.0] },
+            SecondVertex { position: [1.0, 1.0] },
+            SecondVertex { position: [-1.0, 1.0] },
+            SecondVertex { position: [1.0, -1.0] },
+        ].iter()
+            .cloned(),
+    ).expect("failed to create buffer");
+
     let vs = vs::Shader::load(device.clone()).expect("failed to create shader module");
     let fs = fs::Shader::load(device.clone()).expect("failed to create shader module");
+
+    let second_vs = second_vs::Shader::load(device.clone()).expect("failed to create shader module");
+    let second_fs = second_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
     let render_pass = Arc::new(
         ordered_passes_renderpass!(device.clone(),
         attachments: {
             color: {
+                load: Clear,
+                store: Store,
+                format: swapchain.format(),
+                samples: 1,
+            },
+            tmp_color: {
                 load: Clear,
                 store: Store,
                 format: swapchain.format(),
@@ -272,9 +337,14 @@ fn main() {
         },
         passes: [
             {
-                color: [color],
+                color: [tmp_color],
                 depth_stencil: {depth},
                 input: []
+            },
+            {
+                color: [color],
+                depth_stencil: {},
+                input: [tmp_color]
             }
         ]
     ).unwrap(),
@@ -299,12 +369,28 @@ fn main() {
             .unwrap(),
     );
 
+    let second_pipeline = Arc::new(
+        GraphicsPipeline::start()
+            .vertex_input_single_buffer::<SecondVertex>()
+            .vertex_shader(second_vs.main_entry_point(), ())
+            .viewports(iter::once(Viewport {
+                origin: [0.0, 0.0],
+                depth_range: 0.0..1.0,
+                dimensions: [width as f32, height as f32],
+            }))
+            .fragment_shader(second_fs.main_entry_point(), ())
+            .render_pass(Subpass::from(render_pass.clone(), 1).unwrap())
+            .build(device.clone())
+            .unwrap(),
+    );
+
     let framebuffers = images
         .iter()
         .map(|image| {
             Arc::new(
                 Framebuffer::start(render_pass.clone())
                     .add(image.clone()).unwrap()
+                    .add(tmp_image.clone()).unwrap()
                     .add(depth_buffer.clone()).unwrap()
                     .build().unwrap(),
             )
@@ -519,7 +605,7 @@ fn main() {
                 .begin_render_pass(
                     framebuffers[image_num].clone(),
                     false,
-                    vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
+                    vec![[0.0, 0.0, 1.0, 1.0].into(), [0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
                 )
                 .unwrap();
 
@@ -552,6 +638,19 @@ fn main() {
         //         fs::ty::Group { group: 1 },
         //     )
         //     .unwrap();
+
+        command_buffer_builder = command_buffer_builder
+            .next_subpass(false)
+            .unwrap();
+
+        command_buffer_builder = command_buffer_builder
+            .draw(
+                second_pipeline.clone(),
+                DynamicState::none(),
+                screen_second_vertex_buffer.clone(),
+                (),()
+            )
+            .unwrap();
 
         let command_buffer = command_buffer_builder
             .end_render_pass()
