@@ -81,6 +81,8 @@ mod fs {
     #[src = "
 #version 450
 
+layout(pixel_center_integer) in vec4 gl_FragCoord;
+
 layout(location = 0) out vec4 f_color;
 
 layout(push_constant) uniform Group {
@@ -88,7 +90,12 @@ layout(push_constant) uniform Group {
 } group;
 
 void main() {
-    f_color = vec4(1.0, 0.0, 0.0, 1.0);
+    if (gl_FragCoord[0] > 100) {
+        f_color = vec4(0.0, 0.0, 0.0, 1.0);
+    } else {
+        f_color = vec4(gl_FragCoord[0], gl_FragCoord[1], gl_FragCoord[2], 1.0);
+    }
+
 }
 "]
     struct Dummy;
@@ -190,6 +197,14 @@ fn main() {
     };
 
     let depth_buffer = vulkano::image::attachment::AttachmentImage::transient(device.clone(), images[0].dimensions(), vulkano::format::D16Unorm).unwrap();
+
+    let tmp_image_usage = ImageUsage {
+        input_attachment: true,
+        color_attachment: true,
+        .. ImageUsage::none()
+    };
+
+    let tmp_image = vulkano::image::attachment::AttachmentImage::with_usage(device.clone(), images[0].dimensions(), vulkano::format::D16Unorm, tmp_image_usage).unwrap();
 
     let cuboid_vertex_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
