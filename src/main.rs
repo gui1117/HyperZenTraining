@@ -124,14 +124,16 @@ mod second_fs {
 
 layout(pixel_center_integer) in vec4 gl_FragCoord;
 
-layout(location = 0) out vec4 f_color;
+layout(input_attachment_index = 0, binding = 0) uniform subpassInput first_input;
+
+layout(location = 0) out vec4 color;
 
 layout(push_constant) uniform Group {
     uint group;
 } group;
 
 void main() {
-    f_color = vec4(1.0, 0.0, 0.0, 1.0);
+    color = subpassLoad(first_input).rgba;
     // if (gl_FragCoord[0] > 100) {
     //     f_color = vec4(0.0, 0.0, 0.0, 1.0);
     // } else {
