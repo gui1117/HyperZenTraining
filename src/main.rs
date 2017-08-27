@@ -82,14 +82,14 @@ mod fs {
 
 // layout(pixel_center_integer) in vec4 gl_FragCoord;
 
-layout(location = 0) out vec4 f_color;
+layout(location = 0) out vec4 out_color;
 
 layout(push_constant) uniform Group {
     uint group;
 } group;
 
 void main() {
-    f_color = vec4(1.0, 0.0, 0.0, 1.0);
+    out_color = vec4(1.0, 0.0, 0.0, 1.0);
 }
 "]
     struct Dummy;
@@ -126,18 +126,19 @@ layout(pixel_center_integer) in vec4 gl_FragCoord;
 
 layout(input_attachment_index = 0, binding = 0) uniform subpassInput first_input;
 
-layout(location = 0) out vec4 color;
+layout(location = 0) out vec4 out_color;
 
 layout(push_constant) uniform Group {
     uint group;
 } group;
 
 void main() {
-    color = subpassLoad(first_input).rgba;
+    out_color = vec4(1.0, 0.0, 0.0, 1.0);
+    out_color = subpassLoad(first_input).rgba;
     // if (gl_FragCoord[0] > 100) {
-    //     f_color = vec4(0.0, 0.0, 0.0, 1.0);
+    //     out_color = vec4(0.0, 0.0, 0.0, 1.0);
     // } else {
-    //     f_color = vec4(gl_FragCoord[0], gl_FragCoord[1], gl_FragCoord[2], 1.0);
+    //     out_color = vec4(gl_FragCoord[0], gl_FragCoord[1], gl_FragCoord[2], 1.0);
     // }
 }
 "]
@@ -299,10 +300,10 @@ fn main() {
         BufferUsage::vertex_buffer(),
         Some(queue.family()),
         [
-            SecondVertex { position: [-1.0f32, -1.0] },
+            SecondVertex { position: [-0.5f32, -0.5] },
             SecondVertex { position: [1.0, -1.0] },
             SecondVertex { position: [-1.0, 1.0] },
-            SecondVertex { position: [1.0, 1.0] },
+            SecondVertex { position: [0.5, 0.5] },
             SecondVertex { position: [-1.0, 1.0] },
             SecondVertex { position: [1.0, -1.0] },
         ].iter()
@@ -326,7 +327,7 @@ fn main() {
             },
             tmp_color: {
                 load: Clear,
-                store: Store,
+                store: DontCare,
                 format: swapchain.format(),
                 samples: 1,
             },
@@ -357,7 +358,7 @@ fn main() {
 
     let pipeline = Arc::new(
         GraphicsPipeline::start()
-            .vertex_input_single_buffer()
+            .vertex_input_single_buffer::<Vertex>()
             .vertex_shader(vs.main_entry_point(), ())
             .viewports(iter::once(Viewport {
                 origin: [0.0, 0.0],
