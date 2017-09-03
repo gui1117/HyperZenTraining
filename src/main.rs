@@ -10,6 +10,9 @@ extern crate alga;
 extern crate nalgebra as na;
 extern crate ncollide;
 
+mod shader;
+mod util;
+
 use vulkano_win::VkSurfaceBuild;
 
 use vulkano::buffer::BufferUsage;
@@ -35,12 +38,11 @@ use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 
 use na::Vector3;
-use ncollide::world::{CollisionWorld, CollisionGroups, GeometricQueryType, CollisionObject3};
-use ncollide::narrow_phase::{ProximityHandler, ContactHandler, ContactAlgorithm3};
-use ncollide::shape::{Plane, Ball, Cylinder, Cuboid, ShapeHandle3};
-use ncollide::query::Proximity;
+use ncollide::world::{CollisionWorld, CollisionGroups, GeometricQueryType};
+use ncollide::shape::{Cylinder, Cuboid, ShapeHandle3};
 use alga::general::SubsetOf;
-use alga::linear::AffineTransformation;
+
+use util::Direction;
 
 use std::iter;
 use std::sync::Arc;
@@ -51,122 +53,12 @@ struct Vertex {
 }
 impl_vertex!(Vertex, position);
 
-mod vs {
-    #[derive(VulkanoShader)]
-    #[ty = "vertex"]
-    #[src = "
-#version 450
-
-layout(location = 0) in vec3 position;
-
-layout(set = 0, binding = 0) uniform View {
-    mat4 view;
-    mat4 proj;
-} view;
-
-layout(set = 1, binding = 0) uniform World {
-    mat4 world;
-} world;
-
-void main() {
-    gl_Position = view.proj * view.view * world.world * vec4(position, 1.0);
-}
-"]
-    struct Dummy;
-}
-
-mod fs {
-    #[derive(VulkanoShader)]
-    #[ty = "fragment"]
-    #[src = "
-#version 450
-
-// layout(pixel_center_integer) in vec4 gl_FragCoord;
-
-layout(location = 0) out vec4 out_color;
-
-layout(push_constant) uniform Group {
-    uint group;
-} group;
-
-void main() {
-    out_color = vec4(1.0, 0.0, 0.0, 1.0);
-}
-"]
-    struct Dummy;
-}
 
 #[derive(Debug, Clone)]
 struct SecondVertex {
     position: [f32; 2],
 }
 impl_vertex!(SecondVertex, position);
-
-mod second_vs {
-    #[derive(VulkanoShader)]
-    #[ty = "vertex"]
-    #[src = "
-#version 450
-
-layout(location = 0) in vec2 position;
-
-void main() {
-    gl_Position = vec4(position, 1.0, 1.0);
-}
-"]
-    struct Dummy;
-}
-
-mod second_fs {
-    #[derive(VulkanoShader)]
-    #[ty = "fragment"]
-    #[src = "
-#version 450
-
-layout(pixel_center_integer) in vec4 gl_FragCoord;
-
-layout(location = 0) out vec4 out_color;
-
-layout(set = 0, binding = 0) uniform sampler2D tmp_image;
-
-void main() {
-    out_color = vec4(1.0, 0.0, 0.0, 1.0);
-    // if (gl_FragCoord[0] > 100) {
-    //     out_color = vec4(0.0, 0.0, 0.0, 1.0);
-    // } else {
-    //     out_color = vec4(gl_FragCoord[0], gl_FragCoord[1], gl_FragCoord[2], 1.0);
-    // }
-}
-"]
-    struct Dummy;
-}
-
-#[derive(Clone, Copy, PartialEq)]
-enum Direction {
-    Forward,
-    Backward,
-    Left,
-    Right,
-}
-
-impl Direction {
-    #[inline]
-    fn orthogonal(self, other: Self) -> bool {
-        use Direction::*;
-        match (self, other) {
-            (Forward, Forward) |
-            (Forward, Backward) |
-            (Backward, Forward) |
-            (Backward, Backward) => false,
-            _ => true,
-        }
-    }
-
-    #[inline]
-    fn perpendicular(self, other: Self) -> bool {
-        !self.orthogonal(other)
-    }
-}
 
 fn main() {
     let instance = {
@@ -241,6 +133,9 @@ fn main() {
             None,
         ).expect("failed to create swapchain")
     };
+
+    let width = images[0].dimensions()[0];
+    let height = images[0].dimensions()[1];
 
     let depth_buffer = vulkano::image::attachment::AttachmentImage::transient(
         device.clone(),
@@ -322,13 +217,13 @@ fn main() {
             .cloned(),
     ).expect("failed to create buffer");
 
-    let vs = vs::Shader::load(device.clone()).expect("failed to create shader module");
-    let fs = fs::Shader::load(device.clone()).expect("failed to create shader module");
+    let vs = shader::vs::Shader::load(device.clone()).expect("failed to create shader module");
+    let fs = shader::fs::Shader::load(device.clone()).expect("failed to create shader module");
 
     let second_vs =
-        second_vs::Shader::load(device.clone()).expect("failed to create shader module");
+        shader::second_vs::Shader::load(device.clone()).expect("failed to create shader module");
     let second_fs =
-        second_fs::Shader::load(device.clone()).expect("failed to create shader module");
+        shader::second_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
     let render_pass = Arc::new(
         single_pass_renderpass!(device.clone(),
@@ -370,9 +265,6 @@ fn main() {
     ).unwrap(),
     );
 
-    let width = images[0].dimensions()[0];
-    let height = images[0].dimensions()[1];
-
     let pipeline = Arc::new(
         GraphicsPipeline::start()
             .vertex_input_single_buffer::<Vertex>()
@@ -408,20 +300,15 @@ fn main() {
             .unwrap(),
     );
 
-    let framebuffers = images
-        .iter()
-        .map(|image| {
-            Arc::new(
-                Framebuffer::start(render_pass.clone())
-                    .add(tmp_image.clone())
-                    .unwrap()
-                    .add(depth_buffer.clone())
-                    .unwrap()
-                    .build()
-                    .unwrap(),
-            )
-        })
-        .collect::<Vec<_>>();
+    let framebuffers = Arc::new(
+        Framebuffer::start(render_pass.clone())
+            .add(tmp_image.clone())
+            .unwrap()
+            .add(depth_buffer.clone())
+            .unwrap()
+            .build()
+            .unwrap(),
+    );
 
     let second_framebuffers = images
         .iter()
@@ -455,11 +342,11 @@ fn main() {
     ).unwrap();
 
     let view_uniform_buffer =
-        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<vs::ty::View>::from_data(
+        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::View>::from_data(
             device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
             Some(queue.family()),
-            vs::ty::View {
+            shader::vs::ty::View {
                 view: na::Matrix4::identity().into(), // This is computed at each frame
                 proj: proj_matrix.into(),
             },
@@ -488,11 +375,11 @@ fn main() {
         na::Translation3::from_vector([0.0, 0.0, -0.5].into());
 
     let floor_uniform_buffer =
-        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<vs::ty::World>::from_data(
+        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::World>::from_data(
             device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
             Some(queue.family()),
-            vs::ty::World { world: floor_world_trans.unwrap().into() },
+            shader::vs::ty::World { world: floor_world_trans.unwrap().into() },
         ).expect("failed to create buffer");
 
     let floor_set =
@@ -507,11 +394,11 @@ fn main() {
     let ceil_world_trans = plane_transform * na::Translation3::from_vector([0.0, 0.0, 1.5].into());
 
     let ceil_uniform_buffer =
-        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<vs::ty::World>::from_data(
+        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::World>::from_data(
             device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
             Some(queue.family()),
-            vs::ty::World { world: ceil_world_trans.unwrap().into() },
+            shader::vs::ty::World { world: ceil_world_trans.unwrap().into() },
         ).expect("failed to create buffer");
 
     let ceil_set =
@@ -532,11 +419,11 @@ fn main() {
         .to_superset();
 
     let wall_uniform_buffer =
-        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<vs::ty::World>::from_data(
+        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::World>::from_data(
             device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
             Some(queue.family()),
-            vs::ty::World { world: wall_world_trans.unwrap().into() },
+            shader::vs::ty::World { world: wall_world_trans.unwrap().into() },
         ).expect("failed to create buffer");
 
     let wall_set =
@@ -636,7 +523,7 @@ fn main() {
             move_vector = na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) * move_vector;
 
             let pos = {
-                let mut character = world.collision_object(0).unwrap();
+                let character = world.collision_object(0).unwrap();
                 na::Translation3::from_vector(move_vector) * character.position
             };
             world.deferred_set_position(0, pos);
@@ -673,7 +560,7 @@ fn main() {
             AutoCommandBufferBuilder::new(device.clone(), queue.family())
                 .unwrap()
                 .begin_render_pass(
-                    framebuffers[image_num].clone(),
+                    framebuffers.clone(),
                     false,
                     vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
                 )
@@ -685,29 +572,29 @@ fn main() {
                 DynamicState::none(),
                 cuboid_vertex_buffer.clone(),
                 (view_set.clone(), wall_set.clone()),
-                fs::ty::Group { group: 1 },
+                shader::fs::ty::Group { group: 1 },
             )
             .unwrap();
 
-        // command_buffer_builder = command_buffer_builder
-        //     .draw(
-        //         pipeline.clone(),
-        //         DynamicState::none(),
-        //         cuboid_vertex_buffer.clone(),
-        //         (view_set.clone(), ceil_set.clone()),
-        //         fs::ty::Group { group: 1 },
-        //     )
-        //     .unwrap();
+        command_buffer_builder = command_buffer_builder
+            .draw(
+                pipeline.clone(),
+                DynamicState::none(),
+                cuboid_vertex_buffer.clone(),
+                (view_set.clone(), ceil_set.clone()),
+                shader::fs::ty::Group { group: 1 },
+            )
+            .unwrap();
 
-        // command_buffer_builder = command_buffer_builder
-        //     .draw(
-        //         pipeline.clone(),
-        //         DynamicState::none(),
-        //         cuboid_vertex_buffer.clone(),
-        //         (view_set.clone(), floor_set.clone()),
-        //         fs::ty::Group { group: 1 },
-        //     )
-        //     .unwrap();
+        command_buffer_builder = command_buffer_builder
+            .draw(
+                pipeline.clone(),
+                DynamicState::none(),
+                cuboid_vertex_buffer.clone(),
+                (view_set.clone(), floor_set.clone()),
+                shader::fs::ty::Group { group: 1 },
+            )
+            .unwrap();
 
         let command_buffer = command_buffer_builder
             .end_render_pass()
@@ -716,6 +603,7 @@ fn main() {
             .unwrap();
 
         // TODO compute all second_command_buffer before
+        // TODO submit first pass before call image from swapchain
         let second_command_buffer = AutoCommandBufferBuilder::new(device.clone(), queue.family()).unwrap()
             .begin_render_pass(second_framebuffers[image_num].clone(), false, vec!())
             .unwrap()
