@@ -25,6 +25,7 @@ use vulkano::instance::Instance;
 use vulkano::instance::ApplicationInfo;
 use vulkano::pipeline::GraphicsPipeline;
 use vulkano::pipeline::viewport::Viewport;
+use vulkano::sampler::Sampler;
 use vulkano::swapchain;
 use vulkano::swapchain::PresentMode;
 use vulkano::swapchain::SurfaceTransform;
@@ -124,17 +125,12 @@ mod second_fs {
 
 layout(pixel_center_integer) in vec4 gl_FragCoord;
 
-layout(input_attachment_index = 0, binding = 0) uniform subpassInput first_input;
-
 layout(location = 0) out vec4 out_color;
 
-layout(push_constant) uniform Group {
-    uint group;
-} group;
+layout(set = 0, binding = 0) uniform sampler2D tmp_image;
 
 void main() {
     out_color = vec4(1.0, 0.0, 0.0, 1.0);
-    out_color = subpassLoad(first_input).rgba;
     // if (gl_FragCoord[0] > 100) {
     //     out_color = vec4(0.0, 0.0, 0.0, 1.0);
     // } else {
@@ -242,13 +238,14 @@ fn main() {
 
     let depth_buffer = vulkano::image::attachment::AttachmentImage::transient(device.clone(), images[0].dimensions(), vulkano::format::D16Unorm).unwrap();
 
-    let tmp_image_usage = ImageUsage {
-        input_attachment: true,
-        color_attachment: true,
-        .. ImageUsage::none()
+    let tmp_image = {
+        let usage = ImageUsage {
+            color_attachment: true,
+            sampled: true,
+            .. ImageUsage::none()
+        };
+        vulkano::image::attachment::AttachmentImage::with_usage(device.clone(), images[0].dimensions(), swapchain.format(), usage).unwrap()
     };
-
-    let tmp_image = vulkano::image::attachment::AttachmentImage::with_usage(device.clone(), images[0].dimensions(), swapchain.format(), tmp_image_usage).unwrap();
 
     let cuboid_vertex_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
@@ -295,7 +292,7 @@ fn main() {
             .cloned(),
     ).expect("failed to create buffer");
 
-    let screen_second_vertex_buffer = CpuAccessibleBuffer::from_iter(
+    let fullscreen_vertex_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
         BufferUsage::vertex_buffer(),
         Some(queue.family()),
@@ -317,17 +314,11 @@ fn main() {
     let second_fs = second_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
     let render_pass = Arc::new(
-        ordered_passes_renderpass!(device.clone(),
+        single_pass_renderpass!(device.clone(),
         attachments: {
             color: {
                 load: Clear,
                 store: Store,
-                format: swapchain.format(),
-                samples: 1,
-            },
-            tmp_color: {
-                load: Clear,
-                store: DontCare,
                 format: swapchain.format(),
                 samples: 1,
             },
@@ -338,20 +329,27 @@ fn main() {
                 samples: 1,
             }
         },
-        passes: [
-            {
-                color: [tmp_color],
-                depth_stencil: {depth},
-                input: []
-            },
-            {
-                color: [color],
-                depth_stencil: {},
-                input: [tmp_color]
-            }
-        ]
-    ).unwrap(),
+        pass: {
+            color: [color],
+            depth_stencil: {depth}
+        }
+        ).unwrap(),
     );
+
+    let second_render_pass = Arc::new(single_pass_renderpass!(device.clone(),
+        attachments: {
+            color: {
+                load: DontCare,
+                store: Store,
+                format: swapchain.format(),
+                samples: 1,
+            }
+        },
+        pass: {
+            color: [color],
+            depth_stencil: {}
+        }
+    ).unwrap());
 
     let width = images[0].dimensions()[0];
     let height = images[0].dimensions()[1];
@@ -372,29 +370,38 @@ fn main() {
             .unwrap(),
     );
 
-    let second_pipeline = Arc::new(
-        GraphicsPipeline::start()
-            .vertex_input_single_buffer::<SecondVertex>()
-            .vertex_shader(second_vs.main_entry_point(), ())
-            .viewports(iter::once(Viewport {
-                origin: [0.0, 0.0],
-                depth_range: 0.0..1.0,
-                dimensions: [width as f32, height as f32],
-            }))
-            .fragment_shader(second_fs.main_entry_point(), ())
-            .render_pass(Subpass::from(render_pass.clone(), 1).unwrap())
-            .build(device.clone())
-            .unwrap(),
-    );
+    let second_pipeline = Arc::new(GraphicsPipeline::start()
+        .vertex_input_single_buffer()
+        .vertex_shader(second_vs.main_entry_point(), ())
+        .triangle_list()
+        .viewports(iter::once(Viewport {
+            origin: [0.0, 0.0],
+            depth_range: 0.0 .. 1.0,
+            dimensions: [images[0].dimensions()[0] as f32, images[0].dimensions()[1] as f32],
+        }))
+        .fragment_shader(second_fs.main_entry_point(), ())
+        .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
+        .build(device.clone())
+        .unwrap());
 
     let framebuffers = images
         .iter()
         .map(|image| {
             Arc::new(
                 Framebuffer::start(render_pass.clone())
-                    .add(image.clone()).unwrap()
                     .add(tmp_image.clone()).unwrap()
                     .add(depth_buffer.clone()).unwrap()
+                    .build().unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    let second_framebuffers = images
+        .iter()
+        .map(|image| {
+            Arc::new(
+                Framebuffer::start(second_render_pass.clone())
+                    .add(image.clone()).unwrap()
                     .build().unwrap(),
             )
         })
@@ -512,6 +519,16 @@ fn main() {
                 .unwrap(),
         );
 
+    //TODO use simple instead of persistent
+    let tmp_image_set =
+        Arc::new(
+            vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(second_pipeline.clone(), 0)
+                .add_sampled_image(tmp_image.clone(), Sampler::simple_repeat_linear(device.clone()))
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+
     let mut x = 0.;
     let mut y = 0.;
 
@@ -608,7 +625,7 @@ fn main() {
                 .begin_render_pass(
                     framebuffers[image_num].clone(),
                     false,
-                    vec![[0.0, 0.0, 1.0, 1.0].into(), [0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
+                    vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
                 )
                 .unwrap();
 
@@ -642,32 +659,27 @@ fn main() {
         //     )
         //     .unwrap();
 
-        command_buffer_builder = command_buffer_builder
-            .next_subpass(false)
-            .unwrap();
-
-        command_buffer_builder = command_buffer_builder
-            .draw(
-                second_pipeline.clone(),
-                DynamicState::none(),
-                screen_second_vertex_buffer.clone(),
-                (),()
-            )
-            .unwrap();
-
         let command_buffer = command_buffer_builder
             .end_render_pass()
             .unwrap()
             .build()
             .unwrap();
 
-        let future = previous_frame_end
-            .join(acquire_future)
-            .then_execute(queue.clone(), command_buffer)
+        // TODO compute all second_command_buffer before
+        let second_command_buffer = AutoCommandBufferBuilder::new(device.clone(), queue.family()).unwrap()
+            .begin_render_pass(second_framebuffers[image_num].clone(), false, vec!())
             .unwrap()
+            .draw(second_pipeline.clone(), DynamicState::none(), fullscreen_vertex_buffer.clone(), tmp_image_set.clone(), ())
+            .unwrap()
+            .end_render_pass()
+            .unwrap()
+            .build().unwrap();
+
+        let future = previous_frame_end.join(acquire_future)
+            .then_execute(queue.clone(), command_buffer).unwrap()
+            .then_execute(queue.clone(), second_command_buffer).unwrap()
             .then_swapchain_present(queue.clone(), swapchain.clone(), image_num)
-            .then_signal_fence_and_flush()
-            .unwrap();
+            .then_signal_fence_and_flush().unwrap();
         previous_frame_end = Box::new(future) as Box<_>;
 
         // Sleep
