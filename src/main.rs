@@ -154,7 +154,10 @@ impl Direction {
     fn orthogonal(self, other: Self) -> bool {
         use Direction::*;
         match (self, other) {
-            (Forward, Forward) | (Forward, Backward) | (Backward, Forward) | (Backward, Backward) => false,
+            (Forward, Forward) |
+            (Forward, Backward) |
+            (Backward, Forward) |
+            (Backward, Backward) => false,
             _ => true,
         }
     }
@@ -182,7 +185,10 @@ fn main() {
         .build_vk_surface(&events_loop, instance.clone())
         .unwrap();
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
-    window.window().set_cursor_state(winit::CursorState::Grab).unwrap();
+    window
+        .window()
+        .set_cursor_state(winit::CursorState::Grab)
+        .unwrap();
 
     let queue = physical
         .queue_families()
@@ -236,15 +242,24 @@ fn main() {
         ).expect("failed to create swapchain")
     };
 
-    let depth_buffer = vulkano::image::attachment::AttachmentImage::transient(device.clone(), images[0].dimensions(), vulkano::format::D16Unorm).unwrap();
+    let depth_buffer = vulkano::image::attachment::AttachmentImage::transient(
+        device.clone(),
+        images[0].dimensions(),
+        vulkano::format::D16Unorm,
+    ).unwrap();
 
     let tmp_image = {
         let usage = ImageUsage {
             color_attachment: true,
             sampled: true,
-            .. ImageUsage::none()
+            ..ImageUsage::none()
         };
-        vulkano::image::attachment::AttachmentImage::with_usage(device.clone(), images[0].dimensions(), swapchain.format(), usage).unwrap()
+        vulkano::image::attachment::AttachmentImage::with_usage(
+            device.clone(),
+            images[0].dimensions(),
+            swapchain.format(),
+            usage,
+        ).unwrap()
     };
 
     let cuboid_vertex_buffer = CpuAccessibleBuffer::from_iter(
@@ -310,8 +325,10 @@ fn main() {
     let vs = vs::Shader::load(device.clone()).expect("failed to create shader module");
     let fs = fs::Shader::load(device.clone()).expect("failed to create shader module");
 
-    let second_vs = second_vs::Shader::load(device.clone()).expect("failed to create shader module");
-    let second_fs = second_fs::Shader::load(device.clone()).expect("failed to create shader module");
+    let second_vs =
+        second_vs::Shader::load(device.clone()).expect("failed to create shader module");
+    let second_fs =
+        second_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
     let render_pass = Arc::new(
         single_pass_renderpass!(device.clone(),
@@ -336,7 +353,8 @@ fn main() {
         ).unwrap(),
     );
 
-    let second_render_pass = Arc::new(single_pass_renderpass!(device.clone(),
+    let second_render_pass = Arc::new(
+        single_pass_renderpass!(device.clone(),
         attachments: {
             color: {
                 load: DontCare,
@@ -349,7 +367,8 @@ fn main() {
             color: [color],
             depth_stencil: {}
         }
-    ).unwrap());
+    ).unwrap(),
+    );
 
     let width = images[0].dimensions()[0];
     let height = images[0].dimensions()[1];
@@ -370,28 +389,36 @@ fn main() {
             .unwrap(),
     );
 
-    let second_pipeline = Arc::new(GraphicsPipeline::start()
-        .vertex_input_single_buffer()
-        .vertex_shader(second_vs.main_entry_point(), ())
-        .triangle_list()
-        .viewports(iter::once(Viewport {
-            origin: [0.0, 0.0],
-            depth_range: 0.0 .. 1.0,
-            dimensions: [images[0].dimensions()[0] as f32, images[0].dimensions()[1] as f32],
-        }))
-        .fragment_shader(second_fs.main_entry_point(), ())
-        .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
-        .build(device.clone())
-        .unwrap());
+    let second_pipeline = Arc::new(
+        GraphicsPipeline::start()
+            .vertex_input_single_buffer()
+            .vertex_shader(second_vs.main_entry_point(), ())
+            .triangle_list()
+            .viewports(iter::once(Viewport {
+                origin: [0.0, 0.0],
+                depth_range: 0.0..1.0,
+                dimensions: [
+                    images[0].dimensions()[0] as f32,
+                    images[0].dimensions()[1] as f32,
+                ],
+            }))
+            .fragment_shader(second_fs.main_entry_point(), ())
+            .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
+            .build(device.clone())
+            .unwrap(),
+    );
 
     let framebuffers = images
         .iter()
         .map(|image| {
             Arc::new(
                 Framebuffer::start(render_pass.clone())
-                    .add(tmp_image.clone()).unwrap()
-                    .add(depth_buffer.clone()).unwrap()
-                    .build().unwrap(),
+                    .add(tmp_image.clone())
+                    .unwrap()
+                    .add(depth_buffer.clone())
+                    .unwrap()
+                    .build()
+                    .unwrap(),
             )
         })
         .collect::<Vec<_>>();
@@ -401,8 +428,10 @@ fn main() {
         .map(|image| {
             Arc::new(
                 Framebuffer::start(second_render_pass.clone())
-                    .add(image.clone()).unwrap()
-                    .build().unwrap(),
+                    .add(image.clone())
+                    .unwrap()
+                    .build()
+                    .unwrap(),
             )
         })
         .collect::<Vec<_>>();
@@ -520,19 +549,23 @@ fn main() {
         );
 
     //TODO use simple instead of persistent
-    let tmp_image_set =
-        Arc::new(
-            vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(second_pipeline.clone(), 0)
-                .add_sampled_image(tmp_image.clone(), Sampler::simple_repeat_linear(device.clone()))
-                .unwrap()
-                .build()
-                .unwrap(),
-        );
+    let tmp_image_set = Arc::new(
+        vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+            second_pipeline.clone(),
+            0,
+        ).add_sampled_image(
+            tmp_image.clone(),
+            Sampler::simple_repeat_linear(device.clone()),
+        )
+            .unwrap()
+            .build()
+            .unwrap(),
+    );
 
     let mut x = 0.;
     let mut y = 0.;
 
-    let mut directions = vec!();
+    let mut directions = vec![];
 
     world.update();
 
@@ -541,14 +574,23 @@ fn main() {
         let mut done = false;
         events_loop.poll_events(|ev| match ev {
             // TODO: get mouse from axis and check if there are differences because of acceleration
-            winit::Event::WindowEvent { event: winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, .. } => {
-                window.window().set_cursor_position(width as i32 / 2, height as i32 / 2).unwrap();
+            winit::Event::WindowEvent {
+                event: winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
+            } => {
+                window
+                    .window()
+                    .set_cursor_position(width as i32 / 2, height as i32 / 2)
+                    .unwrap();
                 x += (dx as f32 - width as f32 / 2.0) / 5000.0;
                 y += (dy as f32 - height as f32 / 2.0) / 5000.0;
-                y = y.min(::std::f32::consts::FRAC_PI_2).max(-::std::f32::consts::FRAC_PI_2);
+                y = y.min(::std::f32::consts::FRAC_PI_2).max(
+                    -::std::f32::consts::FRAC_PI_2,
+                );
                 println!("{}: {}", x, y);
-            },
-            winit::Event::WindowEvent { event: winit::WindowEvent::KeyboardInput { input, .. }, .. } => {
+            }
+            winit::Event::WindowEvent {
+                event: winit::WindowEvent::KeyboardInput { input, .. }, ..
+            } => {
                 let direction = match input.scancode {
                     25 => Some(Direction::Forward),
                     38 => Some(Direction::Left),
@@ -562,12 +604,18 @@ fn main() {
                         directions.push(direction);
                     }
                 }
-            },
+            }
             winit::Event::WindowEvent { event: winit::WindowEvent::Closed, .. } => done = true,
             winit::Event::WindowEvent { event: winit::WindowEvent::Focused(true), .. } => {
-                window.window().set_cursor_state(winit::CursorState::Normal).unwrap();
-                window.window().set_cursor_state(winit::CursorState::Grab).unwrap();
-            },
+                window
+                    .window()
+                    .set_cursor_state(winit::CursorState::Normal)
+                    .unwrap();
+                window
+                    .window()
+                    .set_cursor_state(winit::CursorState::Grab)
+                    .unwrap();
+            }
             _ => (),
         });
         if done {
@@ -600,7 +648,9 @@ fn main() {
         {
             let mut buffer = view_uniform_buffer.write().unwrap();
             let pos = world.collision_object(0).unwrap().position;
-            let dir = na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) * na::Rotation3::new(Vector3::new(0.0, -y, 0.0)) * Vector3::new(1.0, 0.0, 0.0);
+            let dir = na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) *
+                na::Rotation3::new(Vector3::new(0.0, -y, 0.0)) *
+                Vector3::new(1.0, 0.0, 0.0);
             let view_matrix = {
                 let i: na::Transform3<f32> =
                     na::Similarity3::look_at_rh(
@@ -675,11 +725,15 @@ fn main() {
             .unwrap()
             .build().unwrap();
 
-        let future = previous_frame_end.join(acquire_future)
-            .then_execute(queue.clone(), command_buffer).unwrap()
-            .then_execute(queue.clone(), second_command_buffer).unwrap()
+        let future = previous_frame_end
+            .join(acquire_future)
+            .then_execute(queue.clone(), command_buffer)
+            .unwrap()
+            .then_execute(queue.clone(), second_command_buffer)
+            .unwrap()
             .then_swapchain_present(queue.clone(), swapchain.clone(), image_num)
-            .then_signal_fence_and_flush().unwrap();
+            .then_signal_fence_and_flush()
+            .unwrap();
         previous_frame_end = Box::new(future) as Box<_>;
 
         // Sleep
