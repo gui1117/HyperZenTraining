@@ -26,4 +26,3 @@ impl Direction {
         !self.orthogonal(other)
     }
 }
-

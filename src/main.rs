@@ -330,30 +330,10 @@ fn main() {
     let character_groups = CollisionGroups::new();
     world.deferred_add(0, character_pos, character, character_groups, GeometricQueryType::Contacts(0.0), ());
 
-    let proj_matrix = na::Perspective3::new(
-        images[0].dimensions()[1] as f32 / images[0].dimensions()[0] as f32,
-        ::std::f32::consts::FRAC_PI_3,
-        0.01,
-        100.0,
-    ).unwrap();
-
     let view_uniform_buffer =
-        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::View>::from_data(
+        vulkano::buffer::cpu_pool::CpuBufferPool::<shader::vs::ty::View>::new(
             device.clone(),
-            vulkano::buffer::BufferUsage::uniform_buffer(),
-            shader::vs::ty::View {
-                view: na::Matrix4::identity().into(), // This is computed at each frame
-                proj: proj_matrix.into(),
-            },
-        ).expect("failed to create buffer");
-
-    let view_set =
-        Arc::new(
-            vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(pipeline.clone(), 0)
-                .add_buffer(view_uniform_buffer.clone())
-                .unwrap()
-                .build()
-                .unwrap(),
+            BufferUsage::uniform_buffer(),
         );
 
     let mut wall_kind_groups = CollisionGroups::new();
@@ -427,6 +407,30 @@ fn main() {
                 .unwrap(),
         );
 
+    let wall_shape_2 = Cuboid::new(na::Vector3::new(0.5f32, 0.5, 0.5));
+    let wall_2 = ShapeHandle3::new(wall_shape_2);
+    let wall_pos_2 = na::Isometry3::new(na::Vector3::new(3.0, 5.0, -4.0), na::zero());
+    world.deferred_add(1, wall_pos_2, wall_2, wall_kind_groups, GeometricQueryType::Contacts(0.0), ());
+
+    let wall_world_trans_2: na::Transform3<f32> =
+        na::Similarity3::from_isometry(wall_pos_2, 0.5f32).to_superset();
+
+    let wall_uniform_buffer_2 =
+        vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::World>::from_data(
+            device.clone(),
+            vulkano::buffer::BufferUsage::uniform_buffer(),
+            shader::vs::ty::World { world: wall_world_trans_2.unwrap().into() },
+        ).expect("failed to create buffer");
+
+    let wall_set_2 =
+        Arc::new(
+            vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(pipeline.clone(), 0)
+                .add_buffer(wall_uniform_buffer_2.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+
     //TODO use simple instead of persistent
     let tmp_image_set = Arc::new(
         vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
@@ -440,7 +444,7 @@ fn main() {
                 Filter::Nearest,
                 UnnormalizedSamplerAddressMode::ClampToEdge,
                 UnnormalizedSamplerAddressMode::ClampToEdge,
-            ).unwrap()
+            ).unwrap(),
         )
             .unwrap()
             .build()
@@ -531,12 +535,12 @@ fn main() {
         // Update world
         world.update();
 
-        {
-            let mut buffer = view_uniform_buffer.write().unwrap();
+        let view_uniform_buffer_subbuffer = {
             let pos = world.collision_object(0).unwrap().position;
             let dir = na::Rotation3::new(na::Vector3::new(0.0, 0.0, -x)) *
                 na::Rotation3::new(na::Vector3::new(0.0, -y, 0.0)) *
                 na::Vector3::new(1.0, 0.0, 0.0);
+
             let view_matrix = {
                 let i: na::Transform3<f32> =
                     na::Similarity3::look_at_rh(
@@ -547,8 +551,32 @@ fn main() {
                         ).to_superset();
                 i.unwrap()
             };
-            buffer.view = view_matrix.into();
-        }
+
+            let proj_matrix = na::Perspective3::new(
+                images[0].dimensions()[1] as f32 / images[0].dimensions()[0] as f32,
+                ::std::f32::consts::FRAC_PI_3,
+                0.01,
+                100.0,
+            ).unwrap();
+
+            let view_uniform = shader::vs::ty::View {
+                view: view_matrix.into(),
+                proj: proj_matrix.into(),
+            };
+
+            view_uniform_buffer.next(view_uniform)
+        };
+
+
+        let view_set = Arc::new(
+            vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+                pipeline.clone(),
+                0,
+            ).add_buffer(view_uniform_buffer_subbuffer.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
 
         // Render world
         let (image_num, acquire_future) = swapchain::acquire_next_image(swapchain.clone(), None)
@@ -556,11 +584,7 @@ fn main() {
         let mut command_buffer_builder =
             AutoCommandBufferBuilder::new(device.clone(), queue.family())
                 .unwrap()
-                .begin_render_pass(
-                    framebuffers.clone(),
-                    false,
-                    vec![0u32.into(), 1f32.into()],
-                )
+                .begin_render_pass(framebuffers.clone(), false, vec![0u32.into(), 1f32.into()])
                 .unwrap();
 
         command_buffer_builder = command_buffer_builder
@@ -570,6 +594,16 @@ fn main() {
                 cuboid_vertex_buffer.clone(),
                 (view_set.clone(), wall_set.clone()),
                 shader::fs::ty::Group { group: 1 },
+            )
+            .unwrap();
+
+        command_buffer_builder = command_buffer_builder
+            .draw(
+                pipeline.clone(),
+                DynamicState::none(),
+                cuboid_vertex_buffer.clone(),
+                (view_set.clone(), wall_set_2.clone()),
+                shader::fs::ty::Group { group: 4 },
             )
             .unwrap();
 
