@@ -4,13 +4,13 @@ version = "0.1.0"
 authors = ["thiolliere <guillaume.thiolliere@opmbx.org>"]
 
 [dependencies]
-vulkano = "0.5"
-vulkano-shader-derive = "0.5"
-vulkano-win = "0.5"
+vulkano = "0.6"
+vulkano-shader-derive = "0.6"
+vulkano-win = "0.6"
 winit = "0.7"
 fps_clock = "1"
-nalgebra = "0.12"
-ncollide = "0.12"
+nalgebra = "0.13"
+ncollide = "0.13"
 specs = "0.9"
 alga = "0.5"
 

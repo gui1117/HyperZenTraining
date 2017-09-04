@@ -25,10 +25,9 @@ use vulkano::framebuffer::Framebuffer;
 use vulkano::framebuffer::Subpass;
 use vulkano::image::ImageUsage;
 use vulkano::instance::Instance;
-use vulkano::instance::ApplicationInfo;
 use vulkano::pipeline::GraphicsPipeline;
 use vulkano::pipeline::viewport::Viewport;
-use vulkano::sampler::Sampler;
+use vulkano::sampler::{Sampler, Filter, UnnormalizedSamplerAddressMode};
 use vulkano::swapchain;
 use vulkano::swapchain::PresentMode;
 use vulkano::swapchain::SurfaceTransform;
@@ -37,7 +36,6 @@ use vulkano::swapchain::CompositeAlpha;
 use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 
-use na::Vector3;
 use ncollide::world::{CollisionWorld, CollisionGroups, GeometricQueryType};
 use ncollide::shape::{Cylinder, Cuboid, ShapeHandle3};
 use alga::general::SubsetOf;
@@ -63,7 +61,7 @@ impl_vertex!(SecondVertex, position);
 fn main() {
     let instance = {
         let extensions = vulkano_win::required_extensions();
-        let info = ApplicationInfo::from_cargo_toml();
+        let info = app_info_from_cargo_toml!();
         Instance::new(Some(&info), &extensions, None).expect("failed to create Vulkan instance")
     };
 
@@ -152,7 +150,7 @@ fn main() {
         vulkano::image::attachment::AttachmentImage::with_usage(
             device.clone(),
             images[0].dimensions(),
-            swapchain.format(),
+            vulkano::format::R32Uint,
             usage,
         ).unwrap()
     };
@@ -160,7 +158,6 @@ fn main() {
     let cuboid_vertex_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
         BufferUsage::vertex_buffer(),
-        Some(queue.family()),
         [
             Vertex { position: [-1.0f32, 1.0, -1.0] },
             Vertex { position: [-1.0, 1.0, 1.0] },
@@ -205,12 +202,11 @@ fn main() {
     let fullscreen_vertex_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
         BufferUsage::vertex_buffer(),
-        Some(queue.family()),
         [
-            SecondVertex { position: [-0.5f32, -0.5] },
+            SecondVertex { position: [-1.0f32, -1.0] },
             SecondVertex { position: [1.0, -1.0] },
             SecondVertex { position: [-1.0, 1.0] },
-            SecondVertex { position: [0.5, 0.5] },
+            SecondVertex { position: [1.0, 1.0] },
             SecondVertex { position: [-1.0, 1.0] },
             SecondVertex { position: [1.0, -1.0] },
         ].iter()
@@ -231,7 +227,7 @@ fn main() {
             color: {
                 load: Clear,
                 store: Store,
-                format: swapchain.format(),
+                format: vulkano::format::Format::R32Uint,
                 samples: 1,
             },
             depth: {
@@ -254,7 +250,7 @@ fn main() {
             color: {
                 load: DontCare,
                 store: Store,
-                format: swapchain.format(),
+                format: vulkano::format::Format::B8G8R8A8Srgb,
                 samples: 1,
             }
         },
@@ -330,7 +326,7 @@ fn main() {
     let mut world = CollisionWorld::new(0.02, false);
 
     let character = ShapeHandle3::new(Cylinder::new(0.5f32, 0.3));
-    let character_pos = na::Isometry3::new(Vector3::new(1.0, 0.0, 0.0), na::ColumnVector::z());
+    let character_pos = na::Isometry3::new(na::Vector3::new(-1.0, 0.0, 0.0), na::Vector3::z());
     let character_groups = CollisionGroups::new();
     world.deferred_add(0, character_pos, character, character_groups, GeometricQueryType::Contacts(0.0), ());
 
@@ -345,7 +341,6 @@ fn main() {
         vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::View>::from_data(
             device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
-            Some(queue.family()),
             shader::vs::ty::View {
                 view: na::Matrix4::identity().into(), // This is computed at each frame
                 proj: proj_matrix.into(),
@@ -365,20 +360,19 @@ fn main() {
     wall_kind_groups.set_membership(&[2]);
     wall_kind_groups.set_blacklist(&[2]);
 
-    // let floor = ShapeHandle3::new(Plane::new(Vector3::new(0.0, 0.0, 1.0)));
+    // let floor = ShapeHandle3::new(Plane::new(na::Vector3::new(0.0, 0.0, 1.0)));
     // world.deferred_add(0, na::Isometry3::identity(), floor, wall_kind_groups, GeometricQueryType::Contacts(0.0), ());
 
     let mut plane_transform = na::Transform3::identity();
-    plane_transform[(0, 0)] = 100.;
-    plane_transform[(1, 1)] = 100.;
+    plane_transform[(0, 0)] = 10.;
+    plane_transform[(1, 1)] = 10.;
     let floor_world_trans = plane_transform *
-        na::Translation3::from_vector([0.0, 0.0, -0.5].into());
+        na::Translation3::from_vector([0.0, 0.0, -10.5].into());
 
     let floor_uniform_buffer =
         vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::World>::from_data(
             device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
-            Some(queue.family()),
             shader::vs::ty::World { world: floor_world_trans.unwrap().into() },
         ).expect("failed to create buffer");
 
@@ -397,7 +391,6 @@ fn main() {
         vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::World>::from_data(
             device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
-            Some(queue.family()),
             shader::vs::ty::World { world: ceil_world_trans.unwrap().into() },
         ).expect("failed to create buffer");
 
@@ -410,9 +403,9 @@ fn main() {
                 .unwrap(),
         );
 
-    let wall_shape = Cuboid::new(Vector3::new(0.5f32, 0.5, 0.5));
+    let wall_shape = Cuboid::new(na::Vector3::new(0.5f32, 0.5, 0.5));
     let wall = ShapeHandle3::new(wall_shape);
-    let wall_pos = na::Isometry3::new(Vector3::new(4.0, 0.0, 0.0), na::zero());
+    let wall_pos = na::Isometry3::new(na::Vector3::new(0.0, 0.0, 0.0), na::zero());
     world.deferred_add(1, wall_pos, wall, wall_kind_groups, GeometricQueryType::Contacts(0.0), ());
 
     let wall_world_trans: na::Transform3<f32> = na::Similarity3::from_isometry(wall_pos, 0.5f32)
@@ -422,7 +415,6 @@ fn main() {
         vulkano::buffer::cpu_access::CpuAccessibleBuffer::<shader::vs::ty::World>::from_data(
             device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
-            Some(queue.family()),
             shader::vs::ty::World { world: wall_world_trans.unwrap().into() },
         ).expect("failed to create buffer");
 
@@ -442,7 +434,13 @@ fn main() {
             0,
         ).add_sampled_image(
             tmp_image.clone(),
-            Sampler::simple_repeat_linear(device.clone()),
+            // Sampler::simple_repeat_linear_no_mipmap(device.clone()),
+            Sampler::unnormalized(
+                device.clone(),
+                Filter::Nearest,
+                UnnormalizedSamplerAddressMode::ClampToEdge,
+                UnnormalizedSamplerAddressMode::ClampToEdge,
+            ).unwrap()
         )
             .unwrap()
             .build()
@@ -457,6 +455,8 @@ fn main() {
     world.update();
 
     loop {
+        previous_frame_end.cleanup_finished();
+
         // Poll events
         let mut done = false;
         events_loop.poll_events(|ev| match ev {
@@ -473,7 +473,6 @@ fn main() {
                 y = y.min(::std::f32::consts::FRAC_PI_2).max(
                     -::std::f32::consts::FRAC_PI_2,
                 );
-                println!("{}: {}", x, y);
             }
             winit::Event::WindowEvent {
                 event: winit::WindowEvent::KeyboardInput { input, .. }, ..
@@ -509,7 +508,7 @@ fn main() {
             return;
         }
 
-        let mut move_vector = Vector3::new(0.0, 0.0, 0.0);
+        let mut move_vector = na::Vector3::new(0.0, 0.0, 0.0);
         for &direction in &directions {
             match direction {
                 Direction::Forward => move_vector[0] = 1.0,
@@ -520,7 +519,7 @@ fn main() {
         }
         if move_vector != na::zero() {
             let mut move_vector = 0.01f32 * move_vector.normalize();
-            move_vector = na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) * move_vector;
+            move_vector = na::Rotation3::new(na::Vector3::new(0.0, 0.0, -x)) * move_vector;
 
             let pos = {
                 let character = world.collision_object(0).unwrap();
@@ -535,14 +534,14 @@ fn main() {
         {
             let mut buffer = view_uniform_buffer.write().unwrap();
             let pos = world.collision_object(0).unwrap().position;
-            let dir = na::Rotation3::new(Vector3::new(0.0, 0.0, -x)) *
-                na::Rotation3::new(Vector3::new(0.0, -y, 0.0)) *
-                Vector3::new(1.0, 0.0, 0.0);
+            let dir = na::Rotation3::new(na::Vector3::new(0.0, 0.0, -x)) *
+                na::Rotation3::new(na::Vector3::new(0.0, -y, 0.0)) *
+                na::Vector3::new(1.0, 0.0, 0.0);
             let view_matrix = {
                 let i: na::Transform3<f32> =
                     na::Similarity3::look_at_rh(
-                        &na::PointBase::from_coordinates(pos.translation.vector.into()),
-                        &na::PointBase::from_coordinates(Vector3::from(pos.translation.vector) + dir),
+                        &na::Point3::from_coordinates(pos.translation.vector.into()),
+                        &na::Point3::from_coordinates(na::Vector3::from(pos.translation.vector) + dir),
                         &[0.0, 0.0, 1.0].into(), // FIXME: this will result in NaN if y is PI/2 isn't it ?
                         0.1,
                         ).to_superset();
@@ -552,8 +551,6 @@ fn main() {
         }
 
         // Render world
-        previous_frame_end.cleanup_finished();
-
         let (image_num, acquire_future) = swapchain::acquire_next_image(swapchain.clone(), None)
             .unwrap();
         let mut command_buffer_builder =
@@ -562,7 +559,7 @@ fn main() {
                 .begin_render_pass(
                     framebuffers.clone(),
                     false,
-                    vec![[0.0, 0.0, 1.0, 1.0].into(), 1f32.into()],
+                    vec![0u32.into(), 1f32.into()],
                 )
                 .unwrap();
 
@@ -582,7 +579,7 @@ fn main() {
                 DynamicState::none(),
                 cuboid_vertex_buffer.clone(),
                 (view_set.clone(), ceil_set.clone()),
-                shader::fs::ty::Group { group: 1 },
+                shader::fs::ty::Group { group: 2 },
             )
             .unwrap();
 
@@ -592,7 +589,7 @@ fn main() {
                 DynamicState::none(),
                 cuboid_vertex_buffer.clone(),
                 (view_set.clone(), floor_set.clone()),
-                shader::fs::ty::Group { group: 1 },
+                shader::fs::ty::Group { group: 3 },
             )
             .unwrap();
 
@@ -602,7 +599,6 @@ fn main() {
             .build()
             .unwrap();
 
-        // TODO compute all second_command_buffer before
         // TODO submit first pass before call image from swapchain
         let second_command_buffer = AutoCommandBufferBuilder::new(device.clone(), queue.family()).unwrap()
             .begin_render_pass(second_framebuffers[image_num].clone(), false, vec!())
