@@ -12,6 +12,7 @@ extern crate ncollide;
 
 mod shader;
 mod util;
+mod graphics;
 
 use vulkano_win::VkSurfaceBuild;
 
@@ -65,20 +66,20 @@ fn main() {
         Instance::new(Some(&info), &extensions, None).expect("failed to create Vulkan instance")
     };
 
-    //TODO: read config and save device
-    let physical = vulkano::instance::PhysicalDevice::enumerate(&instance)
-        .next()
-        .expect("no device available");
-
     let mut events_loop = winit::EventsLoop::new();
     let window = winit::WindowBuilder::new()
         .build_vk_surface(&events_loop, instance.clone())
         .unwrap();
+
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
-    window
-        .window()
+    window.window()
         .set_cursor_state(winit::CursorState::Grab)
         .unwrap();
+
+    //TODO: read config and save device
+    let physical = vulkano::instance::PhysicalDevice::enumerate(&instance)
+        .next()
+        .expect("no device available");
 
     let queue = physical
         .queue_families()
@@ -285,10 +286,7 @@ fn main() {
             .viewports(iter::once(Viewport {
                 origin: [0.0, 0.0],
                 depth_range: 0.0..1.0,
-                dimensions: [
-                    images[0].dimensions()[0] as f32,
-                    images[0].dimensions()[1] as f32,
-                ],
+                dimensions: [width as f32, height as f32],
             }))
             .fragment_shader(second_fs.main_entry_point(), ())
             .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
@@ -321,7 +319,7 @@ fn main() {
 
     let mut previous_frame_end = Box::new(now(device.clone())) as Box<GpuFuture>;
 
-    let mut fps = fps_clock::FpsClock::new(30);
+    let mut fps = fps_clock::FpsClock::new(60);
 
     let mut world = CollisionWorld::new(0.02, false);
 
@@ -496,16 +494,6 @@ fn main() {
                 }
             }
             winit::Event::WindowEvent { event: winit::WindowEvent::Closed, .. } => done = true,
-            winit::Event::WindowEvent { event: winit::WindowEvent::Focused(true), .. } => {
-                window
-                    .window()
-                    .set_cursor_state(winit::CursorState::Normal)
-                    .unwrap();
-                window
-                    .window()
-                    .set_cursor_state(winit::CursorState::Grab)
-                    .unwrap();
-            }
             _ => (),
         });
         if done {
@@ -553,7 +541,7 @@ fn main() {
             };
 
             let proj_matrix = na::Perspective3::new(
-                images[0].dimensions()[1] as f32 / images[0].dimensions()[0] as f32,
+                width as f32 / height as f32,
                 ::std::f32::consts::FRAC_PI_3,
                 0.01,
                 100.0,
@@ -633,7 +621,6 @@ fn main() {
             .build()
             .unwrap();
 
-        // TODO submit first pass before call image from swapchain
         let second_command_buffer = AutoCommandBufferBuilder::new(device.clone(), queue.family()).unwrap()
             .begin_render_pass(second_framebuffers[image_num].clone(), false, vec!())
             .unwrap()
@@ -643,6 +630,7 @@ fn main() {
             .unwrap()
             .build().unwrap();
 
+        // TODO submit first pass before call image from swapchain
         let future = previous_frame_end
             .join(acquire_future)
             .then_execute(queue.clone(), command_buffer)

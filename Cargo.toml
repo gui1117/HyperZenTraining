@@ -12,6 +12,7 @@ fps_clock = "1"
 nalgebra = "0.13"
 ncollide = "0.13"
 specs = "0.9"
+specs-derive = "0.1"
 alga = "0.5"
 
 # app_dirs = "1"
