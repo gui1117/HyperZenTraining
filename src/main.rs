@@ -375,11 +375,10 @@ fn main() {
             .unwrap()
             .build().unwrap();
 
-        // TODO submit first pass before call image from swapchain
         let future = previous_frame_end
-            .join(acquire_future)
             .then_execute(graphics.queue.clone(), command_buffer)
             .unwrap()
+            .join(acquire_future)
             .then_execute(graphics.queue.clone(), second_command_buffer)
             .unwrap()
             .then_swapchain_present(
