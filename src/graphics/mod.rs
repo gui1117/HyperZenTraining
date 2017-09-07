@@ -38,6 +38,8 @@ pub struct Data {
     pub second_framebuffers: Vec<Arc<::vulkano::framebuffer::Framebuffer<Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<::vulkano::image::SwapchainImage>)>>>,
     pub width: u32,
     pub height: u32,
+    pub view_uniform_buffer: ::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::View>,
+    pub tmp_image_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::AttachmentImage>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>
 }
 
 pub struct Graphics<'a> {
@@ -266,6 +268,32 @@ impl<'a> Graphics<'a> {
             })
             .collect::<Vec<_>>();
 
+        let view_uniform_buffer =
+            ::vulkano::buffer::cpu_pool::CpuBufferPool::<::graphics::shader::vs::ty::View>::new(
+                device.clone(),
+                ::vulkano::buffer::BufferUsage::uniform_buffer(),
+            );
+
+        //TODO maybe use simple instead of persistent
+        let tmp_image_set = Arc::new(
+            ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+                second_pipeline.clone(),
+                0,
+            ).add_sampled_image(
+                tmp_image_attachment.clone(),
+                // Sampler::simple_repeat_linear_no_mipmap(graphics.device.clone()),
+                ::vulkano::sampler::Sampler::unnormalized(
+                    device.clone(),
+                    ::vulkano::sampler::Filter::Nearest,
+                    ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
+                ).unwrap(),
+            )
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+
         Graphics {
             physical,
             data: Data {
@@ -285,6 +313,8 @@ impl<'a> Graphics<'a> {
                 second_framebuffers,
                 width,
                 height,
+                tmp_image_set,
+                view_uniform_buffer,
             },
         }
     }
