@@ -1,10 +1,12 @@
+//TODO: change vertex to includ group offset to have a different group on each side
+//TODO: if two cube have same group then adjacent face will be joined :-)
 use vulkano::framebuffer::RenderPassDesc;
 
 use std::sync::Arc;
 use std::iter;
 
 pub mod shader;
-mod render_pass;
+pub mod render_pass;
 
 #[derive(Debug, Clone)]
 pub struct Vertex {
@@ -12,27 +14,22 @@ pub struct Vertex {
 }
 impl_vertex!(Vertex, position);
 
-
 #[derive(Debug, Clone)]
 pub struct SecondVertex {
     position: [f32; 2],
 }
 impl_vertex!(SecondVertex, position);
 
-pub struct Graphics<'a> {
+#[derive(Clone)]
+pub struct Data {
     pub device: Arc<::vulkano::device::Device>,
     pub queue: Arc<::vulkano::device::Queue>,
-    pub physical: ::vulkano::instance::PhysicalDevice<'a>,
     pub swapchain: Arc<::vulkano::swapchain::Swapchain>,
     pub images: Vec<Arc<::vulkano::image::swapchain::SwapchainImage>>,
     pub depth_buffer_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
     pub tmp_image_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
     pub cuboid_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[Vertex]>>,
     pub fullscreen_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[SecondVertex]>>,
-    pub vs: shader::vs::Shader,
-    pub fs: shader::fs::Shader,
-    pub second_vs: shader::second_vs::Shader,
-    pub second_fs: shader::second_fs::Shader,
     pub render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>,
     pub second_render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>,
     pub pipeline: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<Vertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>>>,
@@ -41,6 +38,11 @@ pub struct Graphics<'a> {
     pub second_framebuffers: Vec<Arc<::vulkano::framebuffer::Framebuffer<Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<::vulkano::image::SwapchainImage>)>>>,
     pub width: u32,
     pub height: u32,
+}
+
+pub struct Graphics<'a> {
+    pub physical: ::vulkano::instance::PhysicalDevice<'a>,
+    pub data: Data,
 }
 
 impl<'a> Graphics<'a> {
@@ -265,27 +267,25 @@ impl<'a> Graphics<'a> {
             .collect::<Vec<_>>();
 
         Graphics {
-            vs,
-            fs,
-            second_vs,
-            second_fs,
-            cuboid_vertex_buffer,
-            fullscreen_vertex_buffer,
-            depth_buffer_attachment,
-            tmp_image_attachment,
-            swapchain,
-            images,
-            device,
-            queue,
             physical,
-            render_pass,
-            second_render_pass,
-            pipeline,
-            second_pipeline,
-            framebuffer,
-            second_framebuffers,
-            width,
-            height,
+            data: Data {
+                cuboid_vertex_buffer,
+                fullscreen_vertex_buffer,
+                depth_buffer_attachment,
+                tmp_image_attachment,
+                swapchain,
+                images,
+                device,
+                queue,
+                render_pass,
+                second_render_pass,
+                pipeline,
+                second_pipeline,
+                framebuffer,
+                second_framebuffers,
+                width,
+                height,
+            },
         }
     }
 }

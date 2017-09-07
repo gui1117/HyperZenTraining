@@ -6,12 +6,13 @@ extern crate vulkano;
 extern crate vulkano_shader_derive;
 extern crate fps_clock;
 extern crate alga;
-
+extern crate specs;
 extern crate nalgebra as na;
 extern crate ncollide;
 
 mod util;
 mod graphics;
+mod component;
 
 use vulkano_win::VkSurfaceBuild;
 
@@ -29,6 +30,12 @@ use alga::general::SubsetOf;
 use util::Direction;
 
 use std::sync::Arc;
+
+type ColGroup = ::ncollide::world::CollisionGroups;
+type ColPoint = na::Point<f32, na::U3>;
+type ColPosition = na::Isometry<f32, na::U3, na::Unit<na::Quaternion<f32>>>;
+type ColShape = ::ncollide::shape::ShapeHandle<ColPoint, ColPosition>;
+type ColWorld = ::ncollide::world::CollisionWorld<na::Point<f32, na::U3>, ColPosition, ()>;
 
 fn main() {
     let instance = {
@@ -51,23 +58,26 @@ fn main() {
 
     let graphics = graphics::Graphics::new(&window);
 
-    let width = graphics.images[0].dimensions()[0];
-    let height = graphics.images[0].dimensions()[1];
-
-    let mut previous_frame_end = Box::new(now(graphics.device.clone())) as Box<GpuFuture>;
+    let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
     let mut fps = fps_clock::FpsClock::new(60);
 
+    let mut world = specs::World::new();
+    world.add_resource(graphics.data.clone());
+    world.add_resource(ColWorld::new(0.02, false));
+
     let mut world = CollisionWorld::new(0.02, false);
 
-    let character = ShapeHandle3::new(Cylinder::new(0.5f32, 0.3));
-    let character_pos = na::Isometry3::new(na::Vector3::new(-1.0, 0.0, 0.0), na::Vector3::z());
-    let character_groups = CollisionGroups::new();
-    world.deferred_add(0, character_pos, character, character_groups, GeometricQueryType::Contacts(0.0), ());
+    {
+        let character = ShapeHandle3::new(Cylinder::new(0.5f32, 0.3));
+        let character_pos = na::Isometry3::new(na::Vector3::new(-1.0, 0.0, 0.0), na::Vector3::z());
+        let character_groups = CollisionGroups::new();
+        world.deferred_add(0, character_pos, character, character_groups, GeometricQueryType::Contacts(0.0), ());
+    }
 
     let view_uniform_buffer =
         vulkano::buffer::cpu_pool::CpuBufferPool::<graphics::shader::vs::ty::View>::new(
-            graphics.device.clone(),
+            graphics.data.device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
         );
 
@@ -86,14 +96,14 @@ fn main() {
 
     let floor_uniform_buffer =
         vulkano::buffer::cpu_access::CpuAccessibleBuffer::<graphics::shader::vs::ty::World>::from_data(
-            graphics.device.clone(),
+            graphics.data.device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
             graphics::shader::vs::ty::World { world: floor_world_trans.unwrap().into() },
         ).expect("failed to create buffer");
 
     let floor_set = Arc::new(
         vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
-            graphics.pipeline.clone(),
+            graphics.data.pipeline.clone(),
             0,
         ).add_buffer(floor_uniform_buffer.clone())
             .unwrap()
@@ -105,14 +115,14 @@ fn main() {
 
     let ceil_uniform_buffer =
         vulkano::buffer::cpu_access::CpuAccessibleBuffer::<graphics::shader::vs::ty::World>::from_data(
-            graphics.device.clone(),
+            graphics.data.device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
             graphics::shader::vs::ty::World { world: ceil_world_trans.unwrap().into() },
         ).expect("failed to create buffer");
 
     let ceil_set = Arc::new(
         vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
-            graphics.pipeline.clone(),
+            graphics.data.pipeline.clone(),
             0,
         ).add_buffer(ceil_uniform_buffer.clone())
             .unwrap()
@@ -130,14 +140,14 @@ fn main() {
 
     let wall_uniform_buffer =
         vulkano::buffer::cpu_access::CpuAccessibleBuffer::<graphics::shader::vs::ty::World>::from_data(
-            graphics.device.clone(),
+            graphics.data.device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
             graphics::shader::vs::ty::World { world: wall_world_trans.unwrap().into() },
         ).expect("failed to create buffer");
 
     let wall_set = Arc::new(
         vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
-            graphics.pipeline.clone(),
+            graphics.data.pipeline.clone(),
             0,
         ).add_buffer(wall_uniform_buffer.clone())
             .unwrap()
@@ -155,14 +165,14 @@ fn main() {
 
     let wall_uniform_buffer_2 =
         vulkano::buffer::cpu_access::CpuAccessibleBuffer::<graphics::shader::vs::ty::World>::from_data(
-            graphics.device.clone(),
+            graphics.data.device.clone(),
             vulkano::buffer::BufferUsage::uniform_buffer(),
             graphics::shader::vs::ty::World { world: wall_world_trans_2.unwrap().into() },
         ).expect("failed to create buffer");
 
     let wall_set_2 = Arc::new(
         vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
-            graphics.pipeline.clone(),
+            graphics.data.pipeline.clone(),
             0,
         ).add_buffer(wall_uniform_buffer_2.clone())
             .unwrap()
@@ -173,13 +183,13 @@ fn main() {
     //TODO use simple instead of persistent
     let tmp_image_set = Arc::new(
         vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
-            graphics.second_pipeline.clone(),
+            graphics.data.second_pipeline.clone(),
             0,
         ).add_sampled_image(
-            graphics.tmp_image_attachment.clone(),
+            graphics.data.tmp_image_attachment.clone(),
             // Sampler::simple_repeat_linear_no_mipmap(graphics.device.clone()),
             Sampler::unnormalized(
-                graphics.device.clone(),
+                graphics.data.device.clone(),
                 Filter::Nearest,
                 UnnormalizedSamplerAddressMode::ClampToEdge,
                 UnnormalizedSamplerAddressMode::ClampToEdge,
@@ -209,10 +219,10 @@ fn main() {
             } => {
                 window
                     .window()
-                    .set_cursor_position(width as i32 / 2, height as i32 / 2)
+                    .set_cursor_position(graphics.data.width as i32 / 2, graphics.data.height as i32 / 2)
                     .unwrap();
-                x += (dx as f32 - width as f32 / 2.0) / 5000.0;
-                y += (dy as f32 - height as f32 / 2.0) / 5000.0;
+                x += (dx as f32 - graphics.data.width as f32 / 2.0) / 5000.0;
+                y += (dy as f32 - graphics.data.height as f32 / 2.0) / 5000.0;
                 y = y.min(::std::f32::consts::FRAC_PI_2).max(
                     -::std::f32::consts::FRAC_PI_2,
                 );
@@ -282,7 +292,7 @@ fn main() {
             };
 
             let proj_matrix = na::Perspective3::new(
-                width as f32 / height as f32,
+                graphics.data.width as f32 / graphics.data.height as f32,
                 ::std::f32::consts::FRAC_PI_3,
                 0.01,
                 100.0,
@@ -297,9 +307,10 @@ fn main() {
         };
 
 
+        // TODO: maybe use a pool
         let view_set = Arc::new(
             vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
-                graphics.pipeline.clone(),
+                graphics.data.pipeline.clone(),
                 0,
             ).add_buffer(view_uniform_buffer_subbuffer.clone())
                 .unwrap()
@@ -309,12 +320,12 @@ fn main() {
 
         // Render world
         let (image_num, acquire_future) =
-            swapchain::acquire_next_image(graphics.swapchain.clone(), None).unwrap();
+            swapchain::acquire_next_image(graphics.data.swapchain.clone(), None).unwrap();
         let mut command_buffer_builder =
-            AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family())
+            AutoCommandBufferBuilder::new(graphics.data.device.clone(), graphics.data.queue.family())
                 .unwrap()
                 .begin_render_pass(
-                    graphics.framebuffer.clone(),
+                    graphics.data.framebuffer.clone(),
                     false,
                     vec![0u32.into(), 1f32.into()],
                 )
@@ -322,9 +333,9 @@ fn main() {
 
         command_buffer_builder = command_buffer_builder
             .draw(
-                graphics.pipeline.clone(),
+                graphics.data.pipeline.clone(),
                 DynamicState::none(),
-                graphics.cuboid_vertex_buffer.clone(),
+                graphics.data.cuboid_vertex_buffer.clone(),
                 (view_set.clone(), wall_set.clone()),
                 graphics::shader::fs::ty::Group { group: 1 },
             )
@@ -332,9 +343,9 @@ fn main() {
 
         command_buffer_builder = command_buffer_builder
             .draw(
-                graphics.pipeline.clone(),
+                graphics.data.pipeline.clone(),
                 DynamicState::none(),
-                graphics.cuboid_vertex_buffer.clone(),
+                graphics.data.cuboid_vertex_buffer.clone(),
                 (view_set.clone(), wall_set_2.clone()),
                 graphics::shader::fs::ty::Group { group: 4 },
             )
@@ -342,9 +353,9 @@ fn main() {
 
         command_buffer_builder = command_buffer_builder
             .draw(
-                graphics.pipeline.clone(),
+                graphics.data.pipeline.clone(),
                 DynamicState::none(),
-                graphics.cuboid_vertex_buffer.clone(),
+                graphics.data.cuboid_vertex_buffer.clone(),
                 (view_set.clone(), ceil_set.clone()),
                 graphics::shader::fs::ty::Group { group: 2 },
             )
@@ -352,9 +363,9 @@ fn main() {
 
         command_buffer_builder = command_buffer_builder
             .draw(
-                graphics.pipeline.clone(),
+                graphics.data.pipeline.clone(),
                 DynamicState::none(),
-                graphics.cuboid_vertex_buffer.clone(),
+                graphics.data.cuboid_vertex_buffer.clone(),
                 (view_set.clone(), floor_set.clone()),
                 graphics::shader::fs::ty::Group { group: 3 },
             )
@@ -366,24 +377,24 @@ fn main() {
             .build()
             .unwrap();
 
-        let second_command_buffer = AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
-            .begin_render_pass(graphics.second_framebuffers[image_num].clone(), false, vec!())
+        let second_command_buffer = AutoCommandBufferBuilder::new(graphics.data.device.clone(), graphics.data.queue.family()).unwrap()
+            .begin_render_pass(graphics.data.second_framebuffers[image_num].clone(), false, vec!())
             .unwrap()
-            .draw(graphics.second_pipeline.clone(), DynamicState::none(), graphics.fullscreen_vertex_buffer.clone(), tmp_image_set.clone(), ())
+            .draw(graphics.data.second_pipeline.clone(), DynamicState::none(), graphics.data.fullscreen_vertex_buffer.clone(), tmp_image_set.clone(), ())
             .unwrap()
             .end_render_pass()
             .unwrap()
             .build().unwrap();
 
         let future = previous_frame_end
-            .then_execute(graphics.queue.clone(), command_buffer)
+            .then_execute(graphics.data.queue.clone(), command_buffer)
             .unwrap()
             .join(acquire_future)
-            .then_execute(graphics.queue.clone(), second_command_buffer)
+            .then_execute(graphics.data.queue.clone(), second_command_buffer)
             .unwrap()
             .then_swapchain_present(
-                graphics.queue.clone(),
-                graphics.swapchain.clone(),
+                graphics.data.queue.clone(),
+                graphics.data.swapchain.clone(),
                 image_num,
             )
             .then_signal_fence_and_flush()

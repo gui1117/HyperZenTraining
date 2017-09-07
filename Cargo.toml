@@ -10,9 +10,9 @@ vulkano-win = "0.6"
 winit = "0.7"
 fps_clock = "1"
 nalgebra = "0.13"
-ncollide = "0.13"
+# ncollide = "0.13"
+ncollide = { path = "../ncollide" }
 specs = "0.9"
-specs-derive = "0.1"
 alga = "0.5"
 
 # app_dirs = "1"
