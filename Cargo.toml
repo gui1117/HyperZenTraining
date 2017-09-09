@@ -8,7 +8,7 @@ vulkano = "0.6"
 vulkano-shader-derive = "0.6"
 vulkano-win = "0.6"
 winit = "0.7"
-fps_clock = "1"
+fps_clock = "2"
 nalgebra = "0.13"
 # ncollide = "0.13"
 ncollide = { path = "../ncollide" }

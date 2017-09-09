@@ -147,6 +147,7 @@ fn main() {
         // TODO update collision world
         // colworld.update();
         world.write_resource::<::resource::ColWorld>().update();
+        world.maintain();
 
         // Render world
         let (image_num, acquire_future) =
@@ -176,6 +177,6 @@ fn main() {
         previous_frame_end = Box::new(future) as Box<_>;
 
         // Sleep
-        fps.tick()
+        fps.tick();
     }
 }
