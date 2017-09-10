@@ -1,15 +1,34 @@
 pub use ::ColWorld;
 pub use ::graphics::Data as Graphics;
 
+pub type WinitEvents = Vec<::winit::Event>;
+
+pub struct Config {
+    pub fps: u32,
+    pub dt: f32,
+    pub mouse_sensibility: f32,
+}
+
+// TODO read from config file
+impl Default for Config {
+    fn default() -> Self {
+        let fps = 60;
+        Config {
+            fps,
+            dt: 1.0 / fps as f32,
+            mouse_sensibility: 5000.0,
+        }
+    }
+}
+
+// TODO change to aim that is assigned to player
 pub struct Control {
-    pub directions: Vec<::util::Direction>,
     pub pointer: [f32; 2],
 }
 
 impl Control {
     pub fn new() -> Self {
         Control {
-            directions: vec!(),
             pointer: [0.0, 0.0],
         }
     }

@@ -10,7 +10,7 @@ impl Direction {
     #[inline]
     #[allow(dead_code)]
     fn orthogonal(self, other: Self) -> bool {
-        use Direction::*;
+        use self::Direction::*;
         match (self, other) {
             (Forward, Forward) |
             (Forward, Backward) |

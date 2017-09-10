@@ -9,6 +9,7 @@ pub fn create_player(world: &mut ::specs::World) {
 
     let entity = world.create_entity()
         .with(::component::Player)
+        .with(::component::Momentum::new(1.0, 0.1))
         .build();
     ::component::ColBody::add(world, entity, pos, shape, group);
 }

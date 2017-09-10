@@ -23,8 +23,6 @@ use vulkano::swapchain;
 use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 
-use util::Direction;
-
 use std::sync::Arc;
 
 pub type ColGroup = ::ncollide::world::CollisionGroups;
@@ -56,16 +54,17 @@ fn main() {
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
-    let mut fps = fps_clock::FpsClock::new(60);
-
     let mut world = specs::World::new();
     world.register::<::component::Player>();
     world.register::<::component::ColBody>();
     world.register::<::component::StaticDraw>();
+    world.register::<::component::Momentum>();
     world.add_resource(graphics.data.clone());
-    world.add_resource(ColWorld::new(0.02, false));
+    world.add_resource(::resource::ColWorld::new(0.02, false));
     world.add_resource(::resource::Control::new());
     world.add_resource(::resource::Rendering::new());
+    world.add_resource(::resource::WinitEvents::new());
+    world.add_resource(::resource::Config::default());
 
     ::entity::create_player(&mut world);
     ::entity::create_wall(&mut world, [4.0, 0.0]);
@@ -73,80 +72,57 @@ fn main() {
     world.maintain();
     world.write_resource::<::resource::ColWorld>().update();
 
+    let mut update_dispatcher = ::specs::DispatcherBuilder::new()
+        .add(::system::ControlSystem::new(), "control_system", &[])
+        .add(::system::PhysicSystem, "physic_system", &[])
+        .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
+    let mut fps = fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps);
+
     loop {
         previous_frame_end.cleanup_finished();
 
         // Poll events
-        let mut done = false;
-        events_loop.poll_events(|ev| match ev {
-            // TODO: get mouse from axis and check if there are differences because of acceleration
-            winit::Event::WindowEvent {
-                event: winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
-            } => {
-                let mut control = world.write_resource::<::resource::Control>();
-                window
-                    .window()
-                    .set_cursor_position(graphics.data.width as i32 / 2, graphics.data.height as i32 / 2)
-                    .unwrap();
-                control.pointer[0] += (dx as f32 - graphics.data.width as f32 / 2.0) / 5000.0;
-                control.pointer[1] += (dy as f32 - graphics.data.height as f32 / 2.0) / 5000.0;
-                control.pointer[1] = control.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
-                    -::std::f32::consts::FRAC_PI_2,
-                );
-            }
-            winit::Event::WindowEvent {
-                event: winit::WindowEvent::KeyboardInput { input, .. }, ..
-            } => {
-                let mut control = world.write_resource::<::resource::Control>();
-                let direction = match input.scancode {
-                    25 => Some(Direction::Forward),
-                    38 => Some(Direction::Left),
-                    39 => Some(Direction::Backward),
-                    40 => Some(Direction::Right),
-                    _ => None,
+        {
+            let mut events = world.write_resource::<::resource::WinitEvents>();
+            events.clear();
+            let mut done = false;
+            events_loop.poll_events(|ev| {
+                let retain = match ev {
+                    winit::Event::WindowEvent { event: winit::WindowEvent::Closed, .. } => {
+                        done = true;
+                        false
+                    },
+                    winit::Event::WindowEvent {
+                        event: winit::WindowEvent::MouseMoved { .. }, ..
+                    } => {
+                        window
+                            .window()
+                            .set_cursor_position(graphics.data.width as i32 / 2, graphics.data.height as i32 / 2)
+                            .unwrap();
+                        true
+                    },
+                    winit::Event::WindowEvent {
+                        event: winit::WindowEvent::KeyboardInput { .. }, ..
+                    } => true,
+                    _ => false,
                 };
-                if let Some(direction) = direction {
-                    control.directions.retain(|&elt| elt != direction);
-                    if let winit::ElementState::Pressed = input.state {
-                        control.directions.push(direction);
-                    }
+
+                if retain {
+                    events.push(ev);
                 }
+            });
+            if done {
+                return;
             }
-            winit::Event::WindowEvent { event: winit::WindowEvent::Closed, .. } => done = true,
-            _ => (),
-        });
-        if done {
-            return;
         }
 
-        // let mut move_vector = na::Vector3::new(0.0, 0.0, 0.0);
-        // for &direction in &directions {
-        //     match direction {
-        //         Direction::Forward => move_vector[0] = 1.0,
-        //         Direction::Backward => move_vector[0] = -1.0,
-        //         Direction::Left => move_vector[1] = 1.0,
-        //         Direction::Right => move_vector[1] = -1.0,
-        //     }
-        // }
-        // if move_vector != na::zero() {
-        //     let mut move_vector = 0.01f32 * move_vector.normalize();
-        //     move_vector = na::Rotation3::new(na::Vector3::new(0.0, 0.0, -x)) * move_vector;
+        update_dispatcher.dispatch(&mut world.res);
 
-        //     let pos = {
-        //         let character = world.collision_object(0).unwrap();
-        //         na::Translation3::from_vector(move_vector) * character.position
-        //     };
-        //     world.deferred_set_position(0, pos);
-        // }
-
-        // TODO update collision world
-        // colworld.update();
-        world.write_resource::<::resource::ColWorld>().update();
         world.maintain();
 
         // Render world

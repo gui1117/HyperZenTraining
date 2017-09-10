@@ -1,5 +1,41 @@
 use std::sync::Arc;
 
+pub struct Momentum {
+    pub acceleration: ::na::Vector3<f32>,
+    pub velocity: ::na::Vector3<f32>,
+
+    pub weight: f32,
+    pub damping: f32,
+
+    pub gravity: bool,
+
+    pub force_coefficient: f32,
+    pub force_direction: ::na::Vector3<f32>,
+}
+
+impl ::specs::Component for Momentum {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+const PHYSIC_ALMOST_V_MAX: f32 = 0.9;
+
+impl Momentum {
+    pub fn new(velocity: f32, time_to_reach_v_max: f32) -> Self {
+        let weight = 1.0;
+        let damping = - weight * (1.-PHYSIC_ALMOST_V_MAX).ln() / time_to_reach_v_max;
+        let force_coefficient = velocity * damping;
+        Momentum {
+            acceleration: ::na::Vector3::new(0.0, 0.0, 0.0),
+            velocity: ::na::Vector3::new(0.0, 0.0, 0.0),
+            weight,
+            damping,
+            gravity: false,
+            force_coefficient,
+            force_direction: ::na::Vector3::new(0.0, 0.0, 0.0),
+        }
+    }
+}
+
 // TODO check storage ???
 #[derive(Default)]
 pub struct Player;

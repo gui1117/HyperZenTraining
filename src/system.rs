@@ -2,6 +2,103 @@ use specs::Join;
 use alga::general::SubsetOf;
 use std::sync::Arc;
 
+// TODO: get mouse from axis and check if there are differences because of acceleration
+pub struct ControlSystem {
+    directions: Vec<::util::Direction>,
+}
+
+impl ControlSystem {
+    pub fn new() -> Self {
+        ControlSystem {
+            directions: vec!(),
+        }
+    }
+}
+
+impl<'a> ::specs::System<'a> for ControlSystem {
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::Player>,
+        ::specs::WriteStorage<'a, ::component::Momentum>,
+        ::specs::Fetch<'a, ::resource::WinitEvents>,
+        ::specs::Fetch<'a, ::resource::Graphics>,
+        ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::FetchMut<'a, ::resource::Control>,
+    );
+
+    fn run(&mut self, (players, mut momentums, events, graphics, config, mut control): Self::SystemData) {
+        for ev in events.iter() {
+            match *ev {
+                ::winit::Event::WindowEvent {
+                    event: ::winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
+                } => {
+                    control.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) / config.mouse_sensibility;
+                    control.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) / config.mouse_sensibility;
+                    control.pointer[1] = control.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
+                        -::std::f32::consts::FRAC_PI_2,
+                    );
+                },
+                ::winit::Event::WindowEvent {
+                    event: ::winit::WindowEvent::KeyboardInput { input, .. }, ..
+                } => {
+                    let direction = match input.scancode {
+                        25 => Some(::util::Direction::Forward),
+                        38 => Some(::util::Direction::Left),
+                        39 => Some(::util::Direction::Backward),
+                        40 => Some(::util::Direction::Right),
+                        _ => None,
+                    };
+                    if let Some(direction) = direction {
+                        self.directions.retain(|&elt| elt != direction);
+                        if let ::winit::ElementState::Pressed = input.state {
+                            self.directions.push(direction);
+                        }
+                    }
+
+                    for (_, momentum) in (&players, &mut momentums).join() {
+                        let mut move_vector = ::na::Vector3::new(0.0, 0.0, 0.0);
+                        for &direction in &self.directions {
+                            match direction {
+                                ::util::Direction::Forward => move_vector[0] = 1.0,
+                                ::util::Direction::Backward => move_vector[0] = -1.0,
+                                ::util::Direction::Left => move_vector[1] = 1.0,
+                                ::util::Direction::Right => move_vector[1] = -1.0,
+                            }
+                        }
+                        momentum.force_direction = move_vector.normalize();
+                    }
+                },
+                _ => (),
+            }
+        }
+    }
+}
+
+pub struct PhysicSystem;
+
+impl<'a> ::specs::System<'a> for PhysicSystem {
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::ColBody>,
+        ::specs::WriteStorage<'a, ::component::Momentum>,
+        ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::FetchMut<'a, ::resource::ColWorld>,
+        ::specs::Entities<'a>,
+    );
+
+    fn run(&mut self, (col_bodies, mut momentums, config, mut col_world, entities): Self::SystemData) {
+        for (_, momentum, entity) in (&col_bodies, &mut momentums, &*entities).join() {
+            momentum.acceleration = (momentum.force_coefficient*momentum.force_direction - momentum.damping*momentum.velocity) / momentum.weight;
+            momentum.velocity += config.dt*momentum.acceleration;
+            let new_pos = {
+                let col_object = col_world.collision_object(entity.id() as usize).unwrap();
+                ::na::Translation3::from_vector(config.dt*momentum.velocity) * col_object.position
+            };
+            col_world.deferred_set_position(entity.id() as usize, new_pos);
+        }
+
+        col_world.update();
+    }
+}
+
 pub struct DrawSystem;
 
 impl<'a> ::specs::System<'a> for DrawSystem {
