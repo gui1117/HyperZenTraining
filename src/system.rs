@@ -56,15 +56,19 @@ impl<'a> ::specs::System<'a> for ControlSystem {
 
                     for (_, momentum) in (&players, &mut momentums).join() {
                         let mut move_vector = ::na::Vector3::new(0.0, 0.0, 0.0);
-                        for &direction in &self.directions {
-                            match direction {
-                                ::util::Direction::Forward => move_vector[0] = 1.0,
-                                ::util::Direction::Backward => move_vector[0] = -1.0,
-                                ::util::Direction::Left => move_vector[1] = 1.0,
-                                ::util::Direction::Right => move_vector[1] = -1.0,
+                        if self.directions.is_empty() {
+                            momentum.force_direction = move_vector;
+                        } else {
+                            for &direction in &self.directions {
+                                match direction {
+                                    ::util::Direction::Forward => move_vector[0] = 1.0,
+                                    ::util::Direction::Backward => move_vector[0] = -1.0,
+                                    ::util::Direction::Left => move_vector[1] = 1.0,
+                                    ::util::Direction::Right => move_vector[1] = -1.0,
+                                }
                             }
+                            momentum.force_direction = move_vector.normalize();
                         }
-                        momentum.force_direction = move_vector.normalize();
                     }
                 },
                 _ => (),
