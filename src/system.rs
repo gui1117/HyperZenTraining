@@ -101,6 +101,19 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
         }
 
         col_world.update();
+
+        // TODO maybe just use col_world.contacts instead of using DATA thing
+        for (_, entity) in (&col_bodies, &*entities).join() {
+            let pos = {
+                let col_object = col_world.collision_object(entity.id() as usize).unwrap();
+                col_object.data.inner.lock().unwrap().resolution.take()
+            };
+            if let Some(pos) = pos {
+                col_world.deferred_set_position(entity.id() as usize, pos);
+            }
+        }
+
+        col_world.perform_position_update();
     }
 }
 

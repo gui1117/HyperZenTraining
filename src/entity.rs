@@ -12,9 +12,7 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
     let mut group = CollisionGroups::new();
     group.set_membership(&[PLAYER_GROUP]);
 
-    let col_data = ::collision::Data {
-        movable: true,
-    };
+    let col_data = ::collision::Data::new(true);
 
     let entity = world.create_entity()
         .with(::component::Player)
@@ -28,9 +26,7 @@ pub fn create_wall(world: &mut ::specs::World, pos: [f32; 2]) {
     group.set_membership(&[WALL_GROUP]);
     // group.set_blacklist(&[WALL_GROUP]);
 
-    let col_data = ::collision::Data {
-        movable: false,
-    };
+    let col_data = ::collision::Data::new(false);
 
     let shape = ShapeHandle3::new(Cuboid::new(::na::Vector3::new(0.5, 0.5, 0.5)));
     let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.0), ::na::zero());
