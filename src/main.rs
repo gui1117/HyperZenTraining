@@ -9,6 +9,7 @@ extern crate alga;
 extern crate specs;
 extern crate nalgebra as na;
 extern crate ncollide;
+extern crate rand;
 
 mod util;
 mod graphics;
@@ -16,6 +17,8 @@ mod entity;
 mod component;
 mod system;
 mod resource;
+mod maze;
+mod collision;
 
 use vulkano_win::VkSurfaceBuild;
 
@@ -24,12 +27,6 @@ use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 
 use std::sync::Arc;
-
-pub type ColGroup = ::ncollide::world::CollisionGroups;
-pub type ColPoint = na::Point<f32, na::U3>;
-pub type ColPosition = na::Isometry<f32, na::U3, na::Unit<na::Quaternion<f32>>>;
-pub type ColShape = ::ncollide::shape::ShapeHandle<ColPoint, ColPosition>;
-pub type ColWorld = ::ncollide::world::CollisionWorld<na::Point<f32, na::U3>, ColPosition, ()>;
 
 fn main() {
     let instance = {
@@ -66,8 +63,16 @@ fn main() {
     world.add_resource(::resource::WinitEvents::new());
     world.add_resource(::resource::Config::default());
 
-    ::entity::create_player(&mut world);
-    ::entity::create_wall(&mut world, [4.0, 0.0]);
+    world.write_resource::<::resource::ColWorld>().register_contact_handler("main", ::collision::ContactHandler::new());
+
+    ::entity::create_player(&mut world, [-2.0, 0.0]);
+    ::entity::create_wall(&mut world, [1.0, 0.0]);
+    // let maze = maze::generate_partial_reverse_randomized_kruskal(11, 11, 50.0);
+    // for (x, ys) in maze.iter().enumerate() {
+    //     for y in ys.iter().enumerate().filter_map(|(y, &b)| if b { Some(y) } else { None }) {
+    //         ::entity::create_wall(&mut world, [x as f32, y as f32]);
+    //     }
+    // }
 
     world.maintain();
     world.write_resource::<::resource::ColWorld>().update();

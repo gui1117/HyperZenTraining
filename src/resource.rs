@@ -1,4 +1,4 @@
-pub use ::ColWorld;
+pub use ::collision::World as ColWorld;
 pub use ::graphics::Data as Graphics;
 
 pub type WinitEvents = Vec<::winit::Event>;

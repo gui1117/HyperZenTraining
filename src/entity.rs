@@ -2,34 +2,47 @@ use ncollide::shape::{Cylinder, Cuboid, ShapeHandle3};
 use ncollide::world::CollisionGroups;
 use alga::general::SubsetOf;
 
-pub fn create_player(world: &mut ::specs::World) {
-    let shape = ShapeHandle3::new(Cylinder::new(0.5f32, 0.3));
-    let pos = ::na::Isometry3::new(::na::Vector3::new(-1.0, 0.0, 0.0), ::na::Vector3::z());
-    let group = CollisionGroups::new();
+const PLAYER_GROUP: usize = 0;
+const WALL_GROUP: usize = 1;
+
+pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
+    let shape = ShapeHandle3::new(Cylinder::new(0.5, 0.3));
+    let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.0), ::na::Vector3::z());
+
+    let mut group = CollisionGroups::new();
+    group.set_membership(&[PLAYER_GROUP]);
+
+    let col_data = ::collision::Data {
+        movable: true,
+    };
 
     let entity = world.create_entity()
         .with(::component::Player)
         .with(::component::Momentum::new(1.0, 0.1))
         .build();
-    ::component::ColBody::add(world, entity, pos, shape, group);
+    ::component::ColBody::add(world, entity, pos, shape, group, col_data);
 }
 
 pub fn create_wall(world: &mut ::specs::World, pos: [f32; 2]) {
     let mut group = CollisionGroups::new();
-    group.set_membership(&[2]);
-    group.set_blacklist(&[2]);
+    group.set_membership(&[WALL_GROUP]);
+    // group.set_blacklist(&[WALL_GROUP]);
 
-    let shape = ShapeHandle3::new(Cuboid::new(::na::Vector3::new(0.5f32, 0.5, 0.5)));
+    let col_data = ::collision::Data {
+        movable: false,
+    };
+
+    let shape = ShapeHandle3::new(Cuboid::new(::na::Vector3::new(0.5, 0.5, 0.5)));
     let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.0), ::na::zero());
     let world_trans = {
-        let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 0.5f32)
+        let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 0.5)
             .to_superset();
         ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
     };
 
     let entity = world.create_entity().build();
 
-    ::component::ColBody::add(world, entity, pos.clone(), shape, group);
+    ::component::ColBody::add(world, entity, pos, shape, group, col_data);
     ::component::StaticDraw::add(world, entity, 1, world_trans);
 }
 

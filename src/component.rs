@@ -25,13 +25,13 @@ impl Momentum {
         let damping = - weight * (1.-PHYSIC_ALMOST_V_MAX).ln() / time_to_reach_v_max;
         let force_coefficient = velocity * damping;
         Momentum {
-            acceleration: ::na::Vector3::new(0.0, 0.0, 0.0),
-            velocity: ::na::Vector3::new(0.0, 0.0, 0.0),
+            acceleration: ::na::zero(),
+            velocity: ::na::zero(),
             weight,
             damping,
             gravity: false,
             force_coefficient,
-            force_direction: ::na::Vector3::new(0.0, 0.0, 0.0),
+            force_direction: ::na::zero(),
         }
     }
 }
@@ -52,9 +52,9 @@ impl ::specs::Component for ColBody {
 }
 
 impl ColBody {
-    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, position: ::ColPosition, shape: ::ColShape, group: ::ColGroup) {
-        let mut col_world = world.write_resource::<::ColWorld>();
-        col_world.deferred_add(entity.id() as usize, position, shape, group, ::ncollide::world::GeometricQueryType::Contacts(0.0), ());
+    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, position: ::collision::Position, shape: ::collision::Shape, group: ::collision::Group, data: ::collision::Data) {
+        let mut col_world = world.write_resource::<::collision::World>();
+        col_world.deferred_add(entity.id() as usize, position, shape, group, ::ncollide::world::GeometricQueryType::Contacts(0.0), data);
 
         match world.write::<ColBody>().insert(entity, ColBody) {
             ::specs::InsertResult::Inserted => (),

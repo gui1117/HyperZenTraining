@@ -14,6 +14,7 @@ nalgebra = "0.13"
 ncollide = { path = "../ncollide" }
 specs = "0.9"
 alga = "0.5"
+rand = "0.3"
 
 # app_dirs = "1"
 # mut_static = "5"

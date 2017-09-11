@@ -55,7 +55,7 @@ impl<'a> ::specs::System<'a> for ControlSystem {
                     }
 
                     for (_, momentum) in (&players, &mut momentums).join() {
-                        let mut move_vector = ::na::Vector3::new(0.0, 0.0, 0.0);
+                        let mut move_vector = ::na::zero();
                         if self.directions.is_empty() {
                             momentum.force_direction = move_vector;
                         } else {
@@ -67,6 +67,7 @@ impl<'a> ::specs::System<'a> for ControlSystem {
                                     ::util::Direction::Right => move_vector[1] = -1.0,
                                 }
                             }
+                            move_vector = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, - control.pointer[0])) * move_vector;
                             momentum.force_direction = move_vector.normalize();
                         }
                     }
@@ -129,10 +130,10 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             let view_matrix = {
                 let i: ::na::Transform3<f32> =
                     ::na::Similarity3::look_at_rh(
-                        &::na::Point3::from_coordinates(pos.translation.vector.into()),
+                        &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
                         &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + dir),
                         &[0.0, 0.0, 1.0].into(), // FIXME: this will result in NaN if y is PI/2 isn't it ?
-                        0.1,
+                        1.0,
                         ).to_superset();
                 i.unwrap()
             };
