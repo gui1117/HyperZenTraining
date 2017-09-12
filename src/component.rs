@@ -52,9 +52,9 @@ impl ::specs::Component for ColBody {
 }
 
 impl ColBody {
-    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, position: ::collision::Position, shape: ::collision::Shape, group: ::collision::Group, data: ::collision::Data) {
+    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, position: ::collision::Position, shape: ::collision::Shape, group: ::collision::Group) {
         let mut col_world = world.write_resource::<::collision::World>();
-        col_world.deferred_add(entity.id() as usize, position, shape, group, ::ncollide::world::GeometricQueryType::Contacts(0.0), data);
+        col_world.deferred_add(entity.id() as usize, position, shape, group, ::ncollide::world::GeometricQueryType::Contacts(0.0), entity);
 
         match world.write::<ColBody>().insert(entity, ColBody) {
             ::specs::InsertResult::Inserted => (),
@@ -102,7 +102,42 @@ impl StaticDraw {
 
         match world.write::<StaticDraw>().insert(entity, static_draw) {
             ::specs::InsertResult::Inserted => (),
-            _ => panic!("cannot insert colbody to entity"),
+            _ => panic!("cannot insert staticdraw to entity"),
+        };
+    }
+}
+
+pub struct DynamicDraw {
+    pub constant: u32,
+    pub world_trans: ::graphics::shader::vs::ty::World,
+    pub uniform_buffer_pool: Arc<::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::World>>,
+}
+
+impl ::specs::Component for DynamicDraw {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl DynamicDraw {
+    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, group: u32) {
+        let graphics = world.read_resource::<::resource::Graphics>();
+
+        let uniform_buffer_pool = Arc::new(::vulkano::buffer::cpu_pool::CpuBufferPool::new(
+                graphics.device.clone(),
+                ::vulkano::buffer::BufferUsage::uniform_buffer(),
+        ));
+
+
+        let dynamic_draw = DynamicDraw {
+            constant: group,
+            uniform_buffer_pool,
+            world_trans: ::graphics::shader::vs::ty::World {
+                world: [[0f32; 4]; 4],
+            },
+        };
+
+        match world.write::<DynamicDraw>().insert(entity, dynamic_draw) {
+            ::specs::InsertResult::Inserted => (),
+            _ => panic!("cannot insert dynamicdraw to entity"),
         };
     }
 }

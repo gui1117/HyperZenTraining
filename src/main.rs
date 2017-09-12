@@ -55,6 +55,7 @@ fn main() {
     world.register::<::component::Player>();
     world.register::<::component::ColBody>();
     world.register::<::component::StaticDraw>();
+    world.register::<::component::DynamicDraw>();
     world.register::<::component::Momentum>();
     world.add_resource(graphics.data.clone());
     world.add_resource(::resource::ColWorld::new(0.02, false));
@@ -63,16 +64,14 @@ fn main() {
     world.add_resource(::resource::WinitEvents::new());
     world.add_resource(::resource::Config::default());
 
-    world.write_resource::<::resource::ColWorld>().register_contact_handler("main", ::collision::ContactHandler::new());
-
-    ::entity::create_player(&mut world, [-2.0, 0.0]);
-    ::entity::create_wall(&mut world, [1.0, 0.0]);
-    // let maze = maze::generate_partial_reverse_randomized_kruskal(11, 11, 50.0);
-    // for (x, ys) in maze.iter().enumerate() {
-    //     for y in ys.iter().enumerate().filter_map(|(y, &b)| if b { Some(y) } else { None }) {
-    //         ::entity::create_wall(&mut world, [x as f32, y as f32]);
-    //     }
-    // }
+    ::entity::create_player(&mut world, [1.0, 1.0]);
+    ::entity::create_wall(&mut world, [2.0, 1.0]);
+    let maze = maze::generate_partial_reverse_randomized_kruskal(11, 11, 50.0);
+    for (x, ys) in maze.iter().enumerate() {
+        for y in ys.iter().enumerate().filter_map(|(y, &b)| if b { Some(y) } else { None }) {
+            ::entity::create_wall(&mut world, [x as f32, y as f32]);
+        }
+    }
 
     world.maintain();
     world.write_resource::<::resource::ColWorld>().update();
@@ -83,6 +82,7 @@ fn main() {
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
+        .add(::system::UpdateDynamicDrawSystem, "update_dynamic_draw_system", &[])
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
@@ -102,18 +102,14 @@ fn main() {
                         done = true;
                         false
                     },
-                    winit::Event::WindowEvent {
-                        event: winit::WindowEvent::MouseMoved { .. }, ..
-                    } => {
+                    winit::Event::WindowEvent { event: winit::WindowEvent::MouseMoved { .. }, .. } => {
                         window
                             .window()
                             .set_cursor_position(graphics.data.width as i32 / 2, graphics.data.height as i32 / 2)
                             .unwrap();
                         true
                     },
-                    winit::Event::WindowEvent {
-                        event: winit::WindowEvent::KeyboardInput { .. }, ..
-                    } => true,
+                    winit::Event::WindowEvent { event: winit::WindowEvent::KeyboardInput { .. }, .. } => true,
                     _ => false,
                 };
 

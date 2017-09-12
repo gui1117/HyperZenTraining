@@ -1,6 +1,8 @@
 use specs::Join;
 use alga::general::SubsetOf;
 use std::sync::Arc;
+use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 
 // TODO: get mouse from axis and check if there are differences because of acceleration
 pub struct ControlSystem {
@@ -102,17 +104,35 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
 
         col_world.update();
 
-        // TODO maybe just use col_world.contacts instead of using DATA thing
-        for (_, entity) in (&col_bodies, &*entities).join() {
-            let pos = {
-                let col_object = col_world.collision_object(entity.id() as usize).unwrap();
-                col_object.data.inner.lock().unwrap().resolution.take()
-            };
-            if let Some(pos) = pos {
-                col_world.deferred_set_position(entity.id() as usize, pos);
+        let mut resolutions: BTreeMap<_, ::na::Vector3<f32>> = BTreeMap::new();
+        for (co1, co2, contact) in col_world.contacts() {
+            if momentums.get(co1.data).is_some() {
+                let normal = contact.normal;
+                let depth = -contact.depth;
+
+                let resolution = match resolutions.entry(co1.uid) {
+                    Entry::Vacant(_) => depth*normal,
+                    Entry::Occupied(entry) => {
+                        let old_vector = *entry.get();
+                        let (larger, smaller) = if old_vector.norm() > depth.abs() {
+                            (old_vector, depth*normal)
+                        } else {
+                            (depth*normal, old_vector)
+                        };
+                        larger + smaller - smaller.dot(&larger)*larger.normalize()
+                    },
+                };
+                resolutions.insert(co1.uid, resolution);
+            }
+            if momentums.get(co2.data).is_some() {
+                unimplemented!();
             }
         }
 
+        for (uid, translation) in resolutions {
+            let pos = col_world.collision_object(uid).unwrap().position;
+            col_world.deferred_set_position(uid, ::na::Translation3::from_vector(translation)*pos);
+        }
         col_world.perform_position_update();
     }
 }
@@ -122,6 +142,7 @@ pub struct DrawSystem;
 impl<'a> ::specs::System<'a> for DrawSystem {
     type SystemData = (
         ::specs::ReadStorage<'a, ::component::StaticDraw>,
+        ::specs::ReadStorage<'a, ::component::DynamicDraw>,
         ::specs::ReadStorage<'a, ::component::ColBody>,
         ::specs::ReadStorage<'a, ::component::Player>,
         ::specs::FetchMut<'a, ::resource::Rendering>,
@@ -131,7 +152,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         ::specs::Entities<'a>,
     );
 
-    fn run(&mut self, (static_draws, col_bodies, players, mut rendering, col_world, control, graphics, entities): Self::SystemData) {
+    fn run(&mut self, (static_draws, dynamic_draws, col_bodies, players, mut rendering, col_world, control, graphics, entities): Self::SystemData) {
         let (_, _, player_entity) = (&players, &col_bodies, &*entities).join().next().unwrap();
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
@@ -146,6 +167,9 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                         &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
                         &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + dir),
                         &[0.0, 0.0, 1.0].into(), // FIXME: this will result in NaN if y is PI/2 isn't it ?
+                        // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + ::na::Vector3::new(0.0, 0.0, -10.0)),
+                        // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
+                        // &[-1.0, 0.0, 0.0].into(),
                         1.0,
                         ).to_superset();
                 i.unwrap()
@@ -171,7 +195,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
                 graphics.pipeline.clone(),
                 0,
-            ).add_buffer(view_uniform_buffer_subbuffer.clone())
+            ).add_buffer(view_uniform_buffer_subbuffer)
                 .unwrap()
                 .build()
                 .unwrap(),
@@ -200,6 +224,28 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 .unwrap();
         }
 
+        for dynamic_draw in dynamic_draws.join() {
+            let world_trans_subbuffer = dynamic_draw.uniform_buffer_pool.next(dynamic_draw.world_trans);
+            let dynamic_draw_set = Arc::new(
+                ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+                    graphics.pipeline.clone(),
+                    0,
+                ).add_buffer(world_trans_subbuffer)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
+            );
+            command_buffer_builder = command_buffer_builder
+                .draw(
+                    graphics.pipeline.clone(),
+                    ::vulkano::command_buffer::DynamicState::none(),
+                    graphics.cuboid_vertex_buffer.clone(),
+                    (view_set.clone(), dynamic_draw_set),
+                    ::graphics::shader::fs::ty::Group { group: dynamic_draw.constant },
+                )
+                .unwrap();
+        }
+
         rendering.command_buffer = Some(command_buffer_builder
             .end_render_pass()
             .unwrap()
@@ -215,5 +261,27 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             .end_render_pass()
             .unwrap()
             .build().unwrap());
+    }
+}
+
+pub struct UpdateDynamicDrawSystem;
+
+impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::ColBody>,
+        ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+        ::specs::Fetch<'a, ::resource::ColWorld>,
+        ::specs::Entities<'a>,
+    );
+
+    fn run(&mut self, (col_bodies, mut dynamic_draws, col_world, entities): Self::SystemData) {
+        for (dynamic_draw, _, entity) in (&mut dynamic_draws, &col_bodies, &*entities).join() {
+            let pos = col_world.collision_object(entity.id() as usize).unwrap().position;
+
+            // TODO second arg !
+            let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 0.1)
+                .to_superset();
+            dynamic_draw.world_trans = ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
+        }
     }
 }

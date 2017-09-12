@@ -16,7 +16,7 @@ impl Default for Config {
         Config {
             fps,
             dt: 1.0 / fps as f32,
-            mouse_sensibility: 5000.0,
+            mouse_sensibility: 1000.0,
         }
     }
 }
