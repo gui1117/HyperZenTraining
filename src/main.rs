@@ -10,6 +10,7 @@ extern crate specs;
 extern crate nalgebra as na;
 extern crate ncollide;
 extern crate rand;
+extern crate itertools;
 
 mod util;
 mod graphics;
@@ -65,13 +66,8 @@ fn main() {
     world.add_resource(::resource::Config::default());
 
     ::entity::create_player(&mut world, [1.0, 1.0]);
-    ::entity::create_wall(&mut world, [2.0, 1.0]);
     let maze = maze::generate_partial_reverse_randomized_kruskal(11, 11, 50.0);
-    for (x, ys) in maze.iter().enumerate() {
-        for y in ys.iter().enumerate().filter_map(|(y, &b)| if b { Some(y) } else { None }) {
-            ::entity::create_wall(&mut world, [x as f32, y as f32]);
-        }
-    }
+    ::entity::create_maze_walls(&mut world, maze);
 
     world.maintain();
     world.write_resource::<::resource::ColWorld>().update();

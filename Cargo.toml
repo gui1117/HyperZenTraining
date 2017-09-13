@@ -15,6 +15,7 @@ ncollide = { path = "../ncollide" }
 specs = "0.9"
 alga = "0.5"
 rand = "0.3"
+itertools = "0.6"
 
 # app_dirs = "1"
 # mut_static = "5"

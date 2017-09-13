@@ -2,7 +2,6 @@ use specs::Join;
 use alga::general::SubsetOf;
 use std::sync::Arc;
 use std::collections::BTreeMap;
-use std::collections::btree_map::Entry;
 
 // TODO: get mouse from axis and check if there are differences because of acceleration
 pub struct ControlSystem {
@@ -104,25 +103,36 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
 
         col_world.update();
 
-        let mut resolutions: BTreeMap<_, ::na::Vector3<f32>> = BTreeMap::new();
+        let mut resolutions: BTreeMap<_, (f32, f32)> = BTreeMap::new();
+        println!("################################");
         for (co1, co2, contact) in col_world.contacts() {
+            println!("#############");
+            println!("{:#?}", contact);
             if momentums.get(co1.data).is_some() {
                 let normal = contact.normal;
                 let depth = -contact.depth;
 
-                let resolution = match resolutions.entry(co1.uid) {
-                    Entry::Vacant(_) => depth*normal,
-                    Entry::Occupied(entry) => {
-                        let old_vector = *entry.get();
-                        let (larger, smaller) = if old_vector.norm() > depth.abs() {
-                            (old_vector, depth*normal)
-                        } else {
-                            (depth*normal, old_vector)
-                        };
-                        larger + smaller - smaller.dot(&larger)*larger.normalize()
-                    },
-                };
-                resolutions.insert(co1.uid, resolution);
+                let resolution = resolutions.entry(co1.uid).or_insert((0.0, 0.0));
+                if (depth*normal.x).abs() > resolution.0.abs() {
+                    resolution.0 = depth*normal.x;
+                }
+                if (depth*normal.y).abs() > resolution.1.abs() {
+                    resolution.1 = depth*normal.y;
+                }
+                // let resolution = match resolutions.entry(co1.uid) {
+                //     Entry::Vacant(_) => depth*normal,
+                //     Entry::Occupied(entry) => {
+                //         let old_vector = *entry.get();
+                //         let (larger, smaller) = if old_vector.norm() > depth.abs() {
+                //             (old_vector, depth*normal)
+                //         } else {
+                //             (depth*normal, old_vector)
+                //         };
+                //         larger + smaller - smaller.dot(&larger)*larger.normalize()
+                //     },
+                // };
+                // resolutions.insert(co1.uid, resolution);
+                println!("{:#?}", resolution);
             }
             if momentums.get(co2.data).is_some() {
                 unimplemented!();
@@ -131,7 +141,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
 
         for (uid, translation) in resolutions {
             let pos = col_world.collision_object(uid).unwrap().position;
-            col_world.deferred_set_position(uid, ::na::Translation3::from_vector(translation)*pos);
+            col_world.deferred_set_position(uid, ::na::Translation3::new(translation.0, translation.1, 0.0)*pos);
         }
         col_world.perform_position_update();
     }
