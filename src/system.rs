@@ -103,22 +103,26 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
 
         col_world.update();
 
-        let mut resolutions: BTreeMap<_, (f32, f32)> = BTreeMap::new();
+        let mut resolutions: BTreeMap<_, Vec<::na::Vector3<f32>>> = BTreeMap::new();
         println!("################################");
         for (co1, co2, contact) in col_world.contacts() {
             println!("#############");
             println!("{:#?}", contact);
             if momentums.get(co1.data).is_some() {
+                //TODO USE FORCE CONSTRAINT!
+                //OR USE THE MORE DEPTH FOR EACH OTHER WALL
                 let normal = contact.normal;
                 let depth = -contact.depth;
 
-                let resolution = resolutions.entry(co1.uid).or_insert((0.0, 0.0));
-                if (depth*normal.x).abs() > resolution.0.abs() {
-                    resolution.0 = depth*normal.x;
-                }
-                if (depth*normal.y).abs() > resolution.1.abs() {
-                    resolution.1 = depth*normal.y;
-                }
+                let resolution = resolutions.entry(co1.uid).or_insert(vec!());
+                resolution.push(depth*normal);
+
+//                 if (depth*normal.x).abs() > resolution.0.abs() {
+//                     resolution.0 = depth*normal.x;
+//                 }
+//                 if (depth*normal.y).abs() > resolution.1.abs() {
+//                     resolution.1 = depth*normal.y;
+//                 }
                 // let resolution = match resolutions.entry(co1.uid) {
                 //     Entry::Vacant(_) => depth*normal,
                 //     Entry::Occupied(entry) => {
@@ -139,9 +143,14 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             }
         }
 
-        for (uid, translation) in resolutions {
+        for (uid, res) in resolutions {
             let pos = col_world.collision_object(uid).unwrap().position;
-            col_world.deferred_set_position(uid, ::na::Translation3::new(translation.0, translation.1, 0.0)*pos);
+            let mut a = ::na::Vector3::new(0.0, 0.0, 0.0);
+            for x in &res {
+                a += x;
+            }
+            a *= 1.0/res.len() as f32;
+            col_world.deferred_set_position(uid, ::na::Translation3::from_vector(a)*pos);
         }
         col_world.perform_position_update();
     }
