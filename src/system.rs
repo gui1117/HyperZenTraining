@@ -95,8 +95,13 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             body.clear_forces();
             body.append_lin_force(momentum.force*momentum.direction);
             body.append_lin_force(-momentum.damping*lin_vel);
+
+            let mut pos = body.position().clone();
+            pos.translation.vector[2] = 0.0;
+            body.set_transformation(pos);
+            // body.append_lin_force(9.8f32*::na::Vector3::new(0.0, 0.0, -1.0));
         }
-        physic_world.0.step(config.dt/1.0);
+        physic_world.0.step(config.dt);
     }
 }
 

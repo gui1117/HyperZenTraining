@@ -1,4 +1,3 @@
-use ncollide::world::CollisionGroups;
 use alga::general::SubsetOf;
 use itertools::Itertools;
 use std::collections::{HashMap};
@@ -8,13 +7,14 @@ const WALL_GROUP: usize = 1;
 
 pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
     let shape = ::ncollide::shape::Cylinder::new(0.5, 0.1);
-    let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.0), ::na::Vector3::x()*::std::f32::consts::FRAC_PI_2);
+    let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::Vector3::x()*::std::f32::consts::FRAC_PI_2);
 
-    let mut group = CollisionGroups::new();
+    let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
     group.set_membership(&[PLAYER_GROUP]);
 
-    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 1.0, 1.0);
+    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     body.set_transformation(pos);
+    body.set_collision_groups(group);
     let mass = 1.0 / body.inv_mass();
     let velocity = 10.0;
     let time_to_reach_v_max = 0.1;
@@ -29,7 +29,7 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
 }
 
 pub fn create_wall(world: &mut ::specs::World, pos: [f32; 2], x_radius: f32, y_radius: f32) {
-    let mut group = CollisionGroups::new();
+    let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
     group.set_membership(&[WALL_GROUP]);
     group.set_blacklist(&[WALL_GROUP]);
 
@@ -45,9 +45,10 @@ pub fn create_wall(world: &mut ::specs::World, pos: [f32; 2], x_radius: f32, y_r
         ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
     };
 
-    let body = ::nphysics::object::RigidBody::new_static(shape, 1.0, 1.0);
+    let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
+    body.set_collision_groups(group);
+    body.set_transformation(pos);
     let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
-    bodyhandle.borrow_mut().set_transformation(pos);
 
     let entity = world.create_entity()
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
@@ -55,7 +56,26 @@ pub fn create_wall(world: &mut ::specs::World, pos: [f32; 2], x_radius: f32, y_r
     ::component::StaticDraw::add(world, entity, 1, world_trans);
 }
 
+pub fn create_floor(world: &mut ::specs::World) {
+    let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
+    group.set_membership(&[WALL_GROUP]);
+    group.set_blacklist(&[WALL_GROUP]);
+
+    let shape = ::ncollide::shape::Plane::new(::na::Vector3::new(0.0, 0.0, 1.0));
+    let pos = ::na::Isometry3::new(::na::Vector3::new(0.0, 0.0, 0.0), ::na::zero());
+
+    let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
+    body.set_collision_groups(group);
+    body.set_transformation(pos);
+    let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
+
+    let entity = world.create_entity()
+        .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
+        .build();
+}
+
 pub fn create_maze_walls(world: &mut ::specs::World, maze: Vec<Vec<bool>>) {
+    // create_floor(world);
     let (mut x_map, mut y_map) = maze.iter()
         .enumerate()
         .flat_map(|(x, column)| {

@@ -55,7 +55,8 @@ unsafe impl Sync for PhysicWorld {}
 
 impl PhysicWorld {
     pub fn new() -> Self {
-        PhysicWorld(::nphysics::world::World::new())
+        let mut world = ::nphysics::world::World::new();
+        PhysicWorld(world)
     }
 }
 
