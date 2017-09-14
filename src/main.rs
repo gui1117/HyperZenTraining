@@ -65,9 +65,10 @@ fn main() {
     world.add_resource(::resource::WinitEvents::new());
     world.add_resource(::resource::Config::default());
 
-    ::entity::create_player(&mut world, [1.0, 1.0]);
+    ::entity::create_player(&mut world, [10.0, 10.0]);
     let maze = maze::generate_partial_reverse_randomized_kruskal(11, 11, 50.0);
-    ::entity::create_maze_walls(&mut world, maze);
+    // ::entity::create_maze_walls(&mut world, maze);
+    ::entity::create_wall_side(&mut world, ::na::Isometry3::new(::na::Vector3::new(11.0, 10.5, -0.5), ::na::Vector3::y()*::std::f32::consts::FRAC_PI_2), 1.5, 10.5);
 
     world.maintain();
 
