@@ -11,6 +11,7 @@ extern crate nalgebra as na;
 extern crate ncollide;
 extern crate rand;
 extern crate itertools;
+extern crate nphysics3d as nphysics;
 
 mod util;
 mod graphics;
@@ -19,7 +20,6 @@ mod component;
 mod system;
 mod resource;
 mod maze;
-mod collision;
 
 use vulkano_win::VkSurfaceBuild;
 
@@ -54,12 +54,12 @@ fn main() {
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();
-    world.register::<::component::ColBody>();
     world.register::<::component::StaticDraw>();
     world.register::<::component::DynamicDraw>();
+    world.register::<::component::PhysicRigidBodyHandle>();
     world.register::<::component::Momentum>();
     world.add_resource(graphics.data.clone());
-    world.add_resource(::resource::ColWorld::new(0.02, false));
+    world.add_resource(::resource::PhysicWorld::new());
     world.add_resource(::resource::Control::new());
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::WinitEvents::new());
@@ -70,7 +70,6 @@ fn main() {
     ::entity::create_maze_walls(&mut world, maze);
 
     world.maintain();
-    world.write_resource::<::resource::ColWorld>().update();
 
     let mut update_dispatcher = ::specs::DispatcherBuilder::new()
         .add(::system::ControlSystem::new(), "control_system", &[])
@@ -78,7 +77,8 @@ fn main() {
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::UpdateDynamicDrawSystem, "update_dynamic_draw_system", &[])
+        // TODO
+        // .add(::system::UpdateDynamicDrawSystem, "update_dynamic_draw_system", &[])
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 

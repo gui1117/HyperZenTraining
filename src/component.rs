@@ -1,16 +1,17 @@
 use std::sync::Arc;
 
+// TODO check storage ???
+#[derive(Default)]
+pub struct Player;
+
+impl ::specs::Component for Player {
+    type Storage = ::specs::NullStorage<Self>;
+}
+
 pub struct Momentum {
-    pub acceleration: ::na::Vector3<f32>,
-    pub velocity: ::na::Vector3<f32>,
-
-    pub weight: f32,
     pub damping: f32,
-
-    pub gravity: bool,
-
-    pub force_coefficient: f32,
-    pub force_direction: ::na::Vector3<f32>,
+    pub force: f32,
+    pub direction: ::na::Vector3<f32>,
 }
 
 impl ::specs::Component for Momentum {
@@ -20,46 +21,14 @@ impl ::specs::Component for Momentum {
 const PHYSIC_ALMOST_V_MAX: f32 = 0.9;
 
 impl Momentum {
-    pub fn new(velocity: f32, time_to_reach_v_max: f32) -> Self {
-        let weight = 1.0;
-        let damping = - weight * (1.-PHYSIC_ALMOST_V_MAX).ln() / time_to_reach_v_max;
-        let force_coefficient = velocity * damping;
+    pub fn new(mass: f32, velocity: f32, time_to_reach_v_max: f32) -> Self {
+        let damping = - mass * (1.-PHYSIC_ALMOST_V_MAX).ln() / time_to_reach_v_max;
+        let force = velocity * damping;
         Momentum {
-            acceleration: ::na::zero(),
-            velocity: ::na::zero(),
-            weight,
             damping,
-            gravity: false,
-            force_coefficient,
-            force_direction: ::na::zero(),
+            force,
+            direction: ::na::zero(),
         }
-    }
-}
-
-// TODO check storage ???
-#[derive(Default)]
-pub struct Player;
-
-impl ::specs::Component for Player {
-    type Storage = ::specs::NullStorage<Self>;
-}
-
-#[derive(Default)]
-pub struct ColBody;
-
-impl ::specs::Component for ColBody {
-    type Storage = ::specs::NullStorage<Self>;
-}
-
-impl ColBody {
-    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, position: ::collision::Position, shape: ::collision::Shape, group: ::collision::Group) {
-        let mut col_world = world.write_resource::<::collision::World>();
-        col_world.deferred_add(entity.id() as usize, position, shape, group, ::ncollide::world::GeometricQueryType::Contacts(0.0), entity);
-
-        match world.write::<ColBody>().insert(entity, ColBody) {
-            ::specs::InsertResult::Inserted => (),
-            _ => panic!("cannot insert colbody to entity"),
-        };
     }
 }
 
@@ -139,5 +108,29 @@ impl DynamicDraw {
             ::specs::InsertResult::Inserted => (),
             _ => panic!("cannot insert dynamicdraw to entity"),
         };
+    }
+}
+
+pub struct PhysicRigidBodyHandle(::nphysics::object::RigidBodyHandle<f32>);
+unsafe impl Send for PhysicRigidBodyHandle {}
+unsafe impl Sync for PhysicRigidBodyHandle {}
+
+impl ::specs::Component for PhysicRigidBodyHandle {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+
+impl PhysicRigidBodyHandle {
+    pub fn new(body: ::nphysics::object::RigidBodyHandle<f32>) -> Self {
+        PhysicRigidBodyHandle(body)
+    }
+
+    // TODO maybe the clone method of ref is not thread safe ...
+    pub fn get<'a>(&'a self, _world: &'a ::resource::PhysicWorld) -> ::std::cell::Ref<'a, ::nphysics::object::RigidBody<f32>> {
+        self.0.borrow()
+    }
+
+    pub fn get_mut<'a>(&'a mut self, _world: &'a mut ::resource::PhysicWorld) -> ::std::cell::RefMut<'a, ::nphysics::object::RigidBody<f32>> {
+        self.0.borrow_mut()
     }
 }

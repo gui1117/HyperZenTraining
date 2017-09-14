@@ -1,4 +1,3 @@
-pub use ::collision::World as ColWorld;
 pub use ::graphics::Data as Graphics;
 
 pub type WinitEvents = Vec<::winit::Event>;
@@ -49,3 +48,14 @@ impl Rendering {
         }
     }
 }
+
+pub struct PhysicWorld(pub ::nphysics::world::World<f32>);
+unsafe impl Send for PhysicWorld {}
+unsafe impl Sync for PhysicWorld {}
+
+impl PhysicWorld {
+    pub fn new() -> Self {
+        PhysicWorld(::nphysics::world::World::new())
+    }
+}
+

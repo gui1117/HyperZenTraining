@@ -1,7 +1,6 @@
 use specs::Join;
 use alga::general::SubsetOf;
 use std::sync::Arc;
-use std::collections::BTreeMap;
 
 // TODO: get mouse from axis and check if there are differences because of acceleration
 pub struct ControlSystem {
@@ -32,6 +31,7 @@ impl<'a> ::specs::System<'a> for ControlSystem {
                 ::winit::Event::WindowEvent {
                     event: ::winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
                 } => {
+                    // TODO maybe store this in body directly
                     control.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) / config.mouse_sensibility;
                     control.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) / config.mouse_sensibility;
                     control.pointer[1] = control.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
@@ -55,22 +55,21 @@ impl<'a> ::specs::System<'a> for ControlSystem {
                         }
                     }
 
-                    for (_, momentum) in (&players, &mut momentums).join() {
-                        let mut move_vector = ::na::zero();
-                        if self.directions.is_empty() {
-                            momentum.force_direction = move_vector;
-                        } else {
-                            for &direction in &self.directions {
-                                match direction {
-                                    ::util::Direction::Forward => move_vector[0] = 1.0,
-                                    ::util::Direction::Backward => move_vector[0] = -1.0,
-                                    ::util::Direction::Left => move_vector[1] = 1.0,
-                                    ::util::Direction::Right => move_vector[1] = -1.0,
-                                }
+                    let player_momentum = (&players, &mut momentums).join().next().unwrap().1;
+                    let mut move_vector: ::na::Vector3<f32> = ::na::zero();
+                    if self.directions.is_empty() {
+                        player_momentum.direction = ::na::zero();
+                    } else {
+                        for &direction in &self.directions {
+                            match direction {
+                                ::util::Direction::Forward => move_vector[0] = 1.0,
+                                ::util::Direction::Backward => move_vector[0] = -1.0,
+                                ::util::Direction::Left => move_vector[1] = 1.0,
+                                ::util::Direction::Right => move_vector[1] = -1.0,
                             }
-                            move_vector = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, - control.pointer[0])) * move_vector;
-                            momentum.force_direction = move_vector.normalize();
                         }
+                        move_vector = (::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, - control.pointer[0])) * move_vector).normalize();
+                        player_momentum.direction = move_vector;
                     }
                 },
                 _ => (),
@@ -83,76 +82,21 @@ pub struct PhysicSystem;
 
 impl<'a> ::specs::System<'a> for PhysicSystem {
     type SystemData = (
-        ::specs::ReadStorage<'a, ::component::ColBody>,
-        ::specs::WriteStorage<'a, ::component::Momentum>,
+        ::specs::ReadStorage<'a, ::component::Momentum>,
+        ::specs::WriteStorage<'a, ::component::PhysicRigidBodyHandle>,
         ::specs::Fetch<'a, ::resource::Config>,
-        ::specs::FetchMut<'a, ::resource::ColWorld>,
-        ::specs::Entities<'a>,
+        ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     );
 
-    fn run(&mut self, (col_bodies, mut momentums, config, mut col_world, entities): Self::SystemData) {
-        for (_, momentum, entity) in (&col_bodies, &mut momentums, &*entities).join() {
-            momentum.acceleration = (momentum.force_coefficient*momentum.force_direction - momentum.damping*momentum.velocity) / momentum.weight;
-            momentum.velocity += config.dt*momentum.acceleration;
-            let new_pos = {
-                let col_object = col_world.collision_object(entity.id() as usize).unwrap();
-                ::na::Translation3::from_vector(config.dt*momentum.velocity) * col_object.position
-            };
-            col_world.deferred_set_position(entity.id() as usize, new_pos);
+    fn run(&mut self, (momentums, mut bodies, config, mut physic_world): Self::SystemData) {
+        for (momentum, body) in (&momentums, &mut bodies).join() {
+            let mut body = body.get_mut(&mut physic_world);
+            let lin_vel = body.lin_vel();
+            body.clear_forces();
+            body.append_lin_force(momentum.force*momentum.direction);
+            body.append_lin_force(-momentum.damping*lin_vel);
         }
-
-        col_world.update();
-
-        let mut resolutions: BTreeMap<_, Vec<::na::Vector3<f32>>> = BTreeMap::new();
-        println!("################################");
-        for (co1, co2, contact) in col_world.contacts() {
-            println!("#############");
-            println!("{:#?}", contact);
-            if momentums.get(co1.data).is_some() {
-                //TODO USE FORCE CONSTRAINT!
-                //OR USE THE MORE DEPTH FOR EACH OTHER WALL
-                let normal = contact.normal;
-                let depth = -contact.depth;
-
-                let resolution = resolutions.entry(co1.uid).or_insert(vec!());
-                resolution.push(depth*normal);
-
-//                 if (depth*normal.x).abs() > resolution.0.abs() {
-//                     resolution.0 = depth*normal.x;
-//                 }
-//                 if (depth*normal.y).abs() > resolution.1.abs() {
-//                     resolution.1 = depth*normal.y;
-//                 }
-                // let resolution = match resolutions.entry(co1.uid) {
-                //     Entry::Vacant(_) => depth*normal,
-                //     Entry::Occupied(entry) => {
-                //         let old_vector = *entry.get();
-                //         let (larger, smaller) = if old_vector.norm() > depth.abs() {
-                //             (old_vector, depth*normal)
-                //         } else {
-                //             (depth*normal, old_vector)
-                //         };
-                //         larger + smaller - smaller.dot(&larger)*larger.normalize()
-                //     },
-                // };
-                // resolutions.insert(co1.uid, resolution);
-                println!("{:#?}", resolution);
-            }
-            if momentums.get(co2.data).is_some() {
-                unimplemented!();
-            }
-        }
-
-        for (uid, res) in resolutions {
-            let pos = col_world.collision_object(uid).unwrap().position;
-            let mut a = ::na::Vector3::new(0.0, 0.0, 0.0);
-            for x in &res {
-                a += x;
-            }
-            a *= 1.0/res.len() as f32;
-            col_world.deferred_set_position(uid, ::na::Translation3::from_vector(a)*pos);
-        }
-        col_world.perform_position_update();
+        physic_world.0.step(config.dt/1.0);
     }
 }
 
@@ -162,20 +106,19 @@ impl<'a> ::specs::System<'a> for DrawSystem {
     type SystemData = (
         ::specs::ReadStorage<'a, ::component::StaticDraw>,
         ::specs::ReadStorage<'a, ::component::DynamicDraw>,
-        ::specs::ReadStorage<'a, ::component::ColBody>,
+        ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
         ::specs::ReadStorage<'a, ::component::Player>,
         ::specs::FetchMut<'a, ::resource::Rendering>,
-        ::specs::Fetch<'a, ::resource::ColWorld>,
+        ::specs::Fetch<'a, ::resource::PhysicWorld>,
         ::specs::Fetch<'a, ::resource::Control>,
         ::specs::Fetch<'a, ::resource::Graphics>,
-        ::specs::Entities<'a>,
     );
 
-    fn run(&mut self, (static_draws, dynamic_draws, col_bodies, players, mut rendering, col_world, control, graphics, entities): Self::SystemData) {
-        let (_, _, player_entity) = (&players, &col_bodies, &*entities).join().next().unwrap();
+    fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, physic_world, control, graphics): Self::SystemData) {
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
-            let pos = col_world.collision_object(player_entity.id() as usize).unwrap().position;
+            let player = (&players, &bodies).join().next().unwrap().1.get(&physic_world);
+            let pos = player.position();
             let dir = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -control.pointer[0])) *
                 ::na::Rotation3::new(::na::Vector3::new(0.0, -control.pointer[1], 0.0)) *
                 ::na::Vector3::new(1.0, 0.0, 0.0);
@@ -283,24 +226,25 @@ impl<'a> ::specs::System<'a> for DrawSystem {
     }
 }
 
-pub struct UpdateDynamicDrawSystem;
+// TODO
+// pub struct UpdateDynamicDrawSystem;
 
-impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
-    type SystemData = (
-        ::specs::ReadStorage<'a, ::component::ColBody>,
-        ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-        ::specs::Fetch<'a, ::resource::ColWorld>,
-        ::specs::Entities<'a>,
-    );
+// impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
+//     type SystemData = (
+//         ::specs::ReadStorage<'a, ::component::ColBody>,
+//         ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+//         ::specs::Fetch<'a, ::resource::ColWorld>,
+//         ::specs::Entities<'a>,
+//     );
 
-    fn run(&mut self, (col_bodies, mut dynamic_draws, col_world, entities): Self::SystemData) {
-        for (dynamic_draw, _, entity) in (&mut dynamic_draws, &col_bodies, &*entities).join() {
-            let pos = col_world.collision_object(entity.id() as usize).unwrap().position;
+//     fn run(&mut self, (col_bodies, mut dynamic_draws, col_world, entities): Self::SystemData) {
+//         for (dynamic_draw, _, entity) in (&mut dynamic_draws, &col_bodies, &*entities).join() {
+//             let pos = col_world.collision_object(entity.id() as usize).unwrap().position;
 
-            // TODO second arg !
-            let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 0.1)
-                .to_superset();
-            dynamic_draw.world_trans = ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
-        }
-    }
-}
+//             // TODO second arg !
+//             let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 0.1)
+//                 .to_superset();
+//             dynamic_draw.world_trans = ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
+//         }
+//     }
+// }
