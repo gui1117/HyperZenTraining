@@ -33,7 +33,7 @@ impl Momentum {
 }
 
 pub struct StaticDraw {
-    pub constant: u32,
+    pub group: u32,
     pub uniform_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<::graphics::shader::vs::ty::World>>,
     pub set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::Vertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::CustomRenderPassDesc>>>>, ((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetBuf<Arc<::vulkano::buffer::CpuAccessibleBuffer<::graphics::shader::vs::ty::World>>>)>>,
 }
@@ -64,7 +64,7 @@ impl StaticDraw {
             );
 
         let static_draw = StaticDraw {
-            constant: group,
+            group,
             uniform_buffer,
             set,
         };
@@ -77,7 +77,9 @@ impl StaticDraw {
 }
 
 pub struct DynamicDraw {
-    pub constant: u32,
+    pub group: u32,
+    // pub primitive: TODO allow different primitive
+    pub primitive_trans: ::na::Transform3<f32>,
     pub world_trans: ::graphics::shader::vs::ty::World,
     pub uniform_buffer_pool: Arc<::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::World>>,
 }
@@ -87,7 +89,7 @@ impl ::specs::Component for DynamicDraw {
 }
 
 impl DynamicDraw {
-    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, group: u32) {
+    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, group: u32, primitive_trans: ::na::Transform3<f32>) {
         let graphics = world.read_resource::<::resource::Graphics>();
 
         let uniform_buffer_pool = Arc::new(::vulkano::buffer::cpu_pool::CpuBufferPool::new(
@@ -97,8 +99,9 @@ impl DynamicDraw {
 
 
         let dynamic_draw = DynamicDraw {
-            constant: group,
+            group,
             uniform_buffer_pool,
+            primitive_trans,
             world_trans: ::graphics::shader::vs::ty::World {
                 world: [[0f32; 4]; 4],
             },

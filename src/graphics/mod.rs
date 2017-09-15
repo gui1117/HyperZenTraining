@@ -23,8 +23,8 @@ impl GroupCounter {
         }
     }
 
-    pub fn next(&self) -> usize {
-        self.counter.fetch_add(1, ::std::sync::atomic::Ordering::Relaxed)
+    pub fn next(&self) -> u32 {
+        self.counter.fetch_add(1, ::std::sync::atomic::Ordering::Relaxed) as u32
     }
 }
 
@@ -49,6 +49,7 @@ pub struct Data {
     pub depth_buffer_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
     pub tmp_image_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
     pub plane_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[Vertex]>>,
+    pub pyramid_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[Vertex]>>,
     pub fullscreen_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[SecondVertex]>>,
     pub render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>,
     pub second_render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>,
@@ -159,6 +160,37 @@ impl<'a> Graphics<'a> {
                 Vertex { position: [1.0, 1.0, 0.0] },
                 Vertex { position: [-1.0, 1.0, 0.0] },
                 Vertex { position: [1.0, -1.0, 0.0] },
+            ].iter()
+                .cloned(),
+        ).expect("failed to create buffer");
+
+        let pyramid_vertex_buffer = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
+            device.clone(),
+            ::vulkano::buffer::BufferUsage::vertex_buffer(),
+            [
+                Vertex { position: [-1.0, -1.0, -1.0] },
+                Vertex { position: [1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, 1.0, -1.0] },
+
+                Vertex { position: [1.0, 1.0, -1.0] },
+                Vertex { position: [1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, 1.0, -1.0] },
+
+                Vertex { position: [-1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, 1.0, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+
+                Vertex { position: [-1.0, 1.0, -1.0] },
+                Vertex { position: [1.0, 1.0, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+
+                Vertex { position: [1.0, 1.0, -1.0] },
+                Vertex { position: [1.0, -1.0, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+
+                Vertex { position: [1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, -1.0, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
             ].iter()
                 .cloned(),
         ).expect("failed to create buffer");
@@ -288,6 +320,7 @@ impl<'a> Graphics<'a> {
             physical,
             data: Data {
                 plane_vertex_buffer,
+                pyramid_vertex_buffer,
                 fullscreen_vertex_buffer,
                 depth_buffer_attachment,
                 tmp_image_attachment,

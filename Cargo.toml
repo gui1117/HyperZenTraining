@@ -15,7 +15,6 @@ nphysics3d = "0.7"
 specs = "0.9"
 alga = "0.5"
 rand = "0.3"
-itertools = "0.6"
 lazy_static = "0.2"
 
 # app_dirs = "1"

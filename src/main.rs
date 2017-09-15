@@ -10,7 +10,6 @@ extern crate specs;
 extern crate nalgebra as na;
 extern crate ncollide;
 extern crate rand;
-extern crate itertools;
 extern crate nphysics3d as nphysics;
 #[macro_use]
 extern crate lazy_static;
@@ -68,8 +67,9 @@ fn main() {
     world.add_resource(::resource::Config::default());
 
     ::entity::create_player(&mut world, [1.0, 1.0]);
-    let maze = maze::generate_partial_reverse_randomized_kruskal(11, 11, 50.0);
+    let maze = maze::generate_partial_reverse_randomized_kruskal(31, 31, 50.0);
     ::entity::create_maze_walls(&mut world, maze);
+    ::entity::create_avoider(&mut world, [2.0, 1.0]);
 
     world.maintain();
 
@@ -79,7 +79,7 @@ fn main() {
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
-        // .add(::system::UpdateDynamicDrawSystem, "update_dynamic_draw_system", &[])
+        .add(::system::UpdateDynamicDrawSystem, "update_dynamic_draw_system", &[])
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 

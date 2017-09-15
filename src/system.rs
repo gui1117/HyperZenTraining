@@ -15,6 +15,7 @@ impl ControlSystem {
     }
 }
 
+//TODO update if mouse update and even nothing ???
 impl<'a> ::specs::System<'a> for ControlSystem {
     type SystemData = (
         ::specs::ReadStorage<'a, ::component::Player>,
@@ -54,26 +55,26 @@ impl<'a> ::specs::System<'a> for ControlSystem {
                             self.directions.push(direction);
                         }
                     }
-
-                    let player_momentum = (&players, &mut momentums).join().next().unwrap().1;
-                    let mut move_vector: ::na::Vector3<f32> = ::na::zero();
-                    if self.directions.is_empty() {
-                        player_momentum.direction = ::na::zero();
-                    } else {
-                        for &direction in &self.directions {
-                            match direction {
-                                ::util::Direction::Forward => move_vector[0] = 1.0,
-                                ::util::Direction::Backward => move_vector[0] = -1.0,
-                                ::util::Direction::Left => move_vector[1] = 1.0,
-                                ::util::Direction::Right => move_vector[1] = -1.0,
-                            }
-                        }
-                        move_vector = (::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, - control.pointer[0])) * move_vector).normalize();
-                        player_momentum.direction = move_vector;
-                    }
                 },
                 _ => (),
             }
+        }
+
+        let player_momentum = (&players, &mut momentums).join().next().unwrap().1;
+        let mut move_vector: ::na::Vector3<f32> = ::na::zero();
+        if self.directions.is_empty() {
+            player_momentum.direction = ::na::zero();
+        } else {
+            for &direction in &self.directions {
+                match direction {
+                    ::util::Direction::Forward => move_vector[0] = 1.0,
+                    ::util::Direction::Backward => move_vector[0] = -1.0,
+                    ::util::Direction::Left => move_vector[1] = 1.0,
+                    ::util::Direction::Right => move_vector[1] = -1.0,
+                }
+            }
+            move_vector = (::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, - control.pointer[0])) * move_vector).normalize();
+            player_momentum.direction = move_vector;
         }
     }
 }
@@ -82,13 +83,14 @@ pub struct PhysicSystem;
 
 impl<'a> ::specs::System<'a> for PhysicSystem {
     type SystemData = (
+        ::specs::ReadStorage<'a, ::component::Player>,
         ::specs::ReadStorage<'a, ::component::Momentum>,
         ::specs::WriteStorage<'a, ::component::PhysicRigidBodyHandle>,
         ::specs::Fetch<'a, ::resource::Config>,
         ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     );
 
-    fn run(&mut self, (momentums, mut bodies, config, mut physic_world): Self::SystemData) {
+    fn run(&mut self, (player, momentums, mut bodies, config, mut physic_world): Self::SystemData) {
         for (momentum, body) in (&momentums, &mut bodies).join() {
             let mut body = body.get_mut(&mut physic_world);
             let lin_vel = body.lin_vel();
@@ -100,7 +102,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
         for _ in 0..2 {
             physic_world.0.step(config.dt/2.);
         }
-        for (momentum, body) in (&momentums, &mut bodies).join() {
+        for (_, body) in (&player, &mut bodies).join() {
             let mut body = body.get_mut(&mut physic_world);
             body.clear_forces();
             body.set_ang_acc_scale(::na::zero());
@@ -141,7 +143,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                     ::na::Similarity3::look_at_rh(
                         &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
                         &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + dir),
-                        &[0.0, 0.0, 1.0].into(), // FIXME: this will result in NaN if y is PI/2 isn't it ?
+                        &[0.0, 0.0, 1.0].into(), // FIXME: this will result in NaN if y is PI/2
                         // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + ::na::Vector3::new(0.0, 0.0, -10.0)),
                         // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
                         // &[-1.0, 0.0, 0.0].into(),
@@ -194,7 +196,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                     ::vulkano::command_buffer::DynamicState::none(),
                     graphics.plane_vertex_buffer.clone(),
                     (view_set.clone(), static_draw.set.clone()),
-                    ::graphics::shader::fs::ty::Group { group: static_draw.constant },
+                    ::graphics::shader::fs::ty::Group { group: static_draw.group },
                 )
                 .unwrap();
         }
@@ -214,9 +216,9 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 .draw(
                     graphics.pipeline.clone(),
                     ::vulkano::command_buffer::DynamicState::none(),
-                    graphics.plane_vertex_buffer.clone(),
+                    graphics.pyramid_vertex_buffer.clone(),
                     (view_set.clone(), dynamic_draw_set),
-                    ::graphics::shader::fs::ty::Group { group: dynamic_draw.constant },
+                    ::graphics::shader::fs::ty::Group { group: dynamic_draw.group },
                 )
                 .unwrap();
         }
@@ -239,25 +241,19 @@ impl<'a> ::specs::System<'a> for DrawSystem {
     }
 }
 
-// TODO
-// pub struct UpdateDynamicDrawSystem;
+pub struct UpdateDynamicDrawSystem;
 
-// impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
-//     type SystemData = (
-//         ::specs::ReadStorage<'a, ::component::ColBody>,
-//         ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-//         ::specs::Fetch<'a, ::resource::ColWorld>,
-//         ::specs::Entities<'a>,
-//     );
+impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+        ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+        ::specs::Fetch<'a, ::resource::PhysicWorld>,
+    );
 
-//     fn run(&mut self, (col_bodies, mut dynamic_draws, col_world, entities): Self::SystemData) {
-//         for (dynamic_draw, _, entity) in (&mut dynamic_draws, &col_bodies, &*entities).join() {
-//             let pos = col_world.collision_object(entity.id() as usize).unwrap().position;
-
-//             // TODO second arg !
-//             let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 0.1)
-//                 .to_superset();
-//             dynamic_draw.world_trans = ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
-//         }
-//     }
-// }
+    fn run(&mut self, (bodies, mut dynamic_draws, physic_world): Self::SystemData) {
+        for (dynamic_draw, body) in (&mut dynamic_draws, &bodies).join() {
+            let trans = body.get(&physic_world).position() * dynamic_draw.primitive_trans;
+            dynamic_draw.world_trans = ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
+        }
+    }
+}

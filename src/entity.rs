@@ -1,9 +1,8 @@
 use alga::general::SubsetOf;
-use itertools::Itertools;
-use std::collections::{HashMap};
 
 const PLAYER_GROUP: usize = 0;
 const WALL_GROUP: usize = 1;
+const AVOIDER_GROUP: usize = 2;
 
 pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
     let shape = ::ncollide::shape::Cylinder::new(0.5, 0.1);
@@ -21,12 +20,55 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
 
     let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
     world.write_resource::<::resource::PhysicWorld>().0.add_ccd_to(&bodyhandle, 0.01, false);
-    let entity = world.create_entity()
+    world.create_entity()
         .with(::component::Player)
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
         .with(::component::Momentum::new(mass, velocity, time_to_reach_v_max))
         .build();
-    // ::component::DynamicDraw::add(world, entity, 2);
+}
+
+pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
+    let size = 0.1;
+
+    let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
+    primitive_trans[(0, 0)] = size;
+    primitive_trans[(1, 1)] = size;
+    primitive_trans[(2, 2)] = size;
+
+    let shape = {
+        let mut points = vec![
+            ::na::Point3::new(-1.0, -1.0, -1.0),
+            ::na::Point3::new(1.0, -1.0, -1.0),
+            ::na::Point3::new(1.0, 1.0, -1.0),
+            ::na::Point3::new(-1.0, 1.0, -1.0),
+            ::na::Point3::new(0.0, 0.0, 1.0),
+        ];
+        for p in &mut points {
+            *p = *p * size
+        }
+        ::ncollide::shape::ConvexHull::new(points)
+    };
+
+    let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());
+
+    let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
+    group.set_membership(&[AVOIDER_GROUP]);
+
+    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
+    body.set_transformation(pos);
+    body.set_collision_groups(group);
+    let mass = 1.0 / body.inv_mass();
+    let velocity = 5.0;
+    let time_to_reach_v_max = 1.0;
+
+    let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
+    world.write_resource::<::resource::PhysicWorld>().0.add_ccd_to(&bodyhandle, 0.01, false);
+    let entity = world.create_entity()
+        .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
+        .with(::component::Momentum::new(mass, velocity, time_to_reach_v_max))
+        .build();
+    // TODO same graphics group for all avoider ?
+    ::component::DynamicDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), primitive_trans);
 }
 
 pub fn create_wall_side(world: &mut ::specs::World, pos: ::na::Isometry3<f32>, x_radius: f32, y_radius: f32) {
@@ -35,7 +77,7 @@ pub fn create_wall_side(world: &mut ::specs::World, pos: ::na::Isometry3<f32>, x
     group.set_blacklist(&[WALL_GROUP]);
 
     let world_trans = {
-        let mut pos_trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 1.0)
+        let pos_trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 1.0)
             .to_superset();
         let mut dim_trans: ::na::Transform3<f32> = ::na::one();
         dim_trans[(0, 0)] = x_radius;
@@ -50,11 +92,10 @@ pub fn create_wall_side(world: &mut ::specs::World, pos: ::na::Isometry3<f32>, x
     body.set_transformation(pos);
     let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
 
-    let graphic_group = ::graphics::GROUP_COUNTER.next();
     let entity = world.create_entity()
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
         .build();
-    ::component::StaticDraw::add(world, entity, graphic_group as u32, world_trans);
+    ::component::StaticDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), world_trans);
 }
 
 pub fn create_maze_walls(world: &mut ::specs::World, maze: Vec<Vec<bool>>) {
