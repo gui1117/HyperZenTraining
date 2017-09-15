@@ -16,7 +16,7 @@ layout(set = 1, binding = 0) uniform World {
 } world;
 
 void main() {
-    // TODO: why do we need to inverse z ?
+    // FIXME: why do we need to inverse z ?
     vec3 z_inverse_pos = position;
     z_inverse_pos[2] = -z_inverse_pos[2];
     gl_Position = view.proj * view.view * world.world * vec4(z_inverse_pos, 1.0);

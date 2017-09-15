@@ -15,7 +15,6 @@ impl ControlSystem {
     }
 }
 
-//TODO update if mouse update and even nothing ???
 impl<'a> ::specs::System<'a> for ControlSystem {
     type SystemData = (
         ::specs::ReadStorage<'a, ::component::Player>,
@@ -32,7 +31,6 @@ impl<'a> ::specs::System<'a> for ControlSystem {
                 ::winit::Event::WindowEvent {
                     event: ::winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
                 } => {
-                    // TODO maybe store this in body directly
                     control.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) / config.mouse_sensibility;
                     control.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) / config.mouse_sensibility;
                     control.pointer[1] = control.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(

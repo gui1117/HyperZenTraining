@@ -1,5 +1,3 @@
-//TODO: change vertex to includ group offset to have a different group on each side
-//TODO: if two cube have same group then adjacent face will be joined :-)
 use vulkano::framebuffer::RenderPassDesc;
 
 use std::sync::Arc;
