@@ -8,6 +8,26 @@ use std::iter;
 pub mod shader;
 pub mod render_pass;
 
+lazy_static! {
+    pub static ref GROUP_COUNTER: GroupCounter = GroupCounter::new();
+}
+
+pub struct GroupCounter {
+    counter: ::std::sync::atomic::AtomicUsize,
+}
+
+impl GroupCounter {
+    fn new() -> Self {
+        GroupCounter {
+            counter: ::std::sync::atomic::AtomicUsize::new(1),
+        }
+    }
+
+    pub fn next(&self) -> usize {
+        self.counter.fetch_add(1, ::std::sync::atomic::Ordering::Relaxed)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Vertex {
     position: [f32; 3],

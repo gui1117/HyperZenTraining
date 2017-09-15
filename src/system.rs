@@ -97,8 +97,8 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             // TODO gravity if not touching floor
             // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
         }
-        for _ in 0..5 {
-            physic_world.0.step(config.dt/5.);
+        for _ in 0..2 {
+            physic_world.0.step(config.dt/2.);
         }
         for (momentum, body) in (&momentums, &mut bodies).join() {
             let mut body = body.get_mut(&mut physic_world);
