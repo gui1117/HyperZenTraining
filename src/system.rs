@@ -9,34 +9,35 @@ pub struct PlayerControlSystem {
 
 impl PlayerControlSystem {
     pub fn new() -> Self {
-        PlayerControlSystem {
-            directions: vec!(),
-        }
+        PlayerControlSystem { directions: vec![] }
     }
 }
 
 impl<'a> ::specs::System<'a> for PlayerControlSystem {
-    type SystemData = (
-        ::specs::ReadStorage<'a, ::component::Player>,
-        ::specs::WriteStorage<'a, ::component::Momentum>,
-        ::specs::Fetch<'a, ::resource::WinitEvents>,
-        ::specs::Fetch<'a, ::resource::Graphics>,
-        ::specs::Fetch<'a, ::resource::Config>,
-        ::specs::FetchMut<'a, ::resource::Control>,
-    );
+    type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::WriteStorage<'a, ::component::Momentum>,
+     ::specs::Fetch<'a, ::resource::WinitEvents>,
+     ::specs::Fetch<'a, ::resource::Graphics>,
+     ::specs::Fetch<'a, ::resource::Config>,
+     ::specs::FetchMut<'a, ::resource::Control>);
 
-    fn run(&mut self, (players, mut momentums, events, graphics, config, mut control): Self::SystemData) {
+    fn run(
+        &mut self,
+        (players, mut momentums, events, graphics, config, mut control): Self::SystemData,
+    ) {
         for ev in events.iter() {
             match *ev {
                 ::winit::Event::WindowEvent {
                     event: ::winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
                 } => {
-                    control.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) / config.mouse_sensibility;
-                    control.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) / config.mouse_sensibility;
-                    control.pointer[1] = control.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
-                        -::std::f32::consts::FRAC_PI_2,
-                    );
-                },
+                    control.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) /
+                        config.mouse_sensibility;
+                    control.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) /
+                        config.mouse_sensibility;
+                    control.pointer[1] = control.pointer[1]
+                        .min(::std::f32::consts::FRAC_PI_2)
+                        .max(-::std::f32::consts::FRAC_PI_2);
+                }
                 ::winit::Event::WindowEvent {
                     event: ::winit::WindowEvent::KeyboardInput { input, .. }, ..
                 } => {
@@ -53,7 +54,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                             self.directions.push(direction);
                         }
                     }
-                },
+                }
                 _ => (),
             }
         }
@@ -71,7 +72,10 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                     ::util::Direction::Right => move_vector[1] = -1.0,
                 }
             }
-            move_vector = (::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, - control.pointer[0])) * move_vector).normalize();
+            move_vector = (::na::Rotation3::new(
+                ::na::Vector3::new(0.0, 0.0, -control.pointer[0]),
+            ) * move_vector)
+                .normalize();
             player_momentum.direction = move_vector;
         }
     }
@@ -80,20 +84,26 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
 pub struct AvoiderControlSystem;
 
 impl<'a> ::specs::System<'a> for AvoiderControlSystem {
-    type SystemData = (
-        ::specs::ReadStorage<'a, ::component::Avoider>,
-        ::specs::ReadStorage<'a, ::component::Player>,
-        ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
-        ::specs::WriteStorage<'a, ::component::Momentum>,
-        ::specs::Fetch<'a, ::resource::PhysicWorld>,
-    );
+    type SystemData = (::specs::ReadStorage<'a, ::component::Avoider>,
+     ::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+     ::specs::WriteStorage<'a, ::component::Momentum>,
+     ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
     fn run(&mut self, (avoiders, players, bodies, mut momentums, physic_world): Self::SystemData) {
-        let player_pos = (&players, &bodies).join().next().unwrap().1.get(&physic_world).position().clone();
+        let player_pos = (&players, &bodies)
+            .join()
+            .next()
+            .unwrap()
+            .1
+            .get(&physic_world)
+            .position()
+            .clone();
 
         for (_, momentum, body) in (&avoiders, &mut momentums, &bodies).join() {
             let pos = body.get(&physic_world).position().clone();
-            momentum.direction = (player_pos.translation.vector - pos.translation.vector).normalize();
+            momentum.direction = (player_pos.translation.vector - pos.translation.vector)
+                .normalize();
         }
     }
 }
@@ -101,13 +111,11 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
 pub struct PhysicSystem;
 
 impl<'a> ::specs::System<'a> for PhysicSystem {
-    type SystemData = (
-        ::specs::ReadStorage<'a, ::component::Player>,
-        ::specs::ReadStorage<'a, ::component::Momentum>,
-        ::specs::WriteStorage<'a, ::component::PhysicRigidBodyHandle>,
-        ::specs::Fetch<'a, ::resource::Config>,
-        ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-    );
+    type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::ReadStorage<'a, ::component::Momentum>,
+     ::specs::WriteStorage<'a, ::component::PhysicRigidBodyHandle>,
+     ::specs::Fetch<'a, ::resource::Config>,
+     ::specs::FetchMut<'a, ::resource::PhysicWorld>);
 
     fn run(&mut self, (player, momentums, mut bodies, config, mut physic_world): Self::SystemData) {
         for (momentum, body) in (&momentums, &mut bodies).join() {
@@ -116,8 +124,8 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             let ang_vel = body.ang_vel();
             // TODO: use integrator to modify rigidbody
             body.clear_forces();
-            body.append_lin_force(-momentum.damping*lin_vel);
-            let direction_force = momentum.force*momentum.direction;
+            body.append_lin_force(-momentum.damping * lin_vel);
+            let direction_force = momentum.force * momentum.direction;
             if let Some(pnt_to_com) = momentum.pnt_to_com {
                 let pnt_to_com = body.position().rotation * pnt_to_com;
                 body.append_force_wrt_point(direction_force, pnt_to_com);
@@ -130,7 +138,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
         }
         for _ in 0..2 {
-            physic_world.0.step(config.dt/2.);
+            physic_world.0.step(config.dt / 2.);
         }
         for (_, body) in (&player, &mut bodies).join() {
             let mut body = body.get_mut(&mut physic_world);
@@ -138,7 +146,10 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             body.set_ang_vel(::na::zero());
 
             let mut pos = body.position().clone();
-            pos = ::na::Isometry3::new(::na::Vector3::new(pos.translation.vector[0], pos.translation.vector[1], 0.5), ::na::Vector3::x()*::std::f32::consts::FRAC_PI_2);
+            pos = ::na::Isometry3::new(
+                ::na::Vector3::new(pos.translation.vector[0], pos.translation.vector[1], 0.5),
+                ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
+            );
             body.set_transformation(pos);
         }
     }
@@ -147,21 +158,21 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
 pub struct DrawSystem;
 
 impl<'a> ::specs::System<'a> for DrawSystem {
-    type SystemData = (
-        ::specs::ReadStorage<'a, ::component::StaticDraw>,
-        ::specs::ReadStorage<'a, ::component::DynamicDraw>,
-        ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
-        ::specs::ReadStorage<'a, ::component::Player>,
-        ::specs::FetchMut<'a, ::resource::Rendering>,
-        ::specs::Fetch<'a, ::resource::PhysicWorld>,
-        ::specs::Fetch<'a, ::resource::Control>,
-        ::specs::Fetch<'a, ::resource::Graphics>,
-    );
+    type SystemData = (::specs::ReadStorage<'a, ::component::StaticDraw>,
+     ::specs::ReadStorage<'a, ::component::DynamicDraw>,
+     ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+     ::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::FetchMut<'a, ::resource::Rendering>,
+     ::specs::Fetch<'a, ::resource::PhysicWorld>,
+     ::specs::Fetch<'a, ::resource::Control>,
+     ::specs::Fetch<'a, ::resource::Graphics>);
 
-    fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, physic_world, control, graphics): Self::SystemData) {
+fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, physic_world, control, graphics): Self::SystemData){
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
-            let player = (&players, &bodies).join().next().unwrap().1.get(&physic_world);
+            let player = (&players, &bodies).join().next().unwrap().1.get(
+                &physic_world,
+            );
             let pos = player.position();
             let dir = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -control.pointer[0])) *
                 ::na::Rotation3::new(::na::Vector3::new(0.0, -control.pointer[1], 0.0)) *
@@ -186,7 +197,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 ::std::f32::consts::FRAC_PI_3,
                 0.01,
                 100.0,
-                ).unwrap();
+            ).unwrap();
 
             let view_uniform = ::graphics::shader::vs::ty::View {
                 view: view_matrix.into(),
@@ -208,15 +219,16 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         );
 
         // Compute command
-        let mut command_buffer_builder =
-            ::vulkano::command_buffer::AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family())
-                .unwrap()
-                .begin_render_pass(
-                    graphics.framebuffer.clone(),
-                    false,
-                    vec![0u32.into(), 1f32.into()],
-                )
-                .unwrap();
+        let mut command_buffer_builder = ::vulkano::command_buffer::AutoCommandBufferBuilder::new(
+            graphics.device.clone(),
+            graphics.queue.family(),
+        ).unwrap()
+            .begin_render_pass(
+                graphics.framebuffer.clone(),
+                false,
+                vec![0u32.into(), 1f32.into()],
+            )
+            .unwrap();
 
         for static_draw in static_draws.join() {
             command_buffer_builder = command_buffer_builder
@@ -231,7 +243,9 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         }
 
         for dynamic_draw in dynamic_draws.join() {
-            let world_trans_subbuffer = dynamic_draw.uniform_buffer_pool.next(dynamic_draw.world_trans);
+            let world_trans_subbuffer = dynamic_draw.uniform_buffer_pool.next(
+                dynamic_draw.world_trans,
+            );
             let dynamic_draw_set = Arc::new(
                 ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
                     graphics.pipeline.clone(),
@@ -252,11 +266,13 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 .unwrap();
         }
 
-        rendering.command_buffer = Some(command_buffer_builder
-            .end_render_pass()
-            .unwrap()
-            .build()
-            .unwrap());
+        rendering.command_buffer = Some(
+            command_buffer_builder
+                .end_render_pass()
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
 
         // Compute second command
         rendering.second_command_buffer = Some(::vulkano::command_buffer::AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
@@ -273,16 +289,15 @@ impl<'a> ::specs::System<'a> for DrawSystem {
 pub struct UpdateDynamicDrawSystem;
 
 impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
-    type SystemData = (
-        ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
-        ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-        ::specs::Fetch<'a, ::resource::PhysicWorld>,
-    );
+    type SystemData = (::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+     ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+     ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
     fn run(&mut self, (bodies, mut dynamic_draws, physic_world): Self::SystemData) {
         for (dynamic_draw, body) in (&mut dynamic_draws, &bodies).join() {
             let trans = body.get(&physic_world).position() * dynamic_draw.primitive_trans;
-            dynamic_draw.world_trans = ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
+            dynamic_draw.world_trans =
+                ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
         }
     }
 }

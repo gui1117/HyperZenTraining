@@ -1,5 +1,5 @@
-pub use ::graphics::Data as Graphics;
-pub use ::maze::Maze;
+pub use graphics::Data as Graphics;
+pub use maze::Maze;
 
 pub type WinitEvents = Vec<::winit::Event>;
 
@@ -28,9 +28,7 @@ pub struct Control {
 
 impl Control {
     pub fn new() -> Self {
-        Control {
-            pointer: [0.0, 0.0],
-        }
+        Control { pointer: [0.0, 0.0] }
     }
 }
 
@@ -59,4 +57,3 @@ impl PhysicWorld {
         PhysicWorld(::nphysics::world::World::new())
     }
 }
-

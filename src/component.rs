@@ -29,9 +29,15 @@ impl ::specs::Component for Momentum {
 const PHYSIC_ALMOST_V_MAX: f32 = 0.9;
 
 impl Momentum {
-    pub fn new(mass: f32, velocity: f32, time_to_reach_v_max: f32, ang_damping: f32, pnt_to_com: Option<::na::Vector3<f32>>) -> Self {
+    pub fn new(
+        mass: f32,
+        velocity: f32,
+        time_to_reach_v_max: f32,
+        ang_damping: f32,
+        pnt_to_com: Option<::na::Vector3<f32>>,
+    ) -> Self {
         // TODO: add ang_vel, time_to_reach_ang_v_max arguments and compute ang_damping and ang_force with it
-        let damping = - mass * (1.-PHYSIC_ALMOST_V_MAX).ln() / time_to_reach_v_max;
+        let damping = -mass * (1. - PHYSIC_ALMOST_V_MAX).ln() / time_to_reach_v_max;
         let force = velocity * damping;
         Momentum {
             ang_damping,
@@ -54,7 +60,12 @@ impl ::specs::Component for StaticDraw {
 }
 
 impl StaticDraw {
-    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, group: u32, world_trans: ::graphics::shader::vs::ty::World) {
+    pub fn add(
+        world: &mut ::specs::World,
+        entity: ::specs::Entity,
+        group: u32,
+        world_trans: ::graphics::shader::vs::ty::World,
+    ) {
         let graphics = world.read_resource::<::resource::Graphics>();
 
         let uniform_buffer =
@@ -68,11 +79,11 @@ impl StaticDraw {
             ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
                 graphics.pipeline.clone(),
                 0,
-                ).add_buffer(uniform_buffer.clone())
-            .unwrap()
-            .build()
-            .unwrap(),
-            );
+            ).add_buffer(uniform_buffer.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
 
         let static_draw = StaticDraw {
             group,
@@ -92,7 +103,8 @@ pub struct DynamicDraw {
     // pub primitive: TODO: allow different primitive
     pub primitive_trans: ::na::Transform3<f32>,
     pub world_trans: ::graphics::shader::vs::ty::World,
-    pub uniform_buffer_pool: Arc<::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::World>>,
+    pub uniform_buffer_pool:
+        Arc<::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::World>>,
 }
 
 impl ::specs::Component for DynamicDraw {
@@ -100,12 +112,17 @@ impl ::specs::Component for DynamicDraw {
 }
 
 impl DynamicDraw {
-    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, group: u32, primitive_trans: ::na::Transform3<f32>) {
+    pub fn add(
+        world: &mut ::specs::World,
+        entity: ::specs::Entity,
+        group: u32,
+        primitive_trans: ::na::Transform3<f32>,
+    ) {
         let graphics = world.read_resource::<::resource::Graphics>();
 
         let uniform_buffer_pool = Arc::new(::vulkano::buffer::cpu_pool::CpuBufferPool::new(
-                graphics.device.clone(),
-                ::vulkano::buffer::BufferUsage::uniform_buffer(),
+            graphics.device.clone(),
+            ::vulkano::buffer::BufferUsage::uniform_buffer(),
         ));
 
 
@@ -113,9 +130,7 @@ impl DynamicDraw {
             group,
             uniform_buffer_pool,
             primitive_trans,
-            world_trans: ::graphics::shader::vs::ty::World {
-                world: [[0f32; 4]; 4],
-            },
+            world_trans: ::graphics::shader::vs::ty::World { world: [[0f32; 4]; 4] },
         };
 
         match world.write::<DynamicDraw>().insert(entity, dynamic_draw) {
@@ -140,11 +155,17 @@ impl PhysicRigidBodyHandle {
     }
 
     // TODO: maybe the clone method of ref is not thread safe ...
-    pub fn get<'a>(&'a self, _world: &'a ::resource::PhysicWorld) -> ::std::cell::Ref<'a, ::nphysics::object::RigidBody<f32>> {
+    pub fn get<'a>(
+        &'a self,
+        _world: &'a ::resource::PhysicWorld,
+    ) -> ::std::cell::Ref<'a, ::nphysics::object::RigidBody<f32>> {
         self.0.borrow()
     }
 
-    pub fn get_mut<'a>(&'a mut self, _world: &'a mut ::resource::PhysicWorld) -> ::std::cell::RefMut<'a, ::nphysics::object::RigidBody<f32>> {
+    pub fn get_mut<'a>(
+        &'a mut self,
+        _world: &'a mut ::resource::PhysicWorld,
+    ) -> ::std::cell::RefMut<'a, ::nphysics::object::RigidBody<f32>> {
         self.0.borrow_mut()
     }
 }

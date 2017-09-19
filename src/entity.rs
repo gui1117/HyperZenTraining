@@ -6,7 +6,10 @@ const AVOIDER_GROUP: usize = 2;
 
 pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
     let shape = ::ncollide::shape::Cylinder::new(0.5, 0.1);
-    let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::Vector3::x()*::std::f32::consts::FRAC_PI_2);
+    let pos = ::na::Isometry3::new(
+        ::na::Vector3::new(pos[0], pos[1], 0.5),
+        ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
+    );
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
     group.set_membership(&[PLAYER_GROUP]);
@@ -19,13 +22,23 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
     let time_to_reach_v_max = 0.1;
     let ang_damping = 0.0;
 
-    let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
+    let bodyhandle = world
+        .write_resource::<::resource::PhysicWorld>()
+        .0
+        .add_rigid_body(body);
     // TODO: ccd ?
     // world.write_resource::<::resource::PhysicWorld>().0.add_ccd_to(&bodyhandle, 0.01, false);
-    world.create_entity()
+    world
+        .create_entity()
         .with(::component::Player)
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
-        .with(::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, None))
+        .with(::component::Momentum::new(
+            mass,
+            velocity,
+            time_to_reach_v_max,
+            ang_damping,
+            None,
+        ))
         .build();
 }
 
@@ -64,21 +77,41 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
     let time_to_reach_v_max = 1.0;
     let ang_damping = 0.8;
     // TODO: why is it negative ? the body may not correspond to the display
-    let pnt_to_com = - (::na::Vector3::z()*size - body.center_of_mass().coords);
+    let pnt_to_com = -(::na::Vector3::z() * size - body.center_of_mass().coords);
 
     body.set_transformation(pos);
     body.set_collision_groups(group);
-    let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
-    let entity = world.create_entity()
+    let bodyhandle = world
+        .write_resource::<::resource::PhysicWorld>()
+        .0
+        .add_rigid_body(body);
+    let entity = world
+        .create_entity()
         .with(::component::Avoider)
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
-        .with(::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, Some(pnt_to_com)))
+        .with(::component::Momentum::new(
+            mass,
+            velocity,
+            time_to_reach_v_max,
+            ang_damping,
+            Some(pnt_to_com),
+        ))
         .build();
     // TODO: same graphics group for all avoider ?
-    ::component::DynamicDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), primitive_trans);
+    ::component::DynamicDraw::add(
+        world,
+        entity,
+        ::graphics::GROUP_COUNTER.next(),
+        primitive_trans,
+    );
 }
 
-pub fn create_wall_side(world: &mut ::specs::World, pos: ::na::Isometry3<f32>, x_radius: f32, y_radius: f32) {
+pub fn create_wall_side(
+    world: &mut ::specs::World,
+    pos: ::na::Isometry3<f32>,
+    x_radius: f32,
+    y_radius: f32,
+) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
     group.set_membership(&[WALL_GROUP]);
     group.set_blacklist(&[WALL_GROUP]);
@@ -89,7 +122,7 @@ pub fn create_wall_side(world: &mut ::specs::World, pos: ::na::Isometry3<f32>, x
         let mut dim_trans: ::na::Transform3<f32> = ::na::one();
         dim_trans[(0, 0)] = x_radius;
         dim_trans[(1, 1)] = y_radius;
-        let trans = pos_trans*dim_trans;
+        let trans = pos_trans * dim_trans;
         ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
     };
 
@@ -97,9 +130,13 @@ pub fn create_wall_side(world: &mut ::specs::World, pos: ::na::Isometry3<f32>, x
     let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
     body.set_collision_groups(group);
     body.set_transformation(pos);
-    let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
+    let bodyhandle = world
+        .write_resource::<::resource::PhysicWorld>()
+        .0
+        .add_rigid_body(body);
 
-    let entity = world.create_entity()
+    let entity = world
+        .create_entity()
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
         .build();
     ::component::StaticDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), world_trans);
@@ -121,21 +158,17 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
     for x in 0..size {
         let mut up_coords = None;
         let mut down_coords = None;
-        for y in 0..size+1 {
+        for y in 0..size + 1 {
             let up_wall = if x == 0 || y == size {
                 false
             } else {
-                maze[x-1][y]
+                maze[x - 1][y]
             };
-            let wall = if y == size {
-                false
-            } else {
-                maze[x][y]
-            };
+            let wall = if y == size { false } else { maze[x][y] };
             let down_wall = if x + 1 == size || y == size {
                 false
             } else {
-                maze[x+1][y]
+                maze[x + 1][y]
             };
 
             let up_side_wall = wall && !up_wall;
@@ -149,7 +182,10 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                 let c = up_coords.take().unwrap();
                 let x_radius = 0.5;
                 let y_radius = (c.1 - c.0 + 1) as f32 / 2.0;
-                let pos = ::na::Isometry3::new(::na::Vector3::new(x as f32 - 0.5, c.0 as f32 + y_radius - 0.5, 0.5), ::na::Vector3::y()*::std::f32::consts::FRAC_PI_2);
+                let pos = ::na::Isometry3::new(
+                    ::na::Vector3::new(x as f32 - 0.5, c.0 as f32 + y_radius - 0.5, 0.5),
+                    ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
+                );
                 create_wall_side(world, pos, x_radius, y_radius);
             }
 
@@ -161,7 +197,10 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                 let c = down_coords.take().unwrap();
                 let x_radius = 0.5;
                 let y_radius = (c.1 - c.0 + 1) as f32 / 2.0;
-                let pos = ::na::Isometry3::new(::na::Vector3::new(x as f32 + 0.5, c.0 as f32 + y_radius - 0.5, 0.5), ::na::Vector3::y()*::std::f32::consts::FRAC_PI_2);
+                let pos = ::na::Isometry3::new(
+                    ::na::Vector3::new(x as f32 + 0.5, c.0 as f32 + y_radius - 0.5, 0.5),
+                    ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
+                );
                 create_wall_side(world, pos, x_radius, y_radius);
             }
         }
@@ -170,21 +209,17 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
     for y in 0..size {
         let mut up_coords = None;
         let mut down_coords = None;
-        for x in 0..size+1 {
+        for x in 0..size + 1 {
             let up_wall = if y == 0 || x == size {
                 false
             } else {
-                maze[x][y-1]
+                maze[x][y - 1]
             };
-            let wall = if x == size {
-                false
-            } else {
-                maze[x][y]
-            };
+            let wall = if x == size { false } else { maze[x][y] };
             let down_wall = if y + 1 == size || x == size {
                 false
             } else {
-                maze[x][y+1]
+                maze[x][y + 1]
             };
 
             let up_side_wall = wall && !up_wall;
@@ -198,7 +233,10 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                 let c = up_coords.take().unwrap();
                 let x_radius = (c.1 - c.0 + 1) as f32 / 2.0;
                 let y_radius = 0.5;
-                let pos = ::na::Isometry3::new(::na::Vector3::new(c.0 as f32 + x_radius - 0.5, y as f32 - 0.5, 0.5), ::na::Vector3::x()*::std::f32::consts::FRAC_PI_2);
+                let pos = ::na::Isometry3::new(
+                    ::na::Vector3::new(c.0 as f32 + x_radius - 0.5, y as f32 - 0.5, 0.5),
+                    ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
+                );
                 create_wall_side(world, pos, x_radius, y_radius);
             }
 
@@ -210,7 +248,10 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                 let c = down_coords.take().unwrap();
                 let x_radius = (c.1 - c.0 + 1) as f32 / 2.0;
                 let y_radius = 0.5;
-                let pos = ::na::Isometry3::new(::na::Vector3::new(c.0 as f32 + x_radius - 0.5, y as f32 + 0.5, 0.5), ::na::Vector3::x()*::std::f32::consts::FRAC_PI_2);
+                let pos = ::na::Isometry3::new(
+                    ::na::Vector3::new(c.0 as f32 + x_radius - 0.5, y as f32 + 0.5, 0.5),
+                    ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
+                );
                 create_wall_side(world, pos, x_radius, y_radius);
             }
         }

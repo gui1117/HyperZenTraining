@@ -16,13 +16,14 @@ pub struct GroupCounter {
 
 impl GroupCounter {
     fn new() -> Self {
-        GroupCounter {
-            counter: ::std::sync::atomic::AtomicUsize::new(1),
-        }
+        GroupCounter { counter: ::std::sync::atomic::AtomicUsize::new(1) }
     }
 
     pub fn next(&self) -> u32 {
-        self.counter.fetch_add(1, ::std::sync::atomic::Ordering::Relaxed) as u32
+        self.counter.fetch_add(
+            1,
+            ::std::sync::atomic::Ordering::Relaxed,
+        ) as u32
     }
 }
 

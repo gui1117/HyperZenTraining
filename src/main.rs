@@ -67,7 +67,11 @@ fn main() {
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::WinitEvents::new());
     world.add_resource(::resource::Config::default());
-    world.add_resource(::maze::generate_partial_reverse_randomized_kruskal(31, 31, 50.0));
+    world.add_resource(::maze::generate_partial_reverse_randomized_kruskal(
+        31,
+        31,
+        50.0,
+    ));
 
     ::entity::create_maze_walls(&mut world);
     ::entity::create_avoider(&mut world, [2.0, 1.0]);
@@ -76,13 +80,25 @@ fn main() {
     world.maintain();
 
     let mut update_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::PlayerControlSystem::new(), "player_control_system", &[])
-        .add(::system::AvoiderControlSystem, "avoider_control_system", &[])
+        .add(
+            ::system::PlayerControlSystem::new(),
+            "player_control_system",
+            &[],
+        )
+        .add(
+            ::system::AvoiderControlSystem,
+            "avoider_control_system",
+            &[],
+        )
         .add(::system::PhysicSystem, "physic_system", &[])
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::UpdateDynamicDrawSystem, "update_dynamic_draw_system", &[])
+        .add(
+            ::system::UpdateDynamicDrawSystem,
+            "update_dynamic_draw_system",
+            &[],
+        )
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
@@ -101,15 +117,22 @@ fn main() {
                     winit::Event::WindowEvent { event: winit::WindowEvent::Closed, .. } => {
                         done = true;
                         false
-                    },
-                    winit::Event::WindowEvent { event: winit::WindowEvent::MouseMoved { .. }, .. } => {
+                    }
+                    winit::Event::WindowEvent {
+                        event: winit::WindowEvent::MouseMoved { .. }, ..
+                    } => {
                         window
                             .window()
-                            .set_cursor_position(graphics.data.width as i32 / 2, graphics.data.height as i32 / 2)
+                            .set_cursor_position(
+                                graphics.data.width as i32 / 2,
+                                graphics.data.height as i32 / 2,
+                            )
                             .unwrap();
                         true
-                    },
-                    winit::Event::WindowEvent { event: winit::WindowEvent::KeyboardInput { .. }, .. } => true,
+                    }
+                    winit::Event::WindowEvent {
+                        event: winit::WindowEvent::KeyboardInput { .. }, ..
+                    } => true,
                     _ => false,
                 };
 
@@ -135,7 +158,10 @@ fn main() {
 
         let (command_buffer, second_command_buffer) = {
             let mut rendering = world.write_resource::<::resource::Rendering>();
-            (rendering.command_buffer.take().unwrap(), rendering.second_command_buffer.take().unwrap())
+            (
+                rendering.command_buffer.take().unwrap(),
+                rendering.second_command_buffer.take().unwrap(),
+            )
         };
 
         let future = previous_frame_end
