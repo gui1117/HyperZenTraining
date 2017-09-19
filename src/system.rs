@@ -3,19 +3,19 @@ use alga::general::SubsetOf;
 use std::sync::Arc;
 
 // TODO: get mouse from axis and check if there are differences because of acceleration
-pub struct ControlSystem {
+pub struct PlayerControlSystem {
     directions: Vec<::util::Direction>,
 }
 
-impl ControlSystem {
+impl PlayerControlSystem {
     pub fn new() -> Self {
-        ControlSystem {
+        PlayerControlSystem {
             directions: vec!(),
         }
     }
 }
 
-impl<'a> ::specs::System<'a> for ControlSystem {
+impl<'a> ::specs::System<'a> for PlayerControlSystem {
     type SystemData = (
         ::specs::ReadStorage<'a, ::component::Player>,
         ::specs::WriteStorage<'a, ::component::Momentum>,
@@ -77,6 +77,27 @@ impl<'a> ::specs::System<'a> for ControlSystem {
     }
 }
 
+pub struct AvoiderControlSystem;
+
+impl<'a> ::specs::System<'a> for AvoiderControlSystem {
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::Avoider>,
+        ::specs::ReadStorage<'a, ::component::Player>,
+        ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+        ::specs::WriteStorage<'a, ::component::Momentum>,
+        ::specs::Fetch<'a, ::resource::PhysicWorld>,
+    );
+
+    fn run(&mut self, (avoiders, players, bodies, mut momentums, physic_world): Self::SystemData) {
+        let player_pos = (&players, &bodies).join().next().unwrap().1.get(&physic_world).position().clone();
+
+        for (_, momentum, body) in (&avoiders, &mut momentums, &bodies).join() {
+            let pos = body.get(&physic_world).position().clone();
+            momentum.direction = (player_pos.translation.vector - pos.translation.vector).normalize();
+        }
+    }
+}
+
 pub struct PhysicSystem;
 
 impl<'a> ::specs::System<'a> for PhysicSystem {
@@ -92,8 +113,19 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
         for (momentum, body) in (&momentums, &mut bodies).join() {
             let mut body = body.get_mut(&mut physic_world);
             let lin_vel = body.lin_vel();
-            body.append_lin_force(momentum.force*momentum.direction);
+            let ang_vel = body.ang_vel();
+            // TODO use integrator to modify rigidbody
+            body.clear_forces();
             body.append_lin_force(-momentum.damping*lin_vel);
+            let direction_force = momentum.force*momentum.direction;
+            if let Some(pnt_to_com) = momentum.pnt_to_com {
+                let pnt_to_com = body.position().rotation * pnt_to_com;
+                body.append_force_wrt_point(direction_force, pnt_to_com);
+            } else {
+                body.append_lin_force(direction_force);
+            }
+            body.set_ang_vel_internal(momentum.ang_damping * ang_vel);
+
             // TODO gravity if not touching floor
             // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
         }
@@ -102,7 +134,6 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
         }
         for (_, body) in (&player, &mut bodies).join() {
             let mut body = body.get_mut(&mut physic_world);
-            body.clear_forces();
             body.set_ang_acc_scale(::na::zero());
             body.set_ang_vel(::na::zero());
 

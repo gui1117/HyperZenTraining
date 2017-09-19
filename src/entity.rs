@@ -17,16 +17,20 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
     let mass = 1.0 / body.inv_mass();
     let velocity = 10.0;
     let time_to_reach_v_max = 0.1;
+    let ang_damping = 0.0;
 
     let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
-    world.write_resource::<::resource::PhysicWorld>().0.add_ccd_to(&bodyhandle, 0.01, false);
+    // TODO: ccd ?
+    // world.write_resource::<::resource::PhysicWorld>().0.add_ccd_to(&bodyhandle, 0.01, false);
     world.create_entity()
         .with(::component::Player)
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
-        .with(::component::Momentum::new(mass, velocity, time_to_reach_v_max))
+        .with(::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, None))
         .build();
 }
 
+// TODO: maybe have a triangle base for the pyramid
+// TODO: mabye make it turn on itself
 pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
     let size = 0.1;
 
@@ -55,17 +59,21 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
     group.set_membership(&[AVOIDER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
-    body.set_transformation(pos);
-    body.set_collision_groups(group);
     let mass = 1.0 / body.inv_mass();
     let velocity = 5.0;
     let time_to_reach_v_max = 1.0;
+    let ang_damping = 0.8;
+    // TODO: why is it negative ? the body may not correspond to the display
+    let pnt_to_com = - (::na::Vector3::z()*size - body.center_of_mass().coords);
 
+    body.set_transformation(pos);
+    body.set_collision_groups(group);
     let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
     world.write_resource::<::resource::PhysicWorld>().0.add_ccd_to(&bodyhandle, 0.01, false);
     let entity = world.create_entity()
+        .with(::component::Avoider)
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
-        .with(::component::Momentum::new(mass, velocity, time_to_reach_v_max))
+        .with(::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, Some(pnt_to_com)))
         .build();
     // TODO same graphics group for all avoider ?
     ::component::DynamicDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), primitive_trans);

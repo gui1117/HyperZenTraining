@@ -1,6 +1,12 @@
 use std::sync::Arc;
 
-// TODO check storage ???
+#[derive(Default)]
+pub struct Avoider;
+
+impl ::specs::Component for Avoider {
+    type Storage = ::specs::NullStorage<Self>;
+}
+
 #[derive(Default)]
 pub struct Player;
 
@@ -9,9 +15,11 @@ impl ::specs::Component for Player {
 }
 
 pub struct Momentum {
+    pub ang_damping: f32,
     pub damping: f32,
     pub force: f32,
     pub direction: ::na::Vector3<f32>,
+    pub pnt_to_com: Option<::na::Vector3<f32>>,
 }
 
 impl ::specs::Component for Momentum {
@@ -21,13 +29,16 @@ impl ::specs::Component for Momentum {
 const PHYSIC_ALMOST_V_MAX: f32 = 0.9;
 
 impl Momentum {
-    pub fn new(mass: f32, velocity: f32, time_to_reach_v_max: f32) -> Self {
+    pub fn new(mass: f32, velocity: f32, time_to_reach_v_max: f32, ang_damping: f32, pnt_to_com: Option<::na::Vector3<f32>>) -> Self {
+        // TODO: add ang_vel, time_to_reach_ang_v_max arguments and compute ang_damping and ang_force with it
         let damping = - mass * (1.-PHYSIC_ALMOST_V_MAX).ln() / time_to_reach_v_max;
         let force = velocity * damping;
         Momentum {
+            ang_damping,
             damping,
             force,
             direction: ::na::zero(),
+            pnt_to_com,
         }
     }
 }

@@ -59,6 +59,7 @@ fn main() {
     world.register::<::component::DynamicDraw>();
     world.register::<::component::PhysicRigidBodyHandle>();
     world.register::<::component::Momentum>();
+    world.register::<::component::Avoider>();
     world.add_resource(graphics.data.clone());
     world.add_resource(::resource::PhysicWorld::new());
     world.add_resource(::resource::Control::new());
@@ -74,7 +75,8 @@ fn main() {
     world.maintain();
 
     let mut update_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::ControlSystem::new(), "control_system", &[])
+        .add(::system::PlayerControlSystem::new(), "player_control_system", &[])
+        .add(::system::AvoiderControlSystem, "avoider_control_system", &[])
         .add(::system::PhysicSystem, "physic_system", &[])
         .build();
 
