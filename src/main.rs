@@ -13,6 +13,7 @@ extern crate rand;
 extern crate nphysics3d as nphysics;
 #[macro_use]
 extern crate lazy_static;
+extern crate pathfinding;
 
 mod util;
 mod graphics;
@@ -66,11 +67,11 @@ fn main() {
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::WinitEvents::new());
     world.add_resource(::resource::Config::default());
+    world.add_resource(::maze::generate_partial_reverse_randomized_kruskal(31, 31, 50.0));
 
-    ::entity::create_player(&mut world, [1.0, 1.0]);
-    let maze = maze::generate_partial_reverse_randomized_kruskal(31, 31, 50.0);
-    ::entity::create_maze_walls(&mut world, maze);
+    ::entity::create_maze_walls(&mut world);
     ::entity::create_avoider(&mut world, [2.0, 1.0]);
+    ::entity::create_player(&mut world, [1.0, 1.0]);
 
     world.maintain();
 

@@ -1,4 +1,5 @@
 pub use ::graphics::Data as Graphics;
+pub use ::maze::Maze;
 
 pub type WinitEvents = Vec<::winit::Event>;
 

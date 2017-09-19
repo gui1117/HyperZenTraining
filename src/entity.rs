@@ -69,7 +69,6 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
     body.set_transformation(pos);
     body.set_collision_groups(group);
     let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
-    world.write_resource::<::resource::PhysicWorld>().0.add_ccd_to(&bodyhandle, 0.01, false);
     let entity = world.create_entity()
         .with(::component::Avoider)
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
@@ -106,12 +105,18 @@ pub fn create_wall_side(world: &mut ::specs::World, pos: ::na::Isometry3<f32>, x
     ::component::StaticDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), world_trans);
 }
 
-pub fn create_maze_walls(world: &mut ::specs::World, maze: Vec<Vec<bool>>) {
+pub fn create_maze_walls(world: &mut ::specs::World) {
+    // TODO: do not clone maze.
+    //       maybe a method instantiate on maze that take world
+    //       or all entity method take storage instead of whole world
+    let maze = world.read_resource::<::resource::Maze>().clone();
+
     // TODO: refactor
     let size = {
-        assert_eq!(maze.len().pow(2), maze.iter().map(|column| column.len()).sum());
-        maze.len()
+        assert_eq!(maze.height, maze.width);
+        maze.height
     };
+    let maze = maze.walls;
 
     for x in 0..size {
         let mut up_coords = None;

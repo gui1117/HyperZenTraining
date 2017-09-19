@@ -16,6 +16,7 @@ specs = "0.9"
 alga = "0.5"
 rand = "0.3"
 lazy_static = "0.2"
+pathfinding = "0.1"
 
 # app_dirs = "1"
 # mut_static = "5"

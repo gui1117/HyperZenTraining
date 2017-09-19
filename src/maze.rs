@@ -1,7 +1,40 @@
 use rand::distributions::IndependentSample;
 
+#[derive(Clone)]
+pub struct Maze {
+    pub walls: Vec<Vec<bool>>,
+    pub width: usize,
+    pub height: usize,
+}
+
+impl Maze {
+    pub fn pathfind(&mut self, pos: (usize, usize), goal: (usize, usize)) -> Option<(Vec<(usize, usize)>, usize)> {
+        ::pathfinding::astar(&pos,
+                             |&(x, y)| {
+                                 let mut neighbours = vec!();
+                                 for i in x-1..x+2 {
+                                     for j in y-1..y+2 {
+                                         if let Some(&true) = self.walls.get(i).and_then(|column| column.get(j)) {
+                                             let cost = if i == x || j == y {
+                                                 1000
+                                             } else {
+                                                 1414
+                                             };
+                                             neighbours.push(((i, j), cost))
+                                         }
+                                     }
+                                 }
+                                 neighbours
+                             },
+                             // TODO: more precise heuristic ?
+                             |&(x, y)| (if x > goal.0 { x-goal.0 } else { goal.0-x } + if y > goal.1 { y-goal.1 } else { goal.1-y }) / 3,
+                             |&p| p == goal)
+
+    }
+}
+
 /// https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm
-pub fn generate_partial_reverse_randomized_kruskal(width: usize, height: usize, percent: f64) -> Vec<Vec<bool>> {
+pub fn generate_partial_reverse_randomized_kruskal(width: usize, height: usize, percent: f64) -> Maze {
     enum WallPos {
         Vertical(usize,usize),
         Horizontal(usize,usize),
@@ -79,5 +112,10 @@ pub fn generate_partial_reverse_randomized_kruskal(width: usize, height: usize, 
             res[i].push(grid[index(i,j)].0);
         }
     }
-    res
+
+    Maze {
+        width,
+        height,
+        walls: res,
+    }
 }
