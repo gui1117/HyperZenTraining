@@ -89,7 +89,7 @@ impl StaticDraw {
 
 pub struct DynamicDraw {
     pub group: u32,
-    // pub primitive: TODO allow different primitive
+    // pub primitive: TODO: allow different primitive
     pub primitive_trans: ::na::Transform3<f32>,
     pub world_trans: ::graphics::shader::vs::ty::World,
     pub uniform_buffer_pool: Arc<::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::World>>,
@@ -139,7 +139,7 @@ impl PhysicRigidBodyHandle {
         PhysicRigidBodyHandle(body)
     }
 
-    // TODO maybe the clone method of ref is not thread safe ...
+    // TODO: maybe the clone method of ref is not thread safe ...
     pub fn get<'a>(&'a self, _world: &'a ::resource::PhysicWorld) -> ::std::cell::Ref<'a, ::nphysics::object::RigidBody<f32>> {
         self.0.borrow()
     }

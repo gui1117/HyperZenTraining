@@ -75,7 +75,7 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
         .with(::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, Some(pnt_to_com)))
         .build();
-    // TODO same graphics group for all avoider ?
+    // TODO: same graphics group for all avoider ?
     ::component::DynamicDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), primitive_trans);
 }
 

@@ -8,7 +8,7 @@ pub struct Config {
     pub mouse_sensibility: f32,
 }
 
-// TODO read from config file
+// TODO: read from config file
 impl Default for Config {
     fn default() -> Self {
         let fps = 60;
@@ -20,7 +20,7 @@ impl Default for Config {
     }
 }
 
-// TODO change to aim that is assigned to player
+// TODO: change to aim that is assigned to player
 pub struct Control {
     pub pointer: [f32; 2],
 }

@@ -294,7 +294,7 @@ impl<'a> Graphics<'a> {
                 ::vulkano::buffer::BufferUsage::uniform_buffer(),
             );
 
-        //TODO maybe use simple instead of persistent
+        //TODO: maybe use simple instead of persistent
         let tmp_image_set = Arc::new(
             ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
                 second_pipeline.clone(),

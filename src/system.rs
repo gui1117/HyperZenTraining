@@ -114,7 +114,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             let mut body = body.get_mut(&mut physic_world);
             let lin_vel = body.lin_vel();
             let ang_vel = body.ang_vel();
-            // TODO use integrator to modify rigidbody
+            // TODO: use integrator to modify rigidbody
             body.clear_forces();
             body.append_lin_force(-momentum.damping*lin_vel);
             let direction_force = momentum.force*momentum.direction;
@@ -126,7 +126,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             }
             body.set_ang_vel_internal(momentum.ang_damping * ang_vel);
 
-            // TODO gravity if not touching floor
+            // TODO: gravity if not touching floor
             // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
         }
         for _ in 0..2 {
