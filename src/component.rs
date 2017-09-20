@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-#[derive(Default)]
 pub struct Avoider {
     pub goal: Option<(usize, usize)>,
 }
@@ -15,11 +14,22 @@ impl Avoider {
     }
 }
 
-#[derive(Default)]
-pub struct Player;
+pub struct Player {
+    pub aim: ::na::Vector3<f32>,
+    pub x_aim: f32,
+}
+
+impl Player {
+    pub fn new() -> Self {
+        Player {
+            aim: ::na::Vector3::x(),
+            x_aim: 0.0,
+        }
+    }
+}
 
 impl ::specs::Component for Player {
-    type Storage = ::specs::NullStorage<Self>;
+    type Storage = ::specs::HashMapStorage<Self>;
 }
 
 pub struct Momentum {

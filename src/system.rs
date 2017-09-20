@@ -14,7 +14,7 @@ impl PlayerControlSystem {
 }
 
 impl<'a> ::specs::System<'a> for PlayerControlSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
+    type SystemData = (::specs::WriteStorage<'a, ::component::Player>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
      ::specs::Fetch<'a, ::resource::WinitEvents>,
      ::specs::Fetch<'a, ::resource::Graphics>,
@@ -23,7 +23,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
 
     fn run(
         &mut self,
-        (players, mut momentums, events, graphics, config, mut control): Self::SystemData,
+        (mut players, mut momentums, events, graphics, config, mut control): Self::SystemData,
     ) {
         for ev in events.iter() {
             match *ev {
@@ -59,7 +59,12 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
             }
         }
 
-        let player_momentum = (&players, &mut momentums).join().next().unwrap().1;
+        let (player, player_momentum) = (&mut players, &mut momentums).join().next().unwrap();
+        player.aim = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -control.pointer[0])) *
+            ::na::Rotation3::new(::na::Vector3::new(0.0, -control.pointer[1], 0.0)) *
+            ::na::Vector3::x();
+        player.x_aim = control.pointer[0];
+
         let mut move_vector: ::na::Vector3<f32> = ::na::zero();
         if self.directions.is_empty() {
             player_momentum.direction = ::na::zero();
@@ -95,14 +100,9 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
         &mut self,
         (players, bodies, mut avoiders, mut momentums, physic_world, maze): Self::SystemData,
     ) {
-        let player_pos = (&players, &bodies)
-            .join()
-            .next()
-            .unwrap()
-            .1
-            .get(&physic_world)
-            .position()
-            .clone();
+        let (player, player_body) = (&players, &bodies).join().next().unwrap();
+
+        let player_pos = player_body.get(&physic_world).position().clone();
 
         for (avoider, momentum, body) in (&mut avoiders, &mut momentums, &bodies).join() {
             let avoider_pos = body.get(&physic_world).position().clone();
@@ -135,17 +135,40 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                 avoider.goal = maze.find_path(pos, goal).unwrap().0.get(1).cloned();
             }
 
-            let direction = if let Some(goal) = avoider.goal {
-                ::na::Vector3::new(
-                    goal.0 as f32 + 0.5,
-                    goal.1 as f32 + 0.5,
-                    avoider_pos.translation.vector[2],
-                )
-            } else {
-                player_pos.translation.vector
+            let (goal_direction, goal_coef) = {
+                let goal_pos = if let Some(goal) = avoider.goal {
+                    ::na::Vector3::new(
+                        goal.0 as f32 + 0.5,
+                        goal.1 as f32 + 0.5,
+                        avoider_pos.translation.vector[2],
+                        )
+                } else {
+                    player_pos.translation.vector
+                };
+
+                ((goal_pos - avoider_pos.translation.vector).normalize(), 1f32)
             };
 
-            momentum.direction = (direction - avoider_pos.translation.vector).normalize();
+            let (avoid_direction, avoid_coef) = {
+                (::na::Vector3::z(), 2f32)
+                // let avoider_pos_rel_player = avoider_pos.translation.vector - player_pos.translation.vector;
+                // let avoid_vector = avoider_pos_rel_player - avoider_pos_rel_player.dot(&player.aim)*player.aim;
+                // if avoid_vector.norm() != 0.0 {
+                //     let avoid_norm = avoid_vector.norm();
+                //     let avoid_direction = avoid_vector.normalize();
+                //     if avoid_norm > 0.5 {
+                //         (avoid_direction, 0f32)
+                //     } else {
+                //         // TODO: COEFFICENT ??
+                //         (avoid_direction, 0.1)//1.0/avoid_norm)
+                //     }
+                // } else {
+                //     let random = ::na::Vector3::new_random();
+                //     ((random - random.dot(&player.aim)*player.aim).normalize(), 0.1f32)//1000f32)
+                // }
+            };
+
+            momentum.direction = (goal_coef*goal_direction + avoid_coef*avoid_direction).normalize();
         }
     }
 }
@@ -206,26 +229,30 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::ReadStorage<'a, ::component::Player>,
      ::specs::FetchMut<'a, ::resource::Rendering>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
-     ::specs::Fetch<'a, ::resource::Control>,
      ::specs::Fetch<'a, ::resource::Graphics>);
 
-fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, physic_world, control, graphics): Self::SystemData){
+fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, physic_world, graphics): Self::SystemData){
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
-            let player = (&players, &bodies).join().next().unwrap().1.get(
+            let (player, player_body) = (&players, &bodies).join().next().unwrap();
+
+            let player_pos = player_body.get(
                 &physic_world,
-            );
-            let pos = player.position();
-            let dir = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -control.pointer[0])) *
-                ::na::Rotation3::new(::na::Vector3::new(0.0, -control.pointer[1], 0.0)) *
-                ::na::Vector3::new(1.0, 0.0, 0.0);
+                ).position().clone();
+
+            // IDEA: if we change -player.x_aim here to + then it is fun
+            let camera_top = if player.aim[2].abs() > 0.8 {
+                ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -player.x_aim)) * ::na::Vector3::x() * - player.aim[2].signum()
+            } else {
+                ::na::Vector3::z()
+            };
 
             let view_matrix = {
                 let i: ::na::Transform3<f32> =
                     ::na::Similarity3::look_at_rh(
-                        &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
-                        &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + dir),
-                        &[0.0, 0.0, 1.0].into(), // FIXME: this will result in NaN if y is PI/2
+                        &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector)),
+                        &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector) + player.aim),
+                        &camera_top.into(),
                         // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + ::na::Vector3::new(0.0, 0.0, -10.0)),
                         // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
                         // &[-1.0, 0.0, 0.0].into(),
