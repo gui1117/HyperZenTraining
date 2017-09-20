@@ -149,8 +149,9 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                 ((goal_pos - avoider_pos.translation.vector).normalize(), 1f32)
             };
 
+            println!("{}", avoider_pos.translation.vector);
             let (avoid_direction, avoid_coef) = {
-                (::na::Vector3::z(), 2f32)
+                (::na::Vector3::z(), 1.0f32)
                 // let avoider_pos_rel_player = avoider_pos.translation.vector - player_pos.translation.vector;
                 // let avoid_vector = avoider_pos_rel_player - avoider_pos_rel_player.dot(&player.aim)*player.aim;
                 // if avoid_vector.norm() != 0.0 {
