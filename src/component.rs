@@ -1,10 +1,18 @@
 use std::sync::Arc;
 
 #[derive(Default)]
-pub struct Avoider;
+pub struct Avoider {
+    pub goal: Option<(usize, usize)>,
+}
 
 impl ::specs::Component for Avoider {
-    type Storage = ::specs::NullStorage<Self>;
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl Avoider {
+    pub fn new() -> Self {
+        Avoider { goal: None }
+    }
 }
 
 #[derive(Default)]

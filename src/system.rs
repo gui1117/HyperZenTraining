@@ -84,13 +84,15 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
 pub struct AvoiderControlSystem;
 
 impl<'a> ::specs::System<'a> for AvoiderControlSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::Avoider>,
+    type SystemData = (
      ::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+     ::specs::WriteStorage<'a, ::component::Avoider>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
-     ::specs::Fetch<'a, ::resource::PhysicWorld>);
+     ::specs::Fetch<'a, ::resource::PhysicWorld>,
+     ::specs::Fetch<'a, ::resource::Maze>);
 
-    fn run(&mut self, (avoiders, players, bodies, mut momentums, physic_world): Self::SystemData) {
+    fn run(&mut self, (players, bodies, mut avoiders, mut momentums, physic_world, maze): Self::SystemData) {
         let player_pos = (&players, &bodies)
             .join()
             .next()
@@ -100,9 +102,28 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             .position()
             .clone();
 
-        for (_, momentum, body) in (&avoiders, &mut momentums, &bodies).join() {
-            let pos = body.get(&physic_world).position().clone();
-            momentum.direction = (player_pos.translation.vector - pos.translation.vector)
+        for (avoider, momentum, body) in (&mut avoiders, &mut momentums, &bodies).join() {
+            let avoider_pos = body.get(&physic_world).position().clone();
+
+            let recompute_goal = if let Some(goal) = avoider.goal {
+                (avoider_pos.translation.vector - ::na::Vector3::new(goal.0 as f32, goal.1 as f32, avoider_pos.translation.vector[2])).norm() < 0.3
+            } else {
+                if (avoider_pos.translation.vector - player_pos.translation.vector).norm() < 1.0 {
+                    avoider.goal.take();
+                    false
+                } else {
+                    true
+                }
+            };
+
+            if recompute_goal {
+                println!("avoider_ pos : {}",avoider_pos.translation.vector);
+                let pos = (avoider_pos.translation.vector[0] as usize, avoider_pos.translation.vector[1] as usize);
+                let goal = (player_pos.translation.vector[0] as usize, player_pos.translation.vector[1] as usize);
+                println!("{:?}", maze.find_path(pos, goal));
+            }
+
+            momentum.direction = (player_pos.translation.vector - avoider_pos.translation.vector)
                 .normalize();
         }
     }

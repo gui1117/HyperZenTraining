@@ -87,7 +87,7 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
         .add_rigid_body(body);
     let entity = world
         .create_entity()
-        .with(::component::Avoider)
+        .with(::component::Avoider::new())
         .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
         .with(::component::Momentum::new(
             mass,
@@ -183,7 +183,7 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                 let x_radius = 0.5;
                 let y_radius = (c.1 - c.0 + 1) as f32 / 2.0;
                 let pos = ::na::Isometry3::new(
-                    ::na::Vector3::new(x as f32 - 0.5, c.0 as f32 + y_radius - 0.5, 0.5),
+                    ::na::Vector3::new(x as f32, c.0 as f32 + y_radius, 0.5),
                     ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
                 );
                 create_wall_side(world, pos, x_radius, y_radius);
@@ -198,7 +198,7 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                 let x_radius = 0.5;
                 let y_radius = (c.1 - c.0 + 1) as f32 / 2.0;
                 let pos = ::na::Isometry3::new(
-                    ::na::Vector3::new(x as f32 + 0.5, c.0 as f32 + y_radius - 0.5, 0.5),
+                    ::na::Vector3::new(x as f32 + 1.0, c.0 as f32 + y_radius, 0.5),
                     ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
                 );
                 create_wall_side(world, pos, x_radius, y_radius);
@@ -234,7 +234,7 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                 let x_radius = (c.1 - c.0 + 1) as f32 / 2.0;
                 let y_radius = 0.5;
                 let pos = ::na::Isometry3::new(
-                    ::na::Vector3::new(c.0 as f32 + x_radius - 0.5, y as f32 - 0.5, 0.5),
+                    ::na::Vector3::new(c.0 as f32 + x_radius, y as f32, 0.5),
                     ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
                 );
                 create_wall_side(world, pos, x_radius, y_radius);
@@ -249,7 +249,7 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                 let x_radius = (c.1 - c.0 + 1) as f32 / 2.0;
                 let y_radius = 0.5;
                 let pos = ::na::Isometry3::new(
-                    ::na::Vector3::new(c.0 as f32 + x_radius - 0.5, y as f32 + 0.5, 0.5),
+                    ::na::Vector3::new(c.0 as f32 + x_radius, y as f32 + 1.0, 0.5),
                     ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
                 );
                 create_wall_side(world, pos, x_radius, y_radius);

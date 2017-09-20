@@ -8,29 +8,35 @@ pub struct Maze {
 }
 
 impl Maze {
-    pub fn pathfind(
-        &mut self,
+    pub fn find_path(
+        &self,
         pos: (usize, usize),
         goal: (usize, usize),
     ) -> Option<(Vec<(usize, usize)>, usize)> {
+        println!("pos: {:?}, goal: {:?}", pos, goal);
         ::pathfinding::astar(
             &pos,
             |&(x, y)| {
-                let mut neighbours = vec![];
-                for i in x - 1..x + 2 {
-                    for j in y - 1..y + 2 {
-                        if let Some(&true) = self.walls.get(i).and_then(|column| column.get(j)) {
-                            let cost = if i == x || j == y { 1000 } else { 1414 };
-                            neighbours.push(((i, j), cost))
-                        }
-                    }
-                }
-                neighbours
+                println!("x:{}, y:{}", x, y);
+                let mut res = vec!(
+                    // (x-1, y-1),
+                    ((x-1, y), 1),
+                    // (x-1, y+1),
+                    ((x, y-1), 1),
+                    ((x, y+1), 1),
+                    // (x+1, y-1),
+                    ((x+1, y), 1),
+                    // (x+1, y+1),
+                );
+                res.retain(|&((x, y), _)| !self.walls[x][y]);
+                println!("res: {:?}", res);
+                res
             },
             // TODO: more precise heuristic ?
             |&(x, y)| {
-                (if x > goal.0 { x - goal.0 } else { goal.0 - x } +
-                     if y > goal.1 { y - goal.1 } else { goal.1 - y }) / 3
+                0usize
+                // (if x > goal.0 { x - goal.0 } else { goal.0 - x } +
+                //      if y > goal.1 { y - goal.1 } else { goal.1 - y }) / 3
             },
             |&p| p == goal,
         )
@@ -38,12 +44,9 @@ impl Maze {
     }
 }
 
-/// https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm
-pub fn generate_partial_reverse_randomized_kruskal(
-    width: usize,
-    height: usize,
-    percent: f64,
-) -> Maze {
+/// Generate partial reverse randomized_kruskal
+/// `https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm`
+pub fn kruskal( width: usize, height: usize, percent: f64) -> Maze {
     enum WallPos {
         Vertical(usize, usize),
         Horizontal(usize, usize),
