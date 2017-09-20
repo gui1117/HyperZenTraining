@@ -155,10 +155,10 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
     };
     let maze = maze.walls;
 
-    for x in 1..size {
+    for x in 0..size {
         let mut up_coords = None;
         let mut down_coords = None;
-        for y in 1..size {
+        for y in 0..size + 1 {
             let up_wall = if x == 0 || y == size {
                 false
             } else {
@@ -206,10 +206,10 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
         }
     }
 
-    for y in 1..size {
+    for y in 0..size {
         let mut up_coords = None;
         let mut down_coords = None;
-        for x in 1..size {
+        for x in 0..size + 1 {
             let up_wall = if y == 0 || x == size {
                 false
             } else {
