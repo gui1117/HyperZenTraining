@@ -84,15 +84,17 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
 pub struct AvoiderControlSystem;
 
 impl<'a> ::specs::System<'a> for AvoiderControlSystem {
-    type SystemData = (
-     ::specs::ReadStorage<'a, ::component::Player>,
+    type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
      ::specs::WriteStorage<'a, ::component::Avoider>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
      ::specs::Fetch<'a, ::resource::Maze>);
 
-    fn run(&mut self, (players, bodies, mut avoiders, mut momentums, physic_world, maze): Self::SystemData) {
+    fn run(
+        &mut self,
+        (players, bodies, mut avoiders, mut momentums, physic_world, maze): Self::SystemData,
+    ) {
         let player_pos = (&players, &bodies)
             .join()
             .next()
@@ -106,7 +108,12 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             let avoider_pos = body.get(&physic_world).position().clone();
 
             let recompute_goal = if let Some(goal) = avoider.goal {
-                (avoider_pos.translation.vector - ::na::Vector3::new(goal.0 as f32 + 0.5, goal.1 as f32 + 0.5, avoider_pos.translation.vector[2])).norm() < 0.5
+                (avoider_pos.translation.vector -
+                     ::na::Vector3::new(
+                        goal.0 as f32 + 0.5,
+                        goal.1 as f32 + 0.5,
+                        avoider_pos.translation.vector[2],
+                    )).norm() < 0.5
             } else {
                 if (avoider_pos.translation.vector - player_pos.translation.vector).norm() < 1.0 {
                     avoider.goal.take();
@@ -117,13 +124,23 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             };
 
             if recompute_goal {
-                let pos = (avoider_pos.translation.vector[0] as usize, avoider_pos.translation.vector[1] as usize);
-                let goal = (player_pos.translation.vector[0] as usize, player_pos.translation.vector[1] as usize);
+                let pos = (
+                    avoider_pos.translation.vector[0] as usize,
+                    avoider_pos.translation.vector[1] as usize,
+                );
+                let goal = (
+                    player_pos.translation.vector[0] as usize,
+                    player_pos.translation.vector[1] as usize,
+                );
                 avoider.goal = maze.find_path(pos, goal).unwrap().0.get(1).cloned();
             }
 
             let direction = if let Some(goal) = avoider.goal {
-                ::na::Vector3::new(goal.0 as f32 + 0.5, goal.1 as f32 + 0.5, avoider_pos.translation.vector[2])
+                ::na::Vector3::new(
+                    goal.0 as f32 + 0.5,
+                    goal.1 as f32 + 0.5,
+                    avoider_pos.translation.vector[2],
+                )
             } else {
                 player_pos.translation.vector
             };

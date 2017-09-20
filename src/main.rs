@@ -67,7 +67,7 @@ fn main() {
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::WinitEvents::new());
     world.add_resource(::resource::Config::default());
-    world.add_resource(::maze::kruskal( 31, 31, 50.0,));
+    world.add_resource(::maze::kruskal(31, 31, 50.0));
 
     ::entity::create_maze_walls(&mut world);
     ::entity::create_avoider(&mut world, [2.5, 1.5]);

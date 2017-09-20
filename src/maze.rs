@@ -42,7 +42,7 @@ impl Maze {
 
 /// Generate partial reverse randomized_kruskal
 /// `https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm`
-pub fn kruskal( width: usize, height: usize, percent: f64) -> Maze {
+pub fn kruskal(width: usize, height: usize, percent: f64) -> Maze {
     enum WallPos {
         Vertical(usize, usize),
         Horizontal(usize, usize),
