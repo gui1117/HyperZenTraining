@@ -21,17 +21,6 @@ impl Default for Config {
     }
 }
 
-// TODO: change to aim that is assigned to player
-pub struct Control {
-    pub pointer: [f32; 2],
-}
-
-impl Control {
-    pub fn new() -> Self {
-        Control { pointer: [0.0, 0.0] }
-    }
-}
-
 pub struct Rendering {
     pub image_num: Option<usize>,
     pub command_buffer: Option<::vulkano::command_buffer::AutoCommandBuffer>,

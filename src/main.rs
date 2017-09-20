@@ -63,7 +63,6 @@ fn main() {
     world.register::<::component::Avoider>();
     world.add_resource(graphics.data.clone());
     world.add_resource(::resource::PhysicWorld::new());
-    world.add_resource(::resource::Control::new());
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::WinitEvents::new());
     world.add_resource(::resource::Config::default());

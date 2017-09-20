@@ -45,8 +45,8 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
         .build();
 }
 
-// TODO: maybe have a triangle base for the pyramid
-// TODO: mabye make it turn on itself
+// IDEA: maybe have a triangle base for the pyramid
+// IDEA: mabye make it turn on itself
 pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
     let size = 0.1;
 
@@ -79,8 +79,7 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
     let velocity = 5.0;
     let time_to_reach_v_max = 1.0;
     let ang_damping = 0.8;
-    // TODO: why is it negative ? the body may not correspond to the display
-    let pnt_to_com = -(::na::Vector3::z() * size - body.center_of_mass().coords);
+    let pnt_to_com = ::na::Vector3::z() * size - body.center_of_mass().coords;
 
     body.set_transformation(pos);
     body.set_collision_groups(group);
@@ -100,7 +99,8 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
             Some(pnt_to_com),
         ))
         .build();
-    // TODO: same graphics group for all avoider ?
+
+    // IDEA: same graphics group for all avoider ?
     ::component::DynamicDraw::add(
         world,
         entity,
@@ -150,13 +150,13 @@ pub fn create_floor_ceil(world: &mut ::specs::World, z: f32, floor: bool) {
     group.set_membership(&[FLOOR_CEIL_GROUP]);
     group.set_blacklist(&[WALL_GROUP, FLOOR_CEIL_GROUP]);
 
-    let pos = ::na::Isometry3::new(-::na::Vector3::z()*z, ::na::zero());
+    let pos = ::na::Isometry3::new(::na::Vector3::z()*z, ::na::zero());
     let world_trans = {
         let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 40.0).to_superset();
         ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
     };
 
-    let orientation = if floor { -1f32 } else { 1f32 };
+    let orientation = if floor { 1f32 } else { -1f32 };
     let shape = ::ncollide::shape::Plane::new(orientation*::na::Vector3::z());
     let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
     body.set_collision_groups(group);
@@ -176,8 +176,8 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
     //       or all entity method take storage instead of whole world
     let maze = world.read_resource::<::resource::Maze>().clone();
 
-    // create_floor_ceil(world, 1.0, true);
-    // create_floor_ceil(world, 10.0, false);
+    create_floor_ceil(world, 0.0, true);
+    create_floor_ceil(world, 1.0, false);
 
     // TODO: refactor
     let size = {

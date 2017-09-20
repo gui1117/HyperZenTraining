@@ -5,11 +5,15 @@ use std::sync::Arc;
 // TODO: get mouse from axis and check if there are differences because of acceleration
 pub struct PlayerControlSystem {
     directions: Vec<::util::Direction>,
+    pointer: [f32; 2],
 }
 
 impl PlayerControlSystem {
     pub fn new() -> Self {
-        PlayerControlSystem { directions: vec![] }
+        PlayerControlSystem {
+            directions: vec!(),
+            pointer: [0.0, 0.0],
+        }
     }
 }
 
@@ -18,23 +22,22 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
      ::specs::WriteStorage<'a, ::component::Momentum>,
      ::specs::Fetch<'a, ::resource::WinitEvents>,
      ::specs::Fetch<'a, ::resource::Graphics>,
-     ::specs::Fetch<'a, ::resource::Config>,
-     ::specs::FetchMut<'a, ::resource::Control>);
+     ::specs::Fetch<'a, ::resource::Config>);
 
     fn run(
         &mut self,
-        (mut players, mut momentums, events, graphics, config, mut control): Self::SystemData,
+        (mut players, mut momentums, events, graphics, config): Self::SystemData,
     ) {
         for ev in events.iter() {
             match *ev {
                 ::winit::Event::WindowEvent {
                     event: ::winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
                 } => {
-                    control.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) /
+                    self.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) /
                         config.mouse_sensibility;
-                    control.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) /
+                    self.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) /
                         config.mouse_sensibility;
-                    control.pointer[1] = control.pointer[1]
+                    self.pointer[1] = self.pointer[1]
                         .min(::std::f32::consts::FRAC_PI_2)
                         .max(-::std::f32::consts::FRAC_PI_2);
                 }
@@ -60,10 +63,10 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
         }
 
         let (player, player_momentum) = (&mut players, &mut momentums).join().next().unwrap();
-        player.aim = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -control.pointer[0])) *
-            ::na::Rotation3::new(::na::Vector3::new(0.0, -control.pointer[1], 0.0)) *
+        player.aim = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -self.pointer[0])) *
+            ::na::Rotation3::new(::na::Vector3::new(0.0, self.pointer[1], 0.0)) *
             ::na::Vector3::x();
-        player.x_aim = control.pointer[0];
+        player.x_aim = self.pointer[0];
 
         let mut move_vector: ::na::Vector3<f32> = ::na::zero();
         if self.directions.is_empty() {
@@ -78,7 +81,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                 }
             }
             move_vector = (::na::Rotation3::new(
-                ::na::Vector3::new(0.0, 0.0, -control.pointer[0]),
+                ::na::Vector3::new(0.0, 0.0, -self.pointer[0]),
             ) * move_vector)
                 .normalize();
             player_momentum.direction = move_vector;
@@ -149,24 +152,22 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                 ((goal_pos - avoider_pos.translation.vector).normalize(), 1f32)
             };
 
-            println!("{}", avoider_pos.translation.vector);
             let (avoid_direction, avoid_coef) = {
-                (::na::Vector3::z(), 1.0f32)
-                // let avoider_pos_rel_player = avoider_pos.translation.vector - player_pos.translation.vector;
-                // let avoid_vector = avoider_pos_rel_player - avoider_pos_rel_player.dot(&player.aim)*player.aim;
-                // if avoid_vector.norm() != 0.0 {
-                //     let avoid_norm = avoid_vector.norm();
-                //     let avoid_direction = avoid_vector.normalize();
-                //     if avoid_norm > 0.5 {
-                //         (avoid_direction, 0f32)
-                //     } else {
-                //         // TODO: COEFFICENT ??
-                //         (avoid_direction, 0.1)//1.0/avoid_norm)
-                //     }
-                // } else {
-                //     let random = ::na::Vector3::new_random();
-                //     ((random - random.dot(&player.aim)*player.aim).normalize(), 0.1f32)//1000f32)
-                // }
+                let avoider_pos_rel_player = avoider_pos.translation.vector - player_pos.translation.vector;
+                let avoid_vector = avoider_pos_rel_player - avoider_pos_rel_player.dot(&player.aim)*player.aim;
+                if avoid_vector.norm() != 0.0 {
+                    let avoid_norm = avoid_vector.norm();
+                    let avoid_direction = avoid_vector.normalize();
+                    if avoid_norm > 0.5 {
+                        (avoid_direction, 0f32)
+                    } else {
+                        // TODO: COEFFICENT ??
+                        (avoid_direction, 1f32)//1.0/avoid_norm)
+                    }
+                } else {
+                    let random = ::na::Vector3::new_random();
+                    ((random - random.dot(&player.aim)*player.aim).normalize(), 1f32)//1000f32)
+                }
             };
 
             momentum.direction = (goal_coef*goal_direction + avoid_coef*avoid_direction).normalize();
