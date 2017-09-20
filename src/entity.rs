@@ -4,6 +4,7 @@ const PLAYER_GROUP: usize = 0;
 const WALL_GROUP: usize = 1;
 const AVOIDER_GROUP: usize = 2;
 
+// TODO: use usize instead of f32
 pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
     let shape = ::ncollide::shape::Cylinder::new(0.5, 0.1);
     let pos = ::na::Isometry3::new(

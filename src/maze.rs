@@ -13,11 +13,9 @@ impl Maze {
         pos: (usize, usize),
         goal: (usize, usize),
     ) -> Option<(Vec<(usize, usize)>, usize)> {
-        println!("pos: {:?}, goal: {:?}", pos, goal);
         ::pathfinding::astar(
             &pos,
             |&(x, y)| {
-                println!("x:{}, y:{}", x, y);
                 let mut res = vec!(
                     // (x-1, y-1),
                     ((x-1, y), 1),
@@ -29,10 +27,9 @@ impl Maze {
                     // (x+1, y+1),
                 );
                 res.retain(|&((x, y), _)| !self.walls[x][y]);
-                println!("res: {:?}", res);
                 res
             },
-            // TODO: more precise heuristic ?
+            // TODO: heuristic
             |&(x, y)| {
                 0usize
                 // (if x > goal.0 { x - goal.0 } else { goal.0 - x } +
@@ -40,7 +37,6 @@ impl Maze {
             },
             |&p| p == goal,
         )
-
     }
 }
 

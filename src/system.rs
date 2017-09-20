@@ -106,7 +106,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             let avoider_pos = body.get(&physic_world).position().clone();
 
             let recompute_goal = if let Some(goal) = avoider.goal {
-                (avoider_pos.translation.vector - ::na::Vector3::new(goal.0 as f32, goal.1 as f32, avoider_pos.translation.vector[2])).norm() < 0.3
+                (avoider_pos.translation.vector - ::na::Vector3::new(goal.0 as f32 + 0.5, goal.1 as f32 + 0.5, avoider_pos.translation.vector[2])).norm() < 0.5
             } else {
                 if (avoider_pos.translation.vector - player_pos.translation.vector).norm() < 1.0 {
                     avoider.goal.take();
@@ -117,14 +117,18 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             };
 
             if recompute_goal {
-                println!("avoider_ pos : {}",avoider_pos.translation.vector);
                 let pos = (avoider_pos.translation.vector[0] as usize, avoider_pos.translation.vector[1] as usize);
                 let goal = (player_pos.translation.vector[0] as usize, player_pos.translation.vector[1] as usize);
-                println!("{:?}", maze.find_path(pos, goal));
+                avoider.goal = maze.find_path(pos, goal).unwrap().0.get(1).cloned();
             }
 
-            momentum.direction = (player_pos.translation.vector - avoider_pos.translation.vector)
-                .normalize();
+            let direction = if let Some(goal) = avoider.goal {
+                ::na::Vector3::new(goal.0 as f32 + 0.5, goal.1 as f32 + 0.5, avoider_pos.translation.vector[2])
+            } else {
+                player_pos.translation.vector
+            };
+
+            momentum.direction = (direction - avoider_pos.translation.vector).normalize();
         }
     }
 }
