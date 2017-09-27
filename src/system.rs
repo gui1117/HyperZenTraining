@@ -18,7 +18,9 @@ impl PlayerControlSystem {
 }
 
 impl<'a> ::specs::System<'a> for PlayerControlSystem {
-    type SystemData = (::specs::WriteStorage<'a, ::component::Player>,
+    type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::WriteStorage<'a, ::component::Aim>,
+     ::specs::WriteStorage<'a, ::component::Shooter>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
      ::specs::Fetch<'a, ::resource::WinitEvents>,
      ::specs::Fetch<'a, ::resource::Graphics>,
@@ -26,10 +28,19 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
 
     fn run(
         &mut self,
-        (mut players, mut momentums, events, graphics, config): Self::SystemData,
+        (players, mut aims, mut shooters, mut momentums, events, graphics, config): Self::SystemData,
     ) {
+        let (_, player_aim, player_shooter, player_momentum) = (&players, &mut aims, &mut shooters, &mut momentums).join().next().unwrap();
         for ev in events.iter() {
             match *ev {
+                ::winit::Event::WindowEvent {
+                    event: ::winit::WindowEvent::MouseInput { button: ::winit::MouseButton::Left, state, .. }, ..
+                } => {
+                    match state {
+                        ::winit::ElementState::Pressed => player_shooter.set_shoot(true),
+                        ::winit::ElementState::Released => player_shooter.set_shoot(false),
+                    }
+                }
                 ::winit::Event::WindowEvent {
                     event: ::winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
                 } => {
@@ -62,11 +73,10 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
             }
         }
 
-        let (player, player_momentum) = (&mut players, &mut momentums).join().next().unwrap();
-        player.aim = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -self.pointer[0])) *
+        player_aim.dir = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -self.pointer[0])) *
             ::na::Rotation3::new(::na::Vector3::new(0.0, self.pointer[1], 0.0)) *
             ::na::Vector3::x();
-        player.x_aim = self.pointer[0];
+        player_aim.x_dir = self.pointer[0];
 
         let mut move_vector: ::na::Vector3<f32> = ::na::zero();
         if self.directions.is_empty() {
@@ -93,6 +103,7 @@ pub struct AvoiderControlSystem;
 
 impl<'a> ::specs::System<'a> for AvoiderControlSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::ReadStorage<'a, ::component::Aim>,
      ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
      ::specs::WriteStorage<'a, ::component::Avoider>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
@@ -101,14 +112,14 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
 
     fn run(
         &mut self,
-        (players, bodies, mut avoiders, mut momentums, physic_world, maze): Self::SystemData,
+        (players, aims, bodies, mut avoiders, mut momentums, physic_world, maze): Self::SystemData,
     ) {
-        let (player, player_body) = (&players, &bodies).join().next().unwrap();
+        let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
 
-        let player_pos = player_body.get(&physic_world).position().clone();
+        let player_pos = player_body.get(&physic_world).body.position().clone();
 
         for (avoider, momentum, body) in (&mut avoiders, &mut momentums, &bodies).join() {
-            let avoider_pos = body.get(&physic_world).position().clone();
+            let avoider_pos = body.get(&physic_world).body.position().clone();
 
             let recompute_goal = if let Some(goal) = avoider.goal {
                 (avoider_pos.translation.vector -
@@ -154,7 +165,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
 
             let (avoid_direction, avoid_coef) = {
                 let avoider_pos_rel_player = avoider_pos.translation.vector - player_pos.translation.vector;
-                let avoid_vector = avoider_pos_rel_player - avoider_pos_rel_player.dot(&player.aim)*player.aim;
+                let avoid_vector = avoider_pos_rel_player - avoider_pos_rel_player.dot(&player_aim.dir)*player_aim.dir;
                 if avoid_vector.norm() != 0.0 {
                     let avoid_norm = avoid_vector.norm();
                     let avoid_direction = avoid_vector.normalize();
@@ -166,7 +177,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                     }
                 } else {
                     let random = ::na::Vector3::new_random();
-                    ((random - random.dot(&player.aim)*player.aim).normalize(), 1f32)//1000f32)
+                    ((random - random.dot(&player_aim.dir)*player_aim.dir).normalize(), 1f32)//1000f32)
                 }
             };
 
@@ -185,8 +196,10 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
      ::specs::FetchMut<'a, ::resource::PhysicWorld>);
 
     fn run(&mut self, (player, momentums, mut bodies, config, mut physic_world): Self::SystemData) {
+        println!("BEGIN PHYSIC HERE");
         for (momentum, body) in (&momentums, &mut bodies).join() {
-            let mut body = body.get_mut(&mut physic_world);
+            println!("physic borrow BEGIN");
+            let mut body = body.get_mut(&mut physic_world).body;
             let lin_vel = body.lin_vel();
             let ang_vel = body.ang_vel();
             // TODO: use integrator to modify rigidbody
@@ -200,15 +213,16 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
                 body.append_lin_force(direction_force);
             }
             body.set_ang_vel_internal(momentum.ang_damping * ang_vel);
+            println!("physic borrow END");
 
             // TODO: gravity if not touching floor
             // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
         }
         for _ in 0..2 {
-            physic_world.0.step(config.dt / 2.);
+            physic_world.step(config.dt / 2.);
         }
         for (_, body) in (&player, &mut bodies).join() {
-            let mut body = body.get_mut(&mut physic_world);
+            let mut body = body.get_mut(&mut physic_world).body;
             body.set_ang_acc_scale(::na::zero());
             body.set_ang_vel(::na::zero());
 
@@ -229,22 +243,21 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::ReadStorage<'a, ::component::DynamicDraw>,
      ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
      ::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::ReadStorage<'a, ::component::Aim>,
      ::specs::FetchMut<'a, ::resource::Rendering>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
      ::specs::Fetch<'a, ::resource::Graphics>);
 
-fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, physic_world, graphics): Self::SystemData){
+fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rendering, physic_world, graphics): Self::SystemData){
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
-            let (player, player_body) = (&players, &bodies).join().next().unwrap();
+            let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
 
-            let player_pos = player_body.get(
-                &physic_world,
-                ).position().clone();
+            let player_pos = player_body.get(&physic_world).body.position().clone();
 
-            // IDEA: if we change -player.x_aim here to + then it is fun
-            let camera_top = if player.aim[2].abs() > 0.8 {
-                ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -player.x_aim)) * ::na::Vector3::x() * - player.aim[2].signum()
+            // IDEA: if we change -player.x here to + then it is fun
+            let camera_top = if player_aim.dir[2].abs() > 0.8 {
+                ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -player_aim.x_dir)) * ::na::Vector3::x() * - player_aim.dir[2].signum()
             } else {
                 ::na::Vector3::z()
             };
@@ -253,7 +266,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, 
                 let i: ::na::Transform3<f32> =
                     ::na::Similarity3::look_at_rh(
                         &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector)),
-                        &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector) + player.aim),
+                        &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector) + player_aim.dir),
                         &camera_top.into(),
                         // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + ::na::Vector3::new(0.0, 0.0, -10.0)),
                         // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
@@ -275,7 +288,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, 
                 proj: proj_matrix.into(),
             };
 
-            graphics.view_uniform_buffer.next(view_uniform)
+            graphics.view_uniform_buffer.next(view_uniform).unwrap()
         };
 
         // Compute view set
@@ -314,9 +327,10 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, 
         }
 
         for dynamic_draw in dynamic_draws.join() {
-            let world_trans_subbuffer = dynamic_draw.uniform_buffer_pool.next(
-                dynamic_draw.world_trans,
-            );
+            let world_trans_subbuffer = dynamic_draw.uniform_buffer_pool
+                .next(dynamic_draw.world_trans)
+                .unwrap();
+
             let dynamic_draw_set = Arc::new(
                 ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
                     graphics.pipeline.clone(),
@@ -326,6 +340,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, mut rendering, 
                     .build()
                     .unwrap(),
             );
+
             command_buffer_builder = command_buffer_builder
                 .draw(
                     graphics.pipeline.clone(),
@@ -366,9 +381,46 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
 
     fn run(&mut self, (bodies, mut dynamic_draws, physic_world): Self::SystemData) {
         for (dynamic_draw, body) in (&mut dynamic_draws, &bodies).join() {
-            let trans = body.get(&physic_world).position() * dynamic_draw.primitive_trans;
+            let trans = body.get(&physic_world).body.position() * dynamic_draw.primitive_trans;
             dynamic_draw.world_trans =
                 ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
         }
+    }
+}
+
+pub struct ShootSystem;
+
+// TODO: not shoot yourself and shoot in one direction only
+impl<'a> ::specs::System<'a> for ShootSystem {
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+        ::specs::ReadStorage<'a, ::component::Aim>,
+        ::specs::WriteStorage<'a, ::component::Shooter>,
+        ::specs::WriteStorage<'a, ::component::Life>,
+        ::specs::Fetch<'a, ::resource::PhysicWorld>,
+        ::specs::Fetch<'a, ::resource::Config>);
+
+    fn run(&mut self, (bodies, aims, mut shooters, mut lifes, physic_world, config): Self::SystemData) {
+        for (aim, body, shooter) in (&aims, &bodies, &mut shooters).join() {
+            let body_pos = body.get(&physic_world).body.position().clone();
+            shooter.reload(config.dt);
+
+            let ray = ::ncollide::query::Ray {
+                origin: ::na::Point3::from_coordinates(body_pos.translation.vector),
+                dir: aim.dir,
+            };
+
+            let group = ::ncollide::world::CollisionGroups::new();
+
+            if shooter.do_shoot() {
+                for (entity, _body, _collision) in physic_world.interferences_with_ray(&ray, &group) {
+                    if let Some(ref mut life) = lifes.get_mut(entity) {
+                        life.0 -= 1;
+                    }
+                    println!("borrow filter map here END");
+                }
+            }
+        }
+        println!("END SYSTEM SHOOT");
     }
 }

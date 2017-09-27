@@ -1,21 +1,22 @@
 use alga::general::SubsetOf;
 
-const PLAYER_GROUP: usize = 0;
 const WALL_GROUP: usize = 1;
-const AVOIDER_GROUP: usize = 2;
-const FLOOR_CEIL_GROUP: usize = 3;
+const FLOOR_CEIL_GROUP: usize = 2;
+
+const DIM2_GROUP: usize = 3;
+
+const ALIVE_GROUP: usize = 4;
 
 // TODO: use usize instead of f32
 pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
-    let shape = ::ncollide::shape::Cylinder::new(0.1, 0.1);
+    let shape = ::ncollide::shape::Cylinder::new(0.4, 0.1);
     let pos = ::na::Isometry3::new(
         ::na::Vector3::new(pos[0], pos[1], 0.5),
         ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
     );
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[PLAYER_GROUP]);
-    group.set_blacklist(&[FLOOR_CEIL_GROUP]);
+    group.set_membership(&[DIM2_GROUP, ALIVE_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     body.set_transformation(pos);
@@ -27,14 +28,14 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
 
     let bodyhandle = world
         .write_resource::<::resource::PhysicWorld>()
-        .0
         .add_rigid_body(body);
+
     // TODO: ccd ?
     // world.write_resource::<::resource::PhysicWorld>().0.add_ccd_to(&bodyhandle, 0.01, false);
-    world
+    let entity = world
         .create_entity()
-        .with(::component::Player::new())
-        .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
+        .with(::component::Player)
+        .with(::component::Aim::new())
         .with(::component::Momentum::new(
             mass,
             velocity,
@@ -42,7 +43,10 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
             ang_damping,
             None,
         ))
+        .with(::component::Shooter::new(2.0))
         .build();
+
+    ::component::PhysicRigidBodyHandle::add(world, entity, bodyhandle);
 }
 
 // IDEA: maybe have a triangle base for the pyramid
@@ -72,7 +76,7 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
     let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[AVOIDER_GROUP]);
+    group.set_membership(&[ALIVE_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
@@ -85,12 +89,10 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
     body.set_collision_groups(group);
     let bodyhandle = world
         .write_resource::<::resource::PhysicWorld>()
-        .0
         .add_rigid_body(body);
     let entity = world
         .create_entity()
         .with(::component::Avoider::new())
-        .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
         .with(::component::Momentum::new(
             mass,
             velocity,
@@ -101,12 +103,8 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
         .build();
 
     // IDEA: same graphics group for all avoider ?
-    ::component::DynamicDraw::add(
-        world,
-        entity,
-        ::graphics::GROUP_COUNTER.next(),
-        primitive_trans,
-    );
+    ::component::DynamicDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), primitive_trans);
+    ::component::PhysicRigidBodyHandle::add(world, entity, bodyhandle);
 }
 
 pub fn create_wall_side(
@@ -135,20 +133,17 @@ pub fn create_wall_side(
     body.set_transformation(pos);
     let bodyhandle = world
         .write_resource::<::resource::PhysicWorld>()
-        .0
         .add_rigid_body(body);
 
-    let entity = world
-        .create_entity()
-        .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
-        .build();
+    let entity = world.create_entity().build();
     ::component::StaticDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), world_trans);
+    ::component::PhysicRigidBodyHandle::add(world, entity, bodyhandle);
 }
 
 pub fn create_floor_ceil(world: &mut ::specs::World, z: f32, floor: bool) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
     group.set_membership(&[FLOOR_CEIL_GROUP]);
-    group.set_blacklist(&[WALL_GROUP, FLOOR_CEIL_GROUP]);
+    group.set_blacklist(&[WALL_GROUP, FLOOR_CEIL_GROUP, DIM2_GROUP]);
 
     let pos = ::na::Isometry3::new(::na::Vector3::z()*z, ::na::zero());
     let world_trans = {
@@ -161,13 +156,11 @@ pub fn create_floor_ceil(world: &mut ::specs::World, z: f32, floor: bool) {
     let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
     body.set_collision_groups(group);
     body.set_transformation(pos);
-    let bodyhandle = world.write_resource::<::resource::PhysicWorld>().0.add_rigid_body(body);
+    let bodyhandle = world.write_resource::<::resource::PhysicWorld>().add_rigid_body(body);
 
-    let entity = world
-        .create_entity()
-        .with(::component::PhysicRigidBodyHandle::new(bodyhandle))
-        .build();
+    let entity = world.create_entity().build();
     ::component::StaticDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), world_trans);
+    ::component::PhysicRigidBodyHandle::add(world, entity, bodyhandle);
 }
 
 pub fn create_maze_walls(world: &mut ::specs::World) {

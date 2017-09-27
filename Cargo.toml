@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["thiolliere <guillaume.thiolliere@opmbx.org>"]
 
 [dependencies]
-vulkano = "0.6"
-vulkano-shader-derive = "0.6"
-vulkano-win = "0.6"
+vulkano = "0.7"
+vulkano-shader-derive = "0.7"
+vulkano-win = "0.7"
 winit = "0.7"
 fps_clock = "2"
 nalgebra = "0.13"
@@ -17,6 +17,11 @@ alga = "0.5"
 rand = "0.3"
 lazy_static = "0.2"
 pathfinding = "0.1"
+
+[replace]
+"ncollide:0.13.0" = { git = "https://github.com/thiolliere/ncollide/", branch = "send_sync_master" }
+"nphysics3d:0.7.2" = { git = "https://github.com/thiolliere/nphysics/", branch = "send_sync_master" }
+
 
 # app_dirs = "1"
 # mut_static = "5"

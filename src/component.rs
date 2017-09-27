@@ -1,5 +1,61 @@
 use std::sync::Arc;
 
+pub struct Life(pub i32);
+
+impl ::specs::Component for Life {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+enum ShooterState {
+    Reloading(f32),
+    Loaded,
+}
+
+pub struct Shooter {
+    reload_time: f32,
+    state: ShooterState,
+    shoot: bool,
+}
+
+impl Shooter {
+    pub fn new(reload_time: f32) -> Self {
+        Shooter {
+            reload_time,
+            state: ShooterState::Loaded,
+            shoot: false,
+        }
+    }
+
+    pub fn reload(&mut self, dt: f32) {
+        let set_ready = if let ShooterState::Reloading(ref mut remaining) = self.state {
+            *remaining -= dt;
+            *remaining <= 0.0
+        } else {
+            false
+        };
+
+        if set_ready { self.state = ShooterState::Loaded }
+    }
+
+    pub fn set_shoot(&mut self, shoot: bool) {
+        self.shoot = shoot;
+    }
+
+    pub fn do_shoot(&mut self) -> bool {
+        if let ShooterState::Loaded = self.state {
+            self.state = ShooterState::Reloading(self.reload_time);
+            true
+        } else {
+            false
+        }
+    }
+}
+
+
+impl ::specs::Component for Shooter {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
 pub struct Avoider {
     pub goal: Option<(usize, usize)>,
 }
@@ -14,22 +70,29 @@ impl Avoider {
     }
 }
 
-pub struct Player {
-    pub aim: ::na::Vector3<f32>,
-    pub x_aim: f32,
+pub struct Aim {
+    pub dir: ::na::Vector3<f32>,
+    pub x_dir: f32,
 }
 
-impl Player {
+impl Aim {
     pub fn new() -> Self {
-        Player {
-            aim: ::na::Vector3::x(),
-            x_aim: 0.0,
+        Aim {
+            dir: ::na::Vector3::x(),
+            x_dir: 0.0,
         }
     }
 }
 
+impl ::specs::Component for Aim {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+#[derive(Default)]
+pub struct Player;
+
 impl ::specs::Component for Player {
-    type Storage = ::specs::HashMapStorage<Self>;
+    type Storage = ::specs::NullStorage<Self>;
 }
 
 pub struct Momentum {
@@ -151,11 +214,21 @@ impl DynamicDraw {
             world_trans: ::graphics::shader::vs::ty::World { world: [[0f32; 4]; 4] },
         };
 
-        match world.write::<DynamicDraw>().insert(entity, dynamic_draw) {
+        match world.write().insert(entity, dynamic_draw) {
             ::specs::InsertResult::Inserted => (),
             _ => panic!("cannot insert dynamicdraw to entity"),
         };
     }
+}
+
+pub struct PhysicRigidBody<'a> {
+    pub body: ::std::cell::Ref<'a, ::nphysics::object::RigidBody<f32>>,
+    physic_world: &'a ::resource::PhysicWorld,
+}
+
+pub struct PhysicRigidBodyMut<'a> {
+    pub body: ::std::cell::RefMut<'a, ::nphysics::object::RigidBody<f32>>,
+    physic_world: &'a mut ::resource::PhysicWorld,
 }
 
 pub struct PhysicRigidBodyHandle(::nphysics::object::RigidBodyHandle<f32>);
@@ -166,24 +239,34 @@ impl ::specs::Component for PhysicRigidBodyHandle {
     type Storage = ::specs::VecStorage<Self>;
 }
 
-
+// TODO: add entity to rigid body user data
 impl PhysicRigidBodyHandle {
-    pub fn new(body: ::nphysics::object::RigidBodyHandle<f32>) -> Self {
-        PhysicRigidBodyHandle(body)
+    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, body: ::nphysics::object::RigidBodyHandle<f32>) {
+        // We are allowed to do that because we have right access to physic world through &mut specs world
+        body.borrow_mut().set_user_data(Some(Box::new(entity)));
+        world.write().insert(entity, PhysicRigidBodyHandle(body));
     }
 
     // TODO: maybe the clone method of ref is not thread safe ...
+    #[inline]
     pub fn get<'a>(
         &'a self,
-        _world: &'a ::resource::PhysicWorld,
-    ) -> ::std::cell::Ref<'a, ::nphysics::object::RigidBody<f32>> {
-        self.0.borrow()
+        physic_world: &'a ::resource::PhysicWorld,
+    ) -> PhysicRigidBody<'a> {
+        PhysicRigidBody {
+            body: self.0.borrow(),
+            physic_world,
+        }
     }
 
+    #[inline]
     pub fn get_mut<'a>(
         &'a mut self,
-        _world: &'a mut ::resource::PhysicWorld,
-    ) -> ::std::cell::RefMut<'a, ::nphysics::object::RigidBody<f32>> {
-        self.0.borrow_mut()
+        physic_world: &'a mut ::resource::PhysicWorld,
+    ) -> PhysicRigidBodyMut<'a> {
+        PhysicRigidBodyMut {
+            body: self.0.borrow_mut(),
+            physic_world,
+        }
     }
 }

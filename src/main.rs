@@ -56,11 +56,14 @@ fn main() {
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();
+    world.register::<::component::Shooter>();
+    world.register::<::component::Aim>();
     world.register::<::component::StaticDraw>();
     world.register::<::component::DynamicDraw>();
     world.register::<::component::PhysicRigidBodyHandle>();
     world.register::<::component::Momentum>();
     world.register::<::component::Avoider>();
+    world.register::<::component::Life>();
     world.add_resource(graphics.data.clone());
     world.add_resource(::resource::PhysicWorld::new());
     world.add_resource(::resource::Rendering::new());
@@ -75,25 +78,14 @@ fn main() {
     world.maintain();
 
     let mut update_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(
-            ::system::PlayerControlSystem::new(),
-            "player_control_system",
-            &[],
-        )
-        .add(
-            ::system::AvoiderControlSystem,
-            "avoider_control_system",
-            &[],
-        )
+        .add(::system::PlayerControlSystem::new(), "player_control", &[])
+        .add(::system::AvoiderControlSystem, "avoider_control", &[])
+        .add(::system::ShootSystem, "shoot", &[])
         .add(::system::PhysicSystem, "physic_system", &[])
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(
-            ::system::UpdateDynamicDrawSystem,
-            "update_dynamic_draw_system",
-            &[],
-        )
+        .add(::system::UpdateDynamicDrawSystem, "update_dynamic_draw", &[])
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
@@ -125,9 +117,9 @@ fn main() {
                             .unwrap();
                         true
                     }
-                    winit::Event::WindowEvent {
-                        event: winit::WindowEvent::KeyboardInput { .. }, ..
-                    } => true,
+                    winit::Event::WindowEvent { event: winit::WindowEvent::MouseInput { .. }, ..  }
+                    | winit::Event::WindowEvent { event: winit::WindowEvent::KeyboardInput { .. }, ..  }
+                    => true,
                     _ => false,
                 };
 
