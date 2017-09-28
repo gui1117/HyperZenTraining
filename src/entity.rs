@@ -102,8 +102,17 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
         ))
         .build();
 
+    let primitives = vec!(
+        (::graphics::primitive::PYRAMID_BASE, ::graphics::GROUP_COUNTER.next()),
+        (::graphics::primitive::PYRAMID_SIDE_1, ::graphics::GROUP_COUNTER.next()),
+        (::graphics::primitive::PYRAMID_SIDE_2, ::graphics::GROUP_COUNTER.next()),
+        (::graphics::primitive::PYRAMID_SIDE_3, ::graphics::GROUP_COUNTER.next()),
+        (::graphics::primitive::PYRAMID_SIDE_4, ::graphics::GROUP_COUNTER.next()),
+
+    );
+
     // IDEA: same graphics group for all avoider ?
-    ::component::DynamicDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), primitive_trans);
+    ::component::DynamicDraw::add(world, entity, primitives, ::graphics::color::GREEN, primitive_trans);
     ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 
@@ -136,7 +145,7 @@ pub fn create_wall_side(
         .add_rigid_body(body);
 
     let entity = world.create_entity().build();
-    ::component::StaticDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), world_trans);
+    ::component::StaticDraw::add(world, entity, ::graphics::primitive::PLANE, ::graphics::GROUP_COUNTER.next(), ::graphics::color::PALE_RED, world_trans);
     ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 
@@ -159,7 +168,7 @@ pub fn create_floor_ceil(world: &mut ::specs::World, z: f32, floor: bool) {
     let bodyhandle = world.write_resource::<::resource::PhysicWorld>().add_rigid_body(body);
 
     let entity = world.create_entity().build();
-    ::component::StaticDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), world_trans);
+    ::component::StaticDraw::add(world, entity, ::graphics::primitive::PLANE, ::graphics::GROUP_COUNTER.next(), ::graphics::color::PALE_BROWN, world_trans);
     ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 

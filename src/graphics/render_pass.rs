@@ -13,7 +13,7 @@ unsafe impl ::vulkano::framebuffer::RenderPassDesc for CustomRenderPassDesc {
     ) -> Option<::vulkano::framebuffer::LayoutAttachmentDescription> {
         match id {
             0 => Some(::vulkano::framebuffer::LayoutAttachmentDescription {
-                format: ::vulkano::format::Format::R32Uint,
+                format: ::vulkano::format::Format::R16G16Uint,
                 samples: 1,
                 load: ::vulkano::framebuffer::LoadOp::Clear,
                 store: ::vulkano::framebuffer::StoreOp::Store,

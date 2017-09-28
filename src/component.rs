@@ -131,7 +131,9 @@ impl Momentum {
 }
 
 pub struct StaticDraw {
-    pub group: u32,
+    pub color: u16,
+    pub group: u16,
+    pub primitive: usize,
     pub uniform_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<::graphics::shader::vs::ty::World>>,
     pub set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::Vertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::CustomRenderPassDesc>>>>, ((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetBuf<Arc<::vulkano::buffer::CpuAccessibleBuffer<::graphics::shader::vs::ty::World>>>)>>,
 }
@@ -144,7 +146,9 @@ impl StaticDraw {
     pub fn add(
         world: &mut ::specs::World,
         entity: ::specs::Entity,
-        group: u32,
+        primitive: usize,
+        group: u16,
+        color: u16,
         world_trans: ::graphics::shader::vs::ty::World,
     ) {
         let graphics = world.read_resource::<::resource::Graphics>();
@@ -167,6 +171,8 @@ impl StaticDraw {
         );
 
         let static_draw = StaticDraw {
+            primitive,
+            color,
             group,
             uniform_buffer,
             set,
@@ -180,8 +186,9 @@ impl StaticDraw {
 }
 
 pub struct DynamicDraw {
-    pub group: u32,
-    // pub primitive: TODO: allow different primitive
+    /// index and group
+    pub primitives: Vec<(usize, u16)>,
+    pub color: u16,
     pub primitive_trans: ::na::Transform3<f32>,
     pub world_trans: ::graphics::shader::vs::ty::World,
     pub uniform_buffer_pool:
@@ -196,7 +203,8 @@ impl DynamicDraw {
     pub fn add(
         world: &mut ::specs::World,
         entity: ::specs::Entity,
-        group: u32,
+        primitives: Vec<(usize, u16)>,
+        color: u16,
         primitive_trans: ::na::Transform3<f32>,
     ) {
         let graphics = world.read_resource::<::resource::Graphics>();
@@ -206,11 +214,11 @@ impl DynamicDraw {
             ::vulkano::buffer::BufferUsage::uniform_buffer(),
         ));
 
-
         let dynamic_draw = DynamicDraw {
-            group,
+            primitives,
             uniform_buffer_pool,
             primitive_trans,
+            color,
             world_trans: ::graphics::shader::vs::ty::World { world: [[0f32; 4]; 4] },
         };
 

@@ -316,9 +316,12 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 .draw(
                     graphics.pipeline.clone(),
                     ::vulkano::command_buffer::DynamicState::none(),
-                    graphics.plane_vertex_buffer.clone(),
+                    graphics.primitives_vertex_buffers[static_draw.primitive].clone(),
                     (view_set.clone(), static_draw.set.clone()),
-                    ::graphics::shader::fs::ty::Group { group: static_draw.group },
+                    ::graphics::shader::fs::ty::Group {
+                        group: static_draw.group as u32,
+                        color: static_draw.color as u32,
+                    },
                 )
                 .unwrap();
         }
@@ -338,15 +341,21 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                     .unwrap(),
             );
 
-            command_buffer_builder = command_buffer_builder
-                .draw(
-                    graphics.pipeline.clone(),
-                    ::vulkano::command_buffer::DynamicState::none(),
-                    graphics.pyramid_vertex_buffer.clone(),
-                    (view_set.clone(), dynamic_draw_set),
-                    ::graphics::shader::fs::ty::Group { group: dynamic_draw.group },
-                )
-                .unwrap();
+            // TODO: have only one draw call with group offset and things
+            for &primitive in &dynamic_draw.primitives {
+                command_buffer_builder = command_buffer_builder
+                    .draw(
+                        graphics.pipeline.clone(),
+                        ::vulkano::command_buffer::DynamicState::none(),
+                        graphics.primitives_vertex_buffers[primitive.0].clone(),
+                        (view_set.clone(), dynamic_draw_set.clone()),
+                        ::graphics::shader::fs::ty::Group {
+                            group: primitive.1 as u32,
+                            color: dynamic_draw.color as u32,
+                        },
+                    )
+                    .unwrap();
+            }
         }
 
         rendering.command_buffer = Some(
@@ -361,7 +370,13 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         rendering.second_command_buffer = Some(::vulkano::command_buffer::AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
             .begin_render_pass(graphics.second_framebuffers[rendering.image_num.take().unwrap()].clone(), false, vec!())
             .unwrap()
-            .draw(graphics.second_pipeline.clone(), ::vulkano::command_buffer::DynamicState::none(), graphics.fullscreen_vertex_buffer.clone(), graphics.tmp_image_set.clone(), ())
+            .draw(
+                graphics.second_pipeline.clone(),
+                ::vulkano::command_buffer::DynamicState::none(),
+                graphics.fullscreen_vertex_buffer.clone(),
+                graphics.tmp_image_set.clone(),
+                ()
+            )
             .unwrap()
             .end_render_pass()
             .unwrap()

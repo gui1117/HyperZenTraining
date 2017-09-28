@@ -5,6 +5,11 @@ use std::iter;
 
 pub mod shader;
 pub mod render_pass;
+mod primitives;
+mod colors;
+
+pub use self::primitives::primitive;
+pub use self::colors::color;
 
 lazy_static! {
     pub static ref GROUP_COUNTER: GroupCounter = GroupCounter::new();
@@ -19,11 +24,11 @@ impl GroupCounter {
         GroupCounter { counter: ::std::sync::atomic::AtomicUsize::new(1) }
     }
 
-    pub fn next(&self) -> u32 {
+    pub fn next(&self) -> u16 {
         self.counter.fetch_add(
             1,
             ::std::sync::atomic::Ordering::Relaxed,
-        ) as u32
+        ) as u16
     }
 }
 
@@ -47,8 +52,8 @@ pub struct Data {
     pub images: Vec<Arc<::vulkano::image::swapchain::SwapchainImage>>,
     pub depth_buffer_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
     pub tmp_image_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
-    pub plane_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[Vertex]>>,
-    pub pyramid_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[Vertex]>>,
+    pub primitives_vertex_buffers: Vec<Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[Vertex]>>>,
+
     pub fullscreen_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[SecondVertex]>>,
     pub render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>,
     pub second_render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>,
@@ -59,7 +64,7 @@ pub struct Data {
     pub width: u32,
     pub height: u32,
     pub view_uniform_buffer: ::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::View>,
-    pub tmp_image_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::AttachmentImage>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>
+    pub tmp_image_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::AttachmentImage>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
 }
 
 pub struct Graphics<'a> {
@@ -144,55 +149,12 @@ impl<'a> Graphics<'a> {
             ::vulkano::image::attachment::AttachmentImage::with_usage(
                 device.clone(),
                 images[0].dimensions(),
-                ::vulkano::format::Format::R32Uint,
+                ::vulkano::format::Format::R16G16Uint,
                 usage,
             ).unwrap()
         };
 
-        let plane_vertex_buffer = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-            device.clone(),
-            ::vulkano::buffer::BufferUsage::vertex_buffer(),
-            [
-                Vertex { position: [-1.0, -1.0, 0.0] },
-                Vertex { position: [1.0, -1.0, 0.0] },
-                Vertex { position: [-1.0, 1.0, 0.0] },
-                Vertex { position: [1.0, 1.0, 0.0] },
-                Vertex { position: [-1.0, 1.0, 0.0] },
-                Vertex { position: [1.0, -1.0, 0.0] },
-            ].iter()
-                .cloned(),
-        ).expect("failed to create buffer");
-
-        let pyramid_vertex_buffer = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-            device.clone(),
-            ::vulkano::buffer::BufferUsage::vertex_buffer(),
-            [
-                Vertex { position: [-1.0, -1.0, -1.0] },
-                Vertex { position: [1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, 1.0, -1.0] },
-
-                Vertex { position: [1.0, 1.0, -1.0] },
-                Vertex { position: [1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, 1.0, -1.0] },
-
-                Vertex { position: [-1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, 1.0, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-
-                Vertex { position: [-1.0, 1.0, -1.0] },
-                Vertex { position: [1.0, 1.0, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-
-                Vertex { position: [1.0, 1.0, -1.0] },
-                Vertex { position: [1.0, -1.0, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-
-                Vertex { position: [1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, -1.0, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-            ].iter()
-                .cloned(),
-        ).expect("failed to create buffer");
+        let primitives_vertex_buffers = primitives::instance_primitives(device.clone());
 
         let fullscreen_vertex_buffer =
             ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
@@ -207,7 +169,7 @@ impl<'a> Graphics<'a> {
                     SecondVertex { position: [1.0, -1.0] },
                 ].iter()
                     .cloned(),
-            ).expect("failed to create buffer");
+        ).expect("failed to create buffer");
 
         let vs = shader::vs::Shader::load(device.clone()).expect("failed to create shader module");
         let fs = shader::fs::Shader::load(device.clone()).expect("failed to create shader module");
@@ -318,8 +280,6 @@ impl<'a> Graphics<'a> {
         Graphics {
             physical,
             data: Data {
-                plane_vertex_buffer,
-                pyramid_vertex_buffer,
                 fullscreen_vertex_buffer,
                 depth_buffer_attachment,
                 tmp_image_attachment,
@@ -337,6 +297,7 @@ impl<'a> Graphics<'a> {
                 height,
                 tmp_image_set,
                 view_uniform_buffer,
+                primitives_vertex_buffers,
             },
         }
     }
