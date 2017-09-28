@@ -221,52 +221,25 @@ impl DynamicDraw {
     }
 }
 
-pub struct PhysicRigidBody<'a> {
-    pub body: ::std::cell::Ref<'a, ::nphysics::object::RigidBody<f32>>,
-    physic_world: &'a ::resource::PhysicWorld,
-}
+pub struct PhysicBody(usize);
 
-pub struct PhysicRigidBodyMut<'a> {
-    pub body: ::std::cell::RefMut<'a, ::nphysics::object::RigidBody<f32>>,
-    physic_world: &'a mut ::resource::PhysicWorld,
-}
-
-pub struct PhysicRigidBodyHandle(::nphysics::object::RigidBodyHandle<f32>);
-unsafe impl Send for PhysicRigidBodyHandle {}
-unsafe impl Sync for PhysicRigidBodyHandle {}
-
-impl ::specs::Component for PhysicRigidBodyHandle {
+impl ::specs::Component for PhysicBody {
     type Storage = ::specs::VecStorage<Self>;
 }
 
-// TODO: add entity to rigid body user data
-impl PhysicRigidBodyHandle {
-    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, body: ::nphysics::object::RigidBodyHandle<f32>) {
-        // We are allowed to do that because we have right access to physic world through &mut specs world
-        body.borrow_mut().set_user_data(Some(Box::new(entity)));
-        world.write().insert(entity, PhysicRigidBodyHandle(body));
-    }
-
-    // TODO: maybe the clone method of ref is not thread safe ...
-    #[inline]
-    pub fn get<'a>(
-        &'a self,
-        physic_world: &'a ::resource::PhysicWorld,
-    ) -> PhysicRigidBody<'a> {
-        PhysicRigidBody {
-            body: self.0.borrow(),
-            physic_world,
-        }
+impl PhysicBody {
+    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, body: usize) {
+        world.write_resource::<::resource::PhysicWorld>().mut_rigid_body(body).set_user_data(Some(Box::new(entity)));
+        world.write().insert(entity, PhysicBody(body));
     }
 
     #[inline]
-    pub fn get_mut<'a>(
-        &'a mut self,
-        physic_world: &'a mut ::resource::PhysicWorld,
-    ) -> PhysicRigidBodyMut<'a> {
-        PhysicRigidBodyMut {
-            body: self.0.borrow_mut(),
-            physic_world,
-        }
+    pub fn get<'a>(&'a self, physic_world: &'a ::resource::PhysicWorld) -> &'a ::nphysics::object::RigidBody<f32> {
+        physic_world.rigid_body(self.0)
+    }
+
+    #[inline]
+    pub fn get_mut<'a>(&'a mut self, physic_world: &'a mut ::resource::PhysicWorld) -> &'a mut ::nphysics::object::RigidBody<f32> {
+        physic_world.mut_rigid_body(self.0)
     }
 }

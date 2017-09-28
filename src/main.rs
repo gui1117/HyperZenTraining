@@ -60,7 +60,7 @@ fn main() {
     world.register::<::component::Aim>();
     world.register::<::component::StaticDraw>();
     world.register::<::component::DynamicDraw>();
-    world.register::<::component::PhysicRigidBodyHandle>();
+    world.register::<::component::PhysicBody>();
     world.register::<::component::Momentum>();
     world.register::<::component::Avoider>();
     world.register::<::component::Life>();

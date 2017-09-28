@@ -104,7 +104,7 @@ pub struct AvoiderControlSystem;
 impl<'a> ::specs::System<'a> for AvoiderControlSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::Aim>,
-     ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+     ::specs::ReadStorage<'a, ::component::PhysicBody>,
      ::specs::WriteStorage<'a, ::component::Avoider>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
@@ -116,10 +116,10 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
     ) {
         let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
 
-        let player_pos = player_body.get(&physic_world).body.position().clone();
+        let player_pos = player_body.get(&physic_world).position().clone();
 
         for (avoider, momentum, body) in (&mut avoiders, &mut momentums, &bodies).join() {
-            let avoider_pos = body.get(&physic_world).body.position().clone();
+            let avoider_pos = body.get(&physic_world).position().clone();
 
             let recompute_goal = if let Some(goal) = avoider.goal {
                 (avoider_pos.translation.vector -
@@ -191,15 +191,13 @@ pub struct PhysicSystem;
 impl<'a> ::specs::System<'a> for PhysicSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::Momentum>,
-     ::specs::WriteStorage<'a, ::component::PhysicRigidBodyHandle>,
+     ::specs::WriteStorage<'a, ::component::PhysicBody>,
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::FetchMut<'a, ::resource::PhysicWorld>);
 
     fn run(&mut self, (player, momentums, mut bodies, config, mut physic_world): Self::SystemData) {
-        println!("BEGIN PHYSIC HERE");
         for (momentum, body) in (&momentums, &mut bodies).join() {
-            println!("physic borrow BEGIN");
-            let mut body = body.get_mut(&mut physic_world).body;
+            let mut body = body.get_mut(&mut physic_world);
             let lin_vel = body.lin_vel();
             let ang_vel = body.ang_vel();
             // TODO: use integrator to modify rigidbody
@@ -213,7 +211,6 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
                 body.append_lin_force(direction_force);
             }
             body.set_ang_vel_internal(momentum.ang_damping * ang_vel);
-            println!("physic borrow END");
 
             // TODO: gravity if not touching floor
             // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
@@ -222,7 +219,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             physic_world.step(config.dt / 2.);
         }
         for (_, body) in (&player, &mut bodies).join() {
-            let mut body = body.get_mut(&mut physic_world).body;
+            let mut body = body.get_mut(&mut physic_world);
             body.set_ang_acc_scale(::na::zero());
             body.set_ang_vel(::na::zero());
 
@@ -241,7 +238,7 @@ pub struct DrawSystem;
 impl<'a> ::specs::System<'a> for DrawSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::StaticDraw>,
      ::specs::ReadStorage<'a, ::component::DynamicDraw>,
-     ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+     ::specs::ReadStorage<'a, ::component::PhysicBody>,
      ::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::Aim>,
      ::specs::FetchMut<'a, ::resource::Rendering>,
@@ -253,7 +250,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         let view_uniform_buffer_subbuffer = {
             let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
 
-            let player_pos = player_body.get(&physic_world).body.position().clone();
+            let player_pos = player_body.get(&physic_world).position().clone();
 
             // IDEA: if we change -player.x here to + then it is fun
             let camera_top = if player_aim.dir[2].abs() > 0.8 {
@@ -375,13 +372,13 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
 pub struct UpdateDynamicDrawSystem;
 
 impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+    type SystemData = (::specs::ReadStorage<'a, ::component::PhysicBody>,
      ::specs::WriteStorage<'a, ::component::DynamicDraw>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
     fn run(&mut self, (bodies, mut dynamic_draws, physic_world): Self::SystemData) {
         for (dynamic_draw, body) in (&mut dynamic_draws, &bodies).join() {
-            let trans = body.get(&physic_world).body.position() * dynamic_draw.primitive_trans;
+            let trans = body.get(&physic_world).position() * dynamic_draw.primitive_trans;
             dynamic_draw.world_trans =
                 ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
         }
@@ -393,7 +390,7 @@ pub struct ShootSystem;
 // TODO: not shoot yourself and shoot in one direction only
 impl<'a> ::specs::System<'a> for ShootSystem {
     type SystemData = (
-        ::specs::ReadStorage<'a, ::component::PhysicRigidBodyHandle>,
+        ::specs::ReadStorage<'a, ::component::PhysicBody>,
         ::specs::ReadStorage<'a, ::component::Aim>,
         ::specs::WriteStorage<'a, ::component::Shooter>,
         ::specs::WriteStorage<'a, ::component::Life>,
@@ -402,7 +399,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
 
     fn run(&mut self, (bodies, aims, mut shooters, mut lifes, physic_world, config): Self::SystemData) {
         for (aim, body, shooter) in (&aims, &bodies, &mut shooters).join() {
-            let body_pos = body.get(&physic_world).body.position().clone();
+            let body_pos = body.get(&physic_world).position().clone();
             shooter.reload(config.dt);
 
             let ray = ::ncollide::query::Ray {
@@ -413,14 +410,13 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             let group = ::ncollide::world::CollisionGroups::new();
 
             if shooter.do_shoot() {
-                for (entity, _body, _collision) in physic_world.interferences_with_ray(&ray, &group) {
-                    if let Some(ref mut life) = lifes.get_mut(entity) {
-                        life.0 -= 1;
-                    }
-                    println!("borrow filter map here END");
-                }
+                // TODO
+                // for (entity, _body, _collision) in physic_world.collision_world().interferences_with_ray(&ray, &group) {
+                //     if let Some(ref mut life) = lifes.get_mut(entity) {
+                //         life.0 -= 1;
+                //     }
+                // }
             }
         }
-        println!("END SYSTEM SHOOT");
     }
 }

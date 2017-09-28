@@ -46,7 +46,7 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
         .with(::component::Shooter::new(2.0))
         .build();
 
-    ::component::PhysicRigidBodyHandle::add(world, entity, bodyhandle);
+    ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 
 // IDEA: maybe have a triangle base for the pyramid
@@ -104,7 +104,7 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
 
     // IDEA: same graphics group for all avoider ?
     ::component::DynamicDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), primitive_trans);
-    ::component::PhysicRigidBodyHandle::add(world, entity, bodyhandle);
+    ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 
 pub fn create_wall_side(
@@ -137,7 +137,7 @@ pub fn create_wall_side(
 
     let entity = world.create_entity().build();
     ::component::StaticDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), world_trans);
-    ::component::PhysicRigidBodyHandle::add(world, entity, bodyhandle);
+    ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 
 pub fn create_floor_ceil(world: &mut ::specs::World, z: f32, floor: bool) {
@@ -160,7 +160,7 @@ pub fn create_floor_ceil(world: &mut ::specs::World, z: f32, floor: bool) {
 
     let entity = world.create_entity().build();
     ::component::StaticDraw::add(world, entity, ::graphics::GROUP_COUNTER.next(), world_trans);
-    ::component::PhysicRigidBodyHandle::add(world, entity, bodyhandle);
+    ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 
 pub fn create_maze_walls(world: &mut ::specs::World) {
