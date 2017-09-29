@@ -22,7 +22,7 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
     body.set_transformation(pos);
     body.set_collision_groups(group);
     let mass = 1.0 / body.inv_mass();
-    let velocity = 10.0;
+    let velocity = 5.0;
     let time_to_reach_v_max = 0.1;
     let ang_damping = 0.0;
 
@@ -80,7 +80,7 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
-    let velocity = 5.0;
+    let velocity = 2.5;
     let time_to_reach_v_max = 1.0;
     let ang_damping = 0.8;
     let pnt_to_com = ::na::Vector3::z() * size - body.center_of_mass().coords;

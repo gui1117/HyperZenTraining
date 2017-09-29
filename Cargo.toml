@@ -16,7 +16,7 @@ specs = "0.9"
 alga = "0.5"
 rand = "0.3"
 lazy_static = "0.2"
-pathfinding = "0.1"
+pathfinding = "0.2"
 
 [replace]
 "ncollide:0.13.0" = { git = "https://github.com/thiolliere/ncollide/", branch = "send_sync_master" }

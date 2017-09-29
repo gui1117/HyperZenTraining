@@ -425,7 +425,6 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             let group = ::ncollide::world::CollisionGroups::new();
 
             if shooter.do_shoot() {
-                // TODO
                 // for (entity, _body, _collision) in physic_world.collision_world().interferences_with_ray(&ray, &group) {
                 //     if let Some(ref mut life) = lifes.get_mut(entity) {
                 //         life.0 -= 1;
