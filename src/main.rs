@@ -14,6 +14,7 @@ extern crate nphysics3d as nphysics;
 #[macro_use]
 extern crate lazy_static;
 extern crate pathfinding;
+extern crate png;
 
 mod util;
 mod graphics;
