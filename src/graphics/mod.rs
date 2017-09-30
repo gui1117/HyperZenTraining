@@ -56,6 +56,7 @@ pub struct Data {
     pub primitives_vertex_buffers: Vec<Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[Vertex]>>>,
 
     pub fullscreen_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[SecondVertex]>>,
+    pub cursor_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[SecondVertex]>>,
     pub render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>,
     pub second_render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>,
     pub pipeline: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<Vertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>>>,
@@ -174,6 +175,46 @@ impl<'a> Graphics<'a> {
                     .cloned(),
         ).expect("failed to create buffer");
 
+        let cursor_vertex_buffer =
+            ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
+                device.clone(),
+                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+                [
+                    SecondVertex { position: [-0.5f32, -0.5] },
+                    SecondVertex { position: [0.5, -0.5] },
+                    SecondVertex { position: [-0.5, 0.5] },
+                    SecondVertex { position: [0.5, 0.5] },
+                    SecondVertex { position: [-0.5, 0.5] },
+                    SecondVertex { position: [0.5, -0.5] },
+                ].iter()
+                    .cloned(),
+        ).expect("failed to create buffer");
+
+        let (cursor_texture, mut cursor_tex_future) = {
+            // TODO: The texture must be configurable
+            let file = ::std::io::Cursor::new(include_bytes!("default_cursor.png").as_ref());
+            let (info, mut reader) = ::png::Decoder::new(file).read_info().unwrap();
+            assert_eq!(info.color_type, ::png::ColorType::RGBA);
+            let mut buf = vec![0; info.buffer_size()];
+            reader.next_frame(&mut buf).unwrap();
+
+            ::vulkano::image::immutable::ImmutableImage::from_iter(
+                buf.iter().cloned(),
+                ::vulkano::image::Dimensions::Dim2d { width: info.width, height: info.height },
+                ::vulkano::format::R8G8B8A8Srgb,
+                queue.clone()).unwrap()
+        };
+
+        let cursor_sampler = ::vulkano::sampler::Sampler::new(device.clone(), ::vulkano::sampler::Filter::Linear,
+                                                     ::vulkano::sampler::Filter::Linear, ::vulkano::sampler::MipmapMode::Nearest,
+                                                     ::vulkano::sampler::SamplerAddressMode::ClampToEdge,
+                                                     ::vulkano::sampler::SamplerAddressMode::ClampToEdge,
+                                                     ::vulkano::sampler::SamplerAddressMode::ClampToEdge,
+                                                     // TODO: What values here
+                                                     0.0, 1.0, 0.0, 0.0).unwrap();
+
+        let cursor_tex_dim = cursor_texture.dimensions();
+
         let vs = shader::vs::Shader::load(device.clone()).expect("failed to create shader module");
         let fs = shader::fs::Shader::load(device.clone()).expect("failed to create shader module");
 
@@ -244,9 +285,13 @@ impl<'a> Graphics<'a> {
                 .vertex_shader(second_vs_cursor.main_entry_point(), ())
                 .triangle_list()
                 .viewports(iter::once(::vulkano::pipeline::viewport::Viewport {
-                    origin: [0.0, 0.0],
+                    // TODO this is wrong maybe minus dimensiosn ?
+                    origin: [
+                        (width - cursor_tex_dim.width()*2) as f32 /2.0,
+                        (height - cursor_tex_dim.height()*2) as f32 / 2.0
+                    ],
                     depth_range: 0.0..1.0,
-                    dimensions: [width as f32, height as f32],
+                    dimensions: [(cursor_tex_dim.width()*2) as f32, (cursor_tex_dim.width()*2) as f32],
                 }))
                 .fragment_shader(second_fs_cursor.main_entry_point(), ())
                 .blend_alpha_blending()
@@ -306,33 +351,6 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let (cursor_texture, mut cursor_tex_future) = {
-            // TODO: The cursor must be configurable
-            // TODO: use PNG instead of image
-            let file = ::std::io::Cursor::new(include_bytes!("default_cursor.png").as_ref());
-            let (info, mut reader) = ::png::Decoder::new(file).read_info().unwrap();
-            // TODO: is format OK ?
-            assert_eq!(info.color_type, ::png::ColorType::RGBA);
-            let mut buf = vec![0; info.buffer_size()];
-            reader.next_frame(&mut buf).unwrap();
-            println!("{:#?}", buf);
-
-            ::vulkano::image::immutable::ImmutableImage::from_iter(
-                buf.iter().cloned(),
-                // TODO: take width and height from png image
-                ::vulkano::image::Dimensions::Dim2d { width: info.width, height: info.height },
-                ::vulkano::format::R8G8B8A8Srgb,
-                queue.clone()).unwrap()
-        };
-
-        let cursor_sampler = ::vulkano::sampler::Sampler::new(device.clone(), ::vulkano::sampler::Filter::Linear,
-                                                     ::vulkano::sampler::Filter::Linear, ::vulkano::sampler::MipmapMode::Nearest,
-                                                     ::vulkano::sampler::SamplerAddressMode::ClampToEdge,
-                                                     ::vulkano::sampler::SamplerAddressMode::ClampToEdge,
-                                                     ::vulkano::sampler::SamplerAddressMode::ClampToEdge,
-                                                     // TODO: What values here
-                                                     0.0, 1.0, 0.0, 0.0).unwrap();
-
         let cursor_texture_set = Arc::new(::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(second_pipeline.clone(), 0)
             .add_sampled_image(cursor_texture.clone(), cursor_sampler.clone()).unwrap()
             .build().unwrap()
@@ -364,6 +382,7 @@ impl<'a> Graphics<'a> {
                 primitives_vertex_buffers,
                 cursor_texture_set,
                 second_pipeline_cursor,
+                cursor_vertex_buffer,
             },
         }
     }

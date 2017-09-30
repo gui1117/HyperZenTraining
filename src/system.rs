@@ -381,8 +381,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             .draw(
                 graphics.second_pipeline_cursor.clone(),
                 ::vulkano::command_buffer::DynamicState::none(),
-                // TODO: use cursor vectex buffer
-                graphics.fullscreen_vertex_buffer.clone(),
+                graphics.cursor_vertex_buffer.clone(),
                 graphics.cursor_texture_set.clone(),
                 ()
             )
