@@ -68,6 +68,7 @@ pub struct Data {
     pub height: u32,
     pub view_uniform_buffer: ::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::View>,
     pub tmp_image_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::AttachmentImage>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
+    pub colors_texture_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::ImmutableImage<::vulkano::format::R8G8B8A8Unorm>>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
     pub cursor_texture_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::ImmutableImage<::vulkano::format::R8G8B8A8Srgb>>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
 }
 
@@ -356,8 +357,34 @@ impl<'a> Graphics<'a> {
             .build().unwrap()
         );
 
+        let (colors_texture, mut colors_tex_future) = {
+            let colors = colors::colors();
+            ::vulkano::image::immutable::ImmutableImage::from_iter(
+                colors.iter().cloned(),
+                ::vulkano::image::Dimensions::Dim1d { width: colors.len() as u32 },
+                ::vulkano::format::R8G8B8A8Unorm,
+                queue.clone()).unwrap()
+        };
+
+        let colors_texture_set = {
+            Arc::new(::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(second_pipeline.clone(), 1)
+                .add_sampled_image(
+                    colors_texture,
+                    ::vulkano::sampler::Sampler::unnormalized(
+                        device.clone(),
+                        ::vulkano::sampler::Filter::Nearest,
+                        ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
+                        ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ).unwrap()
+                )
+                .unwrap()
+                .build().unwrap()
+            )
+        };
+
         // TODO: return this future to enforce it later ?
         cursor_tex_future.cleanup_finished();
+        colors_tex_future.cleanup_finished();
 
         Graphics {
             physical,
@@ -383,6 +410,7 @@ impl<'a> Graphics<'a> {
                 cursor_texture_set,
                 second_pipeline_cursor,
                 cursor_vertex_buffer,
+                colors_texture_set,
             },
         }
     }
