@@ -15,6 +15,8 @@ extern crate nphysics3d as nphysics;
 extern crate lazy_static;
 extern crate pathfinding;
 extern crate png;
+#[macro_use]
+extern crate imgui;
 
 mod util;
 mod graphics;
@@ -51,7 +53,9 @@ fn main() {
         .set_cursor_state(winit::CursorState::Grab)
         .unwrap();
 
-    let graphics = graphics::Graphics::new(&window);
+    let mut imgui = ::imgui::ImGui::init();
+
+    let graphics = graphics::Graphics::new(&window, &mut imgui);
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
@@ -66,6 +70,7 @@ fn main() {
     world.register::<::component::Avoider>();
     world.register::<::component::Life>();
     world.add_resource(graphics.data.clone());
+    world.add_resource(imgui);
     world.add_resource(::resource::PhysicWorld::new());
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::WinitEvents::new());
@@ -141,6 +146,8 @@ fn main() {
         let (image_num, acquire_future) =
             swapchain::acquire_next_image(graphics.data.swapchain.clone(), None).unwrap();
         world.write_resource::<::resource::Rendering>().image_num = Some(image_num);
+        world.write_resource::<::resource::Rendering>().size_points = window.window().get_inner_size_points();
+        world.write_resource::<::resource::Rendering>().size_pixels = window.window().get_inner_size_pixels();
 
         draw_dispatcher.dispatch(&mut world.res);
 

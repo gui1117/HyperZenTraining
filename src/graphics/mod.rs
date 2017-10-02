@@ -45,6 +45,14 @@ pub struct SecondVertex {
 }
 impl_vertex!(SecondVertex, position);
 
+#[derive(Debug, Clone)]
+pub struct SecondVertexImgui {
+    pos: [f32; 2],
+    uv: [f32; 2],
+    col: [f32; 4],
+}
+impl_vertex!(SecondVertexImgui, pos, uv, col);
+
 #[derive(Clone)]
 pub struct Data {
     pub device: Arc<::vulkano::device::Device>,
@@ -53,15 +61,15 @@ pub struct Data {
     pub images: Vec<Arc<::vulkano::image::swapchain::SwapchainImage>>,
     pub depth_buffer_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
     pub tmp_image_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
-    pub primitives_vertex_buffers: Vec<Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[Vertex]>>>,
-
-    pub fullscreen_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[SecondVertex]>>,
-    pub cursor_vertex_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[SecondVertex]>>,
+    pub primitives_vertex_buffers: Vec<Arc<::vulkano::buffer::immutable::ImmutableBuffer<[Vertex]>>>,
+    pub fullscreen_vertex_buffer: Arc<::vulkano::buffer::immutable::ImmutableBuffer<[SecondVertex]>>,
+    pub cursor_vertex_buffer: Arc<::vulkano::buffer::immutable::ImmutableBuffer<[SecondVertex]>>,
     pub render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>,
     pub second_render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>,
     pub pipeline: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<Vertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>>>,
     pub second_pipeline: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
     pub second_pipeline_cursor: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
+    pub second_pipeline_imgui: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<SecondVertexImgui>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
     pub framebuffer: Arc<::vulkano::framebuffer::Framebuffer<Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>, (((), Arc<::vulkano::image::AttachmentImage>), Arc<::vulkano::image::AttachmentImage>)>>,
     pub second_framebuffers: Vec<Arc<::vulkano::framebuffer::Framebuffer<Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<::vulkano::image::SwapchainImage>)>>>,
     pub width: u32,
@@ -70,6 +78,10 @@ pub struct Data {
     pub tmp_image_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::AttachmentImage>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
     pub colors_texture_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::ImmutableImage<::vulkano::format::R8G8B8A8Unorm>>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
     pub cursor_texture_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::ImmutableImage<::vulkano::format::R8G8B8A8Srgb>>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
+    pub imgui_texture_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::ImmutableImage<::vulkano::format::R8G8B8A8Unorm>>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
+    // TODO: The buffer must be able to grow
+    pub imgui_vertex_buffer: ::vulkano::buffer::cpu_pool::CpuBufferPool<[SecondVertexImgui; 1024]>,
+    pub imgui_index_buffer: ::vulkano::buffer::cpu_pool::CpuBufferPool<[u32; 1024]>,
 }
 
 pub struct Graphics<'a> {
@@ -78,7 +90,7 @@ pub struct Graphics<'a> {
 }
 
 impl<'a> Graphics<'a> {
-    pub fn new(window: &'a ::vulkano_win::Window) -> Graphics<'a> {
+    pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) -> Graphics<'a> {
         //TODO: read config and save device
         let physical = ::vulkano::instance::PhysicalDevice::enumerate(&window.surface().instance())
             .next()
@@ -159,12 +171,10 @@ impl<'a> Graphics<'a> {
             ).unwrap()
         };
 
-        let primitives_vertex_buffers = primitives::instance_primitives(device.clone());
+        let (primitives_vertex_buffers, mut futures) = primitives::instance_primitives(queue.clone());
 
-        let fullscreen_vertex_buffer =
-            ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-                device.clone(),
-                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+        let (fullscreen_vertex_buffer, mut fullscreen_vertex_buffer_future) =
+            ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
                 [
                     SecondVertex { position: [-1.0f32, -1.0] },
                     SecondVertex { position: [1.0, -1.0] },
@@ -172,14 +182,13 @@ impl<'a> Graphics<'a> {
                     SecondVertex { position: [1.0, 1.0] },
                     SecondVertex { position: [-1.0, 1.0] },
                     SecondVertex { position: [1.0, -1.0] },
-                ].iter()
-                    .cloned(),
+                ].iter().cloned(),
+                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+                queue.clone(),
         ).expect("failed to create buffer");
 
-        let cursor_vertex_buffer =
-            ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-                device.clone(),
-                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+        let (cursor_vertex_buffer, mut cursor_vertex_buffer_future) =
+            ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
                 [
                     SecondVertex { position: [-0.5f32, -0.5] },
                     SecondVertex { position: [0.5, -0.5] },
@@ -187,8 +196,9 @@ impl<'a> Graphics<'a> {
                     SecondVertex { position: [0.5, 0.5] },
                     SecondVertex { position: [-0.5, 0.5] },
                     SecondVertex { position: [0.5, -0.5] },
-                ].iter()
-                    .cloned(),
+                ].iter().cloned(),
+                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+                queue.clone(),
         ).expect("failed to create buffer");
 
         let (cursor_texture, mut cursor_tex_future) = {
@@ -202,6 +212,7 @@ impl<'a> Graphics<'a> {
             ::vulkano::image::immutable::ImmutableImage::from_iter(
                 buf.iter().cloned(),
                 ::vulkano::image::Dimensions::Dim2d { width: info.width, height: info.height },
+                // TODO: Srgb or Unorm ?
                 ::vulkano::format::R8G8B8A8Srgb,
                 queue.clone()).unwrap()
         };
@@ -230,6 +241,13 @@ impl<'a> Graphics<'a> {
             "failed to create shader module",
         );
         let second_fs_cursor = shader::second_fs_cursor::Shader::load(device.clone()).expect(
+            "failed to create shader module",
+        );
+
+        let second_vs_imgui = shader::second_vs_imgui::Shader::load(device.clone()).expect(
+            "failed to create shader module",
+        );
+        let second_fs_imgui = shader::second_fs_imgui::Shader::load(device.clone()).expect(
             "failed to create shader module",
         );
 
@@ -295,6 +313,25 @@ impl<'a> Graphics<'a> {
                     dimensions: [(cursor_tex_dim.width()*2) as f32, (cursor_tex_dim.width()*2) as f32],
                 }))
                 .fragment_shader(second_fs_cursor.main_entry_point(), ())
+                .blend_alpha_blending()
+                .render_pass(
+                    ::vulkano::framebuffer::Subpass::from(second_render_pass.clone(), 0).unwrap(),
+                )
+                .build(device.clone())
+                .unwrap(),
+        );
+
+        let second_pipeline_imgui = Arc::new(
+            ::vulkano::pipeline::GraphicsPipeline::start()
+                .vertex_input_single_buffer::<SecondVertexImgui>()
+                .vertex_shader(second_vs_imgui.main_entry_point(), ())
+                .triangle_list()
+                .viewports(iter::once(::vulkano::pipeline::viewport::Viewport {
+                    origin: [0.0, 0.0],
+                    depth_range: 0.0..1.0,
+                    dimensions: [width as f32, height as f32],
+                }))
+                .fragment_shader(second_fs_imgui.main_entry_point(), ())
                 .blend_alpha_blending()
                 .render_pass(
                     ::vulkano::framebuffer::Subpass::from(second_render_pass.clone(), 0).unwrap(),
@@ -382,13 +419,58 @@ impl<'a> Graphics<'a> {
             )
         };
 
+        let (imgui_texture, mut imgui_tex_future) = imgui.prepare_texture(|handle| {
+            ::vulkano::image::immutable::ImmutableImage::from_iter(
+                handle.pixels.iter().cloned(),
+                ::vulkano::image::Dimensions::Dim2d { width: handle.width, height: handle.height },
+                // TODO: unorm or srgb ?
+                ::vulkano::format::R8G8B8A8Unorm,
+                queue.clone())
+        }).unwrap();
+
+        let imgui_texture_set = {
+            Arc::new(::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(second_pipeline_imgui.clone(), 1)
+                .add_sampled_image(
+                    imgui_texture,
+                    ::vulkano::sampler::Sampler::unnormalized(
+                        device.clone(),
+                        ::vulkano::sampler::Filter::Linear, // TODO: linear or nearest
+                        ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
+                        ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ).unwrap()
+                )
+                .unwrap()
+                .build().unwrap()
+            )
+        };
+
+        let imgui_vertex_buffer =
+            ::vulkano::buffer::cpu_pool::CpuBufferPool::<[SecondVertexImgui; 1024]>::new(
+                device.clone(),
+                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+            );
+
+        let imgui_index_buffer =
+            ::vulkano::buffer::cpu_pool::CpuBufferPool::<[u32; 1024]>::new(
+                device.clone(),
+                ::vulkano::buffer::BufferUsage::index_buffer(),
+            );
+
         // TODO: return this future to enforce it later ?
         cursor_tex_future.cleanup_finished();
         colors_tex_future.cleanup_finished();
+        imgui_tex_future.cleanup_finished();
+        fullscreen_vertex_buffer_future.cleanup_finished();
+        cursor_vertex_buffer_future.cleanup_finished();
+        for future in &mut futures {
+            future.cleanup_finished();
+        }
 
         Graphics {
             physical,
             data: Data {
+                imgui_vertex_buffer,
+                imgui_index_buffer,
                 fullscreen_vertex_buffer,
                 depth_buffer_attachment,
                 tmp_image_attachment,
@@ -409,8 +491,10 @@ impl<'a> Graphics<'a> {
                 primitives_vertex_buffers,
                 cursor_texture_set,
                 second_pipeline_cursor,
+                second_pipeline_imgui,
                 cursor_vertex_buffer,
                 colors_texture_set,
+                imgui_texture_set,
             },
         }
     }

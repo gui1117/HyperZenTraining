@@ -1,10 +1,8 @@
 use std::sync::Arc;
 use super::Vertex;
 
-pub fn instance_primitives(device: Arc<::vulkano::device::Device>) -> Vec<Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<[Vertex]>>> {
-    let plane = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-        device.clone(),
-        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+pub fn instance_primitives(queue: Arc<::vulkano::device::Queue>) -> (Vec<Arc<::vulkano::buffer::immutable::ImmutableBuffer<[Vertex]>>>, Vec<::vulkano::command_buffer::CommandBufferExecFuture<::vulkano::sync::NowFuture, ::vulkano::command_buffer::AutoCommandBuffer>>) {
+    let (plane, plane_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
         [
             Vertex { position: [-1.0, -1.0, 0.0] },
             Vertex { position: [1.0, -1.0, 0.0] },
@@ -14,11 +12,11 @@ pub fn instance_primitives(device: Arc<::vulkano::device::Device>) -> Vec<Arc<::
             Vertex { position: [1.0, -1.0, 0.0] },
         ].iter()
             .cloned(),
+        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+        queue.clone(),
     ).expect("failed to create buffer");
 
-    let pyramid = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-        device.clone(),
-        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+    let (pyramid, pyramid_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
         [
             Vertex { position: [-1.0, -1.0, -1.0] },
             Vertex { position: [1.0, -1.0, -1.0] },
@@ -45,11 +43,11 @@ pub fn instance_primitives(device: Arc<::vulkano::device::Device>) -> Vec<Arc<::
             Vertex { position: [0.0, 0.0, 1.0] },
         ].iter()
             .cloned(),
+        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+        queue.clone(),
     ).expect("failed to create buffer");
 
-    let pyramid_base = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-        device.clone(),
-        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+    let (pyramid_base, pyramid_base_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
         [
             Vertex { position: [-1.0, -1.0, -1.0] },
             Vertex { position: [1.0, -1.0, -1.0] },
@@ -60,60 +58,73 @@ pub fn instance_primitives(device: Arc<::vulkano::device::Device>) -> Vec<Arc<::
             Vertex { position: [-1.0, 1.0, -1.0] },
         ].iter()
             .cloned(),
+        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+        queue.clone(),
     ).expect("failed to create buffer");
 
-    let pyramid_side_1 = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-        device.clone(),
-        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+    let (pyramid_side_1, pyramid_side_1_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
         [
             Vertex { position: [-1.0, -1.0, -1.0] },
             Vertex { position: [-1.0, 1.0, -1.0] },
             Vertex { position: [0.0, 0.0, 1.0] },
         ].iter()
             .cloned(),
+        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+        queue.clone(),
     ).expect("failed to create buffer");
 
-    let pyramid_side_2 = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-        device.clone(),
-        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+    let (pyramid_side_2, pyramid_side_2_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
         [
             Vertex { position: [-1.0, 1.0, -1.0] },
             Vertex { position: [1.0, 1.0, -1.0] },
             Vertex { position: [0.0, 0.0, 1.0] },
         ].iter()
             .cloned(),
+        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+        queue.clone(),
     ).expect("failed to create buffer");
 
-    let pyramid_side_3 = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-        device.clone(),
-        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+    let (pyramid_side_3, pyramid_side_3_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
         [
             Vertex { position: [1.0, 1.0, -1.0] },
             Vertex { position: [1.0, -1.0, -1.0] },
             Vertex { position: [0.0, 0.0, 1.0] },
         ].iter()
             .cloned(),
+        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+        queue.clone(),
     ).expect("failed to create buffer");
 
-    let pyramid_side_4 = ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::from_iter(
-        device.clone(),
-        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+    let (pyramid_side_4, pyramid_side_4_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
         [
             Vertex { position: [1.0, -1.0, -1.0] },
             Vertex { position: [-1.0, -1.0, -1.0] },
             Vertex { position: [0.0, 0.0, 1.0] },
         ].iter()
             .cloned(),
+        ::vulkano::buffer::BufferUsage::vertex_buffer(),
+        queue.clone(),
     ).expect("failed to create buffer");
 
-    vec!(
-        plane,
-        pyramid,
-        pyramid_base,
-        pyramid_side_1,
-        pyramid_side_2,
-        pyramid_side_3,
-        pyramid_side_4,
+    (
+        vec!(
+            plane,
+            pyramid,
+            pyramid_base,
+            pyramid_side_1,
+            pyramid_side_2,
+            pyramid_side_3,
+            pyramid_side_4,
+        ),
+        vec!(
+            plane_future,
+            pyramid_future,
+            pyramid_base_future,
+            pyramid_side_1_future,
+            pyramid_side_2_future,
+            pyramid_side_3_future,
+            pyramid_side_4_future,
+        )
     )
 }
 

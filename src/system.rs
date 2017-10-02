@@ -242,10 +242,12 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::Aim>,
      ::specs::FetchMut<'a, ::resource::Rendering>,
+     ::specs::FetchMut<'a, ::resource::ImGui>,
+     ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
      ::specs::Fetch<'a, ::resource::Graphics>);
 
-fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rendering, physic_world, graphics): Self::SystemData){
+fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rendering, mut imgui, config, physic_world, graphics): Self::SystemData) {
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
             let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
@@ -367,7 +369,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         );
 
         // Compute second command
-        rendering.second_command_buffer = Some(::vulkano::command_buffer::AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
+        let second_command_buffer_builder = ::vulkano::command_buffer::AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
             .begin_render_pass(graphics.second_framebuffers[rendering.image_num.take().unwrap()].clone(), false, vec!())
             .unwrap()
             .draw(
@@ -385,10 +387,53 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 graphics.cursor_texture_set.clone(),
                 ()
             )
-            .unwrap()
+            .unwrap();
+
+        // // Build imgui
+        // let ui = imgui.frame(rendering.size_points.take().unwrap(), rendering.size_pixels.take().unwrap(), config.dt);
+        // ui.window(im_str!("Hello world"))
+        //     .size((300.0, 100.0), ::imgui::ImGuiSetCond_FirstUseEver)
+        //     .build(|| {
+        //         ui.text(im_str!("Hello world!"));
+        //         ui.separator();
+        //         ui.text(im_str!("This...is...imgui-rs!"));
+        //     });
+
+        // // TODO: maybe change imgui so that it used an iterator instead of a callback
+        // let ref_cell_cmd_builder = ::std::cell::RefCell::new(Some(second_command_buffer_builder));
+        // ui.render::<_, ()>(|ui, drawlist| {
+        //     let mut cmd_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
+        //     let vertex_subbuffer = graphics.imgui_vertex_buffer
+        //         // TODO: clone not very efficient and necessary ...
+        //         .next(drawlist.vtx_buffer.iter().cloned())
+        //         .unwrap();
+        //     let index_subbuffer = graphics.imgui_vertex_buffer
+        //         // TODO: clone not very efficient and necessary ...
+        //         .next(drawlist.idx_buffer.iter().cloned())
+        //         .unwrap();
+
+        //     for cmd in drawlist.cmd_buffer {
+        //         // cmd_builder = cmd_builder
+        //         //     .draw_indexed(
+        //         //         graphics.second_pipeline_imgui.clone(),
+        //         //         ::vulkano::command_buffer::DynamicState::none(),
+        //         //         vertex_subbuffer, index_subbuffer,
+        //         //         graphics.imgui_texture_set.clone(),
+        //         //         ()
+        //         //     )
+        //         //     .unwrap();
+        //     }
+        //     *ref_cell_cmd_builder.borrow_mut() = Some(cmd_builder);
+        //     Ok(())
+        // }).unwrap();
+
+        // let second_command_buffer_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
+
+        rendering.second_command_buffer = Some(second_command_buffer_builder
             .end_render_pass()
             .unwrap()
-            .build().unwrap());
+            .build().unwrap()
+        );
     }
 }
 
