@@ -5,7 +5,9 @@ use vulkano::sync::NowFuture;
 use std::sync::Arc;
 use super::Vertex;
 
-pub fn instance_primitives(queue: Arc<Queue>) -> (Vec<Arc<ImmutableBuffer<[Vertex]>>>, Vec<CommandBufferExecFuture<NowFuture, AutoCommandBuffer>>) {
+pub fn instance_primitives(
+    queue: Arc<Queue>,
+) -> (Vec<Arc<ImmutableBuffer<[Vertex]>>>, Vec<CommandBufferExecFuture<NowFuture, AutoCommandBuffer>>) {
     let (plane, plane_future) = ImmutableBuffer::from_iter(
         [
             Vertex { position: [-1.0, -1.0, 0.0] },
@@ -111,7 +113,7 @@ pub fn instance_primitives(queue: Arc<Queue>) -> (Vec<Arc<ImmutableBuffer<[Verte
     ).expect("failed to create buffer");
 
     (
-        vec!(
+        vec![
             plane,
             pyramid,
             pyramid_base,
@@ -119,8 +121,8 @@ pub fn instance_primitives(queue: Arc<Queue>) -> (Vec<Arc<ImmutableBuffer<[Verte
             pyramid_side_2,
             pyramid_side_3,
             pyramid_side_4,
-        ),
-        vec!(
+        ],
+        vec![
             plane_future,
             pyramid_future,
             pyramid_base_future,
@@ -128,7 +130,7 @@ pub fn instance_primitives(queue: Arc<Queue>) -> (Vec<Arc<ImmutableBuffer<[Verte
             pyramid_side_2_future,
             pyramid_side_3_future,
             pyramid_side_4_future,
-        )
+        ],
     )
 }
 

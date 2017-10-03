@@ -41,8 +41,7 @@ fn main() {
     let instance = {
         let extensions = vulkano_win::required_extensions();
         let info = app_info_from_cargo_toml!();
-        Instance::new(Some(&info), &extensions, None)
-            .expect("failed to create Vulkan instance")
+        Instance::new(Some(&info), &extensions, None).expect("failed to create Vulkan instance")
     };
 
     let mut events_loop = winit::EventsLoop::new();
@@ -51,7 +50,10 @@ fn main() {
         .unwrap();
 
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
-    window.window().set_cursor_state(winit::CursorState::Grab).unwrap();
+    window
+        .window()
+        .set_cursor_state(winit::CursorState::Grab)
+        .unwrap();
 
     let mut imgui = ::imgui::ImGui::init();
     imgui.set_ini_filename(None);
@@ -60,8 +62,7 @@ fn main() {
 
     let graphics = graphics::Graphics::new(&window, &mut imgui);
 
-    let mut previous_frame_end = Box::new(now(graphics.data.device.clone()))
-        as Box<GpuFuture>;
+    let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();
@@ -115,9 +116,7 @@ fn main() {
                         done = true;
                         false
                     }
-                    Event::WindowEvent {
-                        event: WindowEvent::MouseMoved { .. }, ..
-                    } => {
+                    Event::WindowEvent { event: WindowEvent::MouseMoved { .. }, .. } => {
                         window
                             .window()
                             .set_cursor_position(
@@ -127,9 +126,8 @@ fn main() {
                             .unwrap();
                         true
                     }
-                    Event::WindowEvent { event: WindowEvent::MouseInput { .. }, ..  }
-                    | Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, ..  }
-                    => true,
+                    Event::WindowEvent { event: WindowEvent::MouseInput { .. }, .. } |
+                    Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, .. } => true,
                     _ => false,
                 };
 
@@ -150,8 +148,10 @@ fn main() {
         let (image_num, acquire_future) =
             swapchain::acquire_next_image(graphics.data.swapchain.clone(), None).unwrap();
         world.write_resource::<::resource::Rendering>().image_num = Some(image_num);
-        world.write_resource::<::resource::Rendering>().size_points = window.window().get_inner_size_points();
-        world.write_resource::<::resource::Rendering>().size_pixels = window.window().get_inner_size_pixels();
+        world.write_resource::<::resource::Rendering>().size_points =
+            window.window().get_inner_size_points();
+        world.write_resource::<::resource::Rendering>().size_pixels =
+            window.window().get_inner_size_pixels();
 
         draw_dispatcher.dispatch(&mut world.res);
 

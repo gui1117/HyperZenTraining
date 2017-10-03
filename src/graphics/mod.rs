@@ -1,6 +1,7 @@
 use vulkano::device::{Device, Queue, DeviceExtensions};
-use vulkano::swapchain::{Swapchain, self};
-use vulkano::sampler::{Sampler, Filter, SamplerAddressMode, MipmapMode, UnnormalizedSamplerAddressMode};
+use vulkano::swapchain::{self, Swapchain};
+use vulkano::sampler::{Sampler, Filter, SamplerAddressMode, MipmapMode,
+                       UnnormalizedSamplerAddressMode};
 use vulkano::image::{SwapchainImage, AttachmentImage, ImmutableImage, ImageUsage, Dimensions};
 use vulkano::buffer::{ImmutableBuffer, CpuBufferPool, BufferUsage};
 use vulkano::framebuffer::{RenderPassDesc, RenderPass, Framebuffer, Subpass};
@@ -8,7 +9,8 @@ use vulkano::pipeline::GraphicsPipeline;
 use vulkano::pipeline::vertex::SingleBufferDefinition;
 use vulkano::pipeline::viewport::Viewport;
 use vulkano::descriptor::PipelineLayoutAbstract;
-use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetImg, PersistentDescriptorSetSampler};
+use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetImg,
+                                          PersistentDescriptorSetSampler};
 use vulkano::instance::PhysicalDevice;
 use vulkano::format;
 use vulkano::sync::GpuFuture;
@@ -130,7 +132,7 @@ impl<'a> Graphics<'a> {
         let (device, mut queues) = {
             let device_ext = DeviceExtensions {
                 khr_swapchain: true,
-                .. DeviceExtensions::none()
+                ..DeviceExtensions::none()
             };
 
             Device::new(
@@ -195,7 +197,8 @@ impl<'a> Graphics<'a> {
             ).unwrap()
         };
 
-        let (primitives_vertex_buffers, mut futures) = primitives::instance_primitives(queue.clone());
+        let (primitives_vertex_buffers, mut futures) =
+            primitives::instance_primitives(queue.clone());
 
         let (fullscreen_vertex_buffer, mut fullscreen_vertex_buffer_future) =
             ImmutableBuffer::from_iter(
@@ -206,10 +209,11 @@ impl<'a> Graphics<'a> {
                     SecondVertex { position: [1.0, 1.0] },
                     SecondVertex { position: [-1.0, 1.0] },
                     SecondVertex { position: [1.0, -1.0] },
-                ].iter().cloned(),
+                ].iter()
+                    .cloned(),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
-        ).expect("failed to create buffer");
+            ).expect("failed to create buffer");
 
         let (cursor_vertex_buffer, mut cursor_vertex_buffer_future) =
             ImmutableBuffer::from_iter(
@@ -220,10 +224,11 @@ impl<'a> Graphics<'a> {
                     SecondVertex { position: [0.5, 0.5] },
                     SecondVertex { position: [-0.5, 0.5] },
                     SecondVertex { position: [0.5, -0.5] },
-                ].iter().cloned(),
+                ].iter()
+                    .cloned(),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
-        ).expect("failed to create buffer");
+            ).expect("failed to create buffer");
 
         let (cursor_texture, mut cursor_tex_future) = {
             // TODO: The texture must be configurable
@@ -235,19 +240,30 @@ impl<'a> Graphics<'a> {
 
             ImmutableImage::from_iter(
                 buf.iter().cloned(),
-                Dimensions::Dim2d { width: info.width, height: info.height },
+                Dimensions::Dim2d {
+                    width: info.width,
+                    height: info.height,
+                },
                 // TODO: Srgb or Unorm ?
                 format::R8G8B8A8Srgb,
-                queue.clone()).unwrap()
+                queue.clone(),
+            ).unwrap()
         };
 
-        let cursor_sampler = Sampler::new(device.clone(), Filter::Linear,
-                                                     Filter::Linear, MipmapMode::Nearest,
-                                                     SamplerAddressMode::ClampToEdge,
-                                                     SamplerAddressMode::ClampToEdge,
-                                                     SamplerAddressMode::ClampToEdge,
-                                                     // TODO: What values here
-                                                     0.0, 1.0, 0.0, 0.0).unwrap();
+        let cursor_sampler = Sampler::new(
+            device.clone(),
+            Filter::Linear,
+            Filter::Linear,
+            MipmapMode::Nearest,
+            SamplerAddressMode::ClampToEdge,
+            SamplerAddressMode::ClampToEdge,
+            SamplerAddressMode::ClampToEdge,
+            // TODO: What values here
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+        ).unwrap();
 
         let cursor_tex_dim = cursor_texture.dimensions();
 
@@ -261,19 +277,15 @@ impl<'a> Graphics<'a> {
             "failed to create shader module",
         );
 
-        let second_vs_cursor = shader::second_vs_cursor::Shader::load(device.clone()).expect(
-            "failed to create shader module",
-        );
-        let second_fs_cursor = shader::second_fs_cursor::Shader::load(device.clone()).expect(
-            "failed to create shader module",
-        );
+        let second_vs_cursor = shader::second_vs_cursor::Shader::load(device.clone())
+            .expect("failed to create shader module");
+        let second_fs_cursor = shader::second_fs_cursor::Shader::load(device.clone())
+            .expect("failed to create shader module");
 
-        let second_vs_imgui = shader::second_vs_imgui::Shader::load(device.clone()).expect(
-            "failed to create shader module",
-        );
-        let second_fs_imgui = shader::second_fs_imgui::Shader::load(device.clone()).expect(
-            "failed to create shader module",
-        );
+        let second_vs_imgui = shader::second_vs_imgui::Shader::load(device.clone())
+            .expect("failed to create shader module");
+        let second_fs_imgui = shader::second_fs_imgui::Shader::load(device.clone())
+            .expect("failed to create shader module");
 
         let render_pass = Arc::new(
             render_pass::CustomRenderPassDesc
@@ -297,9 +309,7 @@ impl<'a> Graphics<'a> {
                 }))
                 .fragment_shader(fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
-                .render_pass(
-                    Subpass::from(render_pass.clone(), 0).unwrap(),
-                )
+                .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
                 .build(device.clone())
                 .unwrap(),
         );
@@ -315,9 +325,7 @@ impl<'a> Graphics<'a> {
                     dimensions: [width as f32, height as f32],
                 }))
                 .fragment_shader(second_fs.main_entry_point(), ())
-                .render_pass(
-                    Subpass::from(second_render_pass.clone(), 0).unwrap(),
-                )
+                .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
                 .build(device.clone())
                 .unwrap(),
         );
@@ -330,17 +338,18 @@ impl<'a> Graphics<'a> {
                 .viewports(iter::once(Viewport {
                     // TODO this is wrong maybe minus dimensiosn ?
                     origin: [
-                        (width - cursor_tex_dim.width()*2) as f32 /2.0,
-                        (height - cursor_tex_dim.height()*2) as f32 / 2.0
+                        (width - cursor_tex_dim.width() * 2) as f32 / 2.0,
+                        (height - cursor_tex_dim.height() * 2) as f32 / 2.0,
                     ],
                     depth_range: 0.0..1.0,
-                    dimensions: [(cursor_tex_dim.width()*2) as f32, (cursor_tex_dim.width()*2) as f32],
+                    dimensions: [
+                        (cursor_tex_dim.width() * 2) as f32,
+                        (cursor_tex_dim.width() * 2) as f32,
+                    ],
                 }))
                 .fragment_shader(second_fs_cursor.main_entry_point(), ())
                 .blend_alpha_blending()
-                .render_pass(
-                    Subpass::from(second_render_pass.clone(), 0).unwrap(),
-                )
+                .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
                 .build(device.clone())
                 .unwrap(),
         );
@@ -357,9 +366,7 @@ impl<'a> Graphics<'a> {
                 }))
                 .fragment_shader(second_fs_imgui.main_entry_point(), ())
                 .blend_alpha_blending()
-                .render_pass(
-                    Subpass::from(second_render_pass.clone(), 0).unwrap(),
-                )
+                .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
                 .build(device.clone())
                 .unwrap(),
         );
@@ -387,35 +394,35 @@ impl<'a> Graphics<'a> {
             })
             .collect::<Vec<_>>();
 
-        let view_uniform_buffer =
-            CpuBufferPool::<::graphics::shader::vs::ty::View>::new(
-                device.clone(),
-                BufferUsage::uniform_buffer(),
-            );
+        let view_uniform_buffer = CpuBufferPool::<::graphics::shader::vs::ty::View>::new(
+            device.clone(),
+            BufferUsage::uniform_buffer(),
+        );
 
         //TODO: maybe use simple instead of persistent
         let tmp_image_set = Arc::new(
-            PersistentDescriptorSet::start(
-                second_pipeline.clone(),
-                0,
-            ).add_sampled_image(
-                tmp_image_attachment.clone(),
-                // Sampler::simple_repeat_linear_no_mipmap(graphics.device.clone()),
-                Sampler::unnormalized(
-                    device.clone(),
-                    Filter::Nearest,
-                    UnnormalizedSamplerAddressMode::ClampToEdge,
-                    UnnormalizedSamplerAddressMode::ClampToEdge,
-                ).unwrap(),
-            )
+            PersistentDescriptorSet::start(second_pipeline.clone(), 0)
+                .add_sampled_image(
+                    tmp_image_attachment.clone(),
+                    // Sampler::simple_repeat_linear_no_mipmap(graphics.device.clone()),
+                    Sampler::unnormalized(
+                        device.clone(),
+                        Filter::Nearest,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ).unwrap(),
+                )
                 .unwrap()
                 .build()
                 .unwrap(),
         );
 
-        let cursor_texture_set = Arc::new(PersistentDescriptorSet::start(second_pipeline.clone(), 0)
-            .add_sampled_image(cursor_texture.clone(), cursor_sampler.clone()).unwrap()
-            .build().unwrap()
+        let cursor_texture_set = Arc::new(
+            PersistentDescriptorSet::start(second_pipeline.clone(), 0)
+                .add_sampled_image(cursor_texture.clone(), cursor_sampler.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
         );
 
         let (colors_texture, mut colors_tex_future) = {
@@ -424,51 +431,65 @@ impl<'a> Graphics<'a> {
                 colors.iter().cloned(),
                 Dimensions::Dim1d { width: colors.len() as u32 },
                 format::R8G8B8A8Unorm,
-                queue.clone()).unwrap()
+                queue.clone(),
+            ).unwrap()
         };
 
         let colors_texture_set = {
-            Arc::new(PersistentDescriptorSet::start(second_pipeline.clone(), 1)
-                .add_sampled_image(
-                    colors_texture,
-                    Sampler::unnormalized(
-                        device.clone(),
-                        Filter::Nearest,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                    ).unwrap()
-                )
-                .unwrap()
-                .build().unwrap()
+            Arc::new(
+                PersistentDescriptorSet::start(second_pipeline.clone(), 1)
+                    .add_sampled_image(
+                        colors_texture,
+                        Sampler::unnormalized(
+                            device.clone(),
+                            Filter::Nearest,
+                            UnnormalizedSamplerAddressMode::ClampToEdge,
+                            UnnormalizedSamplerAddressMode::ClampToEdge,
+                        ).unwrap(),
+                    )
+                    .unwrap()
+                    .build()
+                    .unwrap(),
             )
         };
 
-        let (imgui_texture, mut imgui_tex_future) = imgui.prepare_texture(|handle| {
-            ImmutableImage::from_iter(
-                handle.pixels.iter().cloned(),
-                Dimensions::Dim2d { width: handle.width, height: handle.height },
-                // TODO: unorm or srgb ?
-                format::R8G8B8A8Unorm,
-                queue.clone())
-        }).unwrap();
+        let (imgui_texture, mut imgui_tex_future) = imgui
+            .prepare_texture(|handle| {
+                ImmutableImage::from_iter(
+                    handle.pixels.iter().cloned(),
+                    Dimensions::Dim2d {
+                        width: handle.width,
+                        height: handle.height,
+                    },
+                    // TODO: unorm or srgb ?
+                    format::R8G8B8A8Unorm,
+                    queue.clone(),
+                )
+            })
+            .unwrap();
 
         let imgui_texture_set = {
-            Arc::new(PersistentDescriptorSet::start(second_pipeline_imgui.clone(), 1)
-                .add_sampled_image(
-                    imgui_texture,
-                    Sampler::new(
-                        device.clone(),
-                        Filter::Nearest, // TODO: linear or nearest
-                        Filter::Linear, // TODO: linear or nearest
-                        MipmapMode::Linear, // TODO: linear or nearest
-                        SamplerAddressMode::MirroredRepeat,
-                        SamplerAddressMode::MirroredRepeat,
-                        SamplerAddressMode::MirroredRepeat,
-                        0.0, 1.0, 0.0, 0.0,
-                    ).unwrap()
-                )
-                .unwrap()
-                .build().unwrap()
+            Arc::new(
+                PersistentDescriptorSet::start(second_pipeline_imgui.clone(), 1)
+                    .add_sampled_image(
+                        imgui_texture,
+                        Sampler::new(
+                            device.clone(),
+                            Filter::Nearest, // TODO: linear or nearest
+                            Filter::Linear, // TODO: linear or nearest
+                            MipmapMode::Linear, // TODO: linear or nearest
+                            SamplerAddressMode::MirroredRepeat,
+                            SamplerAddressMode::MirroredRepeat,
+                            SamplerAddressMode::MirroredRepeat,
+                            0.0,
+                            1.0,
+                            0.0,
+                            0.0,
+                        ).unwrap(),
+                    )
+                    .unwrap()
+                    .build()
+                    .unwrap(),
             )
         };
 

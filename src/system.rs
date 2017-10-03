@@ -19,7 +19,7 @@ pub struct PlayerControlSystem {
 impl PlayerControlSystem {
     pub fn new() -> Self {
         PlayerControlSystem {
-            directions: vec!(),
+            directions: vec![],
             pointer: [0.0, 0.0],
         }
     }
@@ -38,11 +38,20 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
         &mut self,
         (players, mut aims, mut shooters, mut momentums, events, graphics, config): Self::SystemData,
     ) {
-        let (_, player_aim, player_shooter, player_momentum) = (&players, &mut aims, &mut shooters, &mut momentums).join().next().unwrap();
+        let (_, player_aim, player_shooter, player_momentum) =
+            (&players, &mut aims, &mut shooters, &mut momentums)
+                .join()
+                .next()
+                .unwrap();
         for ev in events.iter() {
             match *ev {
                 Event::WindowEvent {
-                    event: WindowEvent::MouseInput { button: MouseButton::Left, state, .. }, ..
+                    event: WindowEvent::MouseInput {
+                        button: MouseButton::Left,
+                        state,
+                        ..
+                    },
+                    ..
                 } => {
                     match state {
                         ElementState::Pressed => player_shooter.set_shoot(true),
@@ -56,13 +65,11 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                         config.mouse_sensibility;
                     self.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) /
                         config.mouse_sensibility;
-                    self.pointer[1] = self.pointer[1]
-                        .min(::std::f32::consts::FRAC_PI_2)
-                        .max(-::std::f32::consts::FRAC_PI_2);
+                    self.pointer[1] = self.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
+                        -::std::f32::consts::FRAC_PI_2,
+                    );
                 }
-                Event::WindowEvent {
-                    event: WindowEvent::KeyboardInput { input, .. }, ..
-                } => {
+                Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } => {
                     let direction = match input.scancode {
                         25 => Some(Direction::Forward),
                         38 => Some(Direction::Left),
@@ -98,9 +105,8 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                     Direction::Right => move_vector[1] = -1.0,
                 }
             }
-            move_vector = (::na::Rotation3::new(
-                ::na::Vector3::new(0.0, 0.0, -self.pointer[0]),
-            ) * move_vector)
+            move_vector = (::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -self.pointer[0])) *
+                               move_vector)
                 .normalize();
             player_momentum.direction = move_vector;
         }
@@ -163,17 +169,22 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                         goal.0 as f32 + 0.5,
                         goal.1 as f32 + 0.5,
                         avoider_pos.translation.vector[2],
-                        )
+                    )
                 } else {
                     player_pos.translation.vector
                 };
 
-                ((goal_pos - avoider_pos.translation.vector).normalize(), 1f32)
+                (
+                    (goal_pos - avoider_pos.translation.vector).normalize(),
+                    1f32,
+                )
             };
 
             let (avoid_direction, avoid_coef) = {
-                let avoider_pos_rel_player = avoider_pos.translation.vector - player_pos.translation.vector;
-                let avoid_vector = avoider_pos_rel_player - avoider_pos_rel_player.dot(&player_aim.dir)*player_aim.dir;
+                let avoider_pos_rel_player = avoider_pos.translation.vector -
+                    player_pos.translation.vector;
+                let avoid_vector = avoider_pos_rel_player -
+                    avoider_pos_rel_player.dot(&player_aim.dir) * player_aim.dir;
                 if avoid_vector.norm() != 0.0 {
                     let avoid_norm = avoid_vector.norm();
                     let avoid_direction = avoid_vector.normalize();
@@ -181,15 +192,19 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                         (avoid_direction, 0f32)
                     } else {
                         // TODO: COEFFICENT ??
-                        (avoid_direction, 1f32)//1.0/avoid_norm)
+                        (avoid_direction, 1f32) //1.0/avoid_norm)
                     }
                 } else {
                     let random = ::na::Vector3::new_random();
-                    ((random - random.dot(&player_aim.dir)*player_aim.dir).normalize(), 1f32)//1000f32)
+                    (
+                        (random - random.dot(&player_aim.dir) * player_aim.dir).normalize(),
+                        1f32,
+                    ) //1000f32)
                 }
             };
 
-            momentum.direction = (goal_coef*goal_direction + avoid_coef*avoid_direction).normalize();
+            momentum.direction = (goal_coef * goal_direction + avoid_coef * avoid_direction)
+                .normalize();
         }
     }
 }
@@ -255,7 +270,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
      ::specs::Fetch<'a, ::resource::Graphics>);
 
-fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rendering, mut imgui, config, physic_world, graphics): Self::SystemData) {
+fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rendering, mut imgui, config, physic_world, graphics): Self::SystemData){
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
             let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
@@ -264,7 +279,8 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
 
             // IDEA: if we change -player.x here to + then it is fun
             let camera_top = if player_aim.dir[2].abs() > 0.8 {
-                ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -player_aim.x_dir)) * ::na::Vector3::x() * - player_aim.dir[2].signum()
+                ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -player_aim.x_dir)) *
+                    ::na::Vector3::x() * -player_aim.dir[2].signum()
             } else {
                 ::na::Vector3::z()
             };
@@ -300,26 +316,23 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
 
         // Compute view set
         let view_set = Arc::new(
-            PersistentDescriptorSet::start(
-                graphics.pipeline.clone(),
-                0,
-            ).add_buffer(view_uniform_buffer_subbuffer)
+            PersistentDescriptorSet::start(graphics.pipeline.clone(), 0)
+                .add_buffer(view_uniform_buffer_subbuffer)
                 .unwrap()
                 .build()
                 .unwrap(),
         );
 
         // Compute command
-        let mut command_buffer_builder = AutoCommandBufferBuilder::new(
-            graphics.device.clone(),
-            graphics.queue.family(),
-        ).unwrap()
-            .begin_render_pass(
-                graphics.framebuffer.clone(),
-                false,
-                vec![0u32.into(), 1f32.into()],
-            )
-            .unwrap();
+        let mut command_buffer_builder =
+            AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family())
+                .unwrap()
+                .begin_render_pass(
+                    graphics.framebuffer.clone(),
+                    false,
+                    vec![0u32.into(), 1f32.into()],
+                )
+                .unwrap();
 
         for static_draw in static_draws.join() {
             command_buffer_builder = command_buffer_builder
@@ -337,15 +350,14 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         }
 
         for dynamic_draw in dynamic_draws.join() {
-            let world_trans_subbuffer = dynamic_draw.uniform_buffer_pool
+            let world_trans_subbuffer = dynamic_draw
+                .uniform_buffer_pool
                 .next(dynamic_draw.world_trans)
                 .unwrap();
 
             let dynamic_draw_set = Arc::new(
-                PersistentDescriptorSet::start(
-                    graphics.pipeline.clone(),
-                    0,
-                ).add_buffer(world_trans_subbuffer)
+                PersistentDescriptorSet::start(graphics.pipeline.clone(), 0)
+                    .add_buffer(world_trans_subbuffer)
                     .unwrap()
                     .build()
                     .unwrap(),
@@ -398,7 +410,11 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             .unwrap();
 
         // Build imgui
-        let ui = imgui.frame(rendering.size_points.take().unwrap(), rendering.size_pixels.take().unwrap(), config.dt);
+        let ui = imgui.frame(
+            rendering.size_points.take().unwrap(),
+            rendering.size_pixels.take().unwrap(),
+            config.dt,
+        );
         ui.window(im_str!("Hello world"))
             .size((300.0, 100.0), ::imgui::ImGuiSetCond_FirstUseEver)
             .build(|| {
@@ -414,48 +430,62 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             // TODO: efficient
             // TODO: impl vertex for imgui in imgui
             let (vertex_buffer, vertex_buf_future) = ImmutableBuffer::from_iter(
-                drawlist.vtx_buffer.iter().map(|vtx| ::graphics::SecondVertexImgui::from(vtx.clone())),
+                drawlist.vtx_buffer.iter().map(|vtx| {
+                    ::graphics::SecondVertexImgui::from(vtx.clone())
+                }),
                 BufferUsage::vertex_buffer(),
-                graphics.queue.clone()).unwrap();
+                graphics.queue.clone(),
+            ).unwrap();
 
             let (index_buffer, index_buf_future) = ImmutableBuffer::from_iter(
                 drawlist.idx_buffer.iter().cloned(),
                 BufferUsage::index_buffer(),
-                graphics.queue.clone()).unwrap();
+                graphics.queue.clone(),
+            ).unwrap();
 
             let (width, height) = ui.imgui().display_size();
             let (scale_width, scale_height) = ui.imgui().display_framebuffer_scale();
 
             // TODO: it in cpu_pool and put the set in imgui_texture_set with rename or just
             //       another set
-            let matrix = [[2.0 / width as f32, 0.0, 0.0, 0.0],
-                          [0.0, 2.0 / -(height as f32), 0.0, 0.0],
-                          [0.0, 0.0, -1.0, 0.0],
-                          [-1.0, 1.0, 0.0, 1.0]];
+            let matrix = [
+                [2.0 / width as f32, 0.0, 0.0, 0.0],
+                [0.0, 2.0 / -(height as f32), 0.0, 0.0],
+                [0.0, 0.0, -1.0, 0.0],
+                [-1.0, 1.0, 0.0, 1.0],
+            ];
 
             let (matrix, matrix_future) = ImmutableBuffer::from_data(
                 matrix,
                 BufferUsage::uniform_buffer(),
-                graphics.queue.clone()).unwrap();
+                graphics.queue.clone(),
+            ).unwrap();
 
-            let matrix_set = Arc::new(
-                PersistentDescriptorSet::start(
-                    graphics.second_pipeline_imgui.clone(),
-                    0,
-                ).add_buffer(matrix)
-                    .unwrap()
-                    .build()
-                    .unwrap(),
-            );
+            let matrix_set =
+                Arc::new(
+                    PersistentDescriptorSet::start(graphics.second_pipeline_imgui.clone(), 0)
+                        .add_buffer(matrix)
+                        .unwrap()
+                        .build()
+                        .unwrap(),
+                );
 
             for cmd in drawlist.cmd_buffer {
                 let dynamic_state = DynamicState {
                     line_width: None,
                     viewports: None,
-                    scissors: Some(vec!(Scissor {
-                        origin: [(cmd.clip_rect.x * scale_width) as i32, ((height - cmd.clip_rect.w) * scale_height) as i32],
-                        dimensions: [((cmd.clip_rect.z - cmd.clip_rect.x) * scale_width) as u32, ((cmd.clip_rect.w - cmd.clip_rect.y) * scale_height) as u32],
-                    })),
+                    scissors: Some(vec![
+                        Scissor {
+                            origin: [
+                                (cmd.clip_rect.x * scale_width) as i32,
+                                ((height - cmd.clip_rect.w) * scale_height) as i32,
+                            ],
+                            dimensions: [
+                                ((cmd.clip_rect.z - cmd.clip_rect.x) * scale_width) as u32,
+                                ((cmd.clip_rect.w - cmd.clip_rect.y) * scale_height) as u32,
+                            ],
+                        },
+                    ]),
                 };
 
                 cmd_builder = cmd_builder
@@ -474,10 +504,12 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
 
         let second_command_buffer_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
 
-        rendering.second_command_buffer = Some(second_command_buffer_builder
-            .end_render_pass()
-            .unwrap()
-            .build().unwrap()
+        rendering.second_command_buffer = Some(
+            second_command_buffer_builder
+                .end_render_pass()
+                .unwrap()
+                .build()
+                .unwrap(),
         );
     }
 }
@@ -502,15 +534,17 @@ pub struct ShootSystem;
 
 // TODO: not shoot yourself and shoot in one direction only
 impl<'a> ::specs::System<'a> for ShootSystem {
-    type SystemData = (
-        ::specs::ReadStorage<'a, ::component::PhysicBody>,
-        ::specs::ReadStorage<'a, ::component::Aim>,
-        ::specs::WriteStorage<'a, ::component::Shooter>,
-        ::specs::WriteStorage<'a, ::component::Life>,
-        ::specs::Fetch<'a, ::resource::PhysicWorld>,
-        ::specs::Fetch<'a, ::resource::Config>);
+    type SystemData = (::specs::ReadStorage<'a, ::component::PhysicBody>,
+     ::specs::ReadStorage<'a, ::component::Aim>,
+     ::specs::WriteStorage<'a, ::component::Shooter>,
+     ::specs::WriteStorage<'a, ::component::Life>,
+     ::specs::Fetch<'a, ::resource::PhysicWorld>,
+     ::specs::Fetch<'a, ::resource::Config>);
 
-    fn run(&mut self, (bodies, aims, mut shooters, mut lifes, physic_world, config): Self::SystemData) {
+    fn run(
+        &mut self,
+        (bodies, aims, mut shooters, mut lifes, physic_world, config): Self::SystemData,
+    ) {
         for (aim, body, shooter) in (&aims, &bodies, &mut shooters).join() {
             let body_pos = body.get(&physic_world).position().clone();
             shooter.reload(config.dt);

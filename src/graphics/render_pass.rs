@@ -1,12 +1,6 @@
-use vulkano::framebuffer::{
-    LoadOp,
-    StoreOp,
-    LayoutAttachmentDescription,
-    LayoutPassDescription,
-    LayoutPassDependencyDescription,
-    RenderPassDesc,
-    RenderPassDescClearValues,
-};
+use vulkano::framebuffer::{LoadOp, StoreOp, LayoutAttachmentDescription, LayoutPassDescription,
+                           LayoutPassDependencyDescription, RenderPassDesc,
+                           RenderPassDescClearValues};
 use vulkano::image::ImageLayout;
 use vulkano::format::{Format, ClearValue};
 pub struct CustomRenderPassDesc;
@@ -18,10 +12,7 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
     }
 
     #[inline]
-    fn attachment_desc(
-        &self,
-        id: usize,
-    ) -> Option<LayoutAttachmentDescription> {
+    fn attachment_desc(&self, id: usize) -> Option<LayoutAttachmentDescription> {
         match id {
             0 => Some(LayoutAttachmentDescription {
                 format: Format::R16G16Uint,
@@ -57,10 +48,7 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
         match id {
             0 => Some(LayoutPassDescription {
                 color_attachments: vec![(0, ImageLayout::ColorAttachmentOptimal)],
-                depth_stencil: Some((
-                    1,
-                    ImageLayout::DepthStencilAttachmentOptimal,
-                )),
+                depth_stencil: Some((1, ImageLayout::DepthStencilAttachmentOptimal)),
                 input_attachments: vec![],
                 resolve_attachments: vec![],
                 preserve_attachments: vec![],
@@ -75,20 +63,13 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
     }
 
     #[inline]
-    fn dependency_desc(
-        &self,
-        _id: usize,
-    ) -> Option<LayoutPassDependencyDescription> {
+    fn dependency_desc(&self, _id: usize) -> Option<LayoutPassDependencyDescription> {
         None
     }
 }
 
-unsafe impl RenderPassDescClearValues<Vec<ClearValue>>
-    for CustomRenderPassDesc {
-    fn convert_clear_values(
-        &self,
-        values: Vec<ClearValue>,
-    ) -> Box<Iterator<Item = ClearValue>> {
+unsafe impl RenderPassDescClearValues<Vec<ClearValue>> for CustomRenderPassDesc {
+    fn convert_clear_values(&self, values: Vec<ClearValue>) -> Box<Iterator<Item = ClearValue>> {
         // FIXME: safety checks
         Box::new(values.into_iter())
     }
@@ -103,10 +84,7 @@ unsafe impl RenderPassDesc for SecondCustomRenderPassDesc {
     }
 
     #[inline]
-    fn attachment_desc(
-        &self,
-        id: usize,
-    ) -> Option<LayoutAttachmentDescription> {
+    fn attachment_desc(&self, id: usize) -> Option<LayoutAttachmentDescription> {
         match id {
             0 => Some(LayoutAttachmentDescription {
                 format: Format::B8G8R8A8Srgb,
@@ -147,20 +125,13 @@ unsafe impl RenderPassDesc for SecondCustomRenderPassDesc {
     }
 
     #[inline]
-    fn dependency_desc(
-        &self,
-        _id: usize,
-    ) -> Option<LayoutPassDependencyDescription> {
+    fn dependency_desc(&self, _id: usize) -> Option<LayoutPassDependencyDescription> {
         None
     }
 }
 
-unsafe impl RenderPassDescClearValues<Vec<ClearValue>>
-    for SecondCustomRenderPassDesc {
-    fn convert_clear_values(
-        &self,
-        values: Vec<ClearValue>,
-    ) -> Box<Iterator<Item = ClearValue>> {
+unsafe impl RenderPassDescClearValues<Vec<ClearValue>> for SecondCustomRenderPassDesc {
+    fn convert_clear_values(&self, values: Vec<ClearValue>) -> Box<Iterator<Item = ClearValue>> {
         // FIXME: safety checks
         Box::new(values.into_iter())
     }

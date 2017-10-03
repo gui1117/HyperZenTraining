@@ -42,7 +42,9 @@ impl Shooter {
             false
         };
 
-        if set_ready { self.state = ShooterState::Loaded }
+        if set_ready {
+            self.state = ShooterState::Loaded
+        }
     }
 
     pub fn set_shoot(&mut self, shoot: bool) {
@@ -245,17 +247,26 @@ impl ::specs::Component for PhysicBody {
 
 impl PhysicBody {
     pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, body: usize) {
-        world.write_resource::<::resource::PhysicWorld>().mut_rigid_body(body).set_user_data(Some(Box::new(entity)));
+        world
+            .write_resource::<::resource::PhysicWorld>()
+            .mut_rigid_body(body)
+            .set_user_data(Some(Box::new(entity)));
         world.write().insert(entity, PhysicBody(body));
     }
 
     #[inline]
-    pub fn get<'a>(&'a self, physic_world: &'a ::resource::PhysicWorld) -> &'a ::nphysics::object::RigidBody<f32> {
+    pub fn get<'a>(
+        &'a self,
+        physic_world: &'a ::resource::PhysicWorld,
+    ) -> &'a ::nphysics::object::RigidBody<f32> {
         physic_world.rigid_body(self.0)
     }
 
     #[inline]
-    pub fn get_mut<'a>(&'a mut self, physic_world: &'a mut ::resource::PhysicWorld) -> &'a mut ::nphysics::object::RigidBody<f32> {
+    pub fn get_mut<'a>(
+        &'a mut self,
+        physic_world: &'a mut ::resource::PhysicWorld,
+    ) -> &'a mut ::nphysics::object::RigidBody<f32> {
         physic_world.mut_rigid_body(self.0)
     }
 }
