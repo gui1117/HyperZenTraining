@@ -1,6 +1,14 @@
+use winit::{Event, WindowEvent, ElementState, MouseButton};
+use vulkano::descriptor::descriptor_set::PersistentDescriptorSet;
+use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
+use vulkano::buffer::{ImmutableBuffer, BufferUsage};
+use vulkano::pipeline::viewport::Scissor;
+use util::Direction;
 use specs::Join;
 use alga::general::SubsetOf;
+
 use std::sync::Arc;
+use std::cell::RefCell;
 
 // TODO: get mouse from axis and check if there are differences because of acceleration
 pub struct PlayerControlSystem {
@@ -33,16 +41,16 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
         let (_, player_aim, player_shooter, player_momentum) = (&players, &mut aims, &mut shooters, &mut momentums).join().next().unwrap();
         for ev in events.iter() {
             match *ev {
-                ::winit::Event::WindowEvent {
-                    event: ::winit::WindowEvent::MouseInput { button: ::winit::MouseButton::Left, state, .. }, ..
+                Event::WindowEvent {
+                    event: WindowEvent::MouseInput { button: MouseButton::Left, state, .. }, ..
                 } => {
                     match state {
-                        ::winit::ElementState::Pressed => player_shooter.set_shoot(true),
-                        ::winit::ElementState::Released => player_shooter.set_shoot(false),
+                        ElementState::Pressed => player_shooter.set_shoot(true),
+                        ElementState::Released => player_shooter.set_shoot(false),
                     }
                 }
-                ::winit::Event::WindowEvent {
-                    event: ::winit::WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
+                Event::WindowEvent {
+                    event: WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
                 } => {
                     self.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) /
                         config.mouse_sensibility;
@@ -52,19 +60,19 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                         .min(::std::f32::consts::FRAC_PI_2)
                         .max(-::std::f32::consts::FRAC_PI_2);
                 }
-                ::winit::Event::WindowEvent {
-                    event: ::winit::WindowEvent::KeyboardInput { input, .. }, ..
+                Event::WindowEvent {
+                    event: WindowEvent::KeyboardInput { input, .. }, ..
                 } => {
                     let direction = match input.scancode {
-                        25 => Some(::util::Direction::Forward),
-                        38 => Some(::util::Direction::Left),
-                        39 => Some(::util::Direction::Backward),
-                        40 => Some(::util::Direction::Right),
+                        25 => Some(Direction::Forward),
+                        38 => Some(Direction::Left),
+                        39 => Some(Direction::Backward),
+                        40 => Some(Direction::Right),
                         _ => None,
                     };
                     if let Some(direction) = direction {
                         self.directions.retain(|&elt| elt != direction);
-                        if let ::winit::ElementState::Pressed = input.state {
+                        if let ElementState::Pressed = input.state {
                             self.directions.push(direction);
                         }
                     }
@@ -84,10 +92,10 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
         } else {
             for &direction in &self.directions {
                 match direction {
-                    ::util::Direction::Forward => move_vector[0] = 1.0,
-                    ::util::Direction::Backward => move_vector[0] = -1.0,
-                    ::util::Direction::Left => move_vector[1] = 1.0,
-                    ::util::Direction::Right => move_vector[1] = -1.0,
+                    Direction::Forward => move_vector[0] = 1.0,
+                    Direction::Backward => move_vector[0] = -1.0,
+                    Direction::Left => move_vector[1] = 1.0,
+                    Direction::Right => move_vector[1] = -1.0,
                 }
             }
             move_vector = (::na::Rotation3::new(
@@ -292,7 +300,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
 
         // Compute view set
         let view_set = Arc::new(
-            ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+            PersistentDescriptorSet::start(
                 graphics.pipeline.clone(),
                 0,
             ).add_buffer(view_uniform_buffer_subbuffer)
@@ -302,7 +310,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         );
 
         // Compute command
-        let mut command_buffer_builder = ::vulkano::command_buffer::AutoCommandBufferBuilder::new(
+        let mut command_buffer_builder = AutoCommandBufferBuilder::new(
             graphics.device.clone(),
             graphics.queue.family(),
         ).unwrap()
@@ -317,7 +325,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             command_buffer_builder = command_buffer_builder
                 .draw(
                     graphics.pipeline.clone(),
-                    ::vulkano::command_buffer::DynamicState::none(),
+                    DynamicState::none(),
                     graphics.primitives_vertex_buffers[static_draw.primitive].clone(),
                     (view_set.clone(), static_draw.set.clone()),
                     ::graphics::shader::fs::ty::Group {
@@ -334,7 +342,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 .unwrap();
 
             let dynamic_draw_set = Arc::new(
-                ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+                PersistentDescriptorSet::start(
                     graphics.pipeline.clone(),
                     0,
                 ).add_buffer(world_trans_subbuffer)
@@ -348,7 +356,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 command_buffer_builder = command_buffer_builder
                     .draw(
                         graphics.pipeline.clone(),
-                        ::vulkano::command_buffer::DynamicState::none(),
+                        DynamicState::none(),
                         graphics.primitives_vertex_buffers[primitive.0].clone(),
                         (view_set.clone(), dynamic_draw_set.clone()),
                         ::graphics::shader::fs::ty::Group {
@@ -369,12 +377,12 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         );
 
         // Compute second command
-        let second_command_buffer_builder = ::vulkano::command_buffer::AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
+        let second_command_buffer_builder = AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
             .begin_render_pass(graphics.second_framebuffers[rendering.image_num.take().unwrap()].clone(), false, vec!())
             .unwrap()
             .draw(
                 graphics.second_pipeline.clone(),
-                ::vulkano::command_buffer::DynamicState::none(),
+                DynamicState::none(),
                 graphics.fullscreen_vertex_buffer.clone(),
                 (graphics.tmp_image_set.clone(), graphics.colors_texture_set.clone()),
                 ()
@@ -382,7 +390,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             .unwrap()
             .draw(
                 graphics.second_pipeline_cursor.clone(),
-                ::vulkano::command_buffer::DynamicState::none(),
+                DynamicState::none(),
                 graphics.cursor_vertex_buffer.clone(),
                 graphics.cursor_texture_set.clone(),
                 ()
@@ -400,19 +408,19 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             });
 
         // TODO: maybe change imgui so that it use an iterator instead of a callback
-        let ref_cell_cmd_builder = ::std::cell::RefCell::new(Some(second_command_buffer_builder));
+        let ref_cell_cmd_builder = RefCell::new(Some(second_command_buffer_builder));
         ui.render::<_, ()>(|ui, drawlist| {
             let mut cmd_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
             // TODO: efficient
             // TODO: impl vertex for imgui in imgui
-            let (vertex_buffer, vertex_buf_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
+            let (vertex_buffer, vertex_buf_future) = ImmutableBuffer::from_iter(
                 drawlist.vtx_buffer.iter().map(|vtx| ::graphics::SecondVertexImgui::from(vtx.clone())),
-                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+                BufferUsage::vertex_buffer(),
                 graphics.queue.clone()).unwrap();
 
-            let (index_buffer, index_buf_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
+            let (index_buffer, index_buf_future) = ImmutableBuffer::from_iter(
                 drawlist.idx_buffer.iter().cloned(),
-                ::vulkano::buffer::BufferUsage::index_buffer(),
+                BufferUsage::index_buffer(),
                 graphics.queue.clone()).unwrap();
 
             let (width, height) = ui.imgui().display_size();
@@ -425,13 +433,13 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                           [0.0, 0.0, -1.0, 0.0],
                           [-1.0, 1.0, 0.0, 1.0]];
 
-            let (matrix, matrix_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_data(
+            let (matrix, matrix_future) = ImmutableBuffer::from_data(
                 matrix,
-                ::vulkano::buffer::BufferUsage::uniform_buffer(),
+                BufferUsage::uniform_buffer(),
                 graphics.queue.clone()).unwrap();
 
             let matrix_set = Arc::new(
-                ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+                PersistentDescriptorSet::start(
                     graphics.second_pipeline_imgui.clone(),
                     0,
                 ).add_buffer(matrix)
@@ -441,10 +449,10 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             );
 
             for cmd in drawlist.cmd_buffer {
-                let dynamic_state = ::vulkano::command_buffer::DynamicState {
+                let dynamic_state = DynamicState {
                     line_width: None,
                     viewports: None,
-                    scissors: Some(vec!(::vulkano::pipeline::viewport::Scissor {
+                    scissors: Some(vec!(Scissor {
                         origin: [(cmd.clip_rect.x * scale_width) as i32, ((height - cmd.clip_rect.w) * scale_height) as i32],
                         dimensions: [((cmd.clip_rect.z - cmd.clip_rect.x) * scale_width) as u32, ((cmd.clip_rect.w - cmd.clip_rect.y) * scale_height) as u32],
                     })),

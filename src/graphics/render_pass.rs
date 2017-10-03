@@ -1,6 +1,17 @@
+use vulkano::framebuffer::{
+    LoadOp,
+    StoreOp,
+    LayoutAttachmentDescription,
+    LayoutPassDescription,
+    LayoutPassDependencyDescription,
+    RenderPassDesc,
+    RenderPassDescClearValues,
+};
+use vulkano::image::ImageLayout;
+use vulkano::format::{Format, ClearValue};
 pub struct CustomRenderPassDesc;
 
-unsafe impl ::vulkano::framebuffer::RenderPassDesc for CustomRenderPassDesc {
+unsafe impl RenderPassDesc for CustomRenderPassDesc {
     #[inline]
     fn num_attachments(&self) -> usize {
         2
@@ -10,27 +21,27 @@ unsafe impl ::vulkano::framebuffer::RenderPassDesc for CustomRenderPassDesc {
     fn attachment_desc(
         &self,
         id: usize,
-    ) -> Option<::vulkano::framebuffer::LayoutAttachmentDescription> {
+    ) -> Option<LayoutAttachmentDescription> {
         match id {
-            0 => Some(::vulkano::framebuffer::LayoutAttachmentDescription {
-                format: ::vulkano::format::Format::R16G16Uint,
+            0 => Some(LayoutAttachmentDescription {
+                format: Format::R16G16Uint,
                 samples: 1,
-                load: ::vulkano::framebuffer::LoadOp::Clear,
-                store: ::vulkano::framebuffer::StoreOp::Store,
-                stencil_load: ::vulkano::framebuffer::LoadOp::Clear,
-                stencil_store: ::vulkano::framebuffer::StoreOp::Store,
-                initial_layout: ::vulkano::image::ImageLayout::Undefined,
-                final_layout: ::vulkano::image::ImageLayout::ColorAttachmentOptimal,
+                load: LoadOp::Clear,
+                store: StoreOp::Store,
+                stencil_load: LoadOp::Clear,
+                stencil_store: StoreOp::Store,
+                initial_layout: ImageLayout::Undefined,
+                final_layout: ImageLayout::ColorAttachmentOptimal,
             }),
-            1 => Some(::vulkano::framebuffer::LayoutAttachmentDescription {
-                format: ::vulkano::format::Format::D16Unorm,
+            1 => Some(LayoutAttachmentDescription {
+                format: Format::D16Unorm,
                 samples: 1,
-                load: ::vulkano::framebuffer::LoadOp::Clear,
-                store: ::vulkano::framebuffer::StoreOp::DontCare,
-                stencil_load: ::vulkano::framebuffer::LoadOp::Clear,
-                stencil_store: ::vulkano::framebuffer::StoreOp::DontCare,
-                initial_layout: ::vulkano::image::ImageLayout::Undefined,
-                final_layout: ::vulkano::image::ImageLayout::DepthStencilAttachmentOptimal,
+                load: LoadOp::Clear,
+                store: StoreOp::DontCare,
+                stencil_load: LoadOp::Clear,
+                stencil_store: StoreOp::DontCare,
+                initial_layout: ImageLayout::Undefined,
+                final_layout: ImageLayout::DepthStencilAttachmentOptimal,
             }),
             _ => None,
         }
@@ -42,13 +53,13 @@ unsafe impl ::vulkano::framebuffer::RenderPassDesc for CustomRenderPassDesc {
     }
 
     #[inline]
-    fn subpass_desc(&self, id: usize) -> Option<::vulkano::framebuffer::LayoutPassDescription> {
+    fn subpass_desc(&self, id: usize) -> Option<LayoutPassDescription> {
         match id {
-            0 => Some(::vulkano::framebuffer::LayoutPassDescription {
-                color_attachments: vec![(0, ::vulkano::image::ImageLayout::ColorAttachmentOptimal)],
+            0 => Some(LayoutPassDescription {
+                color_attachments: vec![(0, ImageLayout::ColorAttachmentOptimal)],
                 depth_stencil: Some((
                     1,
-                    ::vulkano::image::ImageLayout::DepthStencilAttachmentOptimal,
+                    ImageLayout::DepthStencilAttachmentOptimal,
                 )),
                 input_attachments: vec![],
                 resolve_attachments: vec![],
@@ -67,17 +78,17 @@ unsafe impl ::vulkano::framebuffer::RenderPassDesc for CustomRenderPassDesc {
     fn dependency_desc(
         &self,
         _id: usize,
-    ) -> Option<::vulkano::framebuffer::LayoutPassDependencyDescription> {
+    ) -> Option<LayoutPassDependencyDescription> {
         None
     }
 }
 
-unsafe impl ::vulkano::framebuffer::RenderPassDescClearValues<Vec<::vulkano::format::ClearValue>>
+unsafe impl RenderPassDescClearValues<Vec<ClearValue>>
     for CustomRenderPassDesc {
     fn convert_clear_values(
         &self,
-        values: Vec<::vulkano::format::ClearValue>,
-    ) -> Box<Iterator<Item = ::vulkano::format::ClearValue>> {
+        values: Vec<ClearValue>,
+    ) -> Box<Iterator<Item = ClearValue>> {
         // FIXME: safety checks
         Box::new(values.into_iter())
     }
@@ -85,7 +96,7 @@ unsafe impl ::vulkano::framebuffer::RenderPassDescClearValues<Vec<::vulkano::for
 
 pub struct SecondCustomRenderPassDesc;
 
-unsafe impl ::vulkano::framebuffer::RenderPassDesc for SecondCustomRenderPassDesc {
+unsafe impl RenderPassDesc for SecondCustomRenderPassDesc {
     #[inline]
     fn num_attachments(&self) -> usize {
         1
@@ -95,17 +106,17 @@ unsafe impl ::vulkano::framebuffer::RenderPassDesc for SecondCustomRenderPassDes
     fn attachment_desc(
         &self,
         id: usize,
-    ) -> Option<::vulkano::framebuffer::LayoutAttachmentDescription> {
+    ) -> Option<LayoutAttachmentDescription> {
         match id {
-            0 => Some(::vulkano::framebuffer::LayoutAttachmentDescription {
-                format: ::vulkano::format::Format::B8G8R8A8Srgb,
+            0 => Some(LayoutAttachmentDescription {
+                format: Format::B8G8R8A8Srgb,
                 samples: 1,
-                load: ::vulkano::framebuffer::LoadOp::DontCare,
-                store: ::vulkano::framebuffer::StoreOp::Store,
-                stencil_load: ::vulkano::framebuffer::LoadOp::DontCare,
-                stencil_store: ::vulkano::framebuffer::StoreOp::Store,
-                initial_layout: ::vulkano::image::ImageLayout::Undefined,
-                final_layout: ::vulkano::image::ImageLayout::ColorAttachmentOptimal,
+                load: LoadOp::DontCare,
+                store: StoreOp::Store,
+                stencil_load: LoadOp::DontCare,
+                stencil_store: StoreOp::Store,
+                initial_layout: ImageLayout::Undefined,
+                final_layout: ImageLayout::ColorAttachmentOptimal,
             }),
             _ => None,
         }
@@ -117,10 +128,10 @@ unsafe impl ::vulkano::framebuffer::RenderPassDesc for SecondCustomRenderPassDes
     }
 
     #[inline]
-    fn subpass_desc(&self, id: usize) -> Option<::vulkano::framebuffer::LayoutPassDescription> {
+    fn subpass_desc(&self, id: usize) -> Option<LayoutPassDescription> {
         match id {
-            0 => Some(::vulkano::framebuffer::LayoutPassDescription {
-                color_attachments: vec![(0, ::vulkano::image::ImageLayout::ColorAttachmentOptimal)],
+            0 => Some(LayoutPassDescription {
+                color_attachments: vec![(0, ImageLayout::ColorAttachmentOptimal)],
                 depth_stencil: None,
                 input_attachments: vec![],
                 resolve_attachments: vec![],
@@ -139,17 +150,17 @@ unsafe impl ::vulkano::framebuffer::RenderPassDesc for SecondCustomRenderPassDes
     fn dependency_desc(
         &self,
         _id: usize,
-    ) -> Option<::vulkano::framebuffer::LayoutPassDependencyDescription> {
+    ) -> Option<LayoutPassDependencyDescription> {
         None
     }
 }
 
-unsafe impl ::vulkano::framebuffer::RenderPassDescClearValues<Vec<::vulkano::format::ClearValue>>
+unsafe impl RenderPassDescClearValues<Vec<ClearValue>>
     for SecondCustomRenderPassDesc {
     fn convert_clear_values(
         &self,
-        values: Vec<::vulkano::format::ClearValue>,
-    ) -> Box<Iterator<Item = ::vulkano::format::ClearValue>> {
+        values: Vec<ClearValue>,
+    ) -> Box<Iterator<Item = ClearValue>> {
         // FIXME: safety checks
         Box::new(values.into_iter())
     }

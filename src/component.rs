@@ -1,3 +1,11 @@
+use vulkano::buffer::cpu_access::CpuAccessibleBuffer;
+use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetBuf};
+use vulkano::descriptor::PipelineLayoutAbstract;
+use vulkano::pipeline::GraphicsPipeline;
+use vulkano::pipeline::vertex::SingleBufferDefinition;
+use vulkano::framebuffer::RenderPass;
+use graphics::{shader, Vertex, render_pass};
+
 use std::sync::Arc;
 
 pub struct Life(pub i32);
@@ -134,8 +142,8 @@ pub struct StaticDraw {
     pub color: u16,
     pub group: u16,
     pub primitive: usize,
-    pub uniform_buffer: Arc<::vulkano::buffer::cpu_access::CpuAccessibleBuffer<::graphics::shader::vs::ty::World>>,
-    pub set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::Vertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::CustomRenderPassDesc>>>>, ((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetBuf<Arc<::vulkano::buffer::CpuAccessibleBuffer<::graphics::shader::vs::ty::World>>>)>>,
+    pub uniform_buffer: Arc<CpuAccessibleBuffer<shader::vs::ty::World>>,
+    pub set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>, ((), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<shader::vs::ty::World>>>)>>,
 }
 
 impl ::specs::Component for StaticDraw {

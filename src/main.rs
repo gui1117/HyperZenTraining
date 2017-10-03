@@ -31,6 +31,9 @@ use vulkano_win::VkSurfaceBuild;
 use vulkano::swapchain;
 use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
+use vulkano::instance::Instance;
+
+use winit::{WindowEvent, Event};
 
 use std::sync::Arc;
 
@@ -38,7 +41,7 @@ fn main() {
     let instance = {
         let extensions = vulkano_win::required_extensions();
         let info = app_info_from_cargo_toml!();
-        ::vulkano::instance::Instance::new(Some(&info), &extensions, None)
+        Instance::new(Some(&info), &extensions, None)
             .expect("failed to create Vulkan instance")
     };
 
@@ -48,10 +51,7 @@ fn main() {
         .unwrap();
 
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
-    window
-        .window()
-        .set_cursor_state(winit::CursorState::Grab)
-        .unwrap();
+    window.window().set_cursor_state(winit::CursorState::Grab).unwrap();
 
     let mut imgui = ::imgui::ImGui::init();
     imgui.set_ini_filename(None);
@@ -60,7 +60,8 @@ fn main() {
 
     let graphics = graphics::Graphics::new(&window, &mut imgui);
 
-    let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
+    let mut previous_frame_end = Box::new(now(graphics.data.device.clone()))
+        as Box<GpuFuture>;
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();
@@ -110,12 +111,12 @@ fn main() {
             let mut done = false;
             events_loop.poll_events(|ev| {
                 let retain = match ev {
-                    winit::Event::WindowEvent { event: winit::WindowEvent::Closed, .. } => {
+                    Event::WindowEvent { event: WindowEvent::Closed, .. } => {
                         done = true;
                         false
                     }
-                    winit::Event::WindowEvent {
-                        event: winit::WindowEvent::MouseMoved { .. }, ..
+                    Event::WindowEvent {
+                        event: WindowEvent::MouseMoved { .. }, ..
                     } => {
                         window
                             .window()
@@ -126,8 +127,8 @@ fn main() {
                             .unwrap();
                         true
                     }
-                    winit::Event::WindowEvent { event: winit::WindowEvent::MouseInput { .. }, ..  }
-                    | winit::Event::WindowEvent { event: winit::WindowEvent::KeyboardInput { .. }, ..  }
+                    Event::WindowEvent { event: WindowEvent::MouseInput { .. }, ..  }
+                    | Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, ..  }
                     => true,
                     _ => false,
                 };

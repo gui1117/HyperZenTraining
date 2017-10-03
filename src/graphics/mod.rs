@@ -1,5 +1,18 @@
-use vulkano::framebuffer::RenderPassDesc;
+use vulkano::device::{Device, Queue, DeviceExtensions};
+use vulkano::swapchain::{Swapchain, self};
+use vulkano::sampler::{Sampler, Filter, SamplerAddressMode, MipmapMode, UnnormalizedSamplerAddressMode};
+use vulkano::image::{SwapchainImage, AttachmentImage, ImmutableImage, ImageUsage, Dimensions};
+use vulkano::buffer::{ImmutableBuffer, CpuBufferPool, BufferUsage};
+use vulkano::framebuffer::{RenderPassDesc, RenderPass, Framebuffer, Subpass};
+use vulkano::pipeline::GraphicsPipeline;
+use vulkano::pipeline::vertex::SingleBufferDefinition;
+use vulkano::pipeline::viewport::Viewport;
+use vulkano::descriptor::PipelineLayoutAbstract;
+use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetImg, PersistentDescriptorSetSampler};
+use vulkano::instance::PhysicalDevice;
+use vulkano::format;
 use vulkano::sync::GpuFuture;
+
 
 use std::sync::Arc;
 use std::iter;
@@ -69,41 +82,41 @@ impl From<::imgui::ImDrawVert> for SecondVertexImgui {
 
 #[derive(Clone)]
 pub struct Data {
-    pub device: Arc<::vulkano::device::Device>,
-    pub queue: Arc<::vulkano::device::Queue>,
-    pub swapchain: Arc<::vulkano::swapchain::Swapchain>,
-    pub images: Vec<Arc<::vulkano::image::swapchain::SwapchainImage>>,
-    pub depth_buffer_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
-    pub tmp_image_attachment: Arc<::vulkano::image::attachment::AttachmentImage>,
-    pub primitives_vertex_buffers: Vec<Arc<::vulkano::buffer::immutable::ImmutableBuffer<[Vertex]>>>,
-    pub fullscreen_vertex_buffer: Arc<::vulkano::buffer::immutable::ImmutableBuffer<[SecondVertex]>>,
-    pub cursor_vertex_buffer: Arc<::vulkano::buffer::immutable::ImmutableBuffer<[SecondVertex]>>,
-    pub render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>,
-    pub second_render_pass: Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>,
-    pub pipeline: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<Vertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>>>,
-    pub second_pipeline: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
-    pub second_pipeline_cursor: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
-    pub second_pipeline_imgui: Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<SecondVertexImgui>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, ::Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
-    pub framebuffer: Arc<::vulkano::framebuffer::Framebuffer<Arc<::vulkano::framebuffer::RenderPass<render_pass::CustomRenderPassDesc>>, (((), Arc<::vulkano::image::AttachmentImage>), Arc<::vulkano::image::AttachmentImage>)>>,
-    pub second_framebuffers: Vec<Arc<::vulkano::framebuffer::Framebuffer<Arc<::vulkano::framebuffer::RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<::vulkano::image::SwapchainImage>)>>>,
+    pub device: Arc<Device>,
+    pub queue: Arc<Queue>,
+    pub swapchain: Arc<Swapchain>,
+    pub images: Vec<Arc<SwapchainImage>>,
+    pub depth_buffer_attachment: Arc<AttachmentImage>,
+    pub tmp_image_attachment: Arc<AttachmentImage>,
+    pub primitives_vertex_buffers: Vec<Arc<ImmutableBuffer<[Vertex]>>>,
+    pub fullscreen_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,
+    pub cursor_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,
+    pub render_pass: Arc<RenderPass<render_pass::CustomRenderPassDesc>>,
+    pub second_render_pass: Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>,
+    pub pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>,
+    pub second_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
+    pub second_pipeline_cursor: Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
+    pub second_pipeline_imgui: Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
+    pub framebuffer: Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, (((), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
+    pub second_framebuffers: Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage>)>>>,
     pub width: u32,
     pub height: u32,
-    pub view_uniform_buffer: ::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::View>,
-    pub tmp_image_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::AttachmentImage>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
-    pub colors_texture_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::ImmutableImage<::vulkano::format::R8G8B8A8Unorm>>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
-    pub cursor_texture_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertex>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::ImmutableImage<::vulkano::format::R8G8B8A8Srgb>>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
-    pub imgui_texture_set: Arc<::vulkano::descriptor::descriptor_set::PersistentDescriptorSet<Arc<::vulkano::pipeline::GraphicsPipeline<::vulkano::pipeline::vertex::SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<::vulkano::descriptor::PipelineLayoutAbstract + Sync + Send>, Arc<::vulkano::framebuffer::RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetImg<Arc<::vulkano::image::ImmutableImage<::vulkano::format::R8G8B8A8Unorm>>>), ::vulkano::descriptor::descriptor_set::PersistentDescriptorSetSampler)>>,
+    pub view_uniform_buffer: CpuBufferPool<::graphics::shader::vs::ty::View>,
+    pub tmp_image_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
+    pub colors_texture_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
+    pub cursor_texture_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Srgb>>>), PersistentDescriptorSetSampler)>>,
+    pub imgui_texture_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
 }
 
 pub struct Graphics<'a> {
-    pub physical: ::vulkano::instance::PhysicalDevice<'a>,
+    pub physical: PhysicalDevice<'a>,
     pub data: Data,
 }
 
 impl<'a> Graphics<'a> {
     pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) -> Graphics<'a> {
         //TODO: read config and save device
-        let physical = ::vulkano::instance::PhysicalDevice::enumerate(&window.surface().instance())
+        let physical = PhysicalDevice::enumerate(&window.surface().instance())
             .next()
             .expect("no device available");
 
@@ -115,12 +128,12 @@ impl<'a> Graphics<'a> {
             .expect("couldn't find a graphical queue family");
 
         let (device, mut queues) = {
-            let device_ext = ::vulkano::device::DeviceExtensions {
+            let device_ext = DeviceExtensions {
                 khr_swapchain: true,
-                ..::vulkano::device::DeviceExtensions::none()
+                .. DeviceExtensions::none()
             };
 
-            ::vulkano::device::Device::new(
+            Device::new(
                 physical,
                 physical.supported_features(),
                 &device_ext,
@@ -136,24 +149,24 @@ impl<'a> Graphics<'a> {
             );
 
             let dimensions = caps.current_extent.unwrap_or([1280, 1024]);
-            let image_usage = ::vulkano::image::ImageUsage {
+            let image_usage = ImageUsage {
                 sampled: true,
                 color_attachment: true,
-                ..::vulkano::image::ImageUsage::none()
+                ..ImageUsage::none()
             };
 
-            ::vulkano::swapchain::Swapchain::new(
+            Swapchain::new(
                 device.clone(),
                 window.surface().clone(),
                 caps.min_image_count,
-                ::vulkano::format::Format::B8G8R8A8Srgb,
+                format::Format::B8G8R8A8Srgb,
                 dimensions,
                 1,
                 image_usage,
                 &queue,
-                ::vulkano::swapchain::SurfaceTransform::Identity,
-                ::vulkano::swapchain::CompositeAlpha::Opaque,
-                ::vulkano::swapchain::PresentMode::Fifo,
+                swapchain::SurfaceTransform::Identity,
+                swapchain::CompositeAlpha::Opaque,
+                swapchain::PresentMode::Fifo,
                 true,
                 None,
             ).expect("failed to create swapchain")
@@ -162,22 +175,22 @@ impl<'a> Graphics<'a> {
         let width = images[0].dimensions()[0];
         let height = images[0].dimensions()[1];
 
-        let depth_buffer_attachment = ::vulkano::image::attachment::AttachmentImage::transient(
+        let depth_buffer_attachment = AttachmentImage::transient(
             device.clone(),
             images[0].dimensions(),
-            ::vulkano::format::Format::D16Unorm,
+            format::Format::D16Unorm,
         ).unwrap();
 
         let tmp_image_attachment = {
-            let usage = ::vulkano::image::ImageUsage {
+            let usage = ImageUsage {
                 color_attachment: true,
                 sampled: true,
-                ..::vulkano::image::ImageUsage::none()
+                ..ImageUsage::none()
             };
-            ::vulkano::image::attachment::AttachmentImage::with_usage(
+            AttachmentImage::with_usage(
                 device.clone(),
                 images[0].dimensions(),
-                ::vulkano::format::Format::R16G16Uint,
+                format::Format::R16G16Uint,
                 usage,
             ).unwrap()
         };
@@ -185,7 +198,7 @@ impl<'a> Graphics<'a> {
         let (primitives_vertex_buffers, mut futures) = primitives::instance_primitives(queue.clone());
 
         let (fullscreen_vertex_buffer, mut fullscreen_vertex_buffer_future) =
-            ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
+            ImmutableBuffer::from_iter(
                 [
                     SecondVertex { position: [-1.0f32, -1.0] },
                     SecondVertex { position: [1.0, -1.0] },
@@ -194,12 +207,12 @@ impl<'a> Graphics<'a> {
                     SecondVertex { position: [-1.0, 1.0] },
                     SecondVertex { position: [1.0, -1.0] },
                 ].iter().cloned(),
-                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+                BufferUsage::vertex_buffer(),
                 queue.clone(),
         ).expect("failed to create buffer");
 
         let (cursor_vertex_buffer, mut cursor_vertex_buffer_future) =
-            ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
+            ImmutableBuffer::from_iter(
                 [
                     SecondVertex { position: [-0.5f32, -0.5] },
                     SecondVertex { position: [0.5, -0.5] },
@@ -208,7 +221,7 @@ impl<'a> Graphics<'a> {
                     SecondVertex { position: [-0.5, 0.5] },
                     SecondVertex { position: [0.5, -0.5] },
                 ].iter().cloned(),
-                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+                BufferUsage::vertex_buffer(),
                 queue.clone(),
         ).expect("failed to create buffer");
 
@@ -220,19 +233,19 @@ impl<'a> Graphics<'a> {
             let mut buf = vec![0; info.buffer_size()];
             reader.next_frame(&mut buf).unwrap();
 
-            ::vulkano::image::immutable::ImmutableImage::from_iter(
+            ImmutableImage::from_iter(
                 buf.iter().cloned(),
-                ::vulkano::image::Dimensions::Dim2d { width: info.width, height: info.height },
+                Dimensions::Dim2d { width: info.width, height: info.height },
                 // TODO: Srgb or Unorm ?
-                ::vulkano::format::R8G8B8A8Srgb,
+                format::R8G8B8A8Srgb,
                 queue.clone()).unwrap()
         };
 
-        let cursor_sampler = ::vulkano::sampler::Sampler::new(device.clone(), ::vulkano::sampler::Filter::Linear,
-                                                     ::vulkano::sampler::Filter::Linear, ::vulkano::sampler::MipmapMode::Nearest,
-                                                     ::vulkano::sampler::SamplerAddressMode::ClampToEdge,
-                                                     ::vulkano::sampler::SamplerAddressMode::ClampToEdge,
-                                                     ::vulkano::sampler::SamplerAddressMode::ClampToEdge,
+        let cursor_sampler = Sampler::new(device.clone(), Filter::Linear,
+                                                     Filter::Linear, MipmapMode::Nearest,
+                                                     SamplerAddressMode::ClampToEdge,
+                                                     SamplerAddressMode::ClampToEdge,
+                                                     SamplerAddressMode::ClampToEdge,
                                                      // TODO: What values here
                                                      0.0, 1.0, 0.0, 0.0).unwrap();
 
@@ -274,10 +287,10 @@ impl<'a> Graphics<'a> {
         );
 
         let pipeline = Arc::new(
-            ::vulkano::pipeline::GraphicsPipeline::start()
+            GraphicsPipeline::start()
                 .vertex_input_single_buffer::<Vertex>()
                 .vertex_shader(vs.main_entry_point(), ())
-                .viewports(iter::once(::vulkano::pipeline::viewport::Viewport {
+                .viewports(iter::once(Viewport {
                     origin: [0.0, 0.0],
                     depth_range: 0.0..1.0,
                     dimensions: [width as f32, height as f32],
@@ -285,36 +298,36 @@ impl<'a> Graphics<'a> {
                 .fragment_shader(fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
                 .render_pass(
-                    ::vulkano::framebuffer::Subpass::from(render_pass.clone(), 0).unwrap(),
+                    Subpass::from(render_pass.clone(), 0).unwrap(),
                 )
                 .build(device.clone())
                 .unwrap(),
         );
 
         let second_pipeline = Arc::new(
-            ::vulkano::pipeline::GraphicsPipeline::start()
+            GraphicsPipeline::start()
                 .vertex_input_single_buffer::<SecondVertex>()
                 .vertex_shader(second_vs.main_entry_point(), ())
                 .triangle_list()
-                .viewports(iter::once(::vulkano::pipeline::viewport::Viewport {
+                .viewports(iter::once(Viewport {
                     origin: [0.0, 0.0],
                     depth_range: 0.0..1.0,
                     dimensions: [width as f32, height as f32],
                 }))
                 .fragment_shader(second_fs.main_entry_point(), ())
                 .render_pass(
-                    ::vulkano::framebuffer::Subpass::from(second_render_pass.clone(), 0).unwrap(),
+                    Subpass::from(second_render_pass.clone(), 0).unwrap(),
                 )
                 .build(device.clone())
                 .unwrap(),
         );
 
         let second_pipeline_cursor = Arc::new(
-            ::vulkano::pipeline::GraphicsPipeline::start()
+            GraphicsPipeline::start()
                 .vertex_input_single_buffer::<SecondVertex>()
                 .vertex_shader(second_vs_cursor.main_entry_point(), ())
                 .triangle_list()
-                .viewports(iter::once(::vulkano::pipeline::viewport::Viewport {
+                .viewports(iter::once(Viewport {
                     // TODO this is wrong maybe minus dimensiosn ?
                     origin: [
                         (width - cursor_tex_dim.width()*2) as f32 /2.0,
@@ -326,18 +339,18 @@ impl<'a> Graphics<'a> {
                 .fragment_shader(second_fs_cursor.main_entry_point(), ())
                 .blend_alpha_blending()
                 .render_pass(
-                    ::vulkano::framebuffer::Subpass::from(second_render_pass.clone(), 0).unwrap(),
+                    Subpass::from(second_render_pass.clone(), 0).unwrap(),
                 )
                 .build(device.clone())
                 .unwrap(),
         );
 
         let second_pipeline_imgui = Arc::new(
-            ::vulkano::pipeline::GraphicsPipeline::start()
+            GraphicsPipeline::start()
                 .vertex_input_single_buffer::<SecondVertexImgui>()
                 .vertex_shader(second_vs_imgui.main_entry_point(), ())
                 .triangle_list()
-                .viewports_fixed_scissors_dynamic(iter::once(::vulkano::pipeline::viewport::Viewport {
+                .viewports_fixed_scissors_dynamic(iter::once(Viewport {
                     origin: [0.0, 0.0],
                     depth_range: 0.0..1.0,
                     dimensions: [width as f32, height as f32],
@@ -345,14 +358,14 @@ impl<'a> Graphics<'a> {
                 .fragment_shader(second_fs_imgui.main_entry_point(), ())
                 .blend_alpha_blending()
                 .render_pass(
-                    ::vulkano::framebuffer::Subpass::from(second_render_pass.clone(), 0).unwrap(),
+                    Subpass::from(second_render_pass.clone(), 0).unwrap(),
                 )
                 .build(device.clone())
                 .unwrap(),
         );
 
         let framebuffer = Arc::new(
-            ::vulkano::framebuffer::Framebuffer::start(render_pass.clone())
+            Framebuffer::start(render_pass.clone())
                 .add(tmp_image_attachment.clone())
                 .unwrap()
                 .add(depth_buffer_attachment.clone())
@@ -365,7 +378,7 @@ impl<'a> Graphics<'a> {
             .iter()
             .map(|image| {
                 Arc::new(
-                    ::vulkano::framebuffer::Framebuffer::start(second_render_pass.clone())
+                    Framebuffer::start(second_render_pass.clone())
                         .add(image.clone())
                         .unwrap()
                         .build()
@@ -375,24 +388,24 @@ impl<'a> Graphics<'a> {
             .collect::<Vec<_>>();
 
         let view_uniform_buffer =
-            ::vulkano::buffer::cpu_pool::CpuBufferPool::<::graphics::shader::vs::ty::View>::new(
+            CpuBufferPool::<::graphics::shader::vs::ty::View>::new(
                 device.clone(),
-                ::vulkano::buffer::BufferUsage::uniform_buffer(),
+                BufferUsage::uniform_buffer(),
             );
 
         //TODO: maybe use simple instead of persistent
         let tmp_image_set = Arc::new(
-            ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+            PersistentDescriptorSet::start(
                 second_pipeline.clone(),
                 0,
             ).add_sampled_image(
                 tmp_image_attachment.clone(),
                 // Sampler::simple_repeat_linear_no_mipmap(graphics.device.clone()),
-                ::vulkano::sampler::Sampler::unnormalized(
+                Sampler::unnormalized(
                     device.clone(),
-                    ::vulkano::sampler::Filter::Nearest,
-                    ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
-                    ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
+                    Filter::Nearest,
+                    UnnormalizedSamplerAddressMode::ClampToEdge,
+                    UnnormalizedSamplerAddressMode::ClampToEdge,
                 ).unwrap(),
             )
                 .unwrap()
@@ -400,29 +413,29 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let cursor_texture_set = Arc::new(::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(second_pipeline.clone(), 0)
+        let cursor_texture_set = Arc::new(PersistentDescriptorSet::start(second_pipeline.clone(), 0)
             .add_sampled_image(cursor_texture.clone(), cursor_sampler.clone()).unwrap()
             .build().unwrap()
         );
 
         let (colors_texture, mut colors_tex_future) = {
             let colors = colors::colors();
-            ::vulkano::image::immutable::ImmutableImage::from_iter(
+            ImmutableImage::from_iter(
                 colors.iter().cloned(),
-                ::vulkano::image::Dimensions::Dim1d { width: colors.len() as u32 },
-                ::vulkano::format::R8G8B8A8Unorm,
+                Dimensions::Dim1d { width: colors.len() as u32 },
+                format::R8G8B8A8Unorm,
                 queue.clone()).unwrap()
         };
 
         let colors_texture_set = {
-            Arc::new(::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(second_pipeline.clone(), 1)
+            Arc::new(PersistentDescriptorSet::start(second_pipeline.clone(), 1)
                 .add_sampled_image(
                     colors_texture,
-                    ::vulkano::sampler::Sampler::unnormalized(
+                    Sampler::unnormalized(
                         device.clone(),
-                        ::vulkano::sampler::Filter::Nearest,
-                        ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
-                        ::vulkano::sampler::UnnormalizedSamplerAddressMode::ClampToEdge,
+                        Filter::Nearest,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
                     ).unwrap()
                 )
                 .unwrap()
@@ -431,26 +444,26 @@ impl<'a> Graphics<'a> {
         };
 
         let (imgui_texture, mut imgui_tex_future) = imgui.prepare_texture(|handle| {
-            ::vulkano::image::immutable::ImmutableImage::from_iter(
+            ImmutableImage::from_iter(
                 handle.pixels.iter().cloned(),
-                ::vulkano::image::Dimensions::Dim2d { width: handle.width, height: handle.height },
+                Dimensions::Dim2d { width: handle.width, height: handle.height },
                 // TODO: unorm or srgb ?
-                ::vulkano::format::R8G8B8A8Unorm,
+                format::R8G8B8A8Unorm,
                 queue.clone())
         }).unwrap();
 
         let imgui_texture_set = {
-            Arc::new(::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(second_pipeline_imgui.clone(), 1)
+            Arc::new(PersistentDescriptorSet::start(second_pipeline_imgui.clone(), 1)
                 .add_sampled_image(
                     imgui_texture,
-                    ::vulkano::sampler::Sampler::new(
+                    Sampler::new(
                         device.clone(),
-                        ::vulkano::sampler::Filter::Nearest, // TODO: linear or nearest
-                        ::vulkano::sampler::Filter::Linear, // TODO: linear or nearest
-                        ::vulkano::sampler::MipmapMode::Linear, // TODO: linear or nearest
-                        ::vulkano::sampler::SamplerAddressMode::MirroredRepeat,
-                        ::vulkano::sampler::SamplerAddressMode::MirroredRepeat,
-                        ::vulkano::sampler::SamplerAddressMode::MirroredRepeat,
+                        Filter::Nearest, // TODO: linear or nearest
+                        Filter::Linear, // TODO: linear or nearest
+                        MipmapMode::Linear, // TODO: linear or nearest
+                        SamplerAddressMode::MirroredRepeat,
+                        SamplerAddressMode::MirroredRepeat,
+                        SamplerAddressMode::MirroredRepeat,
                         0.0, 1.0, 0.0, 0.0,
                     ).unwrap()
                 )
