@@ -54,6 +54,9 @@ fn main() {
         .unwrap();
 
     let mut imgui = ::imgui::ImGui::init();
+    imgui.set_ini_filename(None);
+    imgui.set_log_filename(None);
+    // TODO configure style
 
     let graphics = graphics::Graphics::new(&window, &mut imgui);
 
