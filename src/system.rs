@@ -389,45 +389,82 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             )
             .unwrap();
 
-        // // Build imgui
-        // let ui = imgui.frame(rendering.size_points.take().unwrap(), rendering.size_pixels.take().unwrap(), config.dt);
-        // ui.window(im_str!("Hello world"))
-        //     .size((300.0, 100.0), ::imgui::ImGuiSetCond_FirstUseEver)
-        //     .build(|| {
-        //         ui.text(im_str!("Hello world!"));
-        //         ui.separator();
-        //         ui.text(im_str!("This...is...imgui-rs!"));
-        //     });
+        // Build imgui
+        let ui = imgui.frame(rendering.size_points.take().unwrap(), rendering.size_pixels.take().unwrap(), config.dt);
+        ui.window(im_str!("Hello world"))
+            .size((300.0, 100.0), ::imgui::ImGuiSetCond_FirstUseEver)
+            .build(|| {
+                ui.text(im_str!("Hello world!"));
+                ui.separator();
+                ui.text(im_str!("This...is...imgui-rs!"));
+            });
 
-        // // TODO: maybe change imgui so that it used an iterator instead of a callback
-        // let ref_cell_cmd_builder = ::std::cell::RefCell::new(Some(second_command_buffer_builder));
-        // ui.render::<_, ()>(|ui, drawlist| {
-        //     let mut cmd_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
-        //     let vertex_subbuffer = graphics.imgui_vertex_buffer
-        //         // TODO: clone not very efficient and necessary ...
-        //         .next(drawlist.vtx_buffer.iter().cloned())
-        //         .unwrap();
-        //     let index_subbuffer = graphics.imgui_vertex_buffer
-        //         // TODO: clone not very efficient and necessary ...
-        //         .next(drawlist.idx_buffer.iter().cloned())
-        //         .unwrap();
+        // TODO: maybe change imgui so that it use an iterator instead of a callback
+        let ref_cell_cmd_builder = ::std::cell::RefCell::new(Some(second_command_buffer_builder));
+        ui.render::<_, ()>(|ui, drawlist| {
+            let mut cmd_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
+            // TODO: efficient
+            // TODO: impl vertex for imgui in imgui
+            let (vertex_buffer, vertex_buf_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
+                drawlist.vtx_buffer.iter().map(|vtx| ::graphics::SecondVertexImgui::from(vtx.clone())),
+                ::vulkano::buffer::BufferUsage::vertex_buffer(),
+                graphics.queue.clone()).unwrap();
 
-        //     for cmd in drawlist.cmd_buffer {
-        //         // cmd_builder = cmd_builder
-        //         //     .draw_indexed(
-        //         //         graphics.second_pipeline_imgui.clone(),
-        //         //         ::vulkano::command_buffer::DynamicState::none(),
-        //         //         vertex_subbuffer, index_subbuffer,
-        //         //         graphics.imgui_texture_set.clone(),
-        //         //         ()
-        //         //     )
-        //         //     .unwrap();
-        //     }
-        //     *ref_cell_cmd_builder.borrow_mut() = Some(cmd_builder);
-        //     Ok(())
-        // }).unwrap();
+            let (index_buffer, index_buf_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_iter(
+                drawlist.idx_buffer.iter().cloned(),
+                ::vulkano::buffer::BufferUsage::index_buffer(),
+                graphics.queue.clone()).unwrap();
 
-        // let second_command_buffer_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
+            let (width, height) = ui.imgui().display_size();
+            let (scale_width, scale_height) = ui.imgui().display_framebuffer_scale();
+
+            // TODO: it in cpu_pool and put the set in imgui_texture_set with rename or just
+            //       another set
+            let matrix = [[2.0 / width as f32, 0.0, 0.0, 0.0],
+                          [0.0, 2.0 / -(height as f32), 0.0, 0.0],
+                          [0.0, 0.0, -1.0, 0.0],
+                          [-1.0, 1.0, 0.0, 1.0]];
+
+            let (matrix, matrix_future) = ::vulkano::buffer::immutable::ImmutableBuffer::from_data(
+                matrix,
+                ::vulkano::buffer::BufferUsage::uniform_buffer(),
+                graphics.queue.clone()).unwrap();
+
+            let matrix_set = Arc::new(
+                ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+                    graphics.second_pipeline_imgui.clone(),
+                    0,
+                ).add_buffer(matrix)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
+            );
+
+            for cmd in drawlist.cmd_buffer {
+                let dynamic_state = ::vulkano::command_buffer::DynamicState {
+                    line_width: None,
+                    viewports: None,
+                    scissors: Some(vec!(::vulkano::pipeline::viewport::Scissor {
+                        origin: [(cmd.clip_rect.x * scale_width) as i32, ((height - cmd.clip_rect.w) * scale_height) as i32],
+                        dimensions: [((cmd.clip_rect.z - cmd.clip_rect.x) * scale_width) as u32, ((cmd.clip_rect.w - cmd.clip_rect.y) * scale_height) as u32],
+                    })),
+                };
+
+                cmd_builder = cmd_builder
+                    .draw_indexed(
+                        graphics.second_pipeline_imgui.clone(),
+                        dynamic_state.clone(),
+                        vertex_buffer.clone(), index_buffer.clone(),
+                        (matrix_set.clone(), graphics.imgui_texture_set.clone()),
+                        ()
+                    )
+                    .unwrap();
+            }
+            *ref_cell_cmd_builder.borrow_mut() = Some(cmd_builder);
+            Ok(())
+        }).unwrap();
+
+        let second_command_buffer_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
 
         rendering.second_command_buffer = Some(second_command_buffer_builder
             .end_render_pass()
