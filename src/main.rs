@@ -17,7 +17,8 @@ extern crate pathfinding;
 extern crate png;
 #[macro_use]
 extern crate imgui;
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate serde_derive;
 extern crate serde;
 extern crate ron;
 
@@ -90,9 +91,34 @@ fn main() {
     world.add_resource(::maze::kruskal(31, 31, 50.0));
 
     {
-        ::entity::create_maze_walls(&mut world.write(), &mut world.write(), &mut world.write_resource(), &world.read_resource(), &world.read_resource(), &world.read_resource());
-        ::entity::create_avoider([2.5, 1.5], &mut world.write(), &mut world.write(), &mut world.write(), &mut world.write(), &mut world.write_resource(), &world.read_resource(), &world.read_resource());
-        ::entity::create_player([1.5, 1.5], &mut world.write(), &mut world.write(), &mut world.write(), &mut world.write(), &mut world.write(), &mut world.write_resource(), &world.read_resource());
+        ::entity::create_maze_walls(
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write_resource(),
+            &world.read_resource(),
+            &world.read_resource(),
+            &world.read_resource(),
+        );
+        ::entity::create_avoider(
+            [2.5, 1.5],
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write_resource(),
+            &world.read_resource(),
+            &world.read_resource(),
+        );
+        ::entity::create_player(
+            [1.5, 1.5],
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write_resource(),
+            &world.read_resource(),
+        );
     }
 
     world.maintain();

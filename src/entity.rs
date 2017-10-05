@@ -38,13 +38,10 @@ pub fn create_player<'a>(
     let entity = entities.create();
     players.insert(entity, ::component::Player);
     aims.insert(entity, ::component::Aim::new());
-    momentums.insert(entity, ::component::Momentum::new(
-        mass,
-        velocity,
-        time_to_reach_v_max,
-        ang_damping,
-        None,
-    ));
+    momentums.insert(
+        entity,
+        ::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, None),
+    );
     shooters.insert(entity, ::component::Shooter::new(2.0));
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
@@ -122,13 +119,16 @@ pub fn create_avoider<'a>(
 
     let entity = entities.create();
     avoiders.insert(entity, ::component::Avoider::new());
-    momentums.insert(entity, ::component::Momentum::new(
-        mass,
-        velocity,
-        time_to_reach_v_max,
-        ang_damping,
-        Some(pnt_to_com),
-    ));
+    momentums.insert(
+        entity,
+        ::component::Momentum::new(
+            mass,
+            velocity,
+            time_to_reach_v_max,
+            ang_damping,
+            Some(pnt_to_com),
+        ),
+    );
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
     ::component::DynamicDraw::add(
@@ -272,7 +272,16 @@ pub fn create_maze_walls<'a>(
                     ::na::Vector3::new(x as f32, c.0 as f32 + y_radius, 0.5),
                     ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
                 );
-                create_wall_side(pos, x_radius, y_radius, bodies, static_draws, physic_world, graphics, entities);
+                create_wall_side(
+                    pos,
+                    x_radius,
+                    y_radius,
+                    bodies,
+                    static_draws,
+                    physic_world,
+                    graphics,
+                    entities,
+                );
             }
 
             if down_side_wall && down_coords.is_none() {
@@ -287,7 +296,16 @@ pub fn create_maze_walls<'a>(
                     ::na::Vector3::new(x as f32 + 1.0, c.0 as f32 + y_radius, 0.5),
                     ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
                 );
-                create_wall_side(pos, x_radius, y_radius, bodies, static_draws, physic_world, graphics, entities);
+                create_wall_side(
+                    pos,
+                    x_radius,
+                    y_radius,
+                    bodies,
+                    static_draws,
+                    physic_world,
+                    graphics,
+                    entities,
+                );
             }
         }
     }
@@ -323,7 +341,16 @@ pub fn create_maze_walls<'a>(
                     ::na::Vector3::new(c.0 as f32 + x_radius, y as f32, 0.5),
                     ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
                 );
-                create_wall_side(pos, x_radius, y_radius, bodies, static_draws, physic_world, graphics, entities);
+                create_wall_side(
+                    pos,
+                    x_radius,
+                    y_radius,
+                    bodies,
+                    static_draws,
+                    physic_world,
+                    graphics,
+                    entities,
+                );
             }
 
             if down_side_wall && down_coords.is_none() {
@@ -338,7 +365,16 @@ pub fn create_maze_walls<'a>(
                     ::na::Vector3::new(c.0 as f32 + x_radius, y as f32 + 1.0, 0.5),
                     ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
                 );
-                create_wall_side(pos, x_radius, y_radius, bodies, static_draws, physic_world, graphics, entities);
+                create_wall_side(
+                    pos,
+                    x_radius,
+                    y_radius,
+                    bodies,
+                    static_draws,
+                    physic_world,
+                    graphics,
+                    entities,
+                );
             }
         }
     }

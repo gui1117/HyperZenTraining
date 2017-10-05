@@ -17,23 +17,29 @@ pub fn instance_primitives(
                 _ => unreachable!(),
             };
 
-            let mut vertices = vec!();
+            let mut vertices = vec![];
             for p in indices {
-                vertices.push(Vertex { position: [
-                    sphere.coords[p.x as usize][0],
-                    sphere.coords[p.x as usize][1],
-                    sphere.coords[p.x as usize][2],
-                ]});
-                vertices.push(Vertex { position: [
-                    sphere.coords[p.y as usize][0],
-                    sphere.coords[p.y as usize][1],
-                    sphere.coords[p.y as usize][2],
-                ]});
-                vertices.push(Vertex { position: [
-                    sphere.coords[p.z as usize][0],
-                    sphere.coords[p.z as usize][1],
-                    sphere.coords[p.z as usize][2],
-                ]});
+                vertices.push(Vertex {
+                    position: [
+                        sphere.coords[p.x as usize][0],
+                        sphere.coords[p.x as usize][1],
+                        sphere.coords[p.x as usize][2],
+                    ],
+                });
+                vertices.push(Vertex {
+                    position: [
+                        sphere.coords[p.y as usize][0],
+                        sphere.coords[p.y as usize][1],
+                        sphere.coords[p.y as usize][2],
+                    ],
+                });
+                vertices.push(Vertex {
+                    position: [
+                        sphere.coords[p.z as usize][0],
+                        sphere.coords[p.z as usize][1],
+                        sphere.coords[p.z as usize][2],
+                    ],
+                });
             }
             vertices.into_iter()
         },
@@ -101,93 +107,101 @@ pub fn instance_primitives(
         queue.clone(),
     ).expect("failed to create buffer");
 
-    let (square_pyramid_side_1, square_pyramid_side_1_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [-1.0, -1.0, -1.0] },
-            Vertex { position: [-1.0, 1.0, -1.0] },
-            Vertex { position: [0.0, 0.0, 1.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    let (square_pyramid_side_1, square_pyramid_side_1_future) =
+        ImmutableBuffer::from_iter(
+            [
+                Vertex { position: [-1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, 1.0, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+            ].iter()
+                .cloned(),
+            BufferUsage::vertex_buffer(),
+            queue.clone(),
+        ).expect("failed to create buffer");
 
-    let (square_pyramid_side_2, square_pyramid_side_2_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [-1.0, 1.0, -1.0] },
-            Vertex { position: [1.0, 1.0, -1.0] },
-            Vertex { position: [0.0, 0.0, 1.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    let (square_pyramid_side_2, square_pyramid_side_2_future) =
+        ImmutableBuffer::from_iter(
+            [
+                Vertex { position: [-1.0, 1.0, -1.0] },
+                Vertex { position: [1.0, 1.0, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+            ].iter()
+                .cloned(),
+            BufferUsage::vertex_buffer(),
+            queue.clone(),
+        ).expect("failed to create buffer");
 
-    let (square_pyramid_side_3, square_pyramid_side_3_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [1.0, 1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, -1.0] },
-            Vertex { position: [0.0, 0.0, 1.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    let (square_pyramid_side_3, square_pyramid_side_3_future) =
+        ImmutableBuffer::from_iter(
+            [
+                Vertex { position: [1.0, 1.0, -1.0] },
+                Vertex { position: [1.0, -1.0, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+            ].iter()
+                .cloned(),
+            BufferUsage::vertex_buffer(),
+            queue.clone(),
+        ).expect("failed to create buffer");
 
-    let (square_pyramid_side_4, square_pyramid_side_4_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [1.0, -1.0, -1.0] },
-            Vertex { position: [-1.0, -1.0, -1.0] },
-            Vertex { position: [0.0, 0.0, 1.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    let (square_pyramid_side_4, square_pyramid_side_4_future) =
+        ImmutableBuffer::from_iter(
+            [
+                Vertex { position: [1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, -1.0, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+            ].iter()
+                .cloned(),
+            BufferUsage::vertex_buffer(),
+            queue.clone(),
+        ).expect("failed to create buffer");
 
-    let (triangle_pyramid_base, triangle_pyramid_base_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
-            Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
-            Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    let (triangle_pyramid_base, triangle_pyramid_base_future) =
+        ImmutableBuffer::from_iter(
+            [
+                Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
+                Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
+                Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
+            ].iter()
+                .cloned(),
+            BufferUsage::vertex_buffer(),
+            queue.clone(),
+        ).expect("failed to create buffer");
 
-    let (triangle_pyramid_side_1, triangle_pyramid_side_1_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
-            Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
-            Vertex { position: [0.0, 0.0, 1.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    let (triangle_pyramid_side_1, triangle_pyramid_side_1_future) =
+        ImmutableBuffer::from_iter(
+            [
+                Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
+                Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+            ].iter()
+                .cloned(),
+            BufferUsage::vertex_buffer(),
+            queue.clone(),
+        ).expect("failed to create buffer");
 
-    let (triangle_pyramid_side_2, triangle_pyramid_side_2_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
-            Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
-            Vertex { position: [0.0, 0.0, 1.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    let (triangle_pyramid_side_2, triangle_pyramid_side_2_future) =
+        ImmutableBuffer::from_iter(
+            [
+                Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
+                Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+            ].iter()
+                .cloned(),
+            BufferUsage::vertex_buffer(),
+            queue.clone(),
+        ).expect("failed to create buffer");
 
-    let (triangle_pyramid_side_3, triangle_pyramid_side_3_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
-            Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
-            Vertex { position: [0.0, 0.0, 1.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    let (triangle_pyramid_side_3, triangle_pyramid_side_3_future) =
+        ImmutableBuffer::from_iter(
+            [
+                Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
+                Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
+                Vertex { position: [0.0, 0.0, 1.0] },
+            ].iter()
+                .cloned(),
+            BufferUsage::vertex_buffer(),
+            queue.clone(),
+        ).expect("failed to create buffer");
 
     (
         vec![
