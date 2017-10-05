@@ -309,6 +309,7 @@ impl<'a> Graphics<'a> {
                 }))
                 .fragment_shader(fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
+                .sample_shading_enabled(1.0)
                 .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
                 .build(device.clone())
                 .unwrap(),
