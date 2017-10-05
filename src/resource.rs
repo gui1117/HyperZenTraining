@@ -3,27 +3,10 @@ use vulkano::command_buffer::AutoCommandBuffer;
 pub use graphics::Data as Graphics;
 pub use imgui::ImGui;
 pub use maze::Maze;
+pub use config::Config;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub type WinitEvents = Vec<::winit::Event>;
-
-pub struct Config {
-    pub fps: u32,
-    pub dt: f32,
-    pub mouse_sensibility: f32,
-}
-
-// TODO: read from config file
-impl Default for Config {
-    fn default() -> Self {
-        let fps = 60;
-        Config {
-            fps,
-            dt: 1.0 / fps as f32,
-            mouse_sensibility: 1000.0,
-        }
-    }
-}
 
 pub struct Rendering {
     pub image_num: Option<usize>,

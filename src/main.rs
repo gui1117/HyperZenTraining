@@ -17,6 +17,7 @@ extern crate pathfinding;
 extern crate png;
 #[macro_use]
 extern crate imgui;
+extern crate app_dirs
 
 mod util;
 mod graphics;
@@ -25,6 +26,7 @@ mod component;
 mod system;
 mod resource;
 mod maze;
+mod config;
 
 use vulkano_win::VkSurfaceBuild;
 
@@ -62,6 +64,8 @@ fn main() {
 
     let graphics = graphics::Graphics::new(&window, &mut imgui);
 
+    let config = ::resource::Config::load();
+
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
     let mut world = specs::World::new();
@@ -76,10 +80,10 @@ fn main() {
     world.register::<::component::Life>();
     world.add_resource(graphics.data.clone());
     world.add_resource(imgui);
+    world.add_resource(config);
     world.add_resource(::resource::PhysicWorld::new());
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::WinitEvents::new());
-    world.add_resource(::resource::Config::default());
     world.add_resource(::maze::kruskal(31, 31, 50.0));
 
     ::entity::create_maze_walls(&mut world);
@@ -100,7 +104,7 @@ fn main() {
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
-    let mut fps = fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps);
+    let mut fps = fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps());
 
     loop {
         previous_frame_end.cleanup_finished();

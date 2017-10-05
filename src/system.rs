@@ -61,10 +61,8 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                 Event::WindowEvent {
                     event: WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
                 } => {
-                    self.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) /
-                        config.mouse_sensibility;
-                    self.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) /
-                        config.mouse_sensibility;
+                    self.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) * config.mouse_sensibility;
+                    self.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) * config.mouse_sensibility;
                     self.pointer[1] = self.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
                         -::std::f32::consts::FRAC_PI_2,
                     );
@@ -239,7 +237,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
         }
         for _ in 0..2 {
-            physic_world.step(config.dt / 2.);
+            physic_world.step(config.dt() / 2.);
         }
         for (_, body) in (&player, &mut bodies).join() {
             let mut body = body.get_mut(&mut physic_world);
@@ -413,7 +411,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         let ui = imgui.frame(
             rendering.size_points.take().unwrap(),
             rendering.size_pixels.take().unwrap(),
-            config.dt,
+            config.dt(),
         );
         ui.window(im_str!("Hello world"))
             .size((300.0, 100.0), ::imgui::ImGuiSetCond_FirstUseEver)
@@ -547,7 +545,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
     ) {
         for (aim, body, shooter) in (&aims, &bodies, &mut shooters).join() {
             let body_pos = body.get(&physic_world).position().clone();
-            shooter.reload(config.dt);
+            shooter.reload(config.dt());
 
             let ray = ::ncollide::query::Ray {
                 origin: ::na::Point3::from_coordinates(body_pos.translation.vector),
