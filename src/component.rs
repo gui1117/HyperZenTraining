@@ -153,16 +153,15 @@ impl ::specs::Component for StaticDraw {
 }
 
 impl StaticDraw {
-    pub fn add(
-        world: &mut ::specs::World,
+    pub fn add<'a>(
         entity: ::specs::Entity,
         primitive: usize,
         group: u16,
         color: u16,
         world_trans: ::graphics::shader::vs::ty::World,
+        static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
+        graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     ) {
-        let graphics = world.read_resource::<::resource::Graphics>();
-
         let uniform_buffer =
             ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::<::graphics::shader::vs::ty::World>::from_data(
                 graphics.device.clone(),
@@ -188,10 +187,7 @@ impl StaticDraw {
             set,
         };
 
-        match world.write::<StaticDraw>().insert(entity, static_draw) {
-            ::specs::InsertResult::Inserted => (),
-            _ => panic!("cannot insert staticdraw to entity"),
-        };
+        static_draws.insert(entity, static_draw);
     }
 }
 
@@ -210,15 +206,14 @@ impl ::specs::Component for DynamicDraw {
 }
 
 impl DynamicDraw {
-    pub fn add(
-        world: &mut ::specs::World,
+    pub fn add<'a>(
         entity: ::specs::Entity,
         primitives: Vec<(usize, u16)>,
         color: u16,
         primitive_trans: ::na::Transform3<f32>,
+        dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+        graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     ) {
-        let graphics = world.read_resource::<::resource::Graphics>();
-
         let uniform_buffer_pool = Arc::new(::vulkano::buffer::cpu_pool::CpuBufferPool::new(
             graphics.device.clone(),
             ::vulkano::buffer::BufferUsage::uniform_buffer(),
@@ -232,10 +227,7 @@ impl DynamicDraw {
             world_trans: ::graphics::shader::vs::ty::World { world: [[0f32; 4]; 4] },
         };
 
-        match world.write().insert(entity, dynamic_draw) {
-            ::specs::InsertResult::Inserted => (),
-            _ => panic!("cannot insert dynamicdraw to entity"),
-        };
+        dynamic_draws.insert(entity, dynamic_draw);
     }
 }
 
@@ -246,12 +238,15 @@ impl ::specs::Component for PhysicBody {
 }
 
 impl PhysicBody {
-    pub fn add(world: &mut ::specs::World, entity: ::specs::Entity, body: usize) {
-        world
-            .write_resource::<::resource::PhysicWorld>()
-            .mut_rigid_body(body)
-            .set_user_data(Some(Box::new(entity)));
-        world.write().insert(entity, PhysicBody(body));
+    pub fn add<'a>(
+        entity: ::specs::Entity,
+        mut body: ::nphysics::object::RigidBody<f32>,
+        bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+        physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    ) {
+        body.set_user_data(Some(Box::new(entity)));
+        let bodyhandle = physic_world.add_rigid_body(body);
+        bodies.insert(entity, PhysicBody(bodyhandle));
     }
 
     #[inline]

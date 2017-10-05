@@ -8,7 +8,16 @@ const DIM2_GROUP: usize = 3;
 const ALIVE_GROUP: usize = 4;
 
 // TODO: use usize instead of f32
-pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
+pub fn create_player<'a>(
+    pos: [f32; 2],
+    players: &mut ::specs::WriteStorage<'a, ::component::Player>,
+    aims: &mut ::specs::WriteStorage<'a, ::component::Aim>,
+    momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
+    bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
+    physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    entities: &::specs::Entities,
+) {
     let shape = ::ncollide::shape::Cylinder::new(0.4, 0.1);
     let pos = ::na::Isometry3::new(
         ::na::Vector3::new(pos[0], pos[1], 0.5),
@@ -26,32 +35,32 @@ pub fn create_player(world: &mut ::specs::World, pos: [f32; 2]) {
     let time_to_reach_v_max = 0.1;
     let ang_damping = 0.0;
 
-    let bodyhandle = world
-        .write_resource::<::resource::PhysicWorld>()
-        .add_rigid_body(body);
+    let entity = entities.create();
+    players.insert(entity, ::component::Player);
+    aims.insert(entity, ::component::Aim::new());
+    momentums.insert(entity, ::component::Momentum::new(
+        mass,
+        velocity,
+        time_to_reach_v_max,
+        ang_damping,
+        None,
+    ));
+    shooters.insert(entity, ::component::Shooter::new(2.0));
 
-    // TODO: ccd ?
-    // world.write_resource::<::resource::PhysicWorld>().0.add_ccd_to(&bodyhandle, 0.01, false);
-    let entity = world
-        .create_entity()
-        .with(::component::Player)
-        .with(::component::Aim::new())
-        .with(::component::Momentum::new(
-            mass,
-            velocity,
-            time_to_reach_v_max,
-            ang_damping,
-            None,
-        ))
-        .with(::component::Shooter::new(2.0))
-        .build();
-
-    ::component::PhysicBody::add(world, entity, bodyhandle);
+    ::component::PhysicBody::add(entity, body, bodies, physic_world);
 }
 
-// IDEA: maybe have a triangle base for the pyramid
 // IDEA: mabye make it turn on itself
-pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
+pub fn create_avoider<'a>(
+    pos: [f32; 2],
+    momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
+    avoiders: &mut ::specs::WriteStorage<'a, ::component::Avoider>,
+    bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    graphics: &::specs::Fetch<'a, ::resource::Graphics>,
+    entities: &::specs::Entities,
+) {
     let size = 0.1;
 
     let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
@@ -87,60 +96,60 @@ pub fn create_avoider(world: &mut ::specs::World, pos: [f32; 2]) {
 
     body.set_transformation(pos);
     body.set_collision_groups(group);
-    let bodyhandle = world
-        .write_resource::<::resource::PhysicWorld>()
-        .add_rigid_body(body);
-    let entity = world
-        .create_entity()
-        .with(::component::Avoider::new())
-        .with(::component::Momentum::new(
-            mass,
-            velocity,
-            time_to_reach_v_max,
-            ang_damping,
-            Some(pnt_to_com),
-        ))
-        .build();
 
     let primitives = vec![
         (
-            ::graphics::primitive::PYRAMID_BASE,
+            ::graphics::primitive::SQUARE_PYRAMID_BASE,
             ::graphics::GROUP_COUNTER.next()
         ),
         (
-            ::graphics::primitive::PYRAMID_SIDE_1,
+            ::graphics::primitive::SQUARE_PYRAMID_SIDE_1,
             ::graphics::GROUP_COUNTER.next()
         ),
         (
-            ::graphics::primitive::PYRAMID_SIDE_2,
+            ::graphics::primitive::SQUARE_PYRAMID_SIDE_2,
             ::graphics::GROUP_COUNTER.next()
         ),
         (
-            ::graphics::primitive::PYRAMID_SIDE_3,
+            ::graphics::primitive::SQUARE_PYRAMID_SIDE_3,
             ::graphics::GROUP_COUNTER.next()
         ),
         (
-            ::graphics::primitive::PYRAMID_SIDE_4,
+            ::graphics::primitive::SQUARE_PYRAMID_SIDE_4,
             ::graphics::GROUP_COUNTER.next()
         ),
     ];
 
-    // IDEA: same graphics group for all avoider ?
+    let entity = entities.create();
+    avoiders.insert(entity, ::component::Avoider::new());
+    momentums.insert(entity, ::component::Momentum::new(
+        mass,
+        velocity,
+        time_to_reach_v_max,
+        ang_damping,
+        Some(pnt_to_com),
+    ));
+
+    ::component::PhysicBody::add(entity, body, bodies, physic_world);
     ::component::DynamicDraw::add(
-        world,
         entity,
         primitives,
         ::graphics::color::GREEN,
         primitive_trans,
+        dynamic_draws,
+        graphics,
     );
-    ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 
-pub fn create_wall_side(
-    world: &mut ::specs::World,
+pub fn create_wall_side<'a>(
     pos: ::na::Isometry3<f32>,
     x_radius: f32,
     y_radius: f32,
+    bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
+    physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    graphics: &::specs::Fetch<'a, ::resource::Graphics>,
+    entities: &::specs::Entities,
 ) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
     group.set_membership(&[WALL_GROUP]);
@@ -160,23 +169,29 @@ pub fn create_wall_side(
     let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
     body.set_collision_groups(group);
     body.set_transformation(pos);
-    let bodyhandle = world
-        .write_resource::<::resource::PhysicWorld>()
-        .add_rigid_body(body);
 
-    let entity = world.create_entity().build();
+    let entity = entities.create();
+    ::component::PhysicBody::add(entity, body, bodies, physic_world);
     ::component::StaticDraw::add(
-        world,
         entity,
         ::graphics::primitive::PLANE,
         ::graphics::GROUP_COUNTER.next(),
         ::graphics::color::PALE_RED,
         world_trans,
+        static_draws,
+        graphics,
     );
-    ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 
-pub fn create_floor_ceil(world: &mut ::specs::World, z: f32, floor: bool) {
+pub fn create_floor_ceil<'a>(
+    z: f32,
+    floor: bool,
+    bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
+    physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    graphics: &::specs::Fetch<'a, ::resource::Graphics>,
+    entities: &::specs::Entities,
+) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
     group.set_membership(&[FLOOR_CEIL_GROUP]);
     group.set_blacklist(&[WALL_GROUP, FLOOR_CEIL_GROUP, DIM2_GROUP]);
@@ -193,37 +208,38 @@ pub fn create_floor_ceil(world: &mut ::specs::World, z: f32, floor: bool) {
     let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
     body.set_collision_groups(group);
     body.set_transformation(pos);
-    let bodyhandle = world
-        .write_resource::<::resource::PhysicWorld>()
-        .add_rigid_body(body);
 
-    let entity = world.create_entity().build();
+    let entity = entities.create();
+
+    ::component::PhysicBody::add(entity, body, bodies, physic_world);
     ::component::StaticDraw::add(
-        world,
         entity,
         ::graphics::primitive::PLANE,
         ::graphics::GROUP_COUNTER.next(),
         ::graphics::color::PALE_BROWN,
         world_trans,
+        static_draws,
+        graphics,
     );
-    ::component::PhysicBody::add(world, entity, bodyhandle);
 }
 
-pub fn create_maze_walls(world: &mut ::specs::World) {
-    // TODO: do not clone maze.
-    //       maybe a method instantiate on maze that take world
-    //       or all entity method take storage instead of whole world
-    let maze = world.read_resource::<::resource::Maze>().clone();
-
-    create_floor_ceil(world, 0.0, true);
-    create_floor_ceil(world, 1.0, false);
+pub fn create_maze_walls<'a>(
+    bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
+    physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    graphics: &::specs::Fetch<'a, ::resource::Graphics>,
+    maze: &::specs::Fetch<'a, ::resource::Maze>,
+    entities: &::specs::Entities,
+) {
+    create_floor_ceil(0.0, true, bodies, static_draws, physic_world, graphics, entities);
+    create_floor_ceil(1.0, false, bodies, static_draws, physic_world, graphics, entities);
 
     // TODO: refactor
     let size = {
         assert_eq!(maze.height, maze.width);
         maze.height
     };
-    let maze = maze.walls;
+    let maze = &maze.walls;
 
     for x in 0..size {
         let mut up_coords = None;
@@ -256,7 +272,7 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                     ::na::Vector3::new(x as f32, c.0 as f32 + y_radius, 0.5),
                     ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
                 );
-                create_wall_side(world, pos, x_radius, y_radius);
+                create_wall_side(pos, x_radius, y_radius, bodies, static_draws, physic_world, graphics, entities);
             }
 
             if down_side_wall && down_coords.is_none() {
@@ -271,7 +287,7 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                     ::na::Vector3::new(x as f32 + 1.0, c.0 as f32 + y_radius, 0.5),
                     ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
                 );
-                create_wall_side(world, pos, x_radius, y_radius);
+                create_wall_side(pos, x_radius, y_radius, bodies, static_draws, physic_world, graphics, entities);
             }
         }
     }
@@ -307,7 +323,7 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                     ::na::Vector3::new(c.0 as f32 + x_radius, y as f32, 0.5),
                     ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
                 );
-                create_wall_side(world, pos, x_radius, y_radius);
+                create_wall_side(pos, x_radius, y_radius, bodies, static_draws, physic_world, graphics, entities);
             }
 
             if down_side_wall && down_coords.is_none() {
@@ -322,7 +338,7 @@ pub fn create_maze_walls(world: &mut ::specs::World) {
                     ::na::Vector3::new(c.0 as f32 + x_radius, y as f32 + 1.0, 0.5),
                     ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
                 );
-                create_wall_side(world, pos, x_radius, y_radius);
+                create_wall_side(pos, x_radius, y_radius, bodies, static_draws, physic_world, graphics, entities);
             }
         }
     }

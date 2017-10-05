@@ -1,0 +1,4 @@
+ConfigSave(
+    fps: 60,
+    mouse_sensibility: 0.001,
+)

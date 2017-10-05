@@ -18,6 +18,7 @@ use vulkano::sync::GpuFuture;
 
 use std::sync::Arc;
 use std::iter;
+use std::fs::File;
 
 pub mod shader;
 pub mod render_pass;
@@ -117,7 +118,7 @@ pub struct Graphics<'a> {
 
 impl<'a> Graphics<'a> {
     pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) -> Graphics<'a> {
-        //TODO: read config and save device
+        // TODO: read config and save device
         let physical = PhysicalDevice::enumerate(&window.surface().instance())
             .next()
             .expect("no device available");
@@ -231,8 +232,7 @@ impl<'a> Graphics<'a> {
             ).expect("failed to create buffer");
 
         let (cursor_texture, mut cursor_tex_future) = {
-            // TODO: The texture must be configurable
-            let file = ::std::io::Cursor::new(include_bytes!("default_cursor.png").as_ref());
+            let file = File::open("assets/cursor.png").unwrap();
             let (info, mut reader) = ::png::Decoder::new(file).read_info().unwrap();
             assert_eq!(info.color_type, ::png::ColorType::RGBA);
             let mut buf = vec![0; info.buffer_size()];
@@ -399,12 +399,11 @@ impl<'a> Graphics<'a> {
             BufferUsage::uniform_buffer(),
         );
 
-        //TODO: maybe use simple instead of persistent
+        // TODO: maybe use simple instead of persistent
         let tmp_image_set = Arc::new(
             PersistentDescriptorSet::start(second_pipeline.clone(), 0)
                 .add_sampled_image(
                     tmp_image_attachment.clone(),
-                    // Sampler::simple_repeat_linear_no_mipmap(graphics.device.clone()),
                     Sampler::unnormalized(
                         device.clone(),
                         Filter::Nearest,

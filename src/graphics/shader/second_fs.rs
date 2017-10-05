@@ -11,7 +11,7 @@ layout(location = 0) out vec4 out_color;
 layout(set = 0, binding = 0) uniform usampler2D tmp_image;
 layout(set = 1, binding = 0) uniform sampler1D colors;
 
-int thickness = 3;
+int thickness = 1;
 
 void main() {
     uint group = texture(tmp_image, gl_FragCoord.xy).r;
