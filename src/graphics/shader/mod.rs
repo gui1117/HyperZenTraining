@@ -6,3 +6,4 @@ pub mod second_vs_cursor;
 pub mod second_fs_cursor;
 pub mod second_vs_imgui;
 pub mod second_fs_imgui;
+pub mod eraser_comp;

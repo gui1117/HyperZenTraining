@@ -7,6 +7,7 @@ use nphysics::object::WorldObject;
 use util::Direction;
 use specs::Join;
 use alga::general::SubsetOf;
+use util::{high_byte, low_byte};
 
 use std::sync::Arc;
 use std::cell::RefCell;
@@ -211,17 +212,15 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
 pub struct BouncerControlSystem;
 
 impl<'a> ::specs::System<'a> for BouncerControlSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::PhysicBody>,
-     ::specs::ReadStorage<'a, ::component::Contactor>,
+    type SystemData = (::specs::ReadStorage<'a, ::component::Contactor>,
      ::specs::ReadStorage<'a, ::component::Bouncer>,
-     ::specs::WriteStorage<'a, ::component::Momentum>,
-     ::specs::Fetch<'a, ::resource::PhysicWorld>);
+     ::specs::WriteStorage<'a, ::component::Momentum>);
 
     fn run(
         &mut self,
-        (bodies, mut contactors, mut bouncers, mut momentums, physic_world): Self::SystemData,
+        (contactors, bouncers, mut momentums): Self::SystemData,
     ) {
-        for (_, momentum, contactor, body) in (&bouncers, &mut momentums, &contactors, &bodies).join() {
+        for (_, momentum, contactor) in (&bouncers, &mut momentums, &contactors).join() {
             if contactor.contacts.len() == 0 {
                 break;
             }
@@ -250,7 +249,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
 
     fn run(&mut self, (player, momentums, mut bodies, mut contactors, config, mut physic_world): Self::SystemData) {
         for (momentum, body) in (&momentums, &mut bodies).join() {
-            let mut body = body.get_mut(&mut physic_world);
+            let body = body.get_mut(&mut physic_world);
             let lin_vel = body.lin_vel();
             let ang_vel = body.ang_vel();
             // TODO: use integrator to modify rigidbody
@@ -297,7 +296,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             }
         }
         for (_, body) in (&player, &mut bodies).join() {
-            let mut body = body.get_mut(&mut physic_world);
+            let body = body.get_mut(&mut physic_world);
             body.set_ang_acc_scale(::na::zero());
             body.set_ang_vel(::na::zero());
 
@@ -397,7 +396,8 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                     graphics.primitives_vertex_buffers[static_draw.primitive].clone(),
                     (view_set.clone(), static_draw.set.clone()),
                     ::graphics::shader::fs::ty::Group {
-                        group: static_draw.group as u32,
+                        group_hb: high_byte(static_draw.group as u32),
+                        group_lb: low_byte(static_draw.group as u32),
                         color: static_draw.color as u32,
                     },
                 )
@@ -427,7 +427,8 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                         graphics.primitives_vertex_buffers[primitive.0].clone(),
                         (view_set.clone(), dynamic_draw_set.clone()),
                         ::graphics::shader::fs::ty::Group {
-                            group: primitive.1 as u32,
+                            group_hb: high_byte(primitive.1 as u32),
+                            group_lb: low_byte(primitive.1 as u32),
                             color: dynamic_draw.color as u32,
                         },
                     )
@@ -484,6 +485,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             let mut cmd_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
             // TODO: efficient
             // TODO: impl vertex for imgui in imgui
+            // TODO: take care of future
             let (vertex_buffer, vertex_buf_future) = ImmutableBuffer::from_iter(
                 drawlist.vtx_buffer.iter().map(|vtx| {
                     ::graphics::SecondVertexImgui::from(vtx.clone())

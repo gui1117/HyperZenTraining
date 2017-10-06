@@ -26,3 +26,11 @@ impl Direction {
         !self.orthogonal(other)
     }
 }
+
+pub fn high_byte(b: u32) -> u32 {
+    b >> 8 as u8 as u32
+}
+
+pub fn low_byte(b: u32) -> u32 {
+    b as u8 as u32
+}

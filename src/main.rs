@@ -19,9 +19,7 @@ extern crate png;
 extern crate imgui;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde;
 extern crate ron;
-extern crate shuffled_iter;
 
 mod util;
 mod graphics;

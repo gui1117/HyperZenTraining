@@ -126,7 +126,7 @@ impl<'a> Graphics<'a> {
         let queue_family = physical
             .queue_families()
             .find(|&q| {
-                q.supports_graphics() && window.surface().is_supported(q).unwrap_or(false)
+                q.supports_graphics() && q.supports_compute() && window.surface().is_supported(q).unwrap_or(false)
             })
             .expect("couldn't find a graphical queue family");
 
@@ -193,7 +193,7 @@ impl<'a> Graphics<'a> {
             AttachmentImage::with_usage(
                 device.clone(),
                 images[0].dimensions(),
-                format::Format::R16G16Uint,
+                format::Format::R8G8B8A8Uint,
                 usage,
             ).unwrap()
         };

@@ -15,7 +15,7 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
     fn attachment_desc(&self, id: usize) -> Option<LayoutAttachmentDescription> {
         match id {
             0 => Some(LayoutAttachmentDescription {
-                format: Format::R16G16Uint,
+                format: Format::R8G8B8A8Uint,
                 samples: 1,
                 load: LoadOp::Clear,
                 store: StoreOp::Store,

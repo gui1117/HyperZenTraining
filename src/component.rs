@@ -62,7 +62,6 @@ impl Shooter {
     }
 }
 
-
 impl ::specs::Component for Shooter {
     type Storage = ::specs::VecStorage<Self>;
 }

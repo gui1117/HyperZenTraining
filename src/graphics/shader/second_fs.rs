@@ -9,14 +9,17 @@ in vec4 gl_FragCoord;
 layout(location = 0) out vec4 out_color;
 
 layout(set = 0, binding = 0) uniform usampler2D tmp_image;
+// TODO: use buffer here.
 layout(set = 1, binding = 0) uniform sampler1D colors;
+
+// TODO: add eraser
 
 int thickness = 3;
 float percent_divider = 15.0;
 
 void main() {
-    uint group = texture(tmp_image, gl_FragCoord.xy).r;
-    uint color = texture(tmp_image, gl_FragCoord.xy).g;
+    uvec2 group = texture(tmp_image, gl_FragCoord.xy).rg;
+    uint color = texture(tmp_image, gl_FragCoord.xy).b;
 
     vec2 pos = vec2(float(gl_FragCoord.x), float(gl_FragCoord.y));
 
@@ -28,7 +31,7 @@ void main() {
         for (int j = -thickness; j < thickness; j++) {
             float x = gl_FragCoord.x + float(i);
             float y = gl_FragCoord.y + float(j);
-            uint other_group = texture(tmp_image, vec2(x, y)).r;
+            uvec2 other_group = texture(tmp_image, vec2(x, y)).rg;
             if (group != other_group) {
                 percent += 1;
             }
