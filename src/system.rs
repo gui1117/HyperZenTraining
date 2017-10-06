@@ -3,6 +3,7 @@ use vulkano::descriptor::descriptor_set::PersistentDescriptorSet;
 use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
 use vulkano::buffer::{ImmutableBuffer, BufferUsage};
 use vulkano::pipeline::viewport::Scissor;
+use nphysics::object::WorldObject;
 use util::Direction;
 use specs::Join;
 use alga::general::SubsetOf;
@@ -207,16 +208,47 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
     }
 }
 
+pub struct BouncerControlSystem;
+
+impl<'a> ::specs::System<'a> for BouncerControlSystem {
+    type SystemData = (::specs::ReadStorage<'a, ::component::PhysicBody>,
+     ::specs::ReadStorage<'a, ::component::Contactor>,
+     ::specs::ReadStorage<'a, ::component::Bouncer>,
+     ::specs::WriteStorage<'a, ::component::Momentum>,
+     ::specs::Fetch<'a, ::resource::PhysicWorld>);
+
+    fn run(
+        &mut self,
+        (bodies, mut contactors, mut bouncers, mut momentums, physic_world): Self::SystemData,
+    ) {
+        for (_, momentum, contactor, body) in (&bouncers, &mut momentums, &contactors, &bodies).join() {
+            if contactor.contacts.len() == 0 {
+                break;
+            }
+
+            let mut normal = ::na::Vector3::new(0.0, 0.0, 0.0);
+            for &(_, ref contact) in &contactor.contacts {
+                normal -= contact.depth * contact.normal;
+            }
+            normal.normalize_mut();
+            let proj_on_normal = momentum.direction.dot(&normal) * normal;
+            momentum.direction -= 2.0 * proj_on_normal;
+        }
+    }
+}
+
+
 pub struct PhysicSystem;
 
 impl<'a> ::specs::System<'a> for PhysicSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::Momentum>,
      ::specs::WriteStorage<'a, ::component::PhysicBody>,
+     ::specs::WriteStorage<'a, ::component::Contactor>,
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::FetchMut<'a, ::resource::PhysicWorld>);
 
-    fn run(&mut self, (player, momentums, mut bodies, config, mut physic_world): Self::SystemData) {
+    fn run(&mut self, (player, momentums, mut bodies, mut contactors, config, mut physic_world): Self::SystemData) {
         for (momentum, body) in (&momentums, &mut bodies).join() {
             let mut body = body.get_mut(&mut physic_world);
             let lin_vel = body.lin_vel();
@@ -237,7 +269,32 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
         }
         for _ in 0..2 {
+            for contactor in (&mut contactors).join() {
+                contactor.contacts.clear();
+            }
+
             physic_world.step(config.dt() / 2.);
+
+            for (co1, co2, mut contact) in physic_world.collision_world().contacts() {
+                match (&co1.data, &co2.data) {
+                    (&WorldObject::RigidBody(co1), &WorldObject::RigidBody(co2)) => {
+                        let body_1 = physic_world.rigid_body(co1);
+                        let entity_1 = ::component::PhysicBody::entity(body_1);
+                        let body_2 = physic_world.rigid_body(co2);
+                        let entity_2 = ::component::PhysicBody::entity(body_2);
+
+                        if let Some(contactor) = contactors.get_mut(entity_1) {
+                            contactor.contacts.push((entity_2, contact.clone()));
+                        }
+
+                        if let Some(contactor) = contactors.get_mut(entity_2) {
+                            contact.flip();
+                            contactor.contacts.push((entity_1, contact));
+                        }
+                    }
+                    _ => (),
+                }
+            }
         }
         for (_, body) in (&player, &mut bodies).join() {
             let mut body = body.get_mut(&mut physic_world);

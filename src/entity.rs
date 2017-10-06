@@ -31,7 +31,7 @@ pub fn create_player<'a>(
     body.set_transformation(pos);
     body.set_collision_groups(group);
     let mass = 1.0 / body.inv_mass();
-    let velocity = 5.0;
+    let velocity = 10.0;
     let time_to_reach_v_max = 0.1;
     let ang_damping = 0.0;
 
@@ -61,9 +61,9 @@ pub fn create_avoider<'a>(
     let size = 0.1;
 
     let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
-    primitive_trans[(0, 0)] = size;
-    primitive_trans[(1, 1)] = size;
-    primitive_trans[(2, 2)] = size;
+    primitive_trans[(0, 0)] = size*2.0;
+    primitive_trans[(1, 1)] = size*2.0;
+    primitive_trans[(2, 2)] = size*2.0;
 
     let shape = {
         let mut points = vec![
@@ -135,6 +135,76 @@ pub fn create_avoider<'a>(
         entity,
         primitives,
         ::graphics::color::GREEN,
+        primitive_trans,
+        dynamic_draws,
+        graphics,
+    );
+}
+
+pub fn create_bouncer<'a>(
+    pos: [f32; 2],
+    bouncers: &mut ::specs::WriteStorage<'a, ::component::Bouncer>,
+    momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
+    contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
+    bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    graphics: &::specs::Fetch<'a, ::resource::Graphics>,
+    entities: &::specs::Entities,
+) {
+    let size = 0.05;
+
+    let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
+    primitive_trans[(0, 0)] = size*2.0;
+    primitive_trans[(1, 1)] = size*2.0;
+    primitive_trans[(2, 2)] = size*2.0;
+
+    let shape = ::ncollide::shape::Ball3::new(size);
+    let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());
+
+    let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
+    group.set_membership(&[ALIVE_GROUP]);
+
+    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
+    let mass = 1.0 / body.inv_mass();
+    let velocity = 2.5;
+    let time_to_reach_v_max = 0.05;
+    let ang_damping = 0.8;
+
+    body.set_transformation(pos);
+    body.set_collision_groups(group);
+
+    let primitives = vec![
+        (
+            // TODO: motif random
+            ::graphics::primitive::SPHERE,
+            ::graphics::GROUP_COUNTER.next()
+        ),
+    ];
+
+    let entity = entities.create();
+    bouncers.insert(entity, ::component::Bouncer);
+    momentums.insert(
+        entity,
+        {
+            let mut momentum = ::component::Momentum::new(
+                mass,
+                velocity,
+                time_to_reach_v_max,
+                ang_damping,
+                None,
+            );
+            momentum.direction = ::na::Vector3::new_random().normalize();
+            momentum
+        },
+    );
+    contactors.insert(entity, ::component::Contactor::new());
+
+    ::component::PhysicBody::add(entity, body, bodies, physic_world);
+    ::component::DynamicDraw::add(
+        entity,
+        primitives,
+        ::graphics::color::BLUE,
         primitive_trans,
         dynamic_draws,
         graphics,

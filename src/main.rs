@@ -21,7 +21,7 @@ extern crate imgui;
 extern crate serde_derive;
 extern crate serde;
 extern crate ron;
-
+extern crate shuffled_iter;
 
 mod util;
 mod graphics;
@@ -31,6 +31,7 @@ mod system;
 mod resource;
 mod maze;
 mod config;
+mod testing;
 
 use vulkano_win::VkSurfaceBuild;
 
@@ -42,6 +43,8 @@ use vulkano::instance::Instance;
 use winit::{WindowEvent, Event};
 
 use std::sync::Arc;
+
+pub use testing::TS;
 
 fn main() {
     let instance = {
@@ -81,7 +84,9 @@ fn main() {
     world.register::<::component::PhysicBody>();
     world.register::<::component::Momentum>();
     world.register::<::component::Avoider>();
+    world.register::<::component::Bouncer>();
     world.register::<::component::Life>();
+    world.register::<::component::Contactor>();
     world.add_resource(graphics.data.clone());
     world.add_resource(imgui);
     world.add_resource(config);
@@ -109,6 +114,17 @@ fn main() {
             &world.read_resource(),
             &world.read_resource(),
         );
+        ::entity::create_bouncer(
+            [3.5, 1.5],
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write_resource(),
+            &world.read_resource(),
+            &world.read_resource(),
+        );
         ::entity::create_player(
             [1.5, 1.5],
             &mut world.write(),
@@ -126,6 +142,7 @@ fn main() {
     let mut update_dispatcher = ::specs::DispatcherBuilder::new()
         .add(::system::PlayerControlSystem::new(), "player_control", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
+        .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::ShootSystem, "shoot", &[])
         .add(::system::PhysicSystem, "physic_system", &[])
         .build();

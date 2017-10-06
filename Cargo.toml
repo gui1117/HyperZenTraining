@@ -12,7 +12,7 @@ fps_clock = "2"
 nalgebra = "0.13"
 ncollide = { git = "https://github.com/thiolliere/ncollide/", branch = "send_sync_master" }
 nphysics3d = { git = "https://github.com/thiolliere/nphysics/", branch = "send_sync_master" }
-specs = "0.9"
+specs = "0.10"
 alga = "0.5"
 rand = "0.3"
 lazy_static = "0.2"
@@ -22,3 +22,4 @@ imgui = "0.0.15"
 ron = "0.1"
 serde_derive = "1.0"
 serde = "1.0"
+shuffled-iter = "0.2"

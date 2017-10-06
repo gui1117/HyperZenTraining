@@ -7,6 +7,7 @@ use vulkano::framebuffer::RenderPass;
 use graphics::{shader, Vertex, render_pass};
 
 use std::sync::Arc;
+use std::any::Any;
 
 pub struct Life(pub i32);
 
@@ -64,6 +65,13 @@ impl Shooter {
 
 impl ::specs::Component for Shooter {
     type Storage = ::specs::VecStorage<Self>;
+}
+
+#[derive(Default)]
+pub struct Bouncer;
+
+impl ::specs::Component for Bouncer {
+    type Storage = ::specs::NullStorage<Self>;
 }
 
 pub struct Avoider {
@@ -238,6 +246,12 @@ impl ::specs::Component for PhysicBody {
 }
 
 impl PhysicBody {
+    pub fn entity(body: &::nphysics::object::RigidBody<f32>) -> ::specs::Entity {
+
+        let entity = body.user_data().unwrap();
+        let entity = unsafe { ::std::mem::transmute::<&Box<_>, &Box<Any>>(entity) };
+        entity.downcast_ref::<::specs::Entity>().unwrap().clone()
+    }
     pub fn add<'a>(
         entity: ::specs::Entity,
         mut body: ::nphysics::object::RigidBody<f32>,
@@ -263,5 +277,23 @@ impl PhysicBody {
         physic_world: &'a mut ::resource::PhysicWorld,
     ) -> &'a mut ::nphysics::object::RigidBody<f32> {
         physic_world.mut_rigid_body(self.0)
+    }
+}
+
+pub type Contact = ::ncollide::query::Contact<::na::Point3<f32>>;
+
+pub struct Contactor {
+    pub contacts: Vec<(::specs::Entity, Contact)>,
+}
+
+impl ::specs::Component for Contactor {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl Contactor {
+    pub fn new() -> Self {
+        Contactor {
+            contacts: vec!(),
+        }
     }
 }
