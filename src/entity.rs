@@ -61,9 +61,9 @@ pub fn create_avoider<'a>(
     let size = 0.1;
 
     let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
-    primitive_trans[(0, 0)] = size*2.0;
-    primitive_trans[(1, 1)] = size*2.0;
-    primitive_trans[(2, 2)] = size*2.0;
+    primitive_trans[(0, 0)] = size * 2.0;
+    primitive_trans[(1, 1)] = size * 2.0;
+    primitive_trans[(2, 2)] = size * 2.0;
 
     let shape = {
         let mut points = vec![
@@ -155,9 +155,9 @@ pub fn create_bouncer<'a>(
     let size = 0.05;
 
     let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
-    primitive_trans[(0, 0)] = size*2.0;
-    primitive_trans[(1, 1)] = size*2.0;
-    primitive_trans[(2, 2)] = size*2.0;
+    primitive_trans[(0, 0)] = size * 2.0;
+    primitive_trans[(1, 1)] = size * 2.0;
+    primitive_trans[(2, 2)] = size * 2.0;
 
     let shape = ::ncollide::shape::Ball3::new(size);
     let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());
@@ -184,20 +184,12 @@ pub fn create_bouncer<'a>(
 
     let entity = entities.create();
     bouncers.insert(entity, ::component::Bouncer);
-    momentums.insert(
-        entity,
-        {
-            let mut momentum = ::component::Momentum::new(
-                mass,
-                velocity,
-                time_to_reach_v_max,
-                ang_damping,
-                None,
-            );
-            momentum.direction = ::na::Vector3::new_random().normalize();
-            momentum
-        },
-    );
+    momentums.insert(entity, {
+        let mut momentum =
+            ::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, None);
+        momentum.direction = ::na::Vector3::new_random().normalize();
+        momentum
+    });
     contactors.insert(entity, ::component::Contactor::new());
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
@@ -301,8 +293,24 @@ pub fn create_maze_walls<'a>(
     maze: &::specs::Fetch<'a, ::resource::Maze>,
     entities: &::specs::Entities,
 ) {
-    create_floor_ceil(0.0, true, bodies, static_draws, physic_world, graphics, entities);
-    create_floor_ceil(1.0, false, bodies, static_draws, physic_world, graphics, entities);
+    create_floor_ceil(
+        0.0,
+        true,
+        bodies,
+        static_draws,
+        physic_world,
+        graphics,
+        entities,
+    );
+    create_floor_ceil(
+        1.0,
+        false,
+        bodies,
+        static_draws,
+        physic_world,
+        graphics,
+        entities,
+    );
 
     // TODO: refactor
     let size = {

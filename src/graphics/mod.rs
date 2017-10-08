@@ -10,8 +10,8 @@ use vulkano::pipeline::vertex::SingleBufferDefinition;
 use vulkano::pipeline::viewport::Viewport;
 use vulkano::descriptor::PipelineLayoutAbstract;
 use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetImg,
-                                          PersistentDescriptorSetSampler, PersistentDescriptorSetBuf,
-                                          FixedSizeDescriptorSetsPool};
+                                          PersistentDescriptorSetSampler,
+                                          PersistentDescriptorSetBuf, FixedSizeDescriptorSetsPool};
 use vulkano::instance::PhysicalDevice;
 use vulkano::format;
 use vulkano::sync::GpuFuture;
@@ -130,7 +130,8 @@ impl<'a> Graphics<'a> {
         let queue_family = physical
             .queue_families()
             .find(|&q| {
-                q.supports_graphics() && q.supports_compute() && window.surface().is_supported(q).unwrap_or(false)
+                q.supports_graphics() && q.supports_compute() &&
+                    window.surface().is_supported(q).unwrap_or(false)
             })
             .expect("couldn't find a graphical queue family");
 

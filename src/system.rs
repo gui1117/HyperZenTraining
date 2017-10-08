@@ -63,8 +63,10 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                 Event::WindowEvent {
                     event: WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
                 } => {
-                    self.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) * config.mouse_sensibility;
-                    self.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) * config.mouse_sensibility;
+                    self.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) *
+                        config.mouse_sensibility;
+                    self.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) *
+                        config.mouse_sensibility;
                     self.pointer[1] = self.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
                         -::std::f32::consts::FRAC_PI_2,
                     );
@@ -216,10 +218,7 @@ impl<'a> ::specs::System<'a> for BouncerControlSystem {
      ::specs::ReadStorage<'a, ::component::Bouncer>,
      ::specs::WriteStorage<'a, ::component::Momentum>);
 
-    fn run(
-        &mut self,
-        (contactors, bouncers, mut momentums): Self::SystemData,
-    ) {
+    fn run(&mut self, (contactors, bouncers, mut momentums): Self::SystemData) {
         for (_, momentum, contactor) in (&bouncers, &mut momentums, &contactors).join() {
             if contactor.contacts.len() == 0 {
                 break;
@@ -247,7 +246,10 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::FetchMut<'a, ::resource::PhysicWorld>);
 
-    fn run(&mut self, (player, momentums, mut bodies, mut contactors, config, mut physic_world): Self::SystemData) {
+    fn run(
+        &mut self,
+        (player, momentums, mut bodies, mut contactors, config, mut physic_world): Self::SystemData,
+    ) {
         for (momentum, body) in (&momentums, &mut bodies).join() {
             let body = body.get_mut(&mut physic_world);
             let lin_vel = body.lin_vel();
@@ -369,11 +371,14 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         };
 
         // Compute view set
-        let view_set = Arc::new(graphics.view_set_pool.next()
-            .add_buffer(view_uniform_buffer_subbuffer)
-            .unwrap()
-            .build()
-            .unwrap()
+        let view_set = Arc::new(
+            graphics
+                .view_set_pool
+                .next()
+                .add_buffer(view_uniform_buffer_subbuffer)
+                .unwrap()
+                .build()
+                .unwrap(),
         );
 
         // Compute command
@@ -409,11 +414,14 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 .next(dynamic_draw.world_trans)
                 .unwrap();
 
-            let dynamic_draw_set = Arc::new(graphics.dynamic_set_pool.next()
-                .add_buffer(world_trans_subbuffer)
-                .unwrap()
-                .build()
-                .unwrap()
+            let dynamic_draw_set = Arc::new(
+                graphics
+                    .dynamic_set_pool
+                    .next()
+                    .add_buffer(world_trans_subbuffer)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
             );
 
             // TODO: have only one draw call with group offset and things
@@ -516,11 +524,14 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 graphics.queue.clone(),
             ).unwrap();
 
-            let matrix_set = Arc::new(graphics.imgui_set_pool.next()
-                .add_buffer(matrix)
-                .unwrap()
-                .build()
-                .unwrap()
+            let matrix_set = Arc::new(
+                graphics
+                    .imgui_set_pool
+                    .next()
+                    .add_buffer(matrix)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
             );
 
             for cmd in drawlist.cmd_buffer {

@@ -175,23 +175,23 @@ pub fn instance_primitives(
         for p in indices {
             vertices.push(Vertex {
                 position: [
-                    sphere.coords[p.x as usize][0]*2.0,
-                    sphere.coords[p.x as usize][1]*2.0,
-                    sphere.coords[p.x as usize][2]*2.0,
+                    sphere.coords[p.x as usize][0] * 2.0,
+                    sphere.coords[p.x as usize][1] * 2.0,
+                    sphere.coords[p.x as usize][2] * 2.0,
                 ],
             });
             vertices.push(Vertex {
                 position: [
-                    sphere.coords[p.y as usize][0]*2.0,
-                    sphere.coords[p.y as usize][1]*2.0,
-                    sphere.coords[p.y as usize][2]*2.0,
+                    sphere.coords[p.y as usize][0] * 2.0,
+                    sphere.coords[p.y as usize][1] * 2.0,
+                    sphere.coords[p.y as usize][2] * 2.0,
                 ],
             });
             vertices.push(Vertex {
                 position: [
-                    sphere.coords[p.z as usize][0]*2.0,
-                    sphere.coords[p.z as usize][1]*2.0,
-                    sphere.coords[p.z as usize][2]*2.0,
+                    sphere.coords[p.z as usize][0] * 2.0,
+                    sphere.coords[p.z as usize][1] * 2.0,
+                    sphere.coords[p.z as usize][2] * 2.0,
                 ],
             });
         }
@@ -220,13 +220,20 @@ pub fn instance_primitives(
     ).expect("failed to create buffer");
 
     let (sphere_2, sphere_2_future) = ImmutableBuffer::from_iter(
-        sphere_vertices.iter().skip(strip).take(sphere_vertices_len - 2 * strip).cloned(),
+        sphere_vertices
+            .iter()
+            .skip(strip)
+            .take(sphere_vertices_len - 2 * strip)
+            .cloned(),
         BufferUsage::vertex_buffer(),
         queue.clone(),
     ).expect("failed to create buffer");
 
     let (sphere_3, sphere_3_future) = ImmutableBuffer::from_iter(
-        sphere_vertices.iter().skip(sphere_vertices_len-strip).cloned(),
+        sphere_vertices
+            .iter()
+            .skip(sphere_vertices_len - strip)
+            .cloned(),
         BufferUsage::vertex_buffer(),
         queue.clone(),
     ).expect("failed to create buffer");

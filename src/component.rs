@@ -291,8 +291,6 @@ impl ::specs::Component for Contactor {
 
 impl Contactor {
     pub fn new() -> Self {
-        Contactor {
-            contacts: vec!(),
-        }
+        Contactor { contacts: vec![] }
     }
 }
