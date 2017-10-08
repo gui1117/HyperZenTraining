@@ -244,7 +244,7 @@ impl<'a> Graphics<'a> {
             reader.next_frame(&mut buf).unwrap();
 
             ImmutableImage::from_iter(
-                buf.iter().cloned(),
+                buf.into_iter(),
                 Dimensions::Dim2d {
                     width: info.width,
                     height: info.height,
