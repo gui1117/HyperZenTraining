@@ -452,7 +452,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 graphics.second_pipeline.clone(),
                 DynamicState::none(),
                 graphics.fullscreen_vertex_buffer.clone(),
-                (graphics.tmp_image_set.clone(), graphics.colors_texture_set.clone()),
+                (graphics.tmp_image_set.clone(), graphics.colors_buffer_set.clone()),
                 ()
             )
             .unwrap()

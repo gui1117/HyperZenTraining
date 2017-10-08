@@ -1,3 +1,4 @@
+// TODO use descriptor pool for bufferpool
 use vulkano::device::{Device, Queue, DeviceExtensions};
 use vulkano::swapchain::{self, Swapchain};
 use vulkano::sampler::{Sampler, Filter, SamplerAddressMode, MipmapMode,
@@ -10,7 +11,7 @@ use vulkano::pipeline::vertex::SingleBufferDefinition;
 use vulkano::pipeline::viewport::Viewport;
 use vulkano::descriptor::PipelineLayoutAbstract;
 use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetImg,
-                                          PersistentDescriptorSetSampler};
+                                          PersistentDescriptorSetSampler, PersistentDescriptorSetBuf};
 use vulkano::instance::PhysicalDevice;
 use vulkano::format;
 use vulkano::sync::GpuFuture;
@@ -105,8 +106,8 @@ pub struct Data {
     pub width: u32,
     pub height: u32,
     pub view_uniform_buffer: CpuBufferPool<::graphics::shader::vs::ty::View>,
-    pub tmp_image_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
-    pub colors_texture_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
+    pub tmp_image_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
+    pub colors_buffer_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, ((), PersistentDescriptorSetBuf<Arc<ImmutableBuffer<[[f32; 4]]>>>)>>,
     pub cursor_texture_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Srgb>>>), PersistentDescriptorSetSampler)>>,
     pub imgui_texture_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
 }
@@ -425,28 +426,20 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let (colors_texture, mut colors_tex_future) = {
+        let (colors_buffer, mut colors_buf_future) = {
             let colors = colors::colors();
-            ImmutableImage::from_iter(
-                colors.iter().cloned(),
-                Dimensions::Dim1d { width: colors.len() as u32 },
-                format::R8G8B8A8Unorm,
+            ImmutableBuffer::from_iter(
+                colors.into_iter(),
+                // TODO: not all buffer usage
+                BufferUsage::all(),
                 queue.clone(),
             ).unwrap()
         };
 
-        let colors_texture_set = {
+        let colors_buffer_set = {
             Arc::new(
                 PersistentDescriptorSet::start(second_pipeline.clone(), 1)
-                    .add_sampled_image(
-                        colors_texture,
-                        Sampler::unnormalized(
-                            device.clone(),
-                            Filter::Nearest,
-                            UnnormalizedSamplerAddressMode::ClampToEdge,
-                            UnnormalizedSamplerAddressMode::ClampToEdge,
-                        ).unwrap(),
-                    )
+                    .add_buffer(colors_buffer)
                     .unwrap()
                     .build()
                     .unwrap(),
@@ -497,7 +490,7 @@ impl<'a> Graphics<'a> {
         // TODO: also is it supposed to be used that way ?
         //       it should be flush
         cursor_tex_future.cleanup_finished();
-        colors_tex_future.cleanup_finished();
+        colors_buf_future.cleanup_finished();
         imgui_tex_future.cleanup_finished();
         fullscreen_vertex_buffer_future.cleanup_finished();
         cursor_vertex_buffer_future.cleanup_finished();
@@ -530,7 +523,7 @@ impl<'a> Graphics<'a> {
                 second_pipeline_cursor,
                 second_pipeline_imgui,
                 cursor_vertex_buffer,
-                colors_texture_set,
+                colors_buffer_set,
                 imgui_texture_set,
             },
         }

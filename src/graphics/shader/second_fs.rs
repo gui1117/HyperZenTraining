@@ -9,8 +9,9 @@ in vec4 gl_FragCoord;
 layout(location = 0) out vec4 out_color;
 
 layout(set = 0, binding = 0) uniform usampler2D tmp_image;
-// TODO: use buffer here.
-layout(set = 1, binding = 0) uniform sampler1D colors;
+layout(set = 1, binding = 0) buffer Colors {
+    vec4 data[];
+} colors;
 
 // TODO: add eraser
 
@@ -23,7 +24,7 @@ void main() {
 
     vec2 pos = vec2(float(gl_FragCoord.x), float(gl_FragCoord.y));
 
-    out_color = texture(colors, color);
+    out_color = colors.data[color];
 
     uint percent = 0;
 
