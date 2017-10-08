@@ -320,11 +320,11 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::ReadStorage<'a, ::component::Aim>,
      ::specs::FetchMut<'a, ::resource::Rendering>,
      ::specs::FetchMut<'a, ::resource::ImGui>,
+     ::specs::FetchMut<'a, ::resource::Graphics>,
      ::specs::Fetch<'a, ::resource::Config>,
-     ::specs::Fetch<'a, ::resource::PhysicWorld>,
-     ::specs::Fetch<'a, ::resource::Graphics>);
+     ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rendering, mut imgui, config, physic_world, graphics): Self::SystemData){
+fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData){
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
             let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
@@ -369,12 +369,11 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         };
 
         // Compute view set
-        let view_set = Arc::new(
-            PersistentDescriptorSet::start(graphics.pipeline.clone(), 0)
-                .add_buffer(view_uniform_buffer_subbuffer)
-                .unwrap()
-                .build()
-                .unwrap(),
+        let view_set = Arc::new(graphics.view_set_pool.next()
+            .add_buffer(view_uniform_buffer_subbuffer)
+            .unwrap()
+            .build()
+            .unwrap()
         );
 
         // Compute command
@@ -410,12 +409,11 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 .next(dynamic_draw.world_trans)
                 .unwrap();
 
-            let dynamic_draw_set = Arc::new(
-                PersistentDescriptorSet::start(graphics.pipeline.clone(), 0)
-                    .add_buffer(world_trans_subbuffer)
-                    .unwrap()
-                    .build()
-                    .unwrap(),
+            let dynamic_draw_set = Arc::new(graphics.dynamic_set_pool.next()
+                .add_buffer(world_trans_subbuffer)
+                .unwrap()
+                .build()
+                .unwrap()
             );
 
             // TODO: have only one draw call with group offset and things
@@ -518,14 +516,12 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 graphics.queue.clone(),
             ).unwrap();
 
-            let matrix_set =
-                Arc::new(
-                    PersistentDescriptorSet::start(graphics.second_pipeline_imgui.clone(), 0)
-                        .add_buffer(matrix)
-                        .unwrap()
-                        .build()
-                        .unwrap(),
-                );
+            let matrix_set = Arc::new(graphics.imgui_set_pool.next()
+                .add_buffer(matrix)
+                .unwrap()
+                .build()
+                .unwrap()
+            );
 
             for cmd in drawlist.cmd_buffer {
                 let dynamic_state = DynamicState {

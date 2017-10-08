@@ -1,4 +1,3 @@
-// TODO use descriptor pool for bufferpool
 use vulkano::device::{Device, Queue, DeviceExtensions};
 use vulkano::swapchain::{self, Swapchain};
 use vulkano::sampler::{Sampler, Filter, SamplerAddressMode, MipmapMode,
@@ -11,7 +10,8 @@ use vulkano::pipeline::vertex::SingleBufferDefinition;
 use vulkano::pipeline::viewport::Viewport;
 use vulkano::descriptor::PipelineLayoutAbstract;
 use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetImg,
-                                          PersistentDescriptorSetSampler, PersistentDescriptorSetBuf};
+                                          PersistentDescriptorSetSampler, PersistentDescriptorSetBuf,
+                                          FixedSizeDescriptorSetsPool};
 use vulkano::instance::PhysicalDevice;
 use vulkano::format;
 use vulkano::sync::GpuFuture;
@@ -110,6 +110,9 @@ pub struct Data {
     pub colors_buffer_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, ((), PersistentDescriptorSetBuf<Arc<ImmutableBuffer<[[f32; 4]]>>>)>>,
     pub cursor_texture_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Srgb>>>), PersistentDescriptorSetSampler)>>,
     pub imgui_texture_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
+    pub view_set_pool: FixedSizeDescriptorSetsPool<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>>,
+    pub dynamic_set_pool: FixedSizeDescriptorSetsPool<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>>,
+    pub imgui_set_pool: FixedSizeDescriptorSetsPool<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>>,
 }
 
 pub struct Graphics<'a> {
@@ -401,7 +404,6 @@ impl<'a> Graphics<'a> {
             BufferUsage::uniform_buffer(),
         );
 
-        // TODO: maybe use simple instead of persistent
         let tmp_image_set = Arc::new(
             PersistentDescriptorSet::start(second_pipeline.clone(), 0)
                 .add_sampled_image(
@@ -498,6 +500,10 @@ impl<'a> Graphics<'a> {
             future.cleanup_finished();
         }
 
+        let view_set_pool = FixedSizeDescriptorSetsPool::new(pipeline.clone(), 0);
+        let dynamic_set_pool = FixedSizeDescriptorSetsPool::new(pipeline.clone(), 0);
+        let imgui_set_pool = FixedSizeDescriptorSetsPool::new(second_pipeline_imgui.clone(), 0);
+
         Graphics {
             physical,
             data: Data {
@@ -525,6 +531,9 @@ impl<'a> Graphics<'a> {
                 cursor_vertex_buffer,
                 colors_buffer_set,
                 imgui_texture_set,
+                view_set_pool,
+                dynamic_set_pool,
+                imgui_set_pool,
             },
         }
     }
