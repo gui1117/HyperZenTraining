@@ -306,8 +306,8 @@ impl<'a> Graphics<'a> {
             shader::draw1_vs::Shader::load(device.clone()).expect("failed to create shader module");
         let draw1_fs =
             shader::draw1_fs::Shader::load(device.clone()).expect("failed to create shader module");
-        let draw1_eraser_fs =
-            shader::draw1_eraser_fs::Shader::load(device.clone()).expect("failed to create shader module");
+        let draw1_eraser_fs = shader::draw1_eraser_fs::Shader::load(device.clone())
+            .expect("failed to create shader module");
 
         let eraser1_cs = shader::eraser1_cs::Shader::load(device.clone()).expect(
             "failed to create shader module",

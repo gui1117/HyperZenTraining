@@ -413,7 +413,8 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         }
 
         for dynamic_draw in dynamic_draws.join() {
-            let world_trans_subbuffer = graphics.world_uniform_buffer
+            let world_trans_subbuffer = graphics
+                .world_uniform_buffer
                 .next(dynamic_draw.world_trans)
                 .unwrap();
 
@@ -444,12 +445,11 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             }
         }
 
-        command_buffer_builder = command_buffer_builder
-            .next_subpass(false)
-            .unwrap();
+        command_buffer_builder = command_buffer_builder.next_subpass(false).unwrap();
 
         for dynamic_eraser in dynamic_erasers.join() {
-            let world_trans_subbuffer = graphics.world_uniform_buffer
+            let world_trans_subbuffer = graphics
+                .world_uniform_buffer
                 .next(dynamic_eraser.world_trans)
                 .unwrap();
 
@@ -622,7 +622,10 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
      ::specs::WriteStorage<'a, ::component::DynamicEraser>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-    fn run(&mut self, (bodies, mut dynamic_draws, mut dynamic_erasers, physic_world): Self::SystemData) {
+    fn run(
+        &mut self,
+        (bodies, mut dynamic_draws, mut dynamic_erasers, physic_world): Self::SystemData,
+    ) {
         for (dynamic_draw, body) in (&mut dynamic_draws, &bodies).join() {
             let trans = body.get(&physic_world).position() * dynamic_draw.primitive_trans;
             dynamic_draw.world_trans =

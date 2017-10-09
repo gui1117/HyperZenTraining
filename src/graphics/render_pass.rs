@@ -87,22 +87,22 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
                 source_subpass: 0,
                 destination_subpass: 1,
                 source_stages: PipelineStages {
-                     late_fragment_tests: true,
-                     .. PipelineStages::none()
+                    late_fragment_tests: true,
+                    ..PipelineStages::none()
                 },
                 destination_stages: PipelineStages {
-                     early_fragment_tests: true,
-                     .. PipelineStages::none()
+                    early_fragment_tests: true,
+                    ..PipelineStages::none()
                 },
                 source_access: AccessFlagBits {
                     depth_stencil_attachment_write: true,
                     depth_stencil_attachment_read: true,
-                    .. AccessFlagBits::none()
+                    ..AccessFlagBits::none()
                 },
                 destination_access: AccessFlagBits {
                     depth_stencil_attachment_write: true,
                     depth_stencil_attachment_read: true,
-                    .. AccessFlagBits::none()
+                    ..AccessFlagBits::none()
                 },
                 by_region: true,
             }),
