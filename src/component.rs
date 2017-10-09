@@ -151,8 +151,8 @@ pub struct StaticDraw {
     pub color: u16,
     pub group: u16,
     pub primitive: usize,
-    pub uniform_buffer: Arc<CpuAccessibleBuffer<shader::vs::ty::World>>,
-    pub set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>, ((), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<shader::vs::ty::World>>>)>>,
+    pub uniform_buffer: Arc<CpuAccessibleBuffer<shader::draw1_vs::ty::World>>,
+    pub set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>, ((), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<shader::draw1_vs::ty::World>>>)>>,
 }
 
 impl ::specs::Component for StaticDraw {
@@ -165,12 +165,12 @@ impl StaticDraw {
         primitive: usize,
         group: u16,
         color: u16,
-        world_trans: ::graphics::shader::vs::ty::World,
+        world_trans: ::graphics::shader::draw1_vs::ty::World,
         static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
         graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     ) {
         let uniform_buffer =
-            ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::<::graphics::shader::vs::ty::World>::from_data(
+            ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::<::graphics::shader::draw1_vs::ty::World>::from_data(
                 graphics.device.clone(),
                 ::vulkano::buffer::BufferUsage::uniform_buffer(),
                 world_trans,
@@ -178,7 +178,7 @@ impl StaticDraw {
 
         let set = Arc::new(
             ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
-                graphics.pipeline.clone(),
+                graphics.draw1_pipeline.clone(),
                 0,
             ).add_buffer(uniform_buffer.clone())
                 .unwrap()
@@ -203,9 +203,9 @@ pub struct DynamicDraw {
     pub primitives: Vec<(usize, u16)>,
     pub color: u16,
     pub primitive_trans: ::na::Transform3<f32>,
-    pub world_trans: ::graphics::shader::vs::ty::World,
+    pub world_trans: ::graphics::shader::draw1_vs::ty::World,
     pub uniform_buffer_pool:
-        Arc<::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::vs::ty::World>>,
+        Arc<::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::draw1_vs::ty::World>>,
 }
 
 impl ::specs::Component for DynamicDraw {
@@ -231,7 +231,7 @@ impl DynamicDraw {
             uniform_buffer_pool,
             primitive_trans,
             color,
-            world_trans: ::graphics::shader::vs::ty::World { world: [[0f32; 4]; 4] },
+            world_trans: ::graphics::shader::draw1_vs::ty::World { world: [[0f32; 4]; 4] },
         };
 
         dynamic_draws.insert(entity, dynamic_draw);

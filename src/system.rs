@@ -1,5 +1,4 @@
 use winit::{Event, WindowEvent, ElementState, MouseButton};
-use vulkano::descriptor::descriptor_set::PersistentDescriptorSet;
 use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
 use vulkano::buffer::{ImmutableBuffer, BufferUsage};
 use vulkano::pipeline::viewport::Scissor;
@@ -362,7 +361,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 100.0,
             ).unwrap();
 
-            let view_uniform = ::graphics::shader::vs::ty::View {
+            let view_uniform = ::graphics::shader::draw1_vs::ty::View {
                 view: view_matrix.into(),
                 proj: proj_matrix.into(),
             };
@@ -373,7 +372,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         // Compute view set
         let view_set = Arc::new(
             graphics
-                .view_set_pool
+                .draw1_view_descriptor_set_pool
                 .next()
                 .add_buffer(view_uniform_buffer_subbuffer)
                 .unwrap()
@@ -395,11 +394,11 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         for static_draw in static_draws.join() {
             command_buffer_builder = command_buffer_builder
                 .draw(
-                    graphics.pipeline.clone(),
+                    graphics.draw1_pipeline.clone(),
                     DynamicState::none(),
                     graphics.primitives_vertex_buffers[static_draw.primitive].clone(),
                     (view_set.clone(), static_draw.set.clone()),
-                    ::graphics::shader::fs::ty::Group {
+                    ::graphics::shader::draw1_fs::ty::Group {
                         group_hb: high_byte(static_draw.group as u32),
                         group_lb: low_byte(static_draw.group as u32),
                         color: static_draw.color as u32,
@@ -416,7 +415,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
 
             let dynamic_draw_set = Arc::new(
                 graphics
-                    .dynamic_set_pool
+                    .draw1_dynamic_descriptor_set_pool
                     .next()
                     .add_buffer(world_trans_subbuffer)
                     .unwrap()
@@ -428,11 +427,11 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             for &primitive in &dynamic_draw.primitives {
                 command_buffer_builder = command_buffer_builder
                     .draw(
-                        graphics.pipeline.clone(),
+                        graphics.draw1_pipeline.clone(),
                         DynamicState::none(),
                         graphics.primitives_vertex_buffers[primitive.0].clone(),
                         (view_set.clone(), dynamic_draw_set.clone()),
-                        ::graphics::shader::fs::ty::Group {
+                        ::graphics::shader::draw1_fs::ty::Group {
                             group_hb: high_byte(primitive.1 as u32),
                             group_lb: low_byte(primitive.1 as u32),
                             color: dynamic_draw.color as u32,
@@ -442,31 +441,38 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             }
         }
 
-        rendering.command_buffer = Some(
-            command_buffer_builder
-                .end_render_pass()
-                .unwrap()
-                .build()
-                .unwrap(),
-        );
+        // TODO: do it configurable and function of dt
+        let velocity = 0.05;
+
+        command_buffer_builder = command_buffer_builder
+            .end_render_pass()
+            .unwrap()
+            .fill_buffer(graphics.tmp_erased_buffer.clone(), 0u32)
+            .unwrap()
+            .dispatch([graphics.width/64, graphics.height/64, 1], graphics.eraser1_pipeline.clone(), graphics.eraser1_descriptor_set.clone(), ())
+            .unwrap()
+            .dispatch([(::graphics::GROUP_COUNTER_SIZE/64) as u32, 1, 1], graphics.eraser2_pipeline.clone(), graphics.eraser2_descriptor_set.clone(), ())
+            .unwrap();
+
+        rendering.command_buffer = Some(command_buffer_builder.build().unwrap());
 
         // Compute second command
         let second_command_buffer_builder = AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
             .begin_render_pass(graphics.second_framebuffers[rendering.image_num.take().unwrap()].clone(), false, vec!())
             .unwrap()
             .draw(
-                graphics.second_pipeline.clone(),
+                graphics.draw2_pipeline.clone(),
                 DynamicState::none(),
                 graphics.fullscreen_vertex_buffer.clone(),
-                (graphics.tmp_image_set.clone(), graphics.colors_buffer_set.clone()),
+                graphics.draw2_descriptor_set.clone(),
                 ()
             )
             .unwrap()
             .draw(
-                graphics.second_pipeline_cursor.clone(),
+                graphics.cursor_pipeline.clone(),
                 DynamicState::none(),
                 graphics.cursor_vertex_buffer.clone(),
-                graphics.cursor_texture_set.clone(),
+                graphics.cursor_descriptor_set.clone(),
                 ()
             )
             .unwrap();
@@ -489,7 +495,6 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         let ref_cell_cmd_builder = RefCell::new(Some(second_command_buffer_builder));
         ui.render::<_, ()>(|ui, drawlist| {
             let mut cmd_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
-            // TODO: efficient
             // TODO: impl vertex for imgui in imgui
             // TODO: take care of future
             let (vertex_buffer, vertex_buf_future) = ImmutableBuffer::from_iter(
@@ -526,7 +531,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
 
             let matrix_set = Arc::new(
                 graphics
-                    .imgui_set_pool
+                    .imgui_matrix_descriptor_set_pool
                     .next()
                     .add_buffer(matrix)
                     .unwrap()
@@ -554,10 +559,10 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
 
                 cmd_builder = cmd_builder
                     .draw_indexed(
-                        graphics.second_pipeline_imgui.clone(),
+                        graphics.imgui_pipeline.clone(),
                         dynamic_state.clone(),
                         vertex_buffer.clone(), index_buffer.clone(),
-                        (matrix_set.clone(), graphics.imgui_texture_set.clone()),
+                        (matrix_set.clone(), graphics.imgui_descriptor_set.clone()),
                         ()
                     )
                     .unwrap();
@@ -589,7 +594,7 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
         for (dynamic_draw, body) in (&mut dynamic_draws, &bodies).join() {
             let trans = body.get(&physic_world).position() * dynamic_draw.primitive_trans;
             dynamic_draw.world_trans =
-                ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
+                ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
         }
     }
 }

@@ -224,7 +224,7 @@ pub fn create_wall_side<'a>(
         dim_trans[(0, 0)] = x_radius;
         dim_trans[(1, 1)] = y_radius;
         let trans = pos_trans * dim_trans;
-        ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
+        ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
     };
 
     let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(x_radius, y_radius, 0.0));
@@ -262,7 +262,7 @@ pub fn create_floor_ceil<'a>(
     let world_trans = {
         let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 40.0)
             .to_superset();
-        ::graphics::shader::vs::ty::World { world: trans.unwrap().into() }
+        ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
     };
 
     let orientation = if floor { 1f32 } else { -1f32 };
