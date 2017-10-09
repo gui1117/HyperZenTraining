@@ -192,7 +192,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                     if avoid_norm > 0.5 {
                         (avoid_direction, 0f32)
                     } else {
-                        // TODO: COEFFICENT ??
+                        // TODO: coefficent
                         (avoid_direction, 1f32) //1.0/avoid_norm)
                     }
                 } else {
@@ -200,6 +200,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                     (
                         (random - random.dot(&player_aim.dir) * player_aim.dir).normalize(),
                         1f32,
+                        // TODO: coefficient
                     ) //1000f32)
                 }
             };
@@ -253,6 +254,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             let body = body.get_mut(&mut physic_world);
             let lin_vel = body.lin_vel();
             let ang_vel = body.ang_vel();
+
             // TODO: use integrator to modify rigidbody
             body.clear_forces();
             body.append_lin_force(-momentum.damping * lin_vel);
@@ -326,7 +328,9 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData){
+    fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData) {
+        let mut future = Vec::new();
+
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
             let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
@@ -423,7 +427,6 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, bodies, players
                     .unwrap(),
             );
 
-            // TODO: have only one draw call with group offset and things
             for &primitive in &dynamic_draw.primitives {
                 command_buffer_builder = command_buffer_builder
                     .draw(
@@ -519,12 +522,11 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, bodies, players
                 ui.text(im_str!("This...is...imgui-rs!"));
             });
 
-        // TODO: maybe change imgui so that it use an iterator instead of a callback
+        // TODO: change imgui so that it use an iterator instead of a callback
         let ref_cell_cmd_builder = RefCell::new(Some(second_command_buffer_builder));
         ui.render::<_, ()>(|ui, drawlist| {
             let mut cmd_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
             // TODO: impl vertex for imgui in imgui
-            // TODO: take care of future
             let (vertex_buffer, vertex_buf_future) = ImmutableBuffer::from_iter(
                 drawlist.vtx_buffer.iter().map(|vtx| {
                     ::graphics::SecondVertexImgui::from(vtx.clone())
@@ -532,18 +534,18 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, bodies, players
                 BufferUsage::vertex_buffer(),
                 graphics.queue.clone(),
             ).unwrap();
+            future.push(vertex_buf_future);
 
             let (index_buffer, index_buf_future) = ImmutableBuffer::from_iter(
                 drawlist.idx_buffer.iter().cloned(),
                 BufferUsage::index_buffer(),
                 graphics.queue.clone(),
             ).unwrap();
+            future.push(index_buf_future);
 
             let (width, height) = ui.imgui().display_size();
             let (scale_width, scale_height) = ui.imgui().display_framebuffer_scale();
 
-            // TODO: it in cpu_pool and put the set in imgui_texture_set with rename or just
-            //       another set
             let matrix = [
                 [2.0 / width as f32, 0.0, 0.0, 0.0],
                 [0.0, 2.0 / -(height as f32), 0.0, 0.0],
@@ -556,6 +558,7 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, bodies, players
                 BufferUsage::uniform_buffer(),
                 graphics.queue.clone(),
             ).unwrap();
+            future.push(matrix_future);
 
             let matrix_set = Arc::new(
                 graphics
@@ -647,18 +650,18 @@ impl<'a> ::specs::System<'a> for ShootSystem {
 
     fn run(
         &mut self,
-        (bodies, aims, mut shooters, mut lifes, physic_world, config): Self::SystemData,
+        (bodies, aims, mut shooters, mut _lifes, physic_world, config): Self::SystemData,
     ) {
         for (aim, body, shooter) in (&aims, &bodies, &mut shooters).join() {
             let body_pos = body.get(&physic_world).position().clone();
             shooter.reload(config.dt());
 
-            let ray = ::ncollide::query::Ray {
+            let _ray = ::ncollide::query::Ray {
                 origin: ::na::Point3::from_coordinates(body_pos.translation.vector),
                 dir: aim.dir,
             };
 
-            let group = ::ncollide::world::CollisionGroups::new();
+            let _group = ::ncollide::world::CollisionGroups::new();
 
             if shooter.do_shoot() {
                 // for (entity, _body, _collision) in physic_world.collision_world().interferences_with_ray(&ray, &group) {

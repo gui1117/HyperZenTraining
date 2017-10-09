@@ -67,7 +67,6 @@ pub struct SecondVertex {
 }
 impl_vertex!(SecondVertex, position);
 
-// TODO: impl this in imgui as for glium and gfx
 #[derive(Debug, Clone)]
 pub struct SecondVertexImgui {
     pos: [f32; 2],
@@ -89,7 +88,6 @@ impl From<::imgui::ImDrawVert> for SecondVertexImgui {
     }
 }
 
-// TODO rename _set to descriptor_set
 #[derive(Clone)]
 pub struct Data {
     pub device: Arc<Device>,
@@ -127,7 +125,7 @@ pub struct Data {
     pub draw1_dynamic_descriptor_set_pool: FixedSizeDescriptorSetsPool<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>>,
     pub imgui_matrix_descriptor_set_pool: FixedSizeDescriptorSetsPool<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>>,
 
-    pub cursor_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Srgb>>>), PersistentDescriptorSetSampler)>>,
+    pub cursor_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
     pub imgui_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
     pub eraser1_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, ((((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 65536]>>>)>>,
     pub eraser2_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser2_cs::Layout>>>, (((), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 65536]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[f32; 65536]>>>)>>,
@@ -282,8 +280,7 @@ impl<'a> Graphics<'a> {
                     width: info.width,
                     height: info.height,
                 },
-                // TODO: Srgb or Unorm ?
-                format::R8G8B8A8Srgb,
+                format::R8G8B8A8Unorm,
                 queue.clone(),
             ).unwrap()
         };
@@ -359,7 +356,7 @@ impl<'a> Graphics<'a> {
                 }))
                 .fragment_shader(draw1_fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
-                .sample_shading_enabled(1.0) // TODO: remove it ?
+                .sample_shading_enabled(1.0)
                 .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
                 .build(device.clone())
                 .unwrap(),
@@ -376,7 +373,7 @@ impl<'a> Graphics<'a> {
                 }))
                 .fragment_shader(draw1_eraser_fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
-                .sample_shading_enabled(1.0) // TODO: remove it ?
+                .sample_shading_enabled(1.0)
                 .render_pass(Subpass::from(render_pass.clone(), 1).unwrap())
                 .build(device.clone())
                 .unwrap(),
@@ -413,7 +410,6 @@ impl<'a> Graphics<'a> {
                 .vertex_shader(cursor_vs.main_entry_point(), ())
                 .triangle_list()
                 .viewports(iter::once(Viewport {
-                    // TODO this is wrong maybe minus dimensiosn ?
                     origin: [
                         (width - cursor_tex_dim.width() * 2) as f32 / 2.0,
                         (height - cursor_tex_dim.height() * 2) as f32 / 2.0,
@@ -501,7 +497,6 @@ impl<'a> Graphics<'a> {
                         width: handle.width,
                         height: handle.height,
                     },
-                    // TODO: unorm or srgb ?
                     format::R8G8B8A8Unorm,
                     queue.clone(),
                 )

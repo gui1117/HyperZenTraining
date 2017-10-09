@@ -7,7 +7,6 @@ const DIM2_GROUP: usize = 3;
 
 const ALIVE_GROUP: usize = 4;
 
-// TODO: use usize instead of f32
 pub fn create_player<'a>(
     pos: [f32; 2],
     players: &mut ::specs::WriteStorage<'a, ::component::Player>,
@@ -308,7 +307,6 @@ pub fn create_maze_walls<'a>(
         entities,
     );
 
-    // TODO: refactor
     let size = {
         assert_eq!(maze.height, maze.width);
         maze.height
