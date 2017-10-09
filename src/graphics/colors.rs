@@ -15,13 +15,15 @@ pub fn colors() -> Vec<[f32; 4]> {
         [0xc7, 0x5f, 0x7a, 0xff],
         [0xe2, 0xc5, 0xc9, 0xff],
         [0x97, 0x5d, 0xb2, 0xff],
-    ].into_iter().map(|color| {
-        let mut out_color = [0f32; 4];
-        for i in 0..4 {
-            out_color[i] = color[i] as f32 / 255.0;
-        }
-        out_color
-    }).collect()
+    ].into_iter()
+        .map(|color| {
+            let mut out_color = [0f32; 4];
+            for i in 0..4 {
+                out_color[i] = color[i] as f32 / 255.0;
+            }
+            out_color
+        })
+        .collect()
 }
 
 #[allow(unused)]

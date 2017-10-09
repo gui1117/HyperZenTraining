@@ -4,7 +4,8 @@ use vulkano::sampler::{Sampler, Filter, SamplerAddressMode, MipmapMode,
                        UnnormalizedSamplerAddressMode};
 use vulkano::image::{SwapchainImage, AttachmentImage, ImmutableImage, ImageUsage, Dimensions};
 // TODO: replace CpuAccessible by something else ?
-use vulkano::buffer::{CpuAccessibleBuffer, ImmutableBuffer, CpuBufferPool, BufferUsage, DeviceLocalBuffer};
+use vulkano::buffer::{CpuAccessibleBuffer, ImmutableBuffer, CpuBufferPool, BufferUsage,
+                      DeviceLocalBuffer};
 use vulkano::framebuffer::{RenderPassDesc, RenderPass, Framebuffer, Subpass};
 use vulkano::pipeline::{GraphicsPipeline, ComputePipeline};
 use vulkano::pipeline::vertex::SingleBufferDefinition;
@@ -287,28 +288,34 @@ impl<'a> Graphics<'a> {
 
         let cursor_tex_dim = cursor_texture.dimensions();
 
-        let draw1_vs = shader::draw1_vs::Shader::load(device.clone()).expect("failed to create shader module");
-        let draw1_fs = shader::draw1_fs::Shader::load(device.clone()).expect("failed to create shader module");
+        let draw1_vs =
+            shader::draw1_vs::Shader::load(device.clone()).expect("failed to create shader module");
+        let draw1_fs =
+            shader::draw1_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
-        let eraser1_cs = shader::eraser1_cs::Shader::load(device.clone()).expect("failed to create shader module");
-        let eraser2_cs = shader::eraser2_cs::Shader::load(device.clone()).expect("failed to create shader module");
-
-        let draw2_vs = shader::draw2_vs::Shader::load(device.clone()).expect(
+        let eraser1_cs = shader::eraser1_cs::Shader::load(device.clone()).expect(
             "failed to create shader module",
         );
-        let draw2_fs = shader::draw2_fs::Shader::load(device.clone()).expect(
+        let eraser2_cs = shader::eraser2_cs::Shader::load(device.clone()).expect(
             "failed to create shader module",
         );
 
-        let cursor_vs = shader::cursor_vs::Shader::load(device.clone())
-            .expect("failed to create shader module");
-        let cursor_fs = shader::cursor_fs::Shader::load(device.clone())
-            .expect("failed to create shader module");
+        let draw2_vs =
+            shader::draw2_vs::Shader::load(device.clone()).expect("failed to create shader module");
+        let draw2_fs =
+            shader::draw2_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
-        let imgui_vs = shader::imgui_vs::Shader::load(device.clone())
-            .expect("failed to create shader module");
-        let imgui_fs = shader::imgui_fs::Shader::load(device.clone())
-            .expect("failed to create shader module");
+        let cursor_vs = shader::cursor_vs::Shader::load(device.clone()).expect(
+            "failed to create shader module",
+        );
+        let cursor_fs = shader::cursor_fs::Shader::load(device.clone()).expect(
+            "failed to create shader module",
+        );
+
+        let imgui_vs =
+            shader::imgui_vs::Shader::load(device.clone()).expect("failed to create shader module");
+        let imgui_fs =
+            shader::imgui_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
         let render_pass = Arc::new(
             render_pass::CustomRenderPassDesc
@@ -339,8 +346,14 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let eraser1_pipeline = Arc::new(ComputePipeline::new(device.clone(), &eraser1_cs.main_entry_point(), &()).unwrap());
-        let eraser2_pipeline = Arc::new(ComputePipeline::new(device.clone(), &eraser2_cs.main_entry_point(), &()).unwrap());
+        let eraser1_pipeline =
+            Arc::new(
+                ComputePipeline::new(device.clone(), &eraser1_cs.main_entry_point(), &()).unwrap(),
+            );
+        let eraser2_pipeline =
+            Arc::new(
+                ComputePipeline::new(device.clone(), &eraser2_cs.main_entry_point(), &()).unwrap(),
+            );
 
         let draw2_pipeline = Arc::new(
             GraphicsPipeline::start()
@@ -504,37 +517,52 @@ impl<'a> Graphics<'a> {
             )
         };
 
-        let draw1_view_descriptor_set_pool = FixedSizeDescriptorSetsPool::new(draw1_pipeline.clone(), 0);
-        let draw1_dynamic_descriptor_set_pool = FixedSizeDescriptorSetsPool::new(draw1_pipeline.clone(), 0);
-        let imgui_matrix_descriptor_set_pool = FixedSizeDescriptorSetsPool::new(imgui_pipeline.clone(), 0);
+        let draw1_view_descriptor_set_pool =
+            FixedSizeDescriptorSetsPool::new(draw1_pipeline.clone(), 0);
+        let draw1_dynamic_descriptor_set_pool =
+            FixedSizeDescriptorSetsPool::new(draw1_pipeline.clone(), 0);
+        let imgui_matrix_descriptor_set_pool =
+            FixedSizeDescriptorSetsPool::new(imgui_pipeline.clone(), 0);
 
         // TODO: not all buffer usage
-        let tmp_erased_buffer = DeviceLocalBuffer::<[u32; GROUP_COUNTER_SIZE]>::new(device.clone(), BufferUsage::all(), vec![queue.family()].into_iter()).unwrap();
-        let erased_buffer = CpuAccessibleBuffer::from_data(device.clone(), BufferUsage::all(), [0u32; GROUP_COUNTER_SIZE]).unwrap();
+        let tmp_erased_buffer = DeviceLocalBuffer::<[u32; GROUP_COUNTER_SIZE]>::new(
+            device.clone(),
+            BufferUsage::all(),
+            vec![queue.family()].into_iter(),
+        ).unwrap();
+        let erased_buffer = CpuAccessibleBuffer::from_data(
+            device.clone(),
+            BufferUsage::all(),
+            [0u32; GROUP_COUNTER_SIZE],
+        ).unwrap();
 
-        let eraser1_descriptor_set = Arc::new(PersistentDescriptorSet::start(eraser1_pipeline.clone(), 0)
-            .add_sampled_image(
-                tmp_image_attachment.clone(),
-                Sampler::unnormalized(
-                    device.clone(),
-                    Filter::Nearest,
-                    UnnormalizedSamplerAddressMode::ClampToEdge,
-                    UnnormalizedSamplerAddressMode::ClampToEdge,
-                ).unwrap(),
-            )
-            .unwrap()
-            .add_buffer(tmp_erased_buffer.clone())
-            .unwrap()
-            .build()
-            .unwrap());
+        let eraser1_descriptor_set = Arc::new(
+            PersistentDescriptorSet::start(eraser1_pipeline.clone(), 0)
+                .add_sampled_image(
+                    tmp_image_attachment.clone(),
+                    Sampler::unnormalized(
+                        device.clone(),
+                        Filter::Nearest,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ).unwrap(),
+                )
+                .unwrap()
+                .add_buffer(tmp_erased_buffer.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
 
-        let eraser2_descriptor_set = Arc::new(PersistentDescriptorSet::start(eraser2_pipeline.clone(), 0)
-            .add_buffer(tmp_erased_buffer.clone())
-            .unwrap()
-            .add_buffer(erased_buffer)
-            .unwrap()
-            .build()
-            .unwrap());
+        let eraser2_descriptor_set = Arc::new(
+            PersistentDescriptorSet::start(eraser2_pipeline.clone(), 0)
+                .add_buffer(tmp_erased_buffer.clone())
+                .unwrap()
+                .add_buffer(erased_buffer)
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
 
         // TODO: return this future to enforce it later ?
         // TODO: also is it supposed to be used that way ?

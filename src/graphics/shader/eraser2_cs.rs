@@ -27,6 +27,5 @@ void main() {
     } else {
         erased.data[idx] += velocity.data;
     }
-}"
-]
+}"]
 struct _Dummy;
