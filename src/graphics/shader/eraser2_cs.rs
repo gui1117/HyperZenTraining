@@ -21,11 +21,18 @@ layout(push_constant) uniform Velocity {
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
-    // TODO: max min ?
+
     if (tmp_erased.data[idx] != 0) {
         erased.data[idx] -= velocity.data;
     } else {
         erased.data[idx] += velocity.data;
+    }
+
+    if (erased.data[idx] > 1.0) {
+        erased.data[idx] = 1.0;
+    }
+    if (erased.data[idx] < 0.0) {
+        erased.data[idx] = 0.0;
     }
 }"]
 struct _Dummy;

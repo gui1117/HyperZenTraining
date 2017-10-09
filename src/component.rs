@@ -1,6 +1,7 @@
-use vulkano::buffer::cpu_access::CpuAccessibleBuffer;
+use vulkano::buffer::cpu_pool::CpuBufferPoolSubbuffer;
 use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetBuf};
 use vulkano::descriptor::PipelineLayoutAbstract;
+use vulkano::memory::pool::StdMemoryPool;
 use vulkano::pipeline::GraphicsPipeline;
 use vulkano::pipeline::vertex::SingleBufferDefinition;
 use vulkano::framebuffer::RenderPass;
@@ -151,8 +152,7 @@ pub struct StaticDraw {
     pub color: u16,
     pub group: u16,
     pub primitive: usize,
-    pub uniform_buffer: Arc<CpuAccessibleBuffer<shader::draw1_vs::ty::World>>,
-    pub set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>, ((), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<shader::draw1_vs::ty::World>>>)>>,
+    pub set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>, ((), PersistentDescriptorSetBuf<CpuBufferPoolSubbuffer<shader::draw1_vs::ty::World, Arc<StdMemoryPool>>>)>>,
 }
 
 impl ::specs::Component for StaticDraw {
@@ -169,18 +169,15 @@ impl StaticDraw {
         static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
         graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     ) {
-        let uniform_buffer =
-            ::vulkano::buffer::cpu_access::CpuAccessibleBuffer::<::graphics::shader::draw1_vs::ty::World>::from_data(
-                graphics.device.clone(),
-                ::vulkano::buffer::BufferUsage::uniform_buffer(),
-                world_trans,
-                ).expect("failed to create buffer");
+        let world_trans_subbuffer = graphics.world_uniform_buffer
+            .next(world_trans)
+            .unwrap();
 
         let set = Arc::new(
-            ::vulkano::descriptor::descriptor_set::PersistentDescriptorSet::start(
+            PersistentDescriptorSet::start(
                 graphics.draw1_pipeline.clone(),
                 0,
-            ).add_buffer(uniform_buffer.clone())
+            ).add_buffer(world_trans_subbuffer.clone())
                 .unwrap()
                 .build()
                 .unwrap(),
@@ -190,7 +187,6 @@ impl StaticDraw {
             primitive,
             color,
             group,
-            uniform_buffer,
             set,
         };
 
@@ -204,8 +200,6 @@ pub struct DynamicDraw {
     pub color: u16,
     pub primitive_trans: ::na::Transform3<f32>,
     pub world_trans: ::graphics::shader::draw1_vs::ty::World,
-    pub uniform_buffer_pool:
-        Arc<::vulkano::buffer::cpu_pool::CpuBufferPool<::graphics::shader::draw1_vs::ty::World>>,
 }
 
 impl ::specs::Component for DynamicDraw {
@@ -219,22 +213,42 @@ impl DynamicDraw {
         color: u16,
         primitive_trans: ::na::Transform3<f32>,
         dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-        graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     ) {
-        let uniform_buffer_pool = Arc::new(::vulkano::buffer::cpu_pool::CpuBufferPool::new(
-            graphics.device.clone(),
-            ::vulkano::buffer::BufferUsage::uniform_buffer(),
-        ));
-
         let dynamic_draw = DynamicDraw {
             primitives,
-            uniform_buffer_pool,
             primitive_trans,
             color,
-            world_trans: ::graphics::shader::draw1_vs::ty::World { world: [[0f32; 4]; 4] },
+            world_trans: shader::draw1_vs::ty::World { world: [[0f32; 4]; 4] },
         };
 
         dynamic_draws.insert(entity, dynamic_draw);
+    }
+}
+
+pub struct DynamicEraser {
+    pub primitive: usize,
+    pub primitive_trans: ::na::Transform3<f32>,
+    pub world_trans: ::graphics::shader::draw1_vs::ty::World,
+}
+
+impl ::specs::Component for DynamicEraser {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl DynamicEraser {
+    pub fn add<'a>(
+        entity: ::specs::Entity,
+        primitive: usize,
+        primitive_trans: ::na::Transform3<f32>,
+        dynamic_erasers: &mut ::specs::WriteStorage<'a, ::component::DynamicEraser>,
+    ) {
+        let dynamic_eraser = DynamicEraser {
+            primitive,
+            primitive_trans,
+            world_trans: shader::draw1_vs::ty::World { world: [[0f32; 4]; 4] },
+        };
+
+        dynamic_erasers.insert(entity, dynamic_eraser);
     }
 }
 

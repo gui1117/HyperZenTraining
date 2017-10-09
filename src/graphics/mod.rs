@@ -105,15 +105,18 @@ pub struct Data {
     pub cursor_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,
 
     pub view_uniform_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::View>,
+    pub world_uniform_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::World>,
     pub tmp_erased_buffer: Arc<DeviceLocalBuffer<[u32; 65536]>>,
+    pub erased_buffer: Arc<CpuAccessibleBuffer<[f32; 65536]>>,
 
     pub render_pass: Arc<RenderPass<render_pass::CustomRenderPassDesc>>,
     pub second_render_pass: Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>,
 
-    pub framebuffer: Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, (((), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
+    pub framebuffer: Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, ((((), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
     pub second_framebuffers: Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage>)>>>,
 
     pub draw1_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>,
+    pub draw1_eraser_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>,
     pub eraser1_pipeline: Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>,
     pub eraser2_pipeline: Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser2_cs::Layout>>>,
     pub draw2_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
@@ -126,9 +129,9 @@ pub struct Data {
 
     pub cursor_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Srgb>>>), PersistentDescriptorSetSampler)>>,
     pub imgui_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
-    pub eraser1_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, ((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 65536]>>>)>>,
-    pub eraser2_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser2_cs::Layout>>>, (((), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 65536]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[u32; 65536]>>>)>>,
-    pub draw2_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, ((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetBuf<Arc<ImmutableBuffer<[[f32; 4]]>>>)>>,
+    pub eraser1_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, ((((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 65536]>>>)>>,
+    pub eraser2_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser2_cs::Layout>>>, (((), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 65536]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[f32; 65536]>>>)>>,
+    pub draw2_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetBuf<Arc<ImmutableBuffer<[[f32; 4]]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[f32; 65536]>>>)>>,
 }
 
 pub struct Graphics<'a> {
@@ -219,6 +222,20 @@ impl<'a> Graphics<'a> {
             ).unwrap()
         };
 
+        let tmp_erase_image_attachment = {
+            let usage = ImageUsage {
+                color_attachment: true,
+                sampled: true,
+                ..ImageUsage::none()
+            };
+            AttachmentImage::with_usage(
+                device.clone(),
+                images[0].dimensions(),
+                format::Format::R8Uint,
+                usage,
+            ).unwrap()
+        };
+
         let (primitives_vertex_buffers, mut futures) =
             primitives::instance_primitives(queue.clone());
 
@@ -292,6 +309,8 @@ impl<'a> Graphics<'a> {
             shader::draw1_vs::Shader::load(device.clone()).expect("failed to create shader module");
         let draw1_fs =
             shader::draw1_fs::Shader::load(device.clone()).expect("failed to create shader module");
+        let draw1_eraser_fs =
+            shader::draw1_eraser_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
         let eraser1_cs = shader::eraser1_cs::Shader::load(device.clone()).expect(
             "failed to create shader module",
@@ -340,8 +359,25 @@ impl<'a> Graphics<'a> {
                 }))
                 .fragment_shader(draw1_fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
-                .sample_shading_enabled(1.0)
+                .sample_shading_enabled(1.0) // TODO: remove it ?
                 .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
+                .build(device.clone())
+                .unwrap(),
+        );
+
+        let draw1_eraser_pipeline = Arc::new(
+            GraphicsPipeline::start()
+                .vertex_input_single_buffer::<Vertex>()
+                .vertex_shader(draw1_vs.main_entry_point(), ())
+                .viewports(iter::once(Viewport {
+                    origin: [0.0, 0.0],
+                    depth_range: 0.0..1.0,
+                    dimensions: [width as f32, height as f32],
+                }))
+                .fragment_shader(draw1_eraser_fs.main_entry_point(), ())
+                .depth_stencil_simple_depth()
+                .sample_shading_enabled(1.0) // TODO: remove it ?
+                .render_pass(Subpass::from(render_pass.clone(), 1).unwrap())
                 .build(device.clone())
                 .unwrap(),
         );
@@ -416,6 +452,8 @@ impl<'a> Graphics<'a> {
             Framebuffer::start(render_pass.clone())
                 .add(tmp_image_attachment.clone())
                 .unwrap()
+                .add(tmp_erase_image_attachment.clone())
+                .unwrap()
                 .add(depth_buffer_attachment.clone())
                 .unwrap()
                 .build()
@@ -440,12 +478,9 @@ impl<'a> Graphics<'a> {
             BufferUsage::uniform_buffer(),
         );
 
-        let cursor_descriptor_set = Arc::new(
-            PersistentDescriptorSet::start(cursor_pipeline.clone(), 0)
-                .add_sampled_image(cursor_texture.clone(), cursor_sampler.clone())
-                .unwrap()
-                .build()
-                .unwrap(),
+        let world_uniform_buffer = CpuBufferPool::<::graphics::shader::draw1_vs::ty::World>::new(
+            device.clone(),
+            BufferUsage::uniform_buffer(),
         );
 
         let (colors_buffer, mut colors_buf_future) = {
@@ -457,25 +492,6 @@ impl<'a> Graphics<'a> {
                 queue.clone(),
             ).unwrap()
         };
-
-        let draw2_descriptor_set = Arc::new(
-            PersistentDescriptorSet::start(draw2_pipeline.clone(), 0)
-                .add_sampled_image(
-                    tmp_image_attachment.clone(),
-                    Sampler::unnormalized(
-                        device.clone(),
-                        Filter::Nearest,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                    ).unwrap(),
-                )
-                .unwrap()
-                .add_buffer(colors_buffer)
-                .unwrap()
-                // TODO: add erased
-                .build()
-                .unwrap(),
-        );
 
         let (imgui_texture, mut imgui_tex_future) = imgui
             .prepare_texture(|handle| {
@@ -491,6 +507,46 @@ impl<'a> Graphics<'a> {
                 )
             })
             .unwrap();
+
+        // TODO: not all buffer usage
+        let tmp_erased_buffer = DeviceLocalBuffer::<[u32; GROUP_COUNTER_SIZE]>::new(
+            device.clone(),
+            BufferUsage::all(),
+            vec![queue.family()].into_iter(),
+        ).unwrap();
+        let erased_buffer = CpuAccessibleBuffer::from_data(
+            device.clone(),
+            BufferUsage::all(),
+            [1f32; GROUP_COUNTER_SIZE],
+        ).unwrap();
+
+        let cursor_descriptor_set = Arc::new(
+            PersistentDescriptorSet::start(cursor_pipeline.clone(), 0)
+                .add_sampled_image(cursor_texture.clone(), cursor_sampler.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+
+        let draw2_descriptor_set = Arc::new(
+            PersistentDescriptorSet::start(draw2_pipeline.clone(), 0)
+                .add_sampled_image(
+                    tmp_image_attachment.clone(),
+                    Sampler::unnormalized(
+                        device.clone(),
+                        Filter::Nearest,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ).unwrap(),
+                )
+                .unwrap()
+                .add_buffer(colors_buffer.clone())
+                .unwrap()
+                .add_buffer(erased_buffer.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
 
         let imgui_descriptor_set = {
             Arc::new(
@@ -524,22 +580,21 @@ impl<'a> Graphics<'a> {
         let imgui_matrix_descriptor_set_pool =
             FixedSizeDescriptorSetsPool::new(imgui_pipeline.clone(), 0);
 
-        // TODO: not all buffer usage
-        let tmp_erased_buffer = DeviceLocalBuffer::<[u32; GROUP_COUNTER_SIZE]>::new(
-            device.clone(),
-            BufferUsage::all(),
-            vec![queue.family()].into_iter(),
-        ).unwrap();
-        let erased_buffer = CpuAccessibleBuffer::from_data(
-            device.clone(),
-            BufferUsage::all(),
-            [0u32; GROUP_COUNTER_SIZE],
-        ).unwrap();
 
         let eraser1_descriptor_set = Arc::new(
             PersistentDescriptorSet::start(eraser1_pipeline.clone(), 0)
                 .add_sampled_image(
                     tmp_image_attachment.clone(),
+                    Sampler::unnormalized(
+                        device.clone(),
+                        Filter::Nearest,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ).unwrap(),
+                )
+                .unwrap()
+                .add_sampled_image(
+                    tmp_erase_image_attachment.clone(),
                     Sampler::unnormalized(
                         device.clone(),
                         Filter::Nearest,
@@ -558,7 +613,7 @@ impl<'a> Graphics<'a> {
             PersistentDescriptorSet::start(eraser2_pipeline.clone(), 0)
                 .add_buffer(tmp_erased_buffer.clone())
                 .unwrap()
-                .add_buffer(erased_buffer)
+                .add_buffer(erased_buffer.clone())
                 .unwrap()
                 .build()
                 .unwrap(),
@@ -587,6 +642,7 @@ impl<'a> Graphics<'a> {
                 render_pass,
                 second_render_pass,
                 draw1_pipeline,
+                draw1_eraser_pipeline,
                 draw2_pipeline,
                 framebuffer,
                 second_framebuffers,
@@ -608,6 +664,8 @@ impl<'a> Graphics<'a> {
                 eraser2_descriptor_set,
                 tmp_erased_buffer,
                 draw2_descriptor_set,
+                world_uniform_buffer,
+                erased_buffer,
             },
         }
     }

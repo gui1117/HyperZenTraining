@@ -55,7 +55,6 @@ pub fn create_avoider<'a>(
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-    graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     entities: &::specs::Entities,
 ) {
     let size = 0.1;
@@ -137,7 +136,6 @@ pub fn create_avoider<'a>(
         ::graphics::color::GREEN,
         primitive_trans,
         dynamic_draws,
-        graphics,
     );
 }
 
@@ -149,7 +147,6 @@ pub fn create_bouncer<'a>(
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-    graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     entities: &::specs::Entities,
 ) {
     let size = 0.05;
@@ -199,7 +196,6 @@ pub fn create_bouncer<'a>(
         ::graphics::color::BLUE,
         primitive_trans,
         dynamic_draws,
-        graphics,
     );
 }
 

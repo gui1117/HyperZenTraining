@@ -3,12 +3,13 @@ use vulkano::framebuffer::{LoadOp, StoreOp, LayoutAttachmentDescription, LayoutP
                            RenderPassDescClearValues};
 use vulkano::image::ImageLayout;
 use vulkano::format::{Format, ClearValue};
+use vulkano::sync::{AccessFlagBits, PipelineStages};
 pub struct CustomRenderPassDesc;
 
 unsafe impl RenderPassDesc for CustomRenderPassDesc {
     #[inline]
     fn num_attachments(&self) -> usize {
-        2
+        3
     }
 
     #[inline]
@@ -25,6 +26,16 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
                 final_layout: ImageLayout::ColorAttachmentOptimal,
             }),
             1 => Some(LayoutAttachmentDescription {
+                format: Format::R8Uint,
+                samples: 1,
+                load: LoadOp::Clear,
+                store: StoreOp::Store,
+                stencil_load: LoadOp::Clear,
+                stencil_store: StoreOp::Store,
+                initial_layout: ImageLayout::Undefined,
+                final_layout: ImageLayout::ColorAttachmentOptimal,
+            }),
+            2 => Some(LayoutAttachmentDescription {
                 format: Format::D16Unorm,
                 samples: 1,
                 load: LoadOp::Clear,
@@ -40,7 +51,7 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
 
     #[inline]
     fn num_subpasses(&self) -> usize {
-        1
+        2
     }
 
     #[inline]
@@ -48,10 +59,17 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
         match id {
             0 => Some(LayoutPassDescription {
                 color_attachments: vec![(0, ImageLayout::ColorAttachmentOptimal)],
-                depth_stencil: Some((1, ImageLayout::DepthStencilAttachmentOptimal)),
+                depth_stencil: Some((2, ImageLayout::DepthStencilAttachmentOptimal)),
                 input_attachments: vec![],
                 resolve_attachments: vec![],
-                preserve_attachments: vec![],
+                preserve_attachments: vec![1],
+            }),
+            1 => Some(LayoutPassDescription {
+                color_attachments: vec![(1, ImageLayout::ColorAttachmentOptimal)],
+                depth_stencil: Some((2, ImageLayout::DepthStencilAttachmentOptimal)),
+                input_attachments: vec![],
+                resolve_attachments: vec![],
+                preserve_attachments: vec![0],
             }),
             _ => None,
         }
@@ -59,12 +77,37 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
 
     #[inline]
     fn num_dependencies(&self) -> usize {
-        0
+        1
     }
 
     #[inline]
-    fn dependency_desc(&self, _id: usize) -> Option<LayoutPassDependencyDescription> {
-        None
+    fn dependency_desc(&self, id: usize) -> Option<LayoutPassDependencyDescription> {
+        match id {
+            0 => Some(LayoutPassDependencyDescription {
+                source_subpass: 0,
+                destination_subpass: 1,
+                source_stages: PipelineStages {
+                     late_fragment_tests: true,
+                     .. PipelineStages::none()
+                },
+                destination_stages: PipelineStages {
+                     early_fragment_tests: true,
+                     .. PipelineStages::none()
+                },
+                source_access: AccessFlagBits {
+                    depth_stencil_attachment_write: true,
+                    depth_stencil_attachment_read: true,
+                    .. AccessFlagBits::none()
+                },
+                destination_access: AccessFlagBits {
+                    depth_stencil_attachment_write: true,
+                    depth_stencil_attachment_read: true,
+                    .. AccessFlagBits::none()
+                },
+                by_region: true,
+            }),
+            _ => None,
+        }
     }
 }
 

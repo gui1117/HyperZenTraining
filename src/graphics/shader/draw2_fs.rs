@@ -12,8 +12,9 @@ layout(set = 0, binding = 0) uniform usampler2D tmp_image;
 layout(set = 0, binding = 1) buffer Colors {
     vec4 data[];
 } colors;
-
-// TODO: add eraser
+layout(set = 0, binding = 2) buffer Erased {
+    float data[];
+} erased;
 
 int thickness = 3;
 float percent_divider = 15.0;
@@ -21,6 +22,7 @@ float percent_divider = 15.0;
 void main() {
     uvec2 group = texture(tmp_image, gl_FragCoord.xy).rg;
     uint color = texture(tmp_image, gl_FragCoord.xy).b;
+    uint group_index = group.r << 8 | group.g;
 
     vec2 pos = vec2(float(gl_FragCoord.x), float(gl_FragCoord.y));
 
@@ -39,7 +41,7 @@ void main() {
         }
     }
 
-    out_color = out_color * (1.0 - (float(percent) / percent_divider));
+    out_color = out_color * (1.0 - (float(percent) / percent_divider)) * erased.data[group_index];
 
     // // smallest square
     // if (group != texture(tmp_image, pos + vec2(-1.0, -1.0)).r) { out_color = out_color * 0.0; return; }

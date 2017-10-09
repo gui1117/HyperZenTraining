@@ -316,6 +316,7 @@ pub struct DrawSystem;
 impl<'a> ::specs::System<'a> for DrawSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::StaticDraw>,
      ::specs::ReadStorage<'a, ::component::DynamicDraw>,
+     ::specs::ReadStorage<'a, ::component::DynamicEraser>,
      ::specs::ReadStorage<'a, ::component::PhysicBody>,
      ::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::Aim>,
@@ -325,7 +326,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData){
+fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData){
         // Compute view uniform
         let view_uniform_buffer_subbuffer = {
             let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
@@ -387,7 +388,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
                 .begin_render_pass(
                     graphics.framebuffer.clone(),
                     false,
-                    vec![0u32.into(), 1f32.into()],
+                    vec![0u32.into(), 0u32.into(), 1f32.into()],
                 )
                 .unwrap();
 
@@ -408,8 +409,7 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
         }
 
         for dynamic_draw in dynamic_draws.join() {
-            let world_trans_subbuffer = dynamic_draw
-                .uniform_buffer_pool
+            let world_trans_subbuffer = graphics.world_uniform_buffer
                 .next(dynamic_draw.world_trans)
                 .unwrap();
 
@@ -441,8 +441,35 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             }
         }
 
-        // TODO: do it configurable and function of dt
-        let velocity = 0.05;
+        command_buffer_builder = command_buffer_builder
+            .next_subpass(false)
+            .unwrap();
+
+        for dynamic_eraser in dynamic_erasers.join() {
+            let world_trans_subbuffer = graphics.world_uniform_buffer
+                .next(dynamic_eraser.world_trans)
+                .unwrap();
+
+            let dynamic_draw_set = Arc::new(
+                graphics
+                    .draw1_dynamic_descriptor_set_pool
+                    .next()
+                    .add_buffer(world_trans_subbuffer)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
+            );
+
+            command_buffer_builder = command_buffer_builder
+                .draw(
+                    graphics.draw1_eraser_pipeline.clone(),
+                    DynamicState::none(),
+                    graphics.primitives_vertex_buffers[dynamic_eraser.primitive].clone(),
+                    (view_set.clone(), dynamic_draw_set.clone()),
+                    (),
+                )
+                .unwrap();
+        }
 
         command_buffer_builder = command_buffer_builder
             .end_render_pass()
@@ -451,7 +478,8 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
             .unwrap()
             .dispatch([graphics.width/64, graphics.height/64, 1], graphics.eraser1_pipeline.clone(), graphics.eraser1_descriptor_set.clone(), ())
             .unwrap()
-            .dispatch([(::graphics::GROUP_COUNTER_SIZE/64) as u32, 1, 1], graphics.eraser2_pipeline.clone(), graphics.eraser2_descriptor_set.clone(), ())
+            // TODO: make velocity it configurable
+            .dispatch([(::graphics::GROUP_COUNTER_SIZE/64) as u32, 1, 1], graphics.eraser2_pipeline.clone(), graphics.eraser2_descriptor_set.clone(), 6.0*config.dt())
             .unwrap();
 
         rendering.command_buffer = Some(command_buffer_builder.build().unwrap());
@@ -583,17 +611,24 @@ fn run(&mut self, (static_draws, dynamic_draws, bodies, players, aims, mut rende
     }
 }
 
-pub struct UpdateDynamicDrawSystem;
+pub struct UpdateDynamicDrawEraserSystem;
 
-impl<'a> ::specs::System<'a> for UpdateDynamicDrawSystem {
+impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::PhysicBody>,
      ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+     ::specs::WriteStorage<'a, ::component::DynamicEraser>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-    fn run(&mut self, (bodies, mut dynamic_draws, physic_world): Self::SystemData) {
+    fn run(&mut self, (bodies, mut dynamic_draws, mut dynamic_erasers, physic_world): Self::SystemData) {
         for (dynamic_draw, body) in (&mut dynamic_draws, &bodies).join() {
             let trans = body.get(&physic_world).position() * dynamic_draw.primitive_trans;
             dynamic_draw.world_trans =
+                ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
+        }
+
+        for (dynamic_eraser, body) in (&mut dynamic_erasers, &bodies).join() {
+            let trans = body.get(&physic_world).position() * dynamic_eraser.primitive_trans;
+            dynamic_eraser.world_trans =
                 ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
         }
     }

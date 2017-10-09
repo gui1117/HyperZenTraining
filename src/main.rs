@@ -79,6 +79,7 @@ fn main() {
     world.register::<::component::Aim>();
     world.register::<::component::StaticDraw>();
     world.register::<::component::DynamicDraw>();
+    world.register::<::component::DynamicEraser>();
     world.register::<::component::PhysicBody>();
     world.register::<::component::Momentum>();
     world.register::<::component::Avoider>();
@@ -110,7 +111,6 @@ fn main() {
             &mut world.write(),
             &mut world.write_resource(),
             &world.read_resource(),
-            &world.read_resource(),
         );
         ::entity::create_bouncer(
             [3.5, 1.5],
@@ -120,7 +120,6 @@ fn main() {
             &mut world.write(),
             &mut world.write(),
             &mut world.write_resource(),
-            &world.read_resource(),
             &world.read_resource(),
         );
         ::entity::create_player(
@@ -146,7 +145,7 @@ fn main() {
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::UpdateDynamicDrawSystem, "update_dynamic_draw", &[])
+        .add(::system::UpdateDynamicDrawEraserSystem, "update_dynamic_draw", &[])
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 

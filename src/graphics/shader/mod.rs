@@ -1,5 +1,6 @@
 pub mod draw1_vs;
 pub mod draw1_fs;
+pub mod draw1_eraser_fs;
 pub mod draw2_vs;
 pub mod draw2_fs;
 pub mod cursor_vs;
