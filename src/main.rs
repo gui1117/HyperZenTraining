@@ -67,6 +67,27 @@ fn main() {
     let mut imgui = ::imgui::ImGui::init();
     imgui.set_ini_filename(None);
     imgui.set_log_filename(None);
+    imgui.set_mouse_draw_cursor(true);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Tab, 0);
+    imgui.set_imgui_key(::imgui::ImGuiKey::LeftArrow, 1);
+    imgui.set_imgui_key(::imgui::ImGuiKey::RightArrow, 2);
+    imgui.set_imgui_key(::imgui::ImGuiKey::UpArrow, 3);
+    imgui.set_imgui_key(::imgui::ImGuiKey::DownArrow, 4);
+    imgui.set_imgui_key(::imgui::ImGuiKey::PageUp, 5);
+    imgui.set_imgui_key(::imgui::ImGuiKey::PageDown, 6);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Home, 7);
+    imgui.set_imgui_key(::imgui::ImGuiKey::End, 8);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Delete, 9);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Backspace, 10);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Enter, 11);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Escape, 12);
+    imgui.set_imgui_key(::imgui::ImGuiKey::A, 13);
+    imgui.set_imgui_key(::imgui::ImGuiKey::C, 14);
+    imgui.set_imgui_key(::imgui::ImGuiKey::V, 15);
+    imgui.set_imgui_key(::imgui::ImGuiKey::X, 16);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Y, 17);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Z, 18);
+
     config.style().set_style(imgui.style_mut());
 
     let graphics = graphics::Graphics::new(&window, &mut imgui);
@@ -137,6 +158,7 @@ fn main() {
     world.maintain();
 
     let mut update_dispatcher = ::specs::DispatcherBuilder::new()
+        .add(::system::MenuControlSystem::new(), "menu_system", &[])
         .add(::system::PlayerControlSystem::new(), "player_control", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
@@ -166,17 +188,20 @@ fn main() {
                         false
                     }
                     Event::WindowEvent { event: WindowEvent::MouseMoved { .. }, .. } => {
-                        window
-                            .window()
-                            .set_cursor_position(
-                                graphics.data.width as i32 / 2,
-                                graphics.data.height as i32 / 2,
-                            )
-                            .unwrap();
+                        // window
+                        //     .window()
+                        //     .set_cursor_position(
+                        //         graphics.data.width as i32 / 2,
+                        //         graphics.data.height as i32 / 2,
+                        //     )
+                        //     .unwrap();
                         true
                     }
                     Event::WindowEvent { event: WindowEvent::MouseInput { .. }, .. } |
-                    Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, .. } => true,
+                    Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, .. } |
+                    Event::WindowEvent { event: WindowEvent::ReceivedCharacter( .. ), .. } |
+                    Event::WindowEvent { event: WindowEvent::MouseWheel { .. }, .. } |
+                    Event::WindowEvent { event: WindowEvent::AxisMotion { .. }, .. } => true,
                     _ => false,
                 };
 
