@@ -3,50 +3,63 @@ use std::io::Write;
 
 const SAVE_FILENAME: &str = "config.ron";
 
-#[derive(Serialize, Deserialize)]
-pub struct ConfigSave {
-    pub fps: u32,
-    pub mouse_sensibility: f32,
+macro_rules! config {
+    (
+        $(saved $saved_field:ident: $saved_type:ty,)*
+        $(built $built_field:ident: $built_type:ty: $built_default:expr,)*
+    ) => {
+        #[derive(Serialize, Deserialize, Clone)]
+        struct ConfigSave {
+            $($saved_field: $saved_type,)*
+        }
+
+        pub struct Config {
+            $($saved_field: $saved_type,)*
+            $($built_field: $built_type,)*
+        }
+
+        impl Config {
+            $(#[inline]
+            pub fn $saved_field(&self) -> $saved_type{
+                self.$saved_field
+            })*
+            $(#[inline]
+            pub fn $built_field(&self) -> $built_type {
+                self.$built_field
+            })*
+
+            fn from_save_default(save: ConfigSave) -> Self {
+                Config {
+                    $($saved_field: save.$saved_field,)*
+                    $($built_field: $built_default,)*
+                }
+            }
+
+            fn to_save(&self) -> ConfigSave {
+                ConfigSave {
+                    $($saved_field: self.$saved_field,)*
+                }
+            }
+        }
+    }
 }
 
-pub struct Config {
-    fps: u32,
-    dt: f32,
-    pub mouse_sensibility: f32,
+config!{
+    saved mouse_sensibility: f32,
+    saved fps: u32,
+    built dt: f32: 0f32,
 }
 
 impl Config {
-    pub fn from_save(save: ConfigSave) -> Self {
-        let mut config = Config {
-            fps: 0,
-            dt: 0.,
-            mouse_sensibility: save.mouse_sensibility,
-        };
-        config.set_fps(save.fps);
-        config
-    }
-
-    pub fn to_save(&self) -> ConfigSave {
-        ConfigSave {
-            fps: self.fps,
-            mouse_sensibility: self.mouse_sensibility,
-        }
-    }
-
-    #[inline]
     pub fn set_fps(&mut self, fps: u32) {
         self.fps = fps;
         self.dt = 1.0 / fps as f32;
     }
 
-    #[inline]
-    pub fn fps(&self) -> u32 {
-        self.fps
-    }
-
-    #[inline]
-    pub fn dt(&self) -> f32 {
-        self.dt
+    fn from_save(save: ConfigSave) -> Self {
+        let mut config = Config::from_save_default(save.clone());
+        config.set_fps(save.fps);
+        config
     }
 
     pub fn load() -> Self {

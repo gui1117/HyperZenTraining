@@ -63,9 +63,9 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                     event: WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
                 } => {
                     self.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) *
-                        config.mouse_sensibility;
+                        config.mouse_sensibility();
                     self.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) *
-                        config.mouse_sensibility;
+                        config.mouse_sensibility();
                     self.pointer[1] = self.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
                         -::std::f32::consts::FRAC_PI_2,
                     );
