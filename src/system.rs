@@ -17,9 +17,7 @@ pub struct MenuControlSystem {
 
 impl MenuControlSystem {
     pub fn new() -> Self {
-        MenuControlSystem {
-            mouse_down: [false; 5],
-        }
+        MenuControlSystem { mouse_down: [false; 5] }
     }
 }
 
@@ -31,28 +29,25 @@ impl<'a> ::specs::System<'a> for MenuControlSystem {
         for ev in events.iter() {
             match *ev {
                 Event::WindowEvent {
-                    event: WindowEvent::MouseInput {
-                        button,
-                        state,
-                        ..
-                    },
-                    ..
+                    event: WindowEvent::MouseInput { button, state, .. }, ..
                 } => {
                     match button {
                         MouseButton::Left => self.mouse_down[0] = state == ElementState::Pressed,
                         MouseButton::Right => self.mouse_down[1] = state == ElementState::Pressed,
                         MouseButton::Middle => self.mouse_down[2] = state == ElementState::Pressed,
-                        MouseButton::Other(0) => self.mouse_down[3] = state == ElementState::Pressed,
-                        MouseButton::Other(1) => self.mouse_down[4] = state == ElementState::Pressed,
+                        MouseButton::Other(0) => {
+                            self.mouse_down[3] = state == ElementState::Pressed
+                        }
+                        MouseButton::Other(1) => {
+                            self.mouse_down[4] = state == ElementState::Pressed
+                        }
                         MouseButton::Other(_) => (),
                     }
                     imgui.set_mouse_down(&self.mouse_down);
                 }
                 Event::WindowEvent {
                     event: WindowEvent::MouseMoved { position: (x, y), .. }, ..
-                } => {
-                    imgui.set_mouse_pos(x as f32, y as f32)
-                }
+                } => imgui.set_mouse_pos(x as f32, y as f32),
                 Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } => {
                     let pressed = input.state == ElementState::Pressed;
                     match input.virtual_keycode {
@@ -75,15 +70,26 @@ impl<'a> ::specs::System<'a> for MenuControlSystem {
                         Some(VirtualKeyCode::X) => imgui.set_key(16, pressed),
                         Some(VirtualKeyCode::Y) => imgui.set_key(17, pressed),
                         Some(VirtualKeyCode::Z) => imgui.set_key(18, pressed),
-                        Some(VirtualKeyCode::LControl) | Some(VirtualKeyCode::RControl) => imgui.set_key_ctrl(pressed),
-                        Some(VirtualKeyCode::LShift) | Some(VirtualKeyCode::RShift) => imgui.set_key_shift(pressed),
-                        Some(VirtualKeyCode::LAlt) | Some(VirtualKeyCode::RAlt) => imgui.set_key_alt(pressed),
-                        Some(VirtualKeyCode::LWin) | Some(VirtualKeyCode::RWin) => imgui.set_key_super(pressed),
-                        _ => ()
-                }
+                        Some(VirtualKeyCode::LControl) |
+                        Some(VirtualKeyCode::RControl) => imgui.set_key_ctrl(pressed),
+                        Some(VirtualKeyCode::LShift) |
+                        Some(VirtualKeyCode::RShift) => imgui.set_key_shift(pressed),
+                        Some(VirtualKeyCode::LAlt) |
+                        Some(VirtualKeyCode::RAlt) => imgui.set_key_alt(pressed),
+                        Some(VirtualKeyCode::LWin) |
+                        Some(VirtualKeyCode::RWin) => imgui.set_key_super(pressed),
+                        _ => (),
+                    }
 
                 }
-                Event::WindowEvent { event: WindowEvent::MouseWheel { delta, phase: TouchPhase::Moved, .. }, .. } => {
+                Event::WindowEvent {
+                    event: WindowEvent::MouseWheel {
+                        delta,
+                        phase: TouchPhase::Moved,
+                        ..
+                    },
+                    ..
+                } => {
                     // TODO: does both are send ? does it depend of computer
                     match delta {
                         MouseScrollDelta::LineDelta(_, y) => imgui.set_mouse_wheel(y),

@@ -199,7 +199,7 @@ fn main() {
                     }
                     Event::WindowEvent { event: WindowEvent::MouseInput { .. }, .. } |
                     Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, .. } |
-                    Event::WindowEvent { event: WindowEvent::ReceivedCharacter( .. ), .. } |
+                    Event::WindowEvent { event: WindowEvent::ReceivedCharacter(..), .. } |
                     Event::WindowEvent { event: WindowEvent::MouseWheel { .. }, .. } |
                     Event::WindowEvent { event: WindowEvent::AxisMotion { .. }, .. } => true,
                     _ => false,

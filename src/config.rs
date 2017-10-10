@@ -96,10 +96,7 @@ pub struct ImVec2Def {
 
 impl From<ImVec2Def> for ImVec2 {
     fn from(def: ImVec2Def) -> Self {
-        ImVec2 {
-            x: def.x,
-            y: def.y,
-        }
+        ImVec2 { x: def.x, y: def.y }
     }
 }
 
