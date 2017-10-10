@@ -62,14 +62,14 @@ fn main() {
         .set_cursor_state(winit::CursorState::Grab)
         .unwrap();
 
+    let config = ::resource::Config::load();
+
     let mut imgui = ::imgui::ImGui::init();
     imgui.set_ini_filename(None);
     imgui.set_log_filename(None);
-    // TODO configure style
+    config.style().set_style(imgui.style_mut());
 
     let graphics = graphics::Graphics::new(&window, &mut imgui);
-
-    let config = ::resource::Config::load();
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
@@ -149,7 +149,7 @@ fn main() {
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
-    let mut fps = fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps());
+    let mut fps = fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps().clone());
 
     loop {
         previous_frame_end.cleanup_finished();

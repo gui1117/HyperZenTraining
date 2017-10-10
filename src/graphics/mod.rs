@@ -76,10 +76,10 @@ pub struct SecondVertexImgui {
 impl_vertex!(SecondVertexImgui, pos, uv, col);
 impl From<::imgui::ImDrawVert> for SecondVertexImgui {
     fn from(vertex: ::imgui::ImDrawVert) -> Self {
-        let r = (vertex.col >> 24) as u8 as f32;
-        let g = (vertex.col >> 16) as u8 as f32;
-        let b = (vertex.col >> 8) as u8 as f32;
-        let a = vertex.col as u8 as f32;
+        let r = vertex.col as u8 as f32;
+        let g = (vertex.col >> 8) as u8 as f32;
+        let b = (vertex.col >> 16) as u8 as f32;
+        let a = (vertex.col >> 24) as u8 as f32;
         SecondVertexImgui {
             pos: [vertex.pos.x, vertex.pos.y],
             uv: [vertex.uv.x, vertex.uv.y],
@@ -614,9 +614,7 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        // TODO: return this future to enforce it later ?
         // TODO: also is it supposed to be used that way ?
-        //       it should be flush
         cursor_tex_future.cleanup_finished();
         colors_buf_future.cleanup_finished();
         imgui_tex_future.cleanup_finished();

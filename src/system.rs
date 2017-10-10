@@ -275,7 +275,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
                 contactor.contacts.clear();
             }
 
-            physic_world.step(config.dt() / 2.);
+            physic_world.step(config.dt().clone() / 2.);
 
             for (co1, co2, mut contact) in physic_world.collision_world().contacts() {
                 match (&co1.data, &co2.data) {
@@ -512,7 +512,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         let ui = imgui.frame(
             rendering.size_points.take().unwrap(),
             rendering.size_pixels.take().unwrap(),
-            config.dt(),
+            config.dt().clone(),
         );
         ui.window(im_str!("Hello world"))
             .size((300.0, 100.0), ::imgui::ImGuiSetCond_FirstUseEver)
@@ -657,7 +657,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
     ) {
         for (aim, body, shooter) in (&aims, &bodies, &mut shooters).join() {
             let body_pos = body.get(&physic_world).position().clone();
-            shooter.reload(config.dt());
+            shooter.reload(config.dt().clone());
 
             let _ray = ::ncollide::query::Ray {
                 origin: ::na::Point3::from_coordinates(body_pos.translation.vector),
