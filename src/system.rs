@@ -1,4 +1,5 @@
-use winit::{Event, WindowEvent, ElementState, MouseButton, MouseScrollDelta, VirtualKeyCode, TouchPhase};
+use winit::{Event, WindowEvent, ElementState, MouseButton, MouseScrollDelta, VirtualKeyCode,
+            TouchPhase};
 use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
 use vulkano::buffer::{ImmutableBuffer, BufferUsage};
 use vulkano::pipeline::viewport::Scissor;

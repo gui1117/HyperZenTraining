@@ -169,11 +169,16 @@ fn main() {
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::UpdateDynamicDrawEraserSystem, "update_dynamic_draw", &[])
+        .add(
+            ::system::UpdateDynamicDrawEraserSystem,
+            "update_dynamic_draw",
+            &[],
+        )
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
-    let mut fps = fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps().clone());
+    let mut fps =
+        fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps().clone());
 
     loop {
         previous_frame_end.cleanup_finished();
@@ -207,10 +212,25 @@ fn main() {
                         }
                         true
                     }
-                    Event::WindowEvent { event: WindowEvent::KeyboardInput { input: KeyboardInput { state: ElementState::Pressed, virtual_keycode: Some(VirtualKeyCode::P), .. }, .. }, .. } => {
+                    Event::WindowEvent {
+                        event: WindowEvent::KeyboardInput {
+                            input: KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::P),
+                                ..
+                            },
+                            ..
+                        },
+                        ..
+                    } => {
                         debug_mode.0 = !debug_mode.0;
-                        world.write_resource::<::resource::ImGui>().set_mouse_draw_cursor(debug_mode.0);
-                        world.write_resource::<::resource::ImGui>().set_mouse_pos(graphics.data.width as f32/2., graphics.data.height as f32/2.);
+                        world
+                            .write_resource::<::resource::ImGui>()
+                            .set_mouse_draw_cursor(debug_mode.0);
+                        world.write_resource::<::resource::ImGui>().set_mouse_pos(
+                            graphics.data.width as f32 / 2.,
+                            graphics.data.height as f32 / 2.,
+                        );
                         window
                             .window()
                             .set_cursor_position(
@@ -219,7 +239,7 @@ fn main() {
                             )
                             .unwrap();
                         true
-                    },
+                    }
                     Event::WindowEvent { event: WindowEvent::MouseInput { .. }, .. } |
                     Event::WindowEvent { event: WindowEvent::ReceivedCharacter(..), .. } |
                     Event::WindowEvent { event: WindowEvent::MouseWheel { .. }, .. } |
