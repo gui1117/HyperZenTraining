@@ -67,7 +67,7 @@ fn main() {
     let mut imgui = ::imgui::ImGui::init();
     imgui.set_ini_filename(None);
     imgui.set_log_filename(None);
-    imgui.set_mouse_draw_cursor(true);
+    imgui.set_mouse_draw_cursor(false);
     imgui.set_imgui_key(::imgui::ImGuiKey::Tab, 0);
     imgui.set_imgui_key(::imgui::ImGuiKey::LeftArrow, 1);
     imgui.set_imgui_key(::imgui::ImGuiKey::RightArrow, 2);

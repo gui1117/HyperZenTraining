@@ -86,7 +86,6 @@ impl Config {
     }
 }
 
-
 #[derive(Serialize, Deserialize)]
 #[serde(remote = "ImVec2")]
 pub struct ImVec2Def {
