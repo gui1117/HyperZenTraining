@@ -22,11 +22,12 @@ impl MenuControlSystem {
 }
 
 impl<'a> ::specs::System<'a> for MenuControlSystem {
-    type SystemData = (::specs::Fetch<'a, ::resource::WinitEvents>,
+    type SystemData = (::specs::Fetch<'a, ::resource::MenuEvents>,
+     ::specs::Fetch<'a, ::resource::DebugMode>,
      ::specs::FetchMut<'a, ::resource::ImGui>);
 
-    fn run(&mut self, (events, mut imgui): Self::SystemData) {
-        for ev in events.iter() {
+    fn run(&mut self, (events, debug_mode, mut imgui): Self::SystemData) {
+        for ev in events.0.iter() {
             match *ev {
                 Event::WindowEvent {
                     event: WindowEvent::MouseInput { button, state, .. }, ..
@@ -125,7 +126,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
      ::specs::WriteStorage<'a, ::component::Aim>,
      ::specs::WriteStorage<'a, ::component::Shooter>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
-     ::specs::Fetch<'a, ::resource::WinitEvents>,
+     ::specs::Fetch<'a, ::resource::GameEvents>,
      ::specs::Fetch<'a, ::resource::Graphics>,
      ::specs::Fetch<'a, ::resource::Config>);
 
@@ -138,7 +139,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                 .join()
                 .next()
                 .unwrap();
-        for ev in events.iter() {
+        for ev in events.0.iter() {
             match *ev {
                 Event::WindowEvent {
                     event: WindowEvent::MouseInput {

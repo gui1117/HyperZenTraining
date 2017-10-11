@@ -6,7 +6,8 @@ pub use maze::Maze;
 pub use config::Config;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
-pub type WinitEvents = Vec<::winit::Event>;
+pub struct MenuEvents(pub Vec<::winit::Event>);
+pub struct GameEvents(pub Vec<::winit::Event>);
 
 pub struct Rendering {
     pub image_num: Option<usize>,
@@ -27,3 +28,5 @@ impl Rendering {
         }
     }
 }
+
+pub struct DebugMode(pub bool);

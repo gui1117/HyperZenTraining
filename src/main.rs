@@ -38,7 +38,7 @@ use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 use vulkano::instance::Instance;
 
-use winit::{WindowEvent, Event};
+use winit::{WindowEvent, Event, ElementState, VirtualKeyCode, KeyboardInput};
 
 use std::sync::Arc;
 
@@ -112,8 +112,10 @@ fn main() {
     world.add_resource(config);
     world.add_resource(::resource::PhysicWorld::new());
     world.add_resource(::resource::Rendering::new());
-    world.add_resource(::resource::WinitEvents::new());
+    world.add_resource(::resource::GameEvents(vec![]));
+    world.add_resource(::resource::MenuEvents(vec![]));
     world.add_resource(::maze::kruskal(31, 31, 50.0));
+    world.add_resource(::resource::DebugMode(false));
 
     {
         ::entity::create_maze_walls(
@@ -178,9 +180,15 @@ fn main() {
 
         // Poll events
         {
-            let mut events = world.write_resource::<::resource::WinitEvents>();
-            events.clear();
+            let mut menu_events = world.write_resource::<::resource::MenuEvents>();
+            let mut game_events = world.write_resource::<::resource::GameEvents>();
+            let mut debug_mode = world.write_resource::<::resource::DebugMode>();
+
+            menu_events.0.clear();
+            game_events.0.clear();
+
             let mut done = false;
+
             events_loop.poll_events(|ev| {
                 let retain = match ev {
                     Event::WindowEvent { event: WindowEvent::Closed, .. } => {
@@ -188,25 +196,44 @@ fn main() {
                         false
                     }
                     Event::WindowEvent { event: WindowEvent::MouseMoved { .. }, .. } => {
-                        // window
-                        //     .window()
-                        //     .set_cursor_position(
-                        //         graphics.data.width as i32 / 2,
-                        //         graphics.data.height as i32 / 2,
-                        //     )
-                        //     .unwrap();
+                        if !debug_mode.0 {
+                            window
+                                .window()
+                                .set_cursor_position(
+                                    graphics.data.width as i32 / 2,
+                                    graphics.data.height as i32 / 2,
+                                )
+                                .unwrap();
+                        }
                         true
                     }
+                    Event::WindowEvent { event: WindowEvent::KeyboardInput { input: KeyboardInput { state: ElementState::Pressed, virtual_keycode: Some(VirtualKeyCode::P), .. }, .. }, .. } => {
+                        debug_mode.0 = !debug_mode.0;
+                        world.write_resource::<::resource::ImGui>().set_mouse_draw_cursor(debug_mode.0);
+                        world.write_resource::<::resource::ImGui>().set_mouse_pos(graphics.data.width as f32/2., graphics.data.height as f32/2.);
+                        window
+                            .window()
+                            .set_cursor_position(
+                                graphics.data.width as i32 / 2,
+                                graphics.data.height as i32 / 2,
+                            )
+                            .unwrap();
+                        true
+                    },
                     Event::WindowEvent { event: WindowEvent::MouseInput { .. }, .. } |
-                    Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, .. } |
                     Event::WindowEvent { event: WindowEvent::ReceivedCharacter(..), .. } |
                     Event::WindowEvent { event: WindowEvent::MouseWheel { .. }, .. } |
+                    Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, .. } |
                     Event::WindowEvent { event: WindowEvent::AxisMotion { .. }, .. } => true,
                     _ => false,
                 };
 
                 if retain {
-                    events.push(ev);
+                    if debug_mode.0 {
+                        menu_events.0.push(ev);
+                    } else {
+                        game_events.0.push(ev);
+                    }
                 }
             });
             if done {
