@@ -1,4 +1,7 @@
-use rand::distributions::IndependentSample;
+use rand::distributions::{IndependentSample, Range};
+use std::collections::HashSet;
+
+use util::Pop;
 
 #[derive(Clone)]
 pub struct Maze {
@@ -7,7 +10,150 @@ pub struct Maze {
     pub height: usize,
 }
 
+impl ::std::fmt::Display for Maze {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+        write!(f, "\n")?;
+        for j in 0..self.height {
+            for i in 0..self.width {
+                if self.walls[i][j] {
+                    write!(f, "#")?;
+                } else {
+                    write!(f, " ")?;
+                }
+            }
+            write!(f, "\n")?;
+        }
+        write!(f, "\n")
+    }
+}
+
+#[allow(unused)]
 impl Maze {
+    pub fn check(&self) {
+        assert_eq!(self.walls.len(), self.width);
+        for column in &self.walls {
+            assert_eq!(column.len(), self.height);
+        }
+    }
+
+    pub fn full(&self) -> bool {
+        for wall in self.walls.iter().flat_map(|column| column.iter()) {
+            if !wall {
+                return false;
+            }
+        }
+        true
+    }
+
+    /// Remove the circle of the maze
+    pub fn reduce(&mut self, x: usize) {
+        for _ in 0..x {
+            self.walls.remove(0);
+            self.walls.pop().unwrap();
+        }
+
+        for column in &mut self.walls {
+            for _ in 0..x {
+                column.remove(0);
+                column.pop().unwrap();
+            }
+        }
+
+        self.width -= x * 2;
+        self.height -= x * 2;
+    }
+
+    /// Create a wall that circle the maze
+    pub fn circle(&mut self) {
+        self.walls[0] = (0..self.width).map(|_| true).collect();
+        self.walls[self.width-1] = (0..self.width).map(|_| true).collect();
+        for column in &mut self.walls {
+            column[0] = true;
+            column[self.height-1] = true;
+        }
+    }
+
+    fn compute_zones(&self) -> Vec<Vec<(usize, usize)>> {
+        let mut unvisited =  HashSet::new();
+        for i in 0..self.width {
+            for j in 0..self.height {
+                if !self.walls[i][j] {
+                    unvisited.insert((i, j));
+                }
+            }
+        }
+
+        let mut to_visit = HashSet::new();
+        let mut zones = Vec::new();
+
+        while let Some(cell) = unvisited.pop() {
+            let mut zone = Vec::new();
+            to_visit.insert(cell);
+
+            while let Some(cell) = to_visit.pop() {
+                let i = cell.0;
+                let j = cell.1;
+
+                let mut neighboors = vec!();
+                if !self.walls[i+1][j] { neighboors.push((i+1, j)); }
+                if !self.walls[i-1][j] { neighboors.push((i-1, j)); }
+                if !self.walls[i][j-1] { neighboors.push((i, j-1)); }
+                if !self.walls[i][j+1] { neighboors.push((i, j+1)); }
+
+                for n in neighboors {
+                    if unvisited.contains(&n) {
+                        to_visit.insert(n);
+                    }
+                }
+
+                unvisited.remove(&cell);
+                zone.push(cell)
+            }
+            zones.push(zone);
+        }
+
+        zones
+    }
+
+    /// Compute the largest zone and fill all other zone
+    pub fn fill_smallest(&mut self) {
+        let mut zones = self.compute_zones();
+        if zones.is_empty() { return }
+        let (_, max_id) = zones.iter()
+            .enumerate()
+            .fold((-1, None), |(max_len, max_id), (id, zone)| {
+                let len = zone.len() as isize;
+                if len >= max_len {
+                    (len, Some(id))
+                } else {
+                    (max_len, max_id)
+                }
+            });
+        zones.remove(max_id.unwrap());
+        zones.iter()
+            .flat_map(|zone| zone.iter())
+            .for_each(|&(i, j)| self.walls[i][j] = true);
+    }
+
+    pub fn random_free(&self) -> (usize, usize) {
+        let x_range = Range::new(0, self.width);
+        let y_range = Range::new(0, self.height);
+        let mut rng = ::rand::thread_rng();
+
+        let mut x = x_range.ind_sample(&mut rng);
+        let mut y = x_range.ind_sample(&mut rng);
+        while self.walls[x][y] {
+            x = x_range.ind_sample(&mut rng);
+            y = x_range.ind_sample(&mut rng);
+        }
+        (x, y)
+    }
+
+    pub fn random_free_float(&self) -> [f32; 2] {
+        let cell = self.random_free();
+        [cell.0 as f32 + 0.5, cell.1 as f32 + 0.5]
+    }
+
     pub fn find_path(
         &self,
         pos: (usize, usize),

@@ -255,7 +255,7 @@ pub fn create_floor_ceil<'a>(
 
     let pos = ::na::Isometry3::new(::na::Vector3::z() * z, ::na::zero());
     let world_trans = {
-        let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 40.0)
+        let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 200.0)
             .to_superset();
         ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
     };

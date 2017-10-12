@@ -94,6 +94,11 @@ fn main() {
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
+    let mut maze = ::maze::kruskal(51, 51, 25.0);
+    maze.reduce(2);
+    maze.circle();
+    maze.fill_smallest();
+
     let mut world = specs::World::new();
     world.register::<::component::Player>();
     world.register::<::component::Shooter>();
@@ -114,7 +119,7 @@ fn main() {
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::GameEvents(vec![]));
     world.add_resource(::resource::MenuEvents(vec![]));
-    world.add_resource(::maze::kruskal(31, 31, 50.0));
+    world.add_resource(maze);
     world.add_resource(::resource::DebugMode(false));
 
     {
@@ -127,7 +132,7 @@ fn main() {
             &world.read_resource(),
         );
         ::entity::create_avoider(
-            [2.5, 1.5],
+            world.read_resource::<::resource::Maze>().random_free_float(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
@@ -136,7 +141,7 @@ fn main() {
             &world.read_resource(),
         );
         ::entity::create_bouncer(
-            [3.5, 1.5],
+            world.read_resource::<::resource::Maze>().random_free_float(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
@@ -146,7 +151,7 @@ fn main() {
             &world.read_resource(),
         );
         ::entity::create_player(
-            [1.5, 1.5],
+            world.read_resource::<::resource::Maze>().random_free_float(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),

@@ -1,3 +1,6 @@
+use std::collections::HashSet;
+use std::hash::Hash;
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum Direction {
     Forward,
@@ -33,4 +36,19 @@ pub fn high_byte(b: u32) -> u32 {
 
 pub fn low_byte(b: u32) -> u32 {
     b as u8 as u32
+}
+
+pub trait Pop {
+    type Item;
+    fn pop(&mut self) -> Option<Self::Item>;
+}
+
+impl<T: Eq + Hash + Clone> Pop for HashSet<T> {
+    type Item = T;
+    fn pop(&mut self) -> Option<Self::Item> {
+        self.iter()
+            .next()
+            .map(|cell| cell.clone())
+            .map(|cell| self.take(&cell).unwrap())
+    }
 }
