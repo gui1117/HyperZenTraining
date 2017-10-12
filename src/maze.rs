@@ -16,32 +16,48 @@ impl Maze {
         ::pathfinding::astar(
             &pos,
             |&(x, y)| {
-                let right = !self.walls[x+1][y];
-                let left = x > 0 && !self.walls[x-1][y];
-                let up = !self.walls[x][y+1];
-                let down = y > 0 && !self.walls[x][y-1];
-                let down_left = x > 0 && y > 0 && !self.walls[x-1][y-1];
-                let down_right = y > 0 && !self.walls[x+1][y-1];
-                let up_left = x > 0 && !self.walls[x-1][y+1];
-                let up_right = !self.walls[x+1][y+1];
+                let right = !self.walls[x + 1][y];
+                let left = x > 0 && !self.walls[x - 1][y];
+                let up = !self.walls[x][y + 1];
+                let down = y > 0 && !self.walls[x][y - 1];
+                let down_left = x > 0 && y > 0 && !self.walls[x - 1][y - 1];
+                let down_right = y > 0 && !self.walls[x + 1][y - 1];
+                let up_left = x > 0 && !self.walls[x - 1][y + 1];
+                let up_right = !self.walls[x + 1][y + 1];
 
                 let mut res = vec![];
 
-                if right { res.push(((x+1, y), 10)) }
-                if left { res.push(((x-1, y), 10)) }
-                if up { res.push(((x, y+1), 10)) }
-                if down { res.push(((x, y-1), 10)) }
-                if up && right && up_right { res.push(((x+1, y+1), 15)) }
-                if up && left && up_left { res.push(((x-1, y+1), 15)) }
-                if down && right && down_right { res.push(((x+1, y-1), 15)) }
-                if down && left && down_left { res.push(((x-1, y-1), 15)) }
+                if right {
+                    res.push(((x + 1, y), 10))
+                }
+                if left {
+                    res.push(((x - 1, y), 10))
+                }
+                if up {
+                    res.push(((x, y + 1), 10))
+                }
+                if down {
+                    res.push(((x, y - 1), 10))
+                }
+                if up && right && up_right {
+                    res.push(((x + 1, y + 1), 15))
+                }
+                if up && left && up_left {
+                    res.push(((x - 1, y + 1), 15))
+                }
+                if down && right && down_right {
+                    res.push(((x + 1, y - 1), 15))
+                }
+                if down && left && down_left {
+                    res.push(((x - 1, y - 1), 15))
+                }
 
                 res
             },
             |&(x, y)| {
                 let dx = if x > goal.0 { x - goal.0 } else { goal.0 - x };
                 let dy = if y > goal.1 { y - goal.1 } else { goal.1 - y };
-                ::std::cmp::min(dx, dy)*10
+                ::std::cmp::min(dx, dy) * 10
             },
             |&p| p == goal,
         )

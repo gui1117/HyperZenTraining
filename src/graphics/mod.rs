@@ -475,10 +475,11 @@ impl<'a> Graphics<'a> {
             BufferUsage::uniform_buffer(),
         );
 
-        let world_uniform_static_buffer = CpuBufferPool::<::graphics::shader::draw1_vs::ty::World>::new(
-            device.clone(),
-            BufferUsage::uniform_buffer(),
-        );
+        let world_uniform_static_buffer =
+            CpuBufferPool::<::graphics::shader::draw1_vs::ty::World>::new(
+                device.clone(),
+                BufferUsage::uniform_buffer(),
+            );
 
         let world_uniform_buffer = CpuBufferPool::<::graphics::shader::draw1_vs::ty::World>::new(
             device.clone(),
@@ -627,7 +628,8 @@ impl<'a> Graphics<'a> {
             .join(fullscreen_vertex_buffer_future)
             .join(cursor_vertex_buffer_future)
             .join(primitives_future)
-            .flush().unwrap();
+            .flush()
+            .unwrap();
 
         Graphics {
             physical,
