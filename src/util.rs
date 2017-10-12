@@ -46,9 +46,8 @@ pub trait Pop {
 impl<T: Eq + Hash + Clone> Pop for HashSet<T> {
     type Item = T;
     fn pop(&mut self) -> Option<Self::Item> {
-        self.iter()
-            .next()
-            .map(|cell| cell.clone())
-            .map(|cell| self.take(&cell).unwrap())
+        self.iter().next().map(|cell| cell.clone()).map(|cell| {
+            self.take(&cell).unwrap()
+        })
     }
 }

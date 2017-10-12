@@ -66,15 +66,15 @@ impl Maze {
     /// Create a wall that circle the maze
     pub fn circle(&mut self) {
         self.walls[0] = (0..self.width).map(|_| true).collect();
-        self.walls[self.width-1] = (0..self.width).map(|_| true).collect();
+        self.walls[self.width - 1] = (0..self.width).map(|_| true).collect();
         for column in &mut self.walls {
             column[0] = true;
-            column[self.height-1] = true;
+            column[self.height - 1] = true;
         }
     }
 
     fn compute_zones(&self) -> Vec<Vec<(usize, usize)>> {
-        let mut unvisited =  HashSet::new();
+        let mut unvisited = HashSet::new();
         for i in 0..self.width {
             for j in 0..self.height {
                 if !self.walls[i][j] {
@@ -94,11 +94,19 @@ impl Maze {
                 let i = cell.0;
                 let j = cell.1;
 
-                let mut neighboors = vec!();
-                if !self.walls[i+1][j] { neighboors.push((i+1, j)); }
-                if !self.walls[i-1][j] { neighboors.push((i-1, j)); }
-                if !self.walls[i][j-1] { neighboors.push((i, j-1)); }
-                if !self.walls[i][j+1] { neighboors.push((i, j+1)); }
+                let mut neighboors = vec![];
+                if !self.walls[i + 1][j] {
+                    neighboors.push((i + 1, j));
+                }
+                if !self.walls[i - 1][j] {
+                    neighboors.push((i - 1, j));
+                }
+                if !self.walls[i][j - 1] {
+                    neighboors.push((i, j - 1));
+                }
+                if !self.walls[i][j + 1] {
+                    neighboors.push((i, j + 1));
+                }
 
                 for n in neighboors {
                     if unvisited.contains(&n) {
@@ -118,21 +126,26 @@ impl Maze {
     /// Compute the largest zone and fill all other zone
     pub fn fill_smallest(&mut self) {
         let mut zones = self.compute_zones();
-        if zones.is_empty() { return }
-        let (_, max_id) = zones.iter()
-            .enumerate()
-            .fold((-1, None), |(max_len, max_id), (id, zone)| {
+        if zones.is_empty() {
+            return;
+        }
+        let (_, max_id) = zones.iter().enumerate().fold(
+            (-1, None),
+            |(max_len, max_id), (id, zone)| {
                 let len = zone.len() as isize;
                 if len >= max_len {
                     (len, Some(id))
                 } else {
                     (max_len, max_id)
                 }
-            });
+            },
+        );
         zones.remove(max_id.unwrap());
-        zones.iter()
-            .flat_map(|zone| zone.iter())
-            .for_each(|&(i, j)| self.walls[i][j] = true);
+        zones.iter().flat_map(|zone| zone.iter()).for_each(
+            |&(i, j)| {
+                self.walls[i][j] = true
+            },
+        );
     }
 
     pub fn random_free(&self) -> (usize, usize) {

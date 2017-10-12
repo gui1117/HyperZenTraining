@@ -132,7 +132,9 @@ fn main() {
             &world.read_resource(),
         );
         ::entity::create_avoider(
-            world.read_resource::<::resource::Maze>().random_free_float(),
+            world
+                .read_resource::<::resource::Maze>()
+                .random_free_float(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
@@ -141,7 +143,9 @@ fn main() {
             &world.read_resource(),
         );
         ::entity::create_bouncer(
-            world.read_resource::<::resource::Maze>().random_free_float(),
+            world
+                .read_resource::<::resource::Maze>()
+                .random_free_float(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
@@ -151,7 +155,9 @@ fn main() {
             &world.read_resource(),
         );
         ::entity::create_player(
-            world.read_resource::<::resource::Maze>().random_free_float(),
+            world
+                .read_resource::<::resource::Maze>()
+                .random_free_float(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
