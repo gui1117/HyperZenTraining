@@ -169,7 +169,7 @@ impl StaticDraw {
         static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
         graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     ) {
-        let world_trans_subbuffer = graphics.world_uniform_buffer.next(world_trans).unwrap();
+        let world_trans_subbuffer = graphics.world_uniform_static_buffer.next(world_trans).unwrap();
 
         let set = Arc::new(
             PersistentDescriptorSet::start(graphics.draw1_pipeline.clone(), 0)

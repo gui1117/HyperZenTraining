@@ -1,13 +1,12 @@
 use vulkano::device::Queue;
 use vulkano::buffer::{ImmutableBuffer, BufferUsage};
-use vulkano::command_buffer::{CommandBufferExecFuture, AutoCommandBuffer};
-use vulkano::sync::NowFuture;
+use vulkano::sync::GpuFuture;
 use std::sync::Arc;
 use super::Vertex;
 
 pub fn instance_primitives(
     queue: Arc<Queue>,
-) -> (Vec<Arc<ImmutableBuffer<[Vertex]>>>, Vec<CommandBufferExecFuture<NowFuture, AutoCommandBuffer>>) {
+) -> (Vec<Arc<ImmutableBuffer<[Vertex]>>>, Box<GpuFuture>) {
     let (plane, plane_future) = ImmutableBuffer::from_iter(
         [
             Vertex { position: [-1.0, -1.0, 0.0] },
@@ -259,26 +258,22 @@ pub fn instance_primitives(
             sphere_2,
             sphere_3,
         ],
-        vec![
-            plane_future,
-
-            square_pyramid_future,
-            square_pyramid_base_future,
-            square_pyramid_side_1_future,
-            square_pyramid_side_2_future,
-            square_pyramid_side_3_future,
-            square_pyramid_side_4_future,
-
-            triangle_pyramid_base_future,
-            triangle_pyramid_side_1_future,
-            triangle_pyramid_side_2_future,
-            triangle_pyramid_side_3_future,
-
-            sphere_future,
-            sphere_1_future,
-            sphere_2_future,
-            sphere_3_future,
-        ],
+        Box::new(plane_future
+            .join(square_pyramid_future)
+            .join(square_pyramid_base_future)
+            .join(square_pyramid_side_1_future)
+            .join(square_pyramid_side_2_future)
+            .join(square_pyramid_side_3_future)
+            .join(square_pyramid_side_4_future)
+            .join(triangle_pyramid_base_future)
+            .join(triangle_pyramid_side_1_future)
+            .join(triangle_pyramid_side_2_future)
+            .join(triangle_pyramid_side_3_future)
+            .join(sphere_future)
+            .join(sphere_1_future)
+            .join(sphere_2_future)
+            .join(sphere_3_future)
+        ) as Box<GpuFuture>
     )
 }
 

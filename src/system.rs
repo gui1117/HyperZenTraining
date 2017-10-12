@@ -24,10 +24,9 @@ impl MenuControlSystem {
 
 impl<'a> ::specs::System<'a> for MenuControlSystem {
     type SystemData = (::specs::Fetch<'a, ::resource::MenuEvents>,
-     ::specs::Fetch<'a, ::resource::DebugMode>,
      ::specs::FetchMut<'a, ::resource::ImGui>);
 
-    fn run(&mut self, (events, debug_mode, mut imgui): Self::SystemData) {
+    fn run(&mut self, (events, mut imgui): Self::SystemData) {
         for ev in events.0.iter() {
             match *ev {
                 Event::WindowEvent {
@@ -640,7 +639,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             future.push(index_buf_future);
 
             let (width, height) = ui.imgui().display_size();
-            let (scale_width, scale_height) = ui.imgui().display_framebuffer_scale();
+            // let (scale_width, scale_height) = ui.imgui().display_framebuffer_scale();
 
             let matrix = [
                 [2.0 / width as f32, 0.0, 0.0, 0.0],
@@ -666,7 +665,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                     .unwrap(),
             );
 
-            for cmd in drawlist.cmd_buffer {
+            for _cmd in drawlist.cmd_buffer {
                 let scissor = Scissor {
                     origin: [0, 0],
                     dimensions: [width as u32, height as u32],

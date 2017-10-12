@@ -17,7 +17,7 @@ use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDes
                                           PersistentDescriptorSetBuf, FixedSizeDescriptorSetsPool};
 use vulkano::instance::PhysicalDevice;
 use vulkano::format;
-use vulkano::sync::GpuFuture;
+use vulkano::sync::{now, GpuFuture};
 
 
 use std::sync::Arc;
@@ -103,6 +103,7 @@ pub struct Data {
     pub cursor_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,
 
     pub view_uniform_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::View>,
+    pub world_uniform_static_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::World>,
     pub world_uniform_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::World>,
     pub tmp_erased_buffer: Arc<DeviceLocalBuffer<[u32; 65536]>>,
     pub erased_buffer: Arc<CpuAccessibleBuffer<[f32; 65536]>>,
@@ -234,10 +235,10 @@ impl<'a> Graphics<'a> {
             ).unwrap()
         };
 
-        let (primitives_vertex_buffers, mut futures) =
+        let (primitives_vertex_buffers, primitives_future) =
             primitives::instance_primitives(queue.clone());
 
-        let (fullscreen_vertex_buffer, mut fullscreen_vertex_buffer_future) =
+        let (fullscreen_vertex_buffer, fullscreen_vertex_buffer_future) =
             ImmutableBuffer::from_iter(
                 [
                     SecondVertex { position: [-1.0f32, -1.0] },
@@ -252,7 +253,7 @@ impl<'a> Graphics<'a> {
                 queue.clone(),
             ).expect("failed to create buffer");
 
-        let (cursor_vertex_buffer, mut cursor_vertex_buffer_future) =
+        let (cursor_vertex_buffer, cursor_vertex_buffer_future) =
             ImmutableBuffer::from_iter(
                 [
                     SecondVertex { position: [-0.5f32, -0.5] },
@@ -267,7 +268,7 @@ impl<'a> Graphics<'a> {
                 queue.clone(),
             ).expect("failed to create buffer");
 
-        let (cursor_texture, mut cursor_tex_future) = {
+        let (cursor_texture, cursor_tex_future) = {
             let file = File::open("assets/cursor.png").unwrap();
             let (info, mut reader) = ::png::Decoder::new(file).read_info().unwrap();
             assert_eq!(info.color_type, ::png::ColorType::RGBA);
@@ -474,12 +475,17 @@ impl<'a> Graphics<'a> {
             BufferUsage::uniform_buffer(),
         );
 
+        let world_uniform_static_buffer = CpuBufferPool::<::graphics::shader::draw1_vs::ty::World>::new(
+            device.clone(),
+            BufferUsage::uniform_buffer(),
+        );
+
         let world_uniform_buffer = CpuBufferPool::<::graphics::shader::draw1_vs::ty::World>::new(
             device.clone(),
             BufferUsage::uniform_buffer(),
         );
 
-        let (colors_buffer, mut colors_buf_future) = {
+        let (colors_buffer, colors_buf_future) = {
             let colors = colors::colors();
             ImmutableBuffer::from_iter(
                 colors.into_iter(),
@@ -489,7 +495,7 @@ impl<'a> Graphics<'a> {
             ).unwrap()
         };
 
-        let (imgui_texture, mut imgui_tex_future) = imgui
+        let (imgui_texture, imgui_tex_future) = imgui
             .prepare_texture(|handle| {
                 ImmutableImage::from_iter(
                     handle.pixels.iter().cloned(),
@@ -614,15 +620,14 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        // TODO: also is it supposed to be used that way ?
-        cursor_tex_future.cleanup_finished();
-        colors_buf_future.cleanup_finished();
-        imgui_tex_future.cleanup_finished();
-        fullscreen_vertex_buffer_future.cleanup_finished();
-        cursor_vertex_buffer_future.cleanup_finished();
-        for future in &mut futures {
-            future.cleanup_finished();
-        }
+        now(device.clone())
+            .join(cursor_tex_future)
+            .join(colors_buf_future)
+            .join(imgui_tex_future)
+            .join(fullscreen_vertex_buffer_future)
+            .join(cursor_vertex_buffer_future)
+            .join(primitives_future)
+            .flush().unwrap();
 
         Graphics {
             physical,
@@ -657,6 +662,7 @@ impl<'a> Graphics<'a> {
                 eraser2_descriptor_set,
                 tmp_erased_buffer,
                 draw2_descriptor_set,
+                world_uniform_static_buffer,
                 world_uniform_buffer,
                 erased_buffer,
             },
