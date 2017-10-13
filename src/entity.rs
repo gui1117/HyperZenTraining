@@ -52,6 +52,7 @@ pub fn create_avoider<'a>(
     avoiders: &mut ::specs::WriteStorage<'a, ::component::Avoider>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     entities: &::specs::Entities,
@@ -128,15 +129,10 @@ pub fn create_avoider<'a>(
         ),
     );
     lifes.insert(entity, ::component::Life(0));
+    dynamic_graphics_assets.insert(entity, ::component::DynamicGraphicsAssets::new(primitives, ::graphics::color::GREEN, primitive_trans));
+    dynamic_draws.insert(entity, ::component::DynamicDraw);
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
-    ::component::DynamicDraw::add(
-        entity,
-        primitives,
-        ::graphics::color::GREEN,
-        primitive_trans,
-        dynamic_draws,
-    );
 }
 
 pub fn create_bouncer<'a>(
@@ -146,6 +142,7 @@ pub fn create_bouncer<'a>(
     contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     entities: &::specs::Entities,
@@ -190,15 +187,10 @@ pub fn create_bouncer<'a>(
     });
     contactors.insert(entity, ::component::Contactor::new());
     lifes.insert(entity, ::component::Life(0));
+    dynamic_graphics_assets.insert(entity, ::component::DynamicGraphicsAssets::new(primitives, ::graphics::color::BLUE, primitive_trans));
+    dynamic_draws.insert(entity, ::component::DynamicDraw);
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
-    ::component::DynamicDraw::add(
-        entity,
-        primitives,
-        ::graphics::color::BLUE,
-        primitive_trans,
-        dynamic_draws,
-    );
 }
 
 pub fn create_wall_side<'a>(

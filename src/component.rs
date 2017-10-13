@@ -195,7 +195,7 @@ impl StaticDraw {
     }
 }
 
-pub struct DynamicDraw {
+pub struct DynamicGraphicsAssets {
     /// index and group
     pub primitives: Vec<(usize, u16)>,
     pub color: u16,
@@ -203,54 +203,37 @@ pub struct DynamicDraw {
     pub world_trans: ::graphics::shader::draw1_vs::ty::World,
 }
 
-impl ::specs::Component for DynamicDraw {
+impl ::specs::Component for DynamicGraphicsAssets {
     type Storage = ::specs::VecStorage<Self>;
 }
 
-impl DynamicDraw {
-    pub fn add<'a>(
-        entity: ::specs::Entity,
+impl DynamicGraphicsAssets {
+    pub fn new(
         primitives: Vec<(usize, u16)>,
         color: u16,
         primitive_trans: ::na::Transform3<f32>,
-        dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-    ) {
-        let dynamic_draw = DynamicDraw {
+    ) -> Self {
+        DynamicGraphicsAssets {
             primitives,
             primitive_trans,
             color,
             world_trans: shader::draw1_vs::ty::World { world: [[0f32; 4]; 4] },
-        };
-
-        dynamic_draws.insert(entity, dynamic_draw);
+        }
     }
 }
 
-pub struct DynamicEraser {
-    pub primitive: usize,
-    pub primitive_trans: ::na::Transform3<f32>,
-    pub world_trans: ::graphics::shader::draw1_vs::ty::World,
+#[derive(Default)]
+pub struct DynamicDraw;
+
+impl ::specs::Component for DynamicDraw {
+    type Storage = ::specs::NullStorage<Self>;
 }
+
+#[derive(Default)]
+pub struct DynamicEraser;
 
 impl ::specs::Component for DynamicEraser {
-    type Storage = ::specs::VecStorage<Self>;
-}
-
-impl DynamicEraser {
-    pub fn add<'a>(
-        entity: ::specs::Entity,
-        primitive: usize,
-        primitive_trans: ::na::Transform3<f32>,
-        dynamic_erasers: &mut ::specs::WriteStorage<'a, ::component::DynamicEraser>,
-    ) {
-        let dynamic_eraser = DynamicEraser {
-            primitive,
-            primitive_trans,
-            world_trans: shader::draw1_vs::ty::World { world: [[0f32; 4]; 4] },
-        };
-
-        dynamic_erasers.insert(entity, dynamic_eraser);
-    }
+    type Storage = ::specs::NullStorage<Self>;
 }
 
 pub struct PhysicBody(usize);

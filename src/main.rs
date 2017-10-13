@@ -140,6 +140,7 @@ fn main() {
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
+            &mut world.write(),
             &mut world.write_resource(),
             &world.read_resource(),
         );
@@ -147,6 +148,7 @@ fn main() {
             world
                 .read_resource::<::resource::Maze>()
                 .random_free_float(),
+            &mut world.write(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
