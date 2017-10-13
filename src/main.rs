@@ -106,6 +106,7 @@ fn main() {
     world.register::<::component::StaticDraw>();
     world.register::<::component::DynamicDraw>();
     world.register::<::component::DynamicEraser>();
+    world.register::<::component::DynamicGraphicsAssets>();
     world.register::<::component::PhysicBody>();
     world.register::<::component::Momentum>();
     world.register::<::component::Avoider>();
@@ -180,6 +181,7 @@ fn main() {
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
+        .add(::system::LifeSystem, "life", &[])
         .add(::system::PhysicSystem, "physic_system", &[])
         .build();
 

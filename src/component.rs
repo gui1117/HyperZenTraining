@@ -10,7 +10,7 @@ use graphics::{shader, Vertex, render_pass};
 use std::sync::Arc;
 use std::any::Any;
 
-pub struct Life(pub i32);
+pub struct Life(pub bool);
 
 impl ::specs::Component for Life {
     type Storage = ::specs::VecStorage<Self>;

@@ -128,7 +128,7 @@ pub fn create_avoider<'a>(
             Some(pnt_to_com),
         ),
     );
-    lifes.insert(entity, ::component::Life(0));
+    lifes.insert(entity, ::component::Life(true));
     dynamic_graphics_assets.insert(
         entity,
         ::component::DynamicGraphicsAssets::new(
@@ -193,7 +193,7 @@ pub fn create_bouncer<'a>(
         momentum
     });
     contactors.insert(entity, ::component::Contactor::new());
-    lifes.insert(entity, ::component::Life(0));
+    lifes.insert(entity, ::component::Life(true));
     dynamic_graphics_assets.insert(
         entity,
         ::component::DynamicGraphicsAssets::new(

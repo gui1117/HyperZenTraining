@@ -734,6 +734,32 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
     }
 }
 
+pub struct LifeSystem;
+
+impl<'a> ::specs::System<'a> for LifeSystem {
+    type SystemData = (::specs::WriteStorage<'a, ::component::DynamicDraw>,
+     ::specs::WriteStorage<'a, ::component::DynamicEraser>,
+     ::specs::WriteStorage<'a, ::component::Life>,
+     ::specs::Entities<'a>);
+
+    fn run(
+        &mut self,
+        (mut dynamic_draws, mut dynamic_erasers, mut lives, entities): Self::SystemData,
+    ) {
+        for (life, entity) in (&lives, &*entities).join() {
+            if !life.0 {
+                if dynamic_draws.get(entity).is_some() {
+                    entities.delete(entity).unwrap();
+                } else {
+                    life.0 = true;
+                    dynamic_draws.insert(entity, ::component::DynamicDraw);
+                    dynamic_erasers.remove(entity).unwrap();
+                }
+            }
+        }
+    }
+}
+
 pub struct ShootSystem {
     collided: Vec<(::specs::Entity, f32)>,
 }
@@ -744,7 +770,6 @@ impl ShootSystem {
     }
 }
 
-// TODO: not shoot yourself and shoot in one direction only
 impl<'a> ::specs::System<'a> for ShootSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::PhysicBody>,
      ::specs::ReadStorage<'a, ::component::Aim>,
@@ -796,8 +821,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                 );
                 for collided in &self.collided {
                     if let Some(ref mut life) = lifes.get_mut(collided.0) {
-                        println!("touch");
-                        life.0 -= 1;
+                        life.0 = false;
                     }
                     break;
                 }
