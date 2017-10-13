@@ -1,5 +1,5 @@
 use winit::{Event, WindowEvent, ElementState, MouseButton, MouseScrollDelta, VirtualKeyCode,
-            TouchPhase};
+            TouchPhase, DeviceEvent};
 use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
 use vulkano::buffer::{ImmutableBuffer, BufferUsage};
 use vulkano::pipeline::viewport::Scissor;
@@ -154,13 +154,15 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                         ElementState::Released => player_shooter.set_shoot(false),
                     }
                 }
-                Event::WindowEvent {
-                    event: WindowEvent::MouseMoved { position: (dx, dy), .. }, ..
+                Event::DeviceEvent {
+                    event: DeviceEvent::Motion { axis: 0, value: dx }, ..
                 } => {
-                    self.pointer[0] += (dx as f32 - graphics.width as f32 / 2.0) *
-                        config.mouse_sensibility();
-                    self.pointer[1] += (dy as f32 - graphics.height as f32 / 2.0) *
-                        config.mouse_sensibility();
+                    self.pointer[0] += dx as f32 * config.mouse_sensibility();
+                }
+                Event::DeviceEvent {
+                    event: DeviceEvent::Motion { axis: 1, value: dy }, ..
+                } => {
+                    self.pointer[1] += dy as f32 * config.mouse_sensibility();
                     self.pointer[1] = self.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
                         -::std::f32::consts::FRAC_PI_2,
                     );

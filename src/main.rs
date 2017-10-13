@@ -38,7 +38,7 @@ use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 use vulkano::instance::Instance;
 
-use winit::{WindowEvent, Event, ElementState, VirtualKeyCode, KeyboardInput};
+use winit::{WindowEvent, Event, ElementState, VirtualKeyCode, KeyboardInput, DeviceEvent};
 
 use std::sync::Arc;
 
@@ -238,23 +238,14 @@ fn main() {
                         world
                             .write_resource::<::resource::ImGui>()
                             .set_mouse_draw_cursor(debug_mode.0);
-                        world.write_resource::<::resource::ImGui>().set_mouse_pos(
-                            graphics.data.width as f32 / 2.,
-                            graphics.data.height as f32 / 2.,
-                        );
-                        window
-                            .window()
-                            .set_cursor_position(
-                                graphics.data.width as i32 / 2,
-                                graphics.data.height as i32 / 2,
-                            )
-                            .unwrap();
                         true
                     }
                     Event::WindowEvent { event: WindowEvent::MouseInput { .. }, .. } |
                     Event::WindowEvent { event: WindowEvent::ReceivedCharacter(..), .. } |
                     Event::WindowEvent { event: WindowEvent::MouseWheel { .. }, .. } |
                     Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, .. } |
+
+                    Event::DeviceEvent { event: DeviceEvent::Motion { .. }, .. } |
                     Event::WindowEvent { event: WindowEvent::AxisMotion { .. }, .. } => true,
                     _ => false,
                 };
