@@ -725,10 +725,7 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
      ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-    fn run(
-        &mut self,
-        (bodies, mut dynamic_graphics_assets, physic_world): Self::SystemData,
-    ) {
+    fn run(&mut self, (bodies, mut dynamic_graphics_assets, physic_world): Self::SystemData) {
         for (assets, body) in (&mut dynamic_graphics_assets, &bodies).join() {
             let trans = body.get(&physic_world).position() * assets.primitive_trans;
             assets.world_trans =
@@ -743,9 +740,7 @@ pub struct ShootSystem {
 
 impl ShootSystem {
     pub fn new() -> Self {
-        ShootSystem {
-            collided: vec![],
-        }
+        ShootSystem { collided: vec![] }
     }
 }
 
@@ -780,15 +775,25 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             if shooter.do_shoot() {
                 // TODO: factorise this.
                 self.collided.clear();
-                for (other_body, collision) in physic_world.collision_world().interferences_with_ray(&ray, &group) {
-                    if let ::nphysics::object::WorldObject::RigidBody(other_body) = other_body.data {
-                        let other_entity = ::component::PhysicBody::entity(physic_world.rigid_body(other_body));
+                for (other_body, collision) in
+                    physic_world.collision_world().interferences_with_ray(
+                        &ray,
+                        &group,
+                    )
+                {
+                    if let ::nphysics::object::WorldObject::RigidBody(other_body) =
+                        other_body.data
+                    {
+                        let other_entity =
+                            ::component::PhysicBody::entity(physic_world.rigid_body(other_body));
                         if entity != other_entity {
                             self.collided.push((other_entity, collision.toi));
                         }
                     }
                 }
-                self.collided.sort_by(|a, b| (a.1).partial_cmp(&b.1).unwrap());
+                self.collided.sort_by(
+                    |a, b| (a.1).partial_cmp(&b.1).unwrap(),
+                );
                 for collided in &self.collided {
                     if let Some(ref mut life) = lifes.get_mut(collided.0) {
                         println!("touch");

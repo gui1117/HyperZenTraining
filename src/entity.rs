@@ -129,7 +129,14 @@ pub fn create_avoider<'a>(
         ),
     );
     lifes.insert(entity, ::component::Life(0));
-    dynamic_graphics_assets.insert(entity, ::component::DynamicGraphicsAssets::new(primitives, ::graphics::color::GREEN, primitive_trans));
+    dynamic_graphics_assets.insert(
+        entity,
+        ::component::DynamicGraphicsAssets::new(
+            primitives,
+            ::graphics::color::GREEN,
+            primitive_trans,
+        ),
+    );
     dynamic_draws.insert(entity, ::component::DynamicDraw);
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
@@ -187,7 +194,14 @@ pub fn create_bouncer<'a>(
     });
     contactors.insert(entity, ::component::Contactor::new());
     lifes.insert(entity, ::component::Life(0));
-    dynamic_graphics_assets.insert(entity, ::component::DynamicGraphicsAssets::new(primitives, ::graphics::color::BLUE, primitive_trans));
+    dynamic_graphics_assets.insert(
+        entity,
+        ::component::DynamicGraphicsAssets::new(
+            primitives,
+            ::graphics::color::BLUE,
+            primitive_trans,
+        ),
+    );
     dynamic_draws.insert(entity, ::component::DynamicDraw);
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
