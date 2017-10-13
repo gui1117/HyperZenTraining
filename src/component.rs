@@ -54,6 +54,8 @@ impl Shooter {
     }
 
     pub fn do_shoot(&mut self) -> bool {
+        if !self.shoot { return false; }
+
         if let ShooterState::Loaded = self.state {
             self.state = ShooterState::Reloading(self.reload_time);
             true

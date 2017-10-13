@@ -1,11 +1,10 @@
 use alga::general::SubsetOf;
 
-const WALL_GROUP: usize = 1;
-const FLOOR_CEIL_GROUP: usize = 2;
-
-const DIM2_GROUP: usize = 3;
-
-const ALIVE_GROUP: usize = 4;
+pub const WALL_GROUP:       usize = 1;
+pub const FLOOR_CEIL_GROUP: usize = 2;
+pub const DIM2_GROUP:       usize = 3;
+pub const ALIVE_GROUP:      usize = 4;
+pub const LASER_GROUP:      usize = 5;
 
 pub fn create_player<'a>(
     pos: [f32; 2],
@@ -53,15 +52,16 @@ pub fn create_avoider<'a>(
     avoiders: &mut ::specs::WriteStorage<'a, ::component::Avoider>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     entities: &::specs::Entities,
 ) {
     let size = 0.1;
 
     let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
-    primitive_trans[(0, 0)] = size * 2.0;
-    primitive_trans[(1, 1)] = size * 2.0;
-    primitive_trans[(2, 2)] = size * 2.0;
+    primitive_trans[(0, 0)] = size;
+    primitive_trans[(1, 1)] = size;
+    primitive_trans[(2, 2)] = size;
 
     let shape = {
         let mut points = vec![
@@ -80,7 +80,7 @@ pub fn create_avoider<'a>(
     let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[ALIVE_GROUP]);
+    group.set_membership(&[ALIVE_GROUP, LASER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
@@ -127,6 +127,7 @@ pub fn create_avoider<'a>(
             Some(pnt_to_com),
         ),
     );
+    lifes.insert(entity, ::component::Life(0));
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
     ::component::DynamicDraw::add(
@@ -145,21 +146,22 @@ pub fn create_bouncer<'a>(
     contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     entities: &::specs::Entities,
 ) {
     let size = 0.05;
 
     let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
-    primitive_trans[(0, 0)] = size * 2.0;
-    primitive_trans[(1, 1)] = size * 2.0;
-    primitive_trans[(2, 2)] = size * 2.0;
+    primitive_trans[(0, 0)] = size;
+    primitive_trans[(1, 1)] = size;
+    primitive_trans[(2, 2)] = size;
 
     let shape = ::ncollide::shape::Ball3::new(size);
     let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[ALIVE_GROUP]);
+    group.set_membership(&[ALIVE_GROUP, LASER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
@@ -187,6 +189,7 @@ pub fn create_bouncer<'a>(
         momentum
     });
     contactors.insert(entity, ::component::Contactor::new());
+    lifes.insert(entity, ::component::Life(0));
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
     ::component::DynamicDraw::add(
@@ -209,7 +212,7 @@ pub fn create_wall_side<'a>(
     entities: &::specs::Entities,
 ) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
-    group.set_membership(&[WALL_GROUP]);
+    group.set_membership(&[WALL_GROUP, LASER_GROUP]);
     group.set_blacklist(&[WALL_GROUP, FLOOR_CEIL_GROUP]);
 
     let world_trans = {
@@ -250,7 +253,7 @@ pub fn create_floor_ceil<'a>(
     entities: &::specs::Entities,
 ) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
-    group.set_membership(&[FLOOR_CEIL_GROUP]);
+    group.set_membership(&[FLOOR_CEIL_GROUP, LASER_GROUP]);
     group.set_blacklist(&[WALL_GROUP, FLOOR_CEIL_GROUP, DIM2_GROUP]);
 
     let pos = ::na::Isometry3::new(::na::Vector3::z() * z, ::na::zero());

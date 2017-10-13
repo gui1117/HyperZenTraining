@@ -106,7 +106,6 @@ impl<'a> ::specs::System<'a> for MenuControlSystem {
     }
 }
 
-// TODO: get mouse from axis and check if there are differences because of acceleration
 pub struct PlayerControlSystem {
     directions: Vec<::util::Direction>,
     pointer: [f32; 2],
@@ -127,12 +126,11 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
      ::specs::WriteStorage<'a, ::component::Shooter>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
      ::specs::Fetch<'a, ::resource::GameEvents>,
-     ::specs::Fetch<'a, ::resource::Graphics>,
      ::specs::Fetch<'a, ::resource::Config>);
 
     fn run(
         &mut self,
-        (players, mut aims, mut shooters, mut momentums, events, graphics, config): Self::SystemData,
+        (players, mut aims, mut shooters, mut momentums, events, config): Self::SystemData,
     ) {
         let (_, player_aim, player_shooter, player_momentum) =
             (&players, &mut aims, &mut shooters, &mut momentums)
@@ -743,7 +741,17 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
     }
 }
 
-pub struct ShootSystem;
+pub struct ShootSystem {
+    collided: Vec<(::specs::Entity, f32)>,
+}
+
+impl ShootSystem {
+    pub fn new() -> Self {
+        ShootSystem {
+            collided: vec![],
+        }
+    }
+}
 
 // TODO: not shoot yourself and shoot in one direction only
 impl<'a> ::specs::System<'a> for ShootSystem {
@@ -752,29 +760,46 @@ impl<'a> ::specs::System<'a> for ShootSystem {
      ::specs::WriteStorage<'a, ::component::Shooter>,
      ::specs::WriteStorage<'a, ::component::Life>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
-     ::specs::Fetch<'a, ::resource::Config>);
+     ::specs::Fetch<'a, ::resource::Config>,
+     ::specs::Entities<'a>);
 
     fn run(
         &mut self,
-        (bodies, aims, mut shooters, mut _lifes, physic_world, config): Self::SystemData,
+        (bodies, aims, mut shooters, mut lifes, physic_world, config, entities): Self::SystemData,
     ) {
-        for (aim, body, shooter) in (&aims, &bodies, &mut shooters).join() {
+        for (aim, body, shooter, entity) in (&aims, &bodies, &mut shooters, &*entities).join() {
             let body_pos = body.get(&physic_world).position().clone();
             shooter.reload(config.dt().clone());
 
-            let _ray = ::ncollide::query::Ray {
+            let ray = ::ncollide::query::Ray {
                 origin: ::na::Point3::from_coordinates(body_pos.translation.vector),
                 dir: aim.dir,
             };
 
-            let _group = ::ncollide::world::CollisionGroups::new();
+            let mut group = ::ncollide::world::CollisionGroups::new();
+            // TODO: resolve hack with membership nphysic #82
+            group.set_membership(&[::entity::LASER_GROUP]);
+            group.set_whitelist(&[::entity::LASER_GROUP]);
 
             if shooter.do_shoot() {
-                // for (entity, _body, _collision) in physic_world.collision_world().interferences_with_ray(&ray, &group) {
-                //     if let Some(ref mut life) = lifes.get_mut(entity) {
-                //         life.0 -= 1;
-                //     }
-                // }
+                // TODO: factorise this.
+                self.collided.clear();
+                for (other_body, collision) in physic_world.collision_world().interferences_with_ray(&ray, &group) {
+                    if let ::nphysics::object::WorldObject::RigidBody(other_body) = other_body.data {
+                        let other_entity = ::component::PhysicBody::entity(physic_world.rigid_body(other_body));
+                        if entity != other_entity {
+                            self.collided.push((other_entity, collision.toi));
+                        }
+                    }
+                }
+                self.collided.sort_by(|a, b| (a.1).partial_cmp(&b.1).unwrap());
+                for collided in &self.collided {
+                    if let Some(ref mut life) = lifes.get_mut(collided.0) {
+                        println!("touch");
+                        life.0 -= 1;
+                    }
+                    break;
+                }
             }
         }
     }
