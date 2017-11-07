@@ -8,6 +8,7 @@ use util::Direction;
 use specs::Join;
 use alga::general::SubsetOf;
 use util::{high_byte, low_byte};
+use rand::distributions::{IndependentSample, Range};
 
 use std::sync::Arc;
 use std::cell::RefCell;
@@ -746,7 +747,7 @@ impl<'a> ::specs::System<'a> for LifeSystem {
         &mut self,
         (mut dynamic_draws, mut dynamic_erasers, mut lives, entities): Self::SystemData,
     ) {
-        for (life, entity) in (&lives, &*entities).join() {
+        for (life, entity) in (&mut lives, &*entities).join() {
             if !life.0 {
                 if dynamic_draws.get(entity).is_some() {
                     entities.delete(entity).unwrap();
@@ -826,6 +827,62 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     break;
                 }
             }
+        }
+    }
+}
+
+pub struct MazeMasterSystem;
+
+impl<'a> ::specs::System<'a> for MazeMasterSystem {
+    type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::WriteStorage<'a, ::component::PhysicBody>,
+     ::specs::WriteStorage<'a, ::component::Momentum>,
+     ::specs::WriteStorage<'a, ::component::Avoider>,
+     ::specs::WriteStorage<'a, ::component::Bouncer>,
+     ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+     ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
+     ::specs::WriteStorage<'a, ::component::Life>,
+     ::specs::WriteStorage<'a, ::component::Contactor>,
+     ::specs::Fetch<'a, ::resource::Maze>,
+     ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+     ::specs::Entities<'a>);
+
+    fn run(
+        &mut self,
+        (players, mut bodies, mut momentums, mut avoiders, mut bouncers, mut dynamic_draws, mut dynamic_graphics_assets, mut lives, mut contactors, maze, mut physic_world, entities): Self::SystemData,
+    ) {
+        let mut avoiders_len = 0;
+        avoiders.join().for_each(|_| avoiders_len += 1);
+
+        let mut bouncers_len = 0;
+        bouncers.join().for_each(|_| bouncers_len += 1);
+
+        // TODO: if nothing to do then return here
+
+        let player_pos = {
+            let point = (&players, &bodies).join().last().unwrap().1.get(&physic_world).position_center();
+            [point[0] as usize, point[1] as usize]
+        };
+
+        let square = maze.free_in_square(player_pos, 5);
+        if square.is_empty() {
+            panic!("maze is too small to be able to create entities");
+        }
+        let square_range = Range::new(0, square.len());
+        let mut rng = ::rand::thread_rng();
+
+        for _ in avoiders_len..10 {
+            let pos = square[square_range.ind_sample(&mut rng)];
+            let pos = [pos[0] as f32 + 0.5, pos[1] as f32 + 0.5];
+
+            ::entity::create_avoider(pos, &mut momentums, &mut avoiders, &mut bodies, &mut dynamic_draws, &mut dynamic_graphics_assets, &mut lives, &mut physic_world, &entities);
+        }
+
+        for _ in bouncers_len..10 {
+            let pos = square[square_range.ind_sample(&mut rng)];
+            let pos = [pos[0] as f32 + 0.5, pos[1] as f32 + 0.5];
+
+            ::entity::create_bouncer(pos, &mut momentums, &mut bouncers, &mut bodies, &mut dynamic_draws, &mut dynamic_graphics_assets, &mut lives, &mut contactors, &mut physic_world, &entities);
         }
     }
 }

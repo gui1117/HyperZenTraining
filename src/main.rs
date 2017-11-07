@@ -94,7 +94,7 @@ fn main() {
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
-    let mut maze = ::maze::kruskal(11, 11, 25.0);
+    let mut maze = ::maze::kruskal(51, 51, 25.0);
     maze.reduce(2);
     maze.circle();
     maze.fill_smallest();
@@ -132,33 +132,6 @@ fn main() {
             &world.read_resource(),
             &world.read_resource(),
         );
-        ::entity::create_avoider(
-            world
-                .read_resource::<::resource::Maze>()
-                .random_free_float(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write_resource(),
-            &world.read_resource(),
-        );
-        ::entity::create_bouncer(
-            world
-                .read_resource::<::resource::Maze>()
-                .random_free_float(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write_resource(),
-            &world.read_resource(),
-        );
         ::entity::create_player(
             world
                 .read_resource::<::resource::Maze>()
@@ -182,6 +155,7 @@ fn main() {
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
         .add(::system::LifeSystem, "life", &[])
+        .add(::system::MazeMasterSystem, "maze_master", &[])
         .add(::system::PhysicSystem, "physic_system", &[])
         .build();
 

@@ -221,6 +221,41 @@ impl Maze {
             |&p| p == goal,
         )
     }
+
+    pub fn free_in_circle(&self, center: [usize; 2], radius: usize) -> Vec<[usize; 2]> {
+        unimplemented!();
+    }
+
+    pub fn free_in_square(&self, center: [usize; 2], radius: usize) -> Vec<[usize; 2]> {
+        let mut res = vec![];
+
+        let top = center[1] as isize + radius as isize;
+        let left = center[0] as isize - radius as isize;
+        let right = center[0] as isize + radius as isize;
+        let bottom = center[1] as isize - radius as isize;
+
+        for &j in &[top, bottom] {
+            if j >= 0 && j < self.height as isize {
+                for i in left.max(0).min(self.width as isize)..(right+1).max(0).min(self.width as isize) {
+                    if !self.walls[i as usize][j as usize] {
+                        res.push([i as usize, j as usize]);
+                    }
+                }
+            }
+        }
+
+        for &i in &[left, right] {
+            if i >= 0 && i < self.width as isize {
+                for j in bottom.max(0).min(self.height as isize)..(top+1).max(0).min(self.height as isize) {
+                    if !self.walls[i as usize][j as usize] {
+                        res.push([i as usize, j as usize]);
+                    }
+                }
+            }
+        }
+
+        res
+    }
 }
 
 /// Generate partial reverse randomized_kruskal

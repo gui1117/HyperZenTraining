@@ -144,13 +144,13 @@ pub fn create_avoider<'a>(
 
 pub fn create_bouncer<'a>(
     pos: [f32; 2],
-    bouncers: &mut ::specs::WriteStorage<'a, ::component::Bouncer>,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
-    contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
+    bouncers: &mut ::specs::WriteStorage<'a, ::component::Bouncer>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
+    contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     entities: &::specs::Entities,
 ) {
