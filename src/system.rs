@@ -326,7 +326,9 @@ impl<'a> ::specs::System<'a> for BouncerControlSystem {
             }
             normal.normalize_mut();
             let proj_on_normal = momentum.direction.dot(&normal) * normal;
-            momentum.direction -= 2.0 * proj_on_normal;
+            if proj_on_normal.dot(&normal) > 0.0 {
+                momentum.direction -= 2.0 * proj_on_normal;
+            }
         }
     }
 }
@@ -614,7 +616,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             config.dt().clone(),
         );
         ui.window(im_str!("Hello world"))
-            .size((300.0, 100.0), ::imgui::ImGuiSetCond_FirstUseEver)
+            .size((300.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
             .build(|| {
                 ui.text(im_str!("Hello world!"));
                 ui.separator();
