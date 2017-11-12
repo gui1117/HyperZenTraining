@@ -318,7 +318,7 @@ impl<'a> ::specs::System<'a> for BouncerControlSystem {
     fn run(&mut self, (contactors, bouncers, mut momentums): Self::SystemData) {
         for (_, momentum, contactor) in (&bouncers, &mut momentums, &contactors).join() {
             if contactor.contacts.is_empty() {
-               break;
+               continue;
             }
 
             let mut normal = ::na::Vector3::new(0.0, 0.0, 0.0);
