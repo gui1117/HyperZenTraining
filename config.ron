@@ -1,5 +1,5 @@
 ConfigSave(
-    fps: 120,
+    fps: 60,
     mouse_sensibility: 0.001,
     style: ImGuiStyleSave(
         alpha: 1.0,

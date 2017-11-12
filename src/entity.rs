@@ -85,7 +85,7 @@ pub fn create_avoider<'a>(
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
-    let velocity = 2.5;
+    let velocity = 5.5;
     let time_to_reach_v_max = 1.0;
     let ang_damping = 0.8;
     let pnt_to_com = ::na::Vector3::z() * size - body.center_of_mass().coords;
@@ -169,7 +169,7 @@ pub fn create_bouncer<'a>(
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
-    let velocity = 2.5;
+    let velocity = 1.0;
     let time_to_reach_v_max = 0.05;
     let ang_damping = 0.8;
 
