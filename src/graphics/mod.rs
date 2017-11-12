@@ -72,11 +72,12 @@ impl DebugArrows {
         }
     }
 
+    #[allow(dead_code)]
     pub fn add(&self, color: [f32; 3], pos: na::Vector3<f32>, vec: na::Vector3<f32>) {
         let transform: na::Transform3<f32> = na::Similarity3::from_parts(
             na::Translation::from_vector(pos),
             na::UnitQuaternion::rotation_between(&na::Vector3::new(0.0, 0.0, 1.0), &vec).unwrap(),
-            vec.norm(),
+            vec.norm()*0.1,
         ).to_superset();
 
         self.trans.lock().unwrap().push((
