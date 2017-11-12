@@ -3,6 +3,8 @@ use vulkano::buffer::{ImmutableBuffer, BufferUsage};
 use vulkano::sync::GpuFuture;
 use std::sync::Arc;
 use super::Vertex;
+use super::DebugVertex;
+use wavefront_obj::obj;
 
 pub fn instance_primitives(
     queue: Arc<Queue>,
@@ -297,4 +299,46 @@ pub mod primitive {
     pub const SPHERE_1:                usize = 12;
     pub const SPHERE_2:                usize = 13;
     pub const SPHERE_3:                usize = 14;
+}
+
+pub fn load_debug_arrow(
+    queue: Arc<Queue>,
+) -> (Arc<ImmutableBuffer<[DebugVertex]>>, Box<GpuFuture>) {
+    let arrow = obj::parse(include_str!("arrow.obj").into()).unwrap();
+
+    let mut vertices = vec![];
+    for object in &arrow.objects {
+        assert!(object.geometry.len() == 1);
+        for shape in &object.geometry[0].shapes {
+            let indexes = match shape.primitive {
+                obj::Primitive::Triangle(a, b, c) => [
+                    (a.0, a.2.unwrap()),
+                    (b.0, b.2.unwrap()),
+                    (c.0, c.2.unwrap()),
+                ],
+                _ => panic!("arrow obj not handled"),
+            };
+            for &(v, n) in &indexes {
+                vertices.push(DebugVertex {
+                    position: [
+                        object.vertices[v].x as f32,
+                        object.vertices[v].y as f32,
+                        object.vertices[v].z as f32,
+                    ],
+                    normal: [
+                        object.normals[n].x as f32,
+                        object.normals[n].y as f32,
+                        object.normals[n].z as f32,
+                    ],
+                });
+            }
+        }
+    }
+
+    let res = ImmutableBuffer::from_iter(
+        vertices.iter().cloned(),
+        BufferUsage::vertex_buffer(),
+        queue.clone(),
+    ).expect("failed to create buffer");
+    (res.0, Box::new(res.1) as Box<GpuFuture>)
 }

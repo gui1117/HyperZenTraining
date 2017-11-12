@@ -3,6 +3,7 @@ use winit::{Event, WindowEvent, ElementState, MouseButton, MouseScrollDelta, Vir
 use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
 use vulkano::buffer::{ImmutableBuffer, BufferUsage};
 use vulkano::pipeline::viewport::Scissor;
+use vulkano::descriptor::descriptor_set::PersistentDescriptorSet;
 use nphysics::object::WorldObject;
 use util::Direction;
 use specs::Join;
@@ -312,23 +313,35 @@ pub struct BouncerControlSystem;
 impl<'a> ::specs::System<'a> for BouncerControlSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Contactor>,
      ::specs::ReadStorage<'a, ::component::Bouncer>,
-     ::specs::WriteStorage<'a, ::component::Momentum>);
+     ::specs::WriteStorage<'a, ::component::Momentum>,
+     ::specs::ReadStorage<'a, ::component::PhysicBody>,
+     ::specs::Fetch<'a, ::resource::PhysicWorld>,
+     ::specs::Entities<'a>);
 
-    fn run(&mut self, (contactors, bouncers, mut momentums): Self::SystemData) {
-        for (_, momentum, contactor) in (&bouncers, &mut momentums, &contactors).join() {
+    fn run(&mut self, (contactors, bouncers, mut momentums, physic_body, physic_world, entities): Self::SystemData) {
+        for (_, momentum, contactor, physic_body, entity) in (&bouncers, &mut momentums, &contactors, &physic_body, &*entities).join() {
+            let position = physic_body.get(&physic_world).position().translation.vector;
+            ::graphics::DEBUG_ARROWS.add([1.0, 0.0, 0.0], position, momentum.direction);
+
             if contactor.contacts.len() == 0 {
                 break;
             }
 
+            println!("direction: {}", momentum.direction);
             let mut normal = ::na::Vector3::new(0.0, 0.0, 0.0);
             for &(_, ref contact) in &contactor.contacts {
+                println!("contact depth: {}", contact.depth);
+                println!("contact normal: {}", contact.normal);
                 normal -= contact.depth * contact.normal;
             }
+            println!("normal: {}", normal);
             normal.normalize_mut();
             let proj_on_normal = momentum.direction.dot(&normal) * normal;
+            println!("proj_on_normal: {}", proj_on_normal);
             if proj_on_normal.dot(&normal) > 0.0 {
                 momentum.direction -= 2.0 * proj_on_normal;
             }
+            println!("final direction: {}", momentum.direction);
         }
     }
 }
@@ -368,12 +381,12 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             // TODO: gravity if not touching floor
             // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
         }
-        for _ in 0..2 {
-            for contactor in (&mut contactors).join() {
-                contactor.contacts.clear();
-            }
+        for contactor in (&mut contactors).join() {
+            contactor.contacts.clear();
+        }
+        for _ in 0..1 {
 
-            physic_world.step(config.dt().clone() / 2.);
+            physic_world.step(config.dt().clone() / 1.);
 
             for (co1, co2, mut contact) in physic_world.collision_world().contacts() {
                 match (&co1.data, &co2.data) {
@@ -589,7 +602,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         rendering.command_buffer = Some(command_buffer_builder.build().unwrap());
 
         // Compute second command
-        let second_command_buffer_builder = AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
+        let mut second_command_buffer_builder = AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
             .begin_render_pass(graphics.second_framebuffers[rendering.image_num.take().unwrap()].clone(), false, vec!())
             .unwrap()
             .draw(
@@ -608,6 +621,30 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 ()
             )
             .unwrap();
+
+        // Draw debug arrows
+        for arrows in ::graphics::DEBUG_ARROWS.draw() {
+            let world_trans_subbuffer = graphics
+                .debug_arrow_world_uniform_buffer
+                .next(arrows.1)
+                .unwrap();
+
+            // This is not optimised.
+            let debug_arrow_set = Arc::new(PersistentDescriptorSet::start(graphics.debug_pipeline.clone(), 0)
+                .add_buffer(world_trans_subbuffer).unwrap()
+                .build().unwrap()
+            );
+
+            second_command_buffer_builder = second_command_buffer_builder
+                .draw(
+                    graphics.debug_pipeline.clone(),
+                    DynamicState::none(),
+                    graphics.debug_arrow_vertex_buffer.clone(),
+                    (view_set.clone(), debug_arrow_set.clone()),
+                    ()
+                )
+                .unwrap();
+        }
 
         // Build imgui
         let ui = imgui.frame(

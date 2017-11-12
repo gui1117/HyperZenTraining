@@ -20,6 +20,7 @@ extern crate imgui;
 #[macro_use]
 extern crate serde_derive;
 extern crate ron;
+extern crate wavefront_obj;
 
 mod util;
 mod graphics;
@@ -132,6 +133,44 @@ fn main() {
             &world.read_resource(),
             &world.read_resource(),
         );
+        // ::entity::create_avoider(
+        //     world
+        //         .read_resource::<::resource::Maze>()
+        //         .random_free_float(),
+        //     &mut world.write(),
+        //     &mut world.write(),
+        //     &mut world.write(),
+        //     &mut world.write(),
+        //     &mut world.write(),
+        //     &mut world.write(),
+        //     &mut world.write_resource(),
+        //     &world.read_resource());
+        ::entity::create_bouncer(
+            world
+                .read_resource::<::resource::Maze>()
+                .random_free_float(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write_resource(),
+            &world.read_resource());
+        ::entity::create_bouncer(
+            world
+                .read_resource::<::resource::Maze>()
+                .random_free_float(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write_resource(),
+            &world.read_resource());
         ::entity::create_player(
             world
                 .read_resource::<::resource::Maze>()
@@ -155,7 +194,7 @@ fn main() {
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
         .add(::system::LifeSystem, "life", &[])
-        .add(::system::MazeMasterSystem, "maze_master", &[])
+        // .add(::system::MazeMasterSystem, "maze_master", &[])
         .add(::system::PhysicSystem, "physic_system", &[])
         .build();
 

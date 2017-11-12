@@ -12,3 +12,5 @@ pub mod imgui_fs;
 pub mod eraser1_cs;
 #[allow(dead_code)]
 pub mod eraser2_cs;
+pub mod debug_vs;
+pub mod debug_fs;

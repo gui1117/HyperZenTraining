@@ -19,8 +19,10 @@ use vulkano::instance::PhysicalDevice;
 use vulkano::format;
 use vulkano::sync::{now, GpuFuture};
 
+use na;
+use alga::general::SubsetOf;
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::iter;
 use std::fs::File;
 
@@ -55,6 +57,43 @@ impl GroupCounter {
     }
 }
 
+lazy_static! {
+    pub static ref DEBUG_ARROWS: DebugArrows = DebugArrows::new();
+}
+
+pub struct DebugArrows {
+    trans: Mutex<Vec<([f32; 3], shader::debug_vs::ty::World)>>,
+}
+
+impl DebugArrows {
+    fn new() -> Self {
+        DebugArrows {
+            trans: Mutex::new(Vec::new()),
+        }
+    }
+
+    pub fn add(&self, color: [f32; 3], pos: na::Vector3<f32>, vec: na::Vector3<f32>) {
+        let transform: na::Transform3<f32> = na::Similarity3::from_parts(
+            na::Translation::from_vector(pos),
+            na::UnitQuaternion::rotation_between(&na::Vector3::new(0.0, 0.0, 1.0), &vec).unwrap(),
+            vec.norm(),
+        ).to_superset();
+
+        self.trans.lock().unwrap().push((
+            color,
+            shader::debug_vs::ty::World {
+                world: transform.unwrap().into(),
+            }
+        ));
+    }
+
+    pub fn draw(&self) -> Vec<([f32; 3], shader::debug_vs::ty::World)> {
+        let mut res = vec![];
+        res.append(&mut self.trans.lock().unwrap());
+        res
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Vertex {
     position: [f32; 3],
@@ -73,6 +112,7 @@ pub struct SecondVertexImgui {
     uv: [f32; 2],
     col: [f32; 4],
 }
+
 impl_vertex!(SecondVertexImgui, pos, uv, col);
 impl From<::imgui::ImDrawVert> for SecondVertexImgui {
     fn from(vertex: ::imgui::ImDrawVert) -> Self {
@@ -88,6 +128,13 @@ impl From<::imgui::ImDrawVert> for SecondVertexImgui {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct DebugVertex {
+    position: [f32; 3],
+    normal: [f32; 3],
+}
+impl_vertex!(DebugVertex, position, normal);
+
 #[derive(Clone)]
 pub struct Data {
     pub device: Arc<Device>,
@@ -99,12 +146,14 @@ pub struct Data {
     pub height: u32,
 
     pub primitives_vertex_buffers: Vec<Arc<ImmutableBuffer<[Vertex]>>>,
+    pub debug_arrow_vertex_buffer: Arc<ImmutableBuffer<[DebugVertex]>>,
     pub fullscreen_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,
     pub cursor_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,
 
     pub view_uniform_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::View>,
     pub world_uniform_static_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::World>,
     pub world_uniform_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::World>,
+    pub debug_arrow_world_uniform_buffer: CpuBufferPool<::graphics::shader::debug_vs::ty::World>,
     pub tmp_erased_buffer: Arc<DeviceLocalBuffer<[u32; 65536]>>,
     pub erased_buffer: Arc<CpuAccessibleBuffer<[f32; 65536]>>,
 
@@ -121,6 +170,7 @@ pub struct Data {
     pub draw2_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
     pub cursor_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
     pub imgui_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
+    pub debug_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<DebugVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
 
     pub draw1_view_descriptor_set_pool: FixedSizeDescriptorSetsPool<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>>,
     pub draw1_dynamic_descriptor_set_pool: FixedSizeDescriptorSetsPool<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>>,
@@ -334,6 +384,11 @@ impl<'a> Graphics<'a> {
         let imgui_fs =
             shader::imgui_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
+        let debug_vs =
+            shader::debug_vs::Shader::load(device.clone()).expect("failed to create shader module");
+        let debug_fs =
+            shader::debug_fs::Shader::load(device.clone()).expect("failed to create shader module");
+
         let render_pass = Arc::new(
             render_pass::CustomRenderPassDesc
                 .build_render_pass(device.clone())
@@ -445,6 +500,23 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
+        let debug_pipeline = Arc::new(
+            GraphicsPipeline::start()
+                .vertex_input_single_buffer::<DebugVertex>()
+                .vertex_shader(debug_vs.main_entry_point(), ())
+                .triangle_list()
+                .viewports(iter::once(Viewport {
+                    origin: [0.0, 0.0],
+                    depth_range: 0.0..1.0,
+                    dimensions: [width as f32, height as f32],
+                }))
+                .fragment_shader(debug_fs.main_entry_point(), ())
+                .blend_alpha_blending()
+                .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
+                .build(device.clone())
+                .unwrap(),
+        );
+
         let framebuffer = Arc::new(
             Framebuffer::start(render_pass.clone())
                 .add(tmp_image_attachment.clone())
@@ -482,6 +554,11 @@ impl<'a> Graphics<'a> {
             );
 
         let world_uniform_buffer = CpuBufferPool::<::graphics::shader::draw1_vs::ty::World>::new(
+            device.clone(),
+            BufferUsage::uniform_buffer(),
+        );
+
+        let debug_arrow_world_uniform_buffer = CpuBufferPool::<::graphics::shader::debug_vs::ty::World>::new(
             device.clone(),
             BufferUsage::uniform_buffer(),
         );
@@ -621,6 +698,8 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
+        let (debug_arrow_vertex_buffer, debug_arrow_future) = primitives::load_debug_arrow(queue.clone());
+
         now(device.clone())
             .join(cursor_tex_future)
             .join(colors_buf_future)
@@ -628,6 +707,7 @@ impl<'a> Graphics<'a> {
             .join(fullscreen_vertex_buffer_future)
             .join(cursor_vertex_buffer_future)
             .join(primitives_future)
+            .join(debug_arrow_future)
             .flush()
             .unwrap();
 
@@ -644,6 +724,7 @@ impl<'a> Graphics<'a> {
                 draw1_pipeline,
                 draw1_eraser_pipeline,
                 draw2_pipeline,
+                debug_pipeline,
                 framebuffer,
                 second_framebuffers,
                 width,
@@ -666,7 +747,9 @@ impl<'a> Graphics<'a> {
                 draw2_descriptor_set,
                 world_uniform_static_buffer,
                 world_uniform_buffer,
+                debug_arrow_world_uniform_buffer,
                 erased_buffer,
+                debug_arrow_vertex_buffer
             },
         }
     }
