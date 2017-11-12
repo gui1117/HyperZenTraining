@@ -54,6 +54,7 @@ fn main() {
 
     let mut events_loop = winit::EventsLoop::new();
     let window = winit::WindowBuilder::new()
+        .with_fullscreen(winit::get_primary_monitor())
         .build_vk_surface(&events_loop, instance.clone())
         .unwrap();
 

@@ -924,7 +924,6 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
         for _ in avoider_len..avoider_population {
             let pos = square[square_range.ind_sample(&mut rng)];
             let pos = [pos[0] as f32 + 0.5, pos[1] as f32 + 0.5];
-            println!("toto");
 
             ::entity::create_avoider(pos, &mut momentums, &mut avoiders, &mut bodies, &mut dynamic_draws, &mut dynamic_graphics_assets, &mut lives, &mut physic_world, &entities);
         }
