@@ -9,7 +9,6 @@ use vulkano::buffer::{CpuAccessibleBuffer, ImmutableBuffer, CpuBufferPool, Buffe
 use vulkano::framebuffer::{RenderPassDesc, RenderPass, Framebuffer, Subpass};
 use vulkano::pipeline::{GraphicsPipeline, ComputePipeline};
 use vulkano::pipeline::vertex::SingleBufferDefinition;
-use vulkano::pipeline::viewport::Viewport;
 use vulkano::descriptor::PipelineLayoutAbstract;
 use vulkano::descriptor::pipeline_layout::PipelineLayout;
 use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetImg,
@@ -23,7 +22,6 @@ use na;
 use alga::general::SubsetOf;
 
 use std::sync::{Arc, Mutex};
-use std::iter;
 use std::fs::File;
 
 pub mod shader;
@@ -143,8 +141,8 @@ pub struct Data {
 
     pub swapchain: Arc<Swapchain>,
     pub images: Vec<Arc<SwapchainImage>>,
-    pub width: u32,
-    pub height: u32,
+    pub dim: [u32; 2],
+    pub cursor_tex_dim: [u32; 2],
 
     pub primitives_vertex_buffers: Vec<Arc<ImmutableBuffer<[Vertex]>>>,
     pub debug_arrow_vertex_buffer: Arc<ImmutableBuffer<[DebugVertex]>>,
@@ -179,9 +177,12 @@ pub struct Data {
 
     pub cursor_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
     pub imgui_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
-    pub eraser1_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, ((((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 65536]>>>)>>,
+
+    pub eraser1_descriptor_set_0: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, (((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
+    pub eraser1_descriptor_set_1: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, ((), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 65536]>>>)>>,
     pub eraser2_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser2_cs::Layout>>>, (((), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 65536]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[f32; 65536]>>>)>>,
-    pub draw2_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetBuf<Arc<ImmutableBuffer<[[f32; 4]]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[f32; 65536]>>>)>>,
+    pub draw2_descriptor_set_0: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
+    pub draw2_descriptor_set_1: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetBuf<Arc<ImmutableBuffer<[[f32; 4]]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[f32; 65536]>>>)>>,
 }
 
 pub struct Graphics<'a> {
@@ -190,6 +191,127 @@ pub struct Graphics<'a> {
 }
 
 impl<'a> Graphics<'a> {
+    pub fn framebuffers_and_descriptors(
+        device: Arc<Device>,
+        images: &Vec<Arc<SwapchainImage>>,
+        render_pass: &Arc<RenderPass<render_pass::CustomRenderPassDesc>>,
+        second_render_pass: &Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>,
+        eraser1_pipeline: &Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>,
+        draw2_pipeline: &Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
+    ) -> (
+        Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, ((((), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
+        Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage>)>>>,
+        Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, (((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
+        Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
+    ) {
+        let depth_buffer_attachment = AttachmentImage::transient(
+            device.clone(),
+            images[0].dimensions(),
+            format::Format::D16Unorm,
+        ).unwrap();
+
+        let tmp_image_attachment = {
+            let usage = ImageUsage {
+                color_attachment: true,
+                sampled: true,
+                ..ImageUsage::none()
+            };
+            AttachmentImage::with_usage(
+                device.clone(),
+                images[0].dimensions(),
+                format::Format::R8G8B8A8Uint,
+                usage,
+            ).unwrap()
+        };
+
+        let tmp_erase_image_attachment = {
+            let usage = ImageUsage {
+                color_attachment: true,
+                sampled: true,
+                ..ImageUsage::none()
+            };
+            AttachmentImage::with_usage(
+                device.clone(),
+                images[0].dimensions(),
+                format::Format::R8Uint,
+                usage,
+            ).unwrap()
+        };
+
+        let framebuffer = Arc::new(
+            Framebuffer::start(render_pass.clone())
+                .add(tmp_image_attachment.clone())
+                .unwrap()
+                .add(tmp_erase_image_attachment.clone())
+                .unwrap()
+                .add(depth_buffer_attachment.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+
+        let second_framebuffers = images
+            .iter()
+            .map(|image| {
+                Arc::new(
+                    Framebuffer::start(second_render_pass.clone())
+                        .add(image.clone())
+                        .unwrap()
+                        .build()
+                        .unwrap(),
+                )
+            })
+            .collect::<Vec<_>>();
+
+        let eraser1_descriptor_set_0 = Arc::new(
+            PersistentDescriptorSet::start(eraser1_pipeline.clone(), 0)
+                .add_sampled_image(
+                    tmp_image_attachment.clone(),
+                    Sampler::unnormalized(
+                        device.clone(),
+                        Filter::Nearest,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ).unwrap(),
+                )
+                .unwrap()
+                .add_sampled_image(
+                    tmp_erase_image_attachment.clone(),
+                    Sampler::unnormalized(
+                        device.clone(),
+                        Filter::Nearest,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ).unwrap(),
+                )
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+
+        let draw2_descriptor_set_0 = Arc::new(
+            PersistentDescriptorSet::start(draw2_pipeline.clone(), 0)
+                .add_sampled_image(
+                    tmp_image_attachment.clone(),
+                    Sampler::unnormalized(
+                        device.clone(),
+                        Filter::Nearest,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                        UnnormalizedSamplerAddressMode::ClampToEdge,
+                    ).unwrap(),
+                )
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+
+        (
+            framebuffer,
+            second_framebuffers,
+            eraser1_descriptor_set_0,
+            draw2_descriptor_set_0,
+        )
+    }
     pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) -> Graphics<'a> {
         // TODO: read config and save device
         let physical = PhysicalDevice::enumerate(&window.surface().instance())
@@ -249,42 +371,7 @@ impl<'a> Graphics<'a> {
             ).expect("failed to create swapchain")
         };
 
-        let width = images[0].dimensions()[0];
-        let height = images[0].dimensions()[1];
-
-        let depth_buffer_attachment = AttachmentImage::transient(
-            device.clone(),
-            images[0].dimensions(),
-            format::Format::D16Unorm,
-        ).unwrap();
-
-        let tmp_image_attachment = {
-            let usage = ImageUsage {
-                color_attachment: true,
-                sampled: true,
-                ..ImageUsage::none()
-            };
-            AttachmentImage::with_usage(
-                device.clone(),
-                images[0].dimensions(),
-                format::Format::R8G8B8A8Uint,
-                usage,
-            ).unwrap()
-        };
-
-        let tmp_erase_image_attachment = {
-            let usage = ImageUsage {
-                color_attachment: true,
-                sampled: true,
-                ..ImageUsage::none()
-            };
-            AttachmentImage::with_usage(
-                device.clone(),
-                images[0].dimensions(),
-                format::Format::R8Uint,
-                usage,
-            ).unwrap()
-        };
+        let dim = images[0].dimensions();
 
         let (primitives_vertex_buffers, primitives_future) =
             primitives::instance_primitives(queue.clone());
@@ -352,7 +439,7 @@ impl<'a> Graphics<'a> {
             0.0,
         ).unwrap();
 
-        let cursor_tex_dim = cursor_texture.dimensions();
+        let cursor_tex_dim = cursor_texture.dimensions().width_height();
 
         let draw1_vs =
             shader::draw1_vs::Shader::load(device.clone()).expect("failed to create shader module");
@@ -406,11 +493,7 @@ impl<'a> Graphics<'a> {
             GraphicsPipeline::start()
                 .vertex_input_single_buffer::<Vertex>()
                 .vertex_shader(draw1_vs.main_entry_point(), ())
-                .viewports(iter::once(Viewport {
-                    origin: [0.0, 0.0],
-                    depth_range: 0.0..1.0,
-                    dimensions: [width as f32, height as f32],
-                }))
+                .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(draw1_fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
                 .sample_shading_enabled(1.0)
@@ -423,11 +506,7 @@ impl<'a> Graphics<'a> {
             GraphicsPipeline::start()
                 .vertex_input_single_buffer::<Vertex>()
                 .vertex_shader(draw1_vs.main_entry_point(), ())
-                .viewports(iter::once(Viewport {
-                    origin: [0.0, 0.0],
-                    depth_range: 0.0..1.0,
-                    dimensions: [width as f32, height as f32],
-                }))
+                .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(draw1_eraser_fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
                 .sample_shading_enabled(1.0)
@@ -450,11 +529,7 @@ impl<'a> Graphics<'a> {
                 .vertex_input_single_buffer::<SecondVertex>()
                 .vertex_shader(draw2_vs.main_entry_point(), ())
                 .triangle_list()
-                .viewports(iter::once(Viewport {
-                    origin: [0.0, 0.0],
-                    depth_range: 0.0..1.0,
-                    dimensions: [width as f32, height as f32],
-                }))
+                .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(draw2_fs.main_entry_point(), ())
                 .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
                 .build(device.clone())
@@ -466,17 +541,7 @@ impl<'a> Graphics<'a> {
                 .vertex_input_single_buffer::<SecondVertex>()
                 .vertex_shader(cursor_vs.main_entry_point(), ())
                 .triangle_list()
-                .viewports(iter::once(Viewport {
-                    origin: [
-                        (width - cursor_tex_dim.width() * 2) as f32 / 2.0,
-                        (height - cursor_tex_dim.height() * 2) as f32 / 2.0,
-                    ],
-                    depth_range: 0.0..1.0,
-                    dimensions: [
-                        (cursor_tex_dim.width() * 2) as f32,
-                        (cursor_tex_dim.width() * 2) as f32,
-                    ],
-                }))
+                .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(cursor_fs.main_entry_point(), ())
                 .blend_alpha_blending()
                 .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
@@ -489,11 +554,7 @@ impl<'a> Graphics<'a> {
                 .vertex_input_single_buffer::<SecondVertexImgui>()
                 .vertex_shader(imgui_vs.main_entry_point(), ())
                 .triangle_list()
-                .viewports_fixed_scissors_dynamic(iter::once(Viewport {
-                    origin: [0.0, 0.0],
-                    depth_range: 0.0..1.0,
-                    dimensions: [width as f32, height as f32],
-                }))
+                .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(imgui_fs.main_entry_point(), ())
                 .blend_alpha_blending()
                 .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
@@ -506,11 +567,7 @@ impl<'a> Graphics<'a> {
                 .vertex_input_single_buffer::<DebugVertex>()
                 .vertex_shader(debug_vs.main_entry_point(), ())
                 .triangle_list()
-                .viewports(iter::once(Viewport {
-                    origin: [0.0, 0.0],
-                    depth_range: 0.0..1.0,
-                    dimensions: [width as f32, height as f32],
-                }))
+                .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(debug_fs.main_entry_point(), ())
                 .blend_alpha_blending()
                 .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
@@ -518,30 +575,19 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let framebuffer = Arc::new(
-            Framebuffer::start(render_pass.clone())
-                .add(tmp_image_attachment.clone())
-                .unwrap()
-                .add(tmp_erase_image_attachment.clone())
-                .unwrap()
-                .add(depth_buffer_attachment.clone())
-                .unwrap()
-                .build()
-                .unwrap(),
+        let (
+            framebuffer,
+            second_framebuffers,
+            eraser1_descriptor_set_0,
+            draw2_descriptor_set_0,
+        ) = Graphics::framebuffers_and_descriptors(
+            device.clone(),
+            &images,
+            &render_pass,
+            &second_render_pass,
+            &eraser1_pipeline,
+            &draw2_pipeline,
         );
-
-        let second_framebuffers = images
-            .iter()
-            .map(|image| {
-                Arc::new(
-                    Framebuffer::start(second_render_pass.clone())
-                        .add(image.clone())
-                        .unwrap()
-                        .build()
-                        .unwrap(),
-                )
-            })
-            .collect::<Vec<_>>();
 
         let view_uniform_buffer = CpuBufferPool::<::graphics::shader::draw1_vs::ty::View>::new(
             device.clone(),
@@ -600,29 +646,27 @@ impl<'a> Graphics<'a> {
             [1f32; GROUP_COUNTER_SIZE],
         ).unwrap();
 
-        let cursor_descriptor_set = Arc::new(
-            PersistentDescriptorSet::start(cursor_pipeline.clone(), 0)
-                .add_sampled_image(cursor_texture.clone(), cursor_sampler.clone())
+        let eraser1_descriptor_set_1 = Arc::new(
+            PersistentDescriptorSet::start(eraser1_pipeline.clone(), 1)
+                .add_buffer(tmp_erased_buffer.clone())
                 .unwrap()
                 .build()
                 .unwrap(),
         );
 
-        let draw2_descriptor_set = Arc::new(
-            PersistentDescriptorSet::start(draw2_pipeline.clone(), 0)
-                .add_sampled_image(
-                    tmp_image_attachment.clone(),
-                    Sampler::unnormalized(
-                        device.clone(),
-                        Filter::Nearest,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                    ).unwrap(),
-                )
-                .unwrap()
+        let draw2_descriptor_set_1 = Arc::new(
+            PersistentDescriptorSet::start(draw2_pipeline.clone(), 1)
                 .add_buffer(colors_buffer.clone())
                 .unwrap()
                 .add_buffer(erased_buffer.clone())
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+
+        let cursor_descriptor_set = Arc::new(
+            PersistentDescriptorSet::start(cursor_pipeline.clone(), 0)
+                .add_sampled_image(cursor_texture.clone(), cursor_sampler.clone())
                 .unwrap()
                 .build()
                 .unwrap(),
@@ -659,35 +703,6 @@ impl<'a> Graphics<'a> {
             FixedSizeDescriptorSetsPool::new(draw1_pipeline.clone(), 0);
         let imgui_matrix_descriptor_set_pool =
             FixedSizeDescriptorSetsPool::new(imgui_pipeline.clone(), 0);
-
-
-        let eraser1_descriptor_set = Arc::new(
-            PersistentDescriptorSet::start(eraser1_pipeline.clone(), 0)
-                .add_sampled_image(
-                    tmp_image_attachment.clone(),
-                    Sampler::unnormalized(
-                        device.clone(),
-                        Filter::Nearest,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                    ).unwrap(),
-                )
-                .unwrap()
-                .add_sampled_image(
-                    tmp_erase_image_attachment.clone(),
-                    Sampler::unnormalized(
-                        device.clone(),
-                        Filter::Nearest,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                        UnnormalizedSamplerAddressMode::ClampToEdge,
-                    ).unwrap(),
-                )
-                .unwrap()
-                .add_buffer(tmp_erased_buffer.clone())
-                .unwrap()
-                .build()
-                .unwrap(),
-        );
 
         let eraser2_descriptor_set = Arc::new(
             PersistentDescriptorSet::start(eraser2_pipeline.clone(), 0)
@@ -728,8 +743,8 @@ impl<'a> Graphics<'a> {
                 debug_pipeline,
                 framebuffer,
                 second_framebuffers,
-                width,
-                height,
+                dim,
+                cursor_tex_dim,
                 view_uniform_buffer,
                 primitives_vertex_buffers,
                 cursor_descriptor_set,
@@ -742,10 +757,12 @@ impl<'a> Graphics<'a> {
                 imgui_matrix_descriptor_set_pool,
                 eraser1_pipeline,
                 eraser2_pipeline,
-                eraser1_descriptor_set,
+                eraser1_descriptor_set_0,
+                eraser1_descriptor_set_1,
                 eraser2_descriptor_set,
                 tmp_erased_buffer,
-                draw2_descriptor_set,
+                draw2_descriptor_set_0,
+                draw2_descriptor_set_1,
                 world_uniform_static_buffer,
                 world_uniform_buffer,
                 debug_arrow_world_uniform_buffer,
@@ -753,5 +770,47 @@ impl<'a> Graphics<'a> {
                 debug_arrow_vertex_buffer
             },
         }
+    }
+
+    pub fn recreate(&mut self, window: &'a ::vulkano_win::Window) {
+        let mut recreate = None;
+        loop {
+            // TODO: Sleep and max number of try
+            let dimensions = window.surface().capabilities(self.physical)
+                .expect("failed to get surface capabilities")
+                .current_extent.unwrap_or([1024, 768]);
+            match self.data.swapchain.recreate_with_dimension(dimensions) {
+                Err(::vulkano::swapchain::SwapchainCreationError::UnsupportedDimensions) => (),
+                r @ _ => {
+                    recreate = Some(r);
+                    break
+                },
+            }
+        }
+
+        let (new_swapchain, new_images) = recreate.unwrap().unwrap();
+        self.data.dim = new_images[0].dimensions();
+        self.data.images = new_images;
+        self.data.swapchain = new_swapchain;
+
+        let (
+            framebuffer,
+            second_framebuffers,
+            eraser1_descriptor_set_0,
+            draw2_descriptor_set_0,
+        ) = Graphics::framebuffers_and_descriptors(
+            self.data.device.clone(),
+            &self.data.images,
+            &self.data.render_pass,
+            &self.data.second_render_pass,
+            &self.data.eraser1_pipeline,
+            &self.data.draw2_pipeline,
+        );
+
+        self.data.framebuffer = framebuffer;
+        self.data.second_framebuffers = second_framebuffers;
+        self.data.eraser1_descriptor_set_0 = eraser1_descriptor_set_0;
+        self.data.draw2_descriptor_set_0 = draw2_descriptor_set_0;
+
     }
 }

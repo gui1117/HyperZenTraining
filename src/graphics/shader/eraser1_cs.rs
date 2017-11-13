@@ -11,7 +11,7 @@ layout(set = 0, binding = 0) uniform usampler2D tmp_image;
 layout(set = 0, binding = 1) uniform usampler2D tmp_erase_image;
 
 /// It is important that this buffer is cleared for each frame.
-layout(set = 0, binding = 2) buffer TmpErased {
+layout(set = 1, binding = 0) buffer TmpErased {
     uint data[];
 } tmp_erased;
 

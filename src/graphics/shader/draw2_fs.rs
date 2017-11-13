@@ -9,10 +9,10 @@ in vec4 gl_FragCoord;
 layout(location = 0) out vec4 out_color;
 
 layout(set = 0, binding = 0) uniform usampler2D tmp_image;
-layout(set = 0, binding = 1) buffer Colors {
+layout(set = 1, binding = 0) buffer Colors {
     vec4 data[];
 } colors;
-layout(set = 0, binding = 2) buffer Erased {
+layout(set = 1, binding = 1) buffer Erased {
     float data[];
 } erased;
 

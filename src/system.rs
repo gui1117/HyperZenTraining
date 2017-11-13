@@ -2,7 +2,7 @@ use winit::{Event, WindowEvent, ElementState, MouseButton, MouseScrollDelta, Vir
             TouchPhase, DeviceEvent};
 use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
 use vulkano::buffer::{ImmutableBuffer, BufferUsage};
-use vulkano::pipeline::viewport::Scissor;
+use vulkano::pipeline::viewport::Viewport;
 use vulkano::descriptor::descriptor_set::PersistentDescriptorSet;
 use nphysics::object::WorldObject;
 use util::Direction;
@@ -460,7 +460,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             };
 
             let proj_matrix = ::na::Perspective3::new(
-                graphics.width as f32 / graphics.height as f32,
+                graphics.dim[0] as f32 / graphics.dim[1] as f32,
                 ::std::f32::consts::FRAC_PI_3,
                 0.01,
                 100.0,
@@ -472,6 +472,15 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             };
 
             graphics.view_uniform_buffer.next(view_uniform).unwrap()
+        };
+
+        let screen_dynamic_state = DynamicState {
+            viewports: Some(vec![Viewport {
+                origin: [0.0, 0.0],
+                dimensions: [graphics.dim[0] as f32, graphics.dim[1] as f32],
+                depth_range: 0.0..1.0,
+            }]),
+            ..DynamicState::none()
         };
 
         // Compute view set
@@ -500,7 +509,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             command_buffer_builder = command_buffer_builder
                 .draw(
                     graphics.draw1_pipeline.clone(),
-                    DynamicState::none(),
+                    screen_dynamic_state.clone(),
                     graphics.primitives_vertex_buffers[static_draw.primitive].clone(),
                     (view_set.clone(), static_draw.set.clone()),
                     ::graphics::shader::draw1_fs::ty::Group {
@@ -532,7 +541,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 command_buffer_builder = command_buffer_builder
                     .draw(
                         graphics.draw1_pipeline.clone(),
-                        DynamicState::none(),
+                        screen_dynamic_state.clone(),
                         graphics.primitives_vertex_buffers[primitive.0].clone(),
                         (view_set.clone(), dynamic_draw_set.clone()),
                         ::graphics::shader::draw1_fs::ty::Group {
@@ -567,7 +576,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 command_buffer_builder = command_buffer_builder
                     .draw(
                         graphics.draw1_eraser_pipeline.clone(),
-                        DynamicState::none(),
+                        screen_dynamic_state.clone(),
                         graphics.primitives_vertex_buffers[primitive.0].clone(),
                         (view_set.clone(), dynamic_draw_set.clone()),
                         (),
@@ -581,7 +590,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             .unwrap()
             .fill_buffer(graphics.tmp_erased_buffer.clone(), 0u32)
             .unwrap()
-            .dispatch([graphics.width/64, graphics.height/64, 1], graphics.eraser1_pipeline.clone(), graphics.eraser1_descriptor_set.clone(), ())
+            .dispatch([graphics.dim[0]/64, graphics.dim[1]/64, 1], graphics.eraser1_pipeline.clone(), (graphics.eraser1_descriptor_set_0.clone(), graphics.eraser1_descriptor_set_1.clone()), ())
             .unwrap()
             // TODO: make velocity it configurable
             .dispatch([(::graphics::GROUP_COUNTER_SIZE/64) as u32, 1, 1], graphics.eraser2_pipeline.clone(), graphics.eraser2_descriptor_set.clone(), 6.0*config.dt())
@@ -595,15 +604,28 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             .unwrap()
             .draw(
                 graphics.draw2_pipeline.clone(),
-                DynamicState::none(),
+                screen_dynamic_state.clone(),
                 graphics.fullscreen_vertex_buffer.clone(),
-                graphics.draw2_descriptor_set.clone(),
+                (graphics.draw2_descriptor_set_0.clone(), graphics.draw2_descriptor_set_1.clone()),
                 ()
             )
             .unwrap()
             .draw(
                 graphics.cursor_pipeline.clone(),
-                DynamicState::none(),
+                DynamicState {
+                    viewports: Some(vec![Viewport {
+                    origin: [
+                        (graphics.dim[0] - graphics.cursor_tex_dim[0] * 2) as f32 / 2.0,
+                        (graphics.dim[1] - graphics.cursor_tex_dim[1] * 2) as f32 / 2.0,
+                    ],
+                    depth_range: 0.0..1.0,
+                    dimensions: [
+                        (graphics.cursor_tex_dim[0] * 2) as f32,
+                        (graphics.cursor_tex_dim[1] * 2) as f32,
+                    ],
+                    }]),
+                    ..DynamicState::none()
+                },
                 graphics.cursor_vertex_buffer.clone(),
                 graphics.cursor_descriptor_set.clone(),
                 ()
@@ -627,7 +649,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 second_command_buffer_builder = second_command_buffer_builder
                     .draw(
                         graphics.debug_pipeline.clone(),
-                        DynamicState::none(),
+                        screen_dynamic_state.clone(),
                         graphics.debug_arrow_vertex_buffer.clone(),
                         (view_set.clone(), debug_arrow_set.clone()),
                         arrow.0
@@ -699,11 +721,6 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             );
 
             for _cmd in drawlist.cmd_buffer {
-                let scissor = Scissor {
-                    origin: [0, 0],
-                    dimensions: [width as u32, height as u32],
-                };
-
                 // TODO: dynamic scissor
                 // Scissor {
                 //     origin: [
@@ -716,16 +733,10 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 //     ],
                 // }
 
-                let dynamic_state = DynamicState {
-                    line_width: None,
-                    viewports: None,
-                    scissors: Some(vec![scissor]),
-                };
-
                 cmd_builder = cmd_builder
                     .draw_indexed(
                         graphics.imgui_pipeline.clone(),
-                        dynamic_state.clone(),
+                        screen_dynamic_state.clone(),
                         vertex_buffer.clone(), index_buffer.clone(),
                         (matrix_set.clone(), graphics.imgui_descriptor_set.clone()),
                         ()

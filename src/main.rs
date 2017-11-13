@@ -54,7 +54,7 @@ fn main() {
 
     let mut events_loop = winit::EventsLoop::new();
     let window = winit::WindowBuilder::new()
-        .with_fullscreen(winit::get_primary_monitor())
+        // .with_fullscreen(winit::get_primary_monitor())
         .build_vk_surface(&events_loop, instance.clone())
         .unwrap();
 
@@ -92,7 +92,7 @@ fn main() {
 
     config.style().set_style(imgui.style_mut());
 
-    let graphics = graphics::Graphics::new(&window, &mut imgui);
+    let mut graphics = graphics::Graphics::new(&window, &mut imgui);
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
@@ -223,8 +223,8 @@ fn main() {
                             window
                                 .window()
                                 .set_cursor_position(
-                                    graphics.data.width as i32 / 2,
-                                    graphics.data.height as i32 / 2,
+                                    graphics.data.dim[0] as i32 / 2,
+                                    graphics.data.dim[1] as i32 / 2,
                                 )
                                 .unwrap();
                         }
@@ -274,8 +274,14 @@ fn main() {
         world.maintain();
 
         // Render world
-        let (image_num, acquire_future) =
-            swapchain::acquire_next_image(graphics.data.swapchain.clone(), None).unwrap();
+        let mut next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), None);
+        while let Err(vulkano::swapchain::AcquireError::OutOfDate) = next_image {
+            graphics.recreate(&window);
+            *world.write_resource() = graphics.data.clone();
+            next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), None);
+        }
+        let (image_num, acquire_future) = next_image.unwrap();
+
         world.write_resource::<::resource::Rendering>().image_num = Some(image_num);
         world.write_resource::<::resource::Rendering>().size_points =
             window.window().get_inner_size_points();
