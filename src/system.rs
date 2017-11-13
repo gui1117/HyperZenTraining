@@ -487,7 +487,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
 
         // Compute command
         let mut command_buffer_builder =
-            AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family())
+            AutoCommandBufferBuilder::primary_one_time_submit(graphics.device.clone(), graphics.queue.family())
                 .unwrap()
                 .begin_render_pass(
                     graphics.framebuffer.clone(),
@@ -590,7 +590,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         rendering.command_buffer = Some(command_buffer_builder.build().unwrap());
 
         // Compute second command
-        let mut second_command_buffer_builder = AutoCommandBufferBuilder::new(graphics.device.clone(), graphics.queue.family()).unwrap()
+        let mut second_command_buffer_builder = AutoCommandBufferBuilder::primary_one_time_submit(graphics.device.clone(), graphics.queue.family()).unwrap()
             .begin_render_pass(graphics.second_framebuffers[rendering.image_num.take().unwrap()].clone(), false, vec!())
             .unwrap()
             .draw(
