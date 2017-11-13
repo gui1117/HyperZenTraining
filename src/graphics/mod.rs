@@ -773,7 +773,7 @@ impl<'a> Graphics<'a> {
     }
 
     pub fn recreate(&mut self, window: &'a ::vulkano_win::Window) {
-        let mut recreate = None;
+        let recreate;
         loop {
             // TODO: Sleep and max number of try
             let dimensions = window.surface().capabilities(self.physical)
@@ -811,6 +811,5 @@ impl<'a> Graphics<'a> {
         self.data.second_framebuffers = second_framebuffers;
         self.data.eraser1_descriptor_set_0 = eraser1_descriptor_set_0;
         self.data.draw2_descriptor_set_0 = draw2_descriptor_set_0;
-
     }
 }
