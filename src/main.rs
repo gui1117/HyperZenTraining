@@ -59,10 +59,15 @@ fn main() {
         .unwrap();
 
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
-    window
-        .window()
-        .set_cursor_state(winit::CursorState::Grab)
-        .unwrap();
+
+    let mut error_timer = 0;
+    while let Err(_) = window .window().set_cursor_state(winit::CursorState::Grab) {
+        ::std::thread::sleep(::std::time::Duration::from_millis(1));
+        error_timer += 1;
+        if error_timer > 100 {
+            panic!("cursor could not be grabbed");
+        }
+    }
 
     let config = ::resource::Config::load();
 
