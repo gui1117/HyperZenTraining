@@ -10,7 +10,23 @@ use graphics::{shader, Vertex, render_pass};
 use std::sync::Arc;
 use std::any::Any;
 
-pub struct Life(pub bool);
+#[derive(Clone)]
+pub enum Life {
+    EraserAlive,
+    EraserDead,
+    DrawAlive,
+    DrawDead,
+}
+
+impl Life {
+    pub fn kill(&mut self) {
+        *self = match self.clone() {
+            Life::EraserAlive => Life::EraserDead,
+            Life::DrawAlive => Life::DrawDead(0),
+            s @ _ => s,
+        };
+    }
+}
 
 impl ::specs::Component for Life {
     type Storage = ::specs::VecStorage<Self>;

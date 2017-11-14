@@ -40,7 +40,7 @@ pub fn create_player<'a>(
         entity,
         ::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, None),
     );
-    shooters.insert(entity, ::component::Shooter::new(2.0));
+    shooters.insert(entity, ::component::Shooter::new(0.5));
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
 }
@@ -130,7 +130,6 @@ pub fn create_avoider<'a>(
             Some(pnt_to_com),
         ),
     );
-    lifes.insert(entity, ::component::Life(true));
     dynamic_graphics_assets.insert(
         entity,
         ::component::DynamicGraphicsAssets::new(
@@ -141,7 +140,9 @@ pub fn create_avoider<'a>(
     );
     if eraser {
         dynamic_erasers.insert(entity, ::component::DynamicEraser);
+        lifes.insert(entity, ::component::Life::EraserAlive);
     } else {
+        lifes.insert(entity, ::component::Life::DrawAlive);
         dynamic_draws.insert(entity, ::component::DynamicDraw);
     }
 
@@ -201,7 +202,6 @@ pub fn create_bouncer<'a>(
         momentum
     });
     contactors.insert(entity, ::component::Contactor::new());
-    lifes.insert(entity, ::component::Life(true));
     dynamic_graphics_assets.insert(
         entity,
         ::component::DynamicGraphicsAssets::new(
@@ -212,7 +212,9 @@ pub fn create_bouncer<'a>(
     );
     if eraser {
         dynamic_erasers.insert(entity, ::component::DynamicEraser);
+        lifes.insert(entity, ::component::Life::EraserAlive);
     } else {
+        lifes.insert(entity, ::component::Life::DrawAlive);
         dynamic_draws.insert(entity, ::component::DynamicDraw);
     }
 

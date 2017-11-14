@@ -1,6 +1,7 @@
-ConfigSave(
+Config(
     fps: 60,
     mouse_sensibility: 0.001,
+    eraser_time: 0.6,
     style: ImGuiStyleSave(
         alpha: 1.0,
         window_padding: ImVec2Def(x: 8, y: 8),

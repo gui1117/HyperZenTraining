@@ -5,84 +5,29 @@ use std::io::Write;
 
 const SAVE_FILENAME: &str = "config.ron";
 
-macro_rules! config {
-    (
-        $(svcst $saved_cast_field:ident: $saved_cast_type1:ty, $saved_cast_type2:ty,)*
-        $(saved $saved_field:ident: $saved_type:ty,)*
-        $(built $built_field:ident: $built_type:ty: $built_default:expr,)*
-    ) => {
-        #[derive(Serialize, Deserialize, Clone)]
-        struct ConfigSave {
-            $($saved_cast_field: $saved_cast_type2,)*
-            $($saved_field: $saved_type,)*
-        }
-
-        pub struct Config {
-            $($saved_cast_field: $saved_cast_type1,)*
-            $($saved_field: $saved_type,)*
-            $($built_field: $built_type,)*
-        }
-
-        impl Config {
-            $(#[inline]
-            pub fn $saved_cast_field(&self) -> &$saved_cast_type1 {
-                &self.$saved_cast_field
-            })*
-            $(#[inline]
-            pub fn $saved_field(&self) -> &$saved_type {
-                &self.$saved_field
-            })*
-            $(#[inline]
-            pub fn $built_field(&self) -> &$built_type {
-                &self.$built_field
-            })*
-
-            fn from_save_default(save: ConfigSave) -> Self {
-                Config {
-                    $($saved_cast_field: save.$saved_cast_field.into(),)*
-                    $($saved_field: save.$saved_field.into(),)*
-                    $($built_field: $built_default.into(),)*
-                }
-            }
-
-            fn to_save(&self) -> ConfigSave {
-                ConfigSave {
-                    $($saved_cast_field: self.$saved_cast_field.clone().into(),)*
-                    $($saved_field: self.$saved_field.clone().into(),)*
-                }
-            }
-        }
-    }
-}
-
-config!{
-    saved style: ImGuiStyleSave,
-    saved mouse_sensibility: f32,
-    saved fps: u32,
-    built dt: f32: 0f32,
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Config {
+    pub style: ImGuiStyleSave,
+    pub mouse_sensibility: f32,
+    pub fps: u32,
+    pub eraser_time: f32,
 }
 
 impl Config {
-    pub fn set_fps(&mut self, fps: u32) {
-        self.fps = fps;
-        self.dt = 1.0 / fps as f32;
-    }
-
-    fn from_save(save: ConfigSave) -> Self {
-        let mut config = Config::from_save_default(save.clone());
-        config.set_fps(save.fps);
-        config
+    #[inline]
+    pub fn dt(&self) -> f32 {
+        1.0 / self.fps as f32
     }
 
     pub fn load() -> Self {
         let file = File::open(SAVE_FILENAME).unwrap();
-        Config::from_save(::ron::de::from_reader(file).unwrap())
+        ::ron::de::from_reader(file).unwrap()
     }
 
     pub fn save(&self) {
-        let save = ::ron::ser::to_string(&self.to_save()).unwrap();
+        let string = ::ron::ser::to_string(&self).unwrap();
         let mut file = File::open(SAVE_FILENAME).unwrap();
-        file.write_all(save.as_bytes()).unwrap();
+        file.write_all(string.as_bytes()).unwrap();
     }
 }
 

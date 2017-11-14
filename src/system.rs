@@ -157,12 +157,12 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                 Event::DeviceEvent {
                     event: DeviceEvent::Motion { axis: 0, value: dx }, ..
                 } => {
-                    self.pointer[0] += dx as f32 * config.mouse_sensibility();
+                    self.pointer[0] += dx as f32 * config.mouse_sensibility;
                 }
                 Event::DeviceEvent {
                     event: DeviceEvent::Motion { axis: 1, value: dy }, ..
                 } => {
-                    self.pointer[1] += dy as f32 * config.mouse_sensibility();
+                    self.pointer[1] += dy as f32 * config.mouse_sensibility;
                     self.pointer[1] = self.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
                         -::std::f32::consts::FRAC_PI_2,
                     );
@@ -592,8 +592,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             .unwrap()
             .dispatch([graphics.dim[0]/64, graphics.dim[1]/64, 1], graphics.eraser1_pipeline.clone(), (graphics.eraser1_descriptor_set_0.clone(), graphics.eraser1_descriptor_set_1.clone()), ())
             .unwrap()
-            // TODO: make velocity it configurable
-            .dispatch([(::graphics::GROUP_COUNTER_SIZE/64) as u32, 1, 1], graphics.eraser2_pipeline.clone(), graphics.eraser2_descriptor_set.clone(), 6.0*config.dt())
+            .dispatch([(::graphics::GROUP_COUNTER_SIZE/64) as u32, 1, 1], graphics.eraser2_pipeline.clone(), graphics.eraser2_descriptor_set.clone(), config.dt()/config.eraser_time)
             .unwrap();
 
         rendering.command_buffer = Some(command_buffer_builder.build().unwrap());
@@ -781,21 +780,25 @@ impl<'a> ::specs::System<'a> for LifeSystem {
     type SystemData = (::specs::WriteStorage<'a, ::component::DynamicDraw>,
      ::specs::WriteStorage<'a, ::component::DynamicEraser>,
      ::specs::WriteStorage<'a, ::component::Life>,
+     ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Entities<'a>);
 
     fn run(
         &mut self,
-        (mut dynamic_draws, mut dynamic_erasers, mut lives, entities): Self::SystemData,
+        (mut dynamic_draws, mut dynamic_erasers, mut lives, config, entities): Self::SystemData,
     ) {
+        use ::component::Life;
         for (life, entity) in (&mut lives, &*entities).join() {
-            if !life.0 {
-                if dynamic_draws.get(entity).is_some() {
-                    entities.delete(entity).unwrap();
-                } else {
-                    life.0 = true;
+            match *life {
+                Life::EraserDead => {
+                    *life = Life::DrawAlive;
                     dynamic_draws.insert(entity, ::component::DynamicDraw);
                     dynamic_erasers.remove(entity).unwrap();
-                }
+                },
+                Life::DrawDead => {
+                    entities.delete(entity).unwrap();
+                },
+                _ => (),
             }
         }
     }
@@ -862,7 +865,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                 );
                 for collided in &self.collided {
                     if let Some(ref mut life) = lifes.get_mut(collided.0) {
-                        life.0 = false;
+                        life.kill();
                     }
                     break;
                 }
@@ -907,7 +910,10 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
             let kill_too_far = |body: &::component::PhysicBody, life: &mut ::component::Life| {
                 let pos = body.get(&physic_world).position().translation.vector;
                 if (pos - player_pos).norm() > kill_distance {
-                    life.0 = false;
+                    // Or maybe directly delete the entity
+                    // here at least if the delete is seen
+                    // then it can look intentional
+                    life.kill()
                 }
             };
 

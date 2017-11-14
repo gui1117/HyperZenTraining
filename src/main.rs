@@ -94,7 +94,7 @@ fn main() {
     imgui.set_imgui_key(::imgui::ImGuiKey::Y, 17);
     imgui.set_imgui_key(::imgui::ImGuiKey::Z, 18);
 
-    config.style().set_style(imgui.style_mut());
+    config.style.set_style(imgui.style_mut());
 
     let mut graphics = graphics::Graphics::new(&window, &mut imgui);
 
@@ -201,7 +201,7 @@ fn main() {
         .build();
 
     let mut fps =
-        fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps().clone());
+        fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps.clone());
 
     loop {
         previous_frame_end.cleanup_finished();
