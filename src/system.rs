@@ -879,6 +879,7 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
      ::specs::WriteStorage<'a, ::component::Momentum>,
      ::specs::WriteStorage<'a, ::component::Avoider>,
      ::specs::WriteStorage<'a, ::component::Bouncer>,
+     ::specs::WriteStorage<'a, ::component::DynamicEraser>,
      ::specs::WriteStorage<'a, ::component::DynamicDraw>,
      ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
      ::specs::WriteStorage<'a, ::component::Life>,
@@ -889,7 +890,7 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
 
     fn run(
         &mut self,
-        (players, mut bodies, mut momentums, mut avoiders, mut bouncers, mut dynamic_draws, mut dynamic_graphics_assets, mut lives, mut contactors, maze, mut physic_world, entities): Self::SystemData,
+        (players, mut bodies, mut momentums, mut avoiders, mut bouncers, mut dynamic_erasers, mut dynamic_draws, mut dynamic_graphics_assets, mut lives, mut contactors, maze, mut physic_world, entities): Self::SystemData,
     ) {
         let avoider_population = 10;
         let bouncer_population = 10;
@@ -936,14 +937,14 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
             let pos = square[square_range.ind_sample(&mut rng)];
             let pos = [pos[0] as f32 + 0.5, pos[1] as f32 + 0.5];
 
-            ::entity::create_avoider(pos, &mut momentums, &mut avoiders, &mut bodies, &mut dynamic_draws, &mut dynamic_graphics_assets, &mut lives, &mut physic_world, &entities);
+            ::entity::create_avoider(pos, false, &mut momentums, &mut avoiders, &mut bodies, &mut dynamic_erasers, &mut dynamic_draws, &mut dynamic_graphics_assets, &mut lives, &mut physic_world, &entities);
         }
 
         for _ in bouncer_len..bouncer_population {
             let pos = square[square_range.ind_sample(&mut rng)];
             let pos = [pos[0] as f32 + 0.5, pos[1] as f32 + 0.5];
 
-            ::entity::create_bouncer(pos, &mut momentums, &mut bouncers, &mut bodies, &mut dynamic_draws, &mut dynamic_graphics_assets, &mut lives, &mut contactors, &mut physic_world, &entities);
+            ::entity::create_bouncer(pos, false, &mut momentums, &mut bouncers, &mut bodies, &mut dynamic_erasers, &mut dynamic_draws, &mut dynamic_graphics_assets, &mut lives, &mut contactors, &mut physic_world, &entities);
         }
     }
 }

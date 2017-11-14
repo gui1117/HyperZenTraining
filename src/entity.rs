@@ -48,9 +48,11 @@ pub fn create_player<'a>(
 // IDEA: mabye make it turn on itself
 pub fn create_avoider<'a>(
     pos: [f32; 2],
+    eraser: bool,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
     avoiders: &mut ::specs::WriteStorage<'a, ::component::Avoider>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    dynamic_erasers: &mut ::specs::WriteStorage<'a, ::component::DynamicEraser>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
@@ -137,16 +139,22 @@ pub fn create_avoider<'a>(
             primitive_trans,
         ),
     );
-    dynamic_draws.insert(entity, ::component::DynamicDraw);
+    if eraser {
+        dynamic_erasers.insert(entity, ::component::DynamicEraser);
+    } else {
+        dynamic_draws.insert(entity, ::component::DynamicDraw);
+    }
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
 }
 
 pub fn create_bouncer<'a>(
     pos: [f32; 2],
+    eraser: bool,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
     bouncers: &mut ::specs::WriteStorage<'a, ::component::Bouncer>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    dynamic_erasers: &mut ::specs::WriteStorage<'a, ::component::DynamicEraser>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
@@ -202,7 +210,11 @@ pub fn create_bouncer<'a>(
             primitive_trans,
         ),
     );
-    dynamic_draws.insert(entity, ::component::DynamicDraw);
+    if eraser {
+        dynamic_erasers.insert(entity, ::component::DynamicEraser);
+    } else {
+        dynamic_draws.insert(entity, ::component::DynamicDraw);
+    }
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
 }
