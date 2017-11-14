@@ -73,11 +73,14 @@ impl Maze {
         }
     }
 
-    fn compute_zones(&self) -> Vec<Vec<(usize, usize)>> {
+    fn compute_zones(&self, corridor: bool) -> Vec<Vec<(usize, usize)>> {
         let mut unvisited = HashSet::new();
         for i in 0..self.width {
             for j in 0..self.height {
                 if !self.walls[i][j] {
+                    // the maze must be circled
+                    assert!(i != 0 && i != self.width-1);
+                    assert!(j != 0 && j != self.height-1);
                     unvisited.insert((i, j));
                 }
             }
@@ -93,6 +96,17 @@ impl Maze {
             while let Some(cell) = to_visit.pop() {
                 let i = cell.0;
                 let j = cell.1;
+
+                let is_corridor = (self.walls[i-1][j] && self.walls[i+1][j])
+                    || (self.walls[i][j-1] && self.walls[i][j+1])
+                    || (self.walls[i-1][j] && self.walls[i][j-1] && self.walls[i+1][j+1])
+                    || (self.walls[i-1][j] && self.walls[i][j+1] && self.walls[i+1][j-1])
+                    || (self.walls[i+1][j] && self.walls[i][j-1] && self.walls[i-1][j+1])
+                    || (self.walls[i+1][j] && self.walls[i][j+1] && self.walls[i-1][j-1]);
+
+                if corridor && !is_corridor {
+                    continue;
+                }
 
                 let mut neighboors = vec![];
                 if !self.walls[i + 1][j] {
@@ -125,7 +139,7 @@ impl Maze {
 
     /// Compute the largest zone and fill all other zone
     pub fn fill_smallest(&mut self) {
-        let mut zones = self.compute_zones();
+        let mut zones = self.compute_zones(false);
         if zones.is_empty() {
             return;
         }
@@ -146,6 +160,26 @@ impl Maze {
                 self.walls[i][j] = true
             },
         );
+    }
+
+    pub fn fill_dead_end(&mut self) {
+        loop {
+            let mut corridors = self.compute_zones(true);
+            corridors.retain(|corridor| {
+                corridor.iter().any(|&(i, j)| {
+                    (self.walls[i-1][j] && self.walls[i][j-1] && self.walls[i][j+1])
+                    || (self.walls[i+1][j] && self.walls[i][j-1] && self.walls[i][j+1])
+                    || (self.walls[i][j-1] && self.walls[i-1][j] && self.walls[i+1][j])
+                    || (self.walls[i][j+1] && self.walls[i-1][j] && self.walls[i+1][j])
+                })
+            });
+            if corridors.len() == 0 {
+                break;
+            }
+            for &(i, j) in corridors.iter().flat_map(|z| z) {
+                self.walls[i][j] = true;
+            }
+        }
     }
 
     pub fn random_free(&self) -> (usize, usize) {
