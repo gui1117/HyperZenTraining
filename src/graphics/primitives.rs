@@ -1,6 +1,6 @@
 use vulkano::device::Queue;
 use vulkano::buffer::{ImmutableBuffer, BufferUsage};
-use vulkano::sync::GpuFuture;
+use vulkano::sync::{GpuFuture, now};
 use std::sync::Arc;
 use super::Vertex;
 use super::DebugVertex;
@@ -11,130 +11,79 @@ use std::f32::consts::PI;
 pub fn instance_primitives(
     queue: Arc<Queue>,
 ) -> (Vec<Vec<Arc<ImmutableBuffer<[Vertex]>>>>, Box<GpuFuture>) {
-    let (plane, plane_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [-1.0, -1.0, 0.0] },
-            Vertex { position: [1.0, -1.0, 0.0] },
-            Vertex { position: [-1.0, 1.0, 0.0] },
-            Vertex { position: [1.0, 1.0, 0.0] },
-            Vertex { position: [-1.0, 1.0, 0.0] },
-            Vertex { position: [1.0, -1.0, 0.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    let mut primitives_buffers_def = vec![];
 
-    let (square_pyramid_base, square_pyramid_base_future) = ImmutableBuffer::from_iter(
-        [
-            Vertex { position: [-1.0, -1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, -1.0] },
-            Vertex { position: [-1.0, 1.0, -1.0] },
+    // Plane
+    primitives_buffers_def.push(vec![
+                 vec![
+                 Vertex { position: [-1.0, -1.0, 0.0] },
+                 Vertex { position: [1.0, -1.0, 0.0] },
+                 Vertex { position: [-1.0, 1.0, 0.0] },
+                 Vertex { position: [1.0, 1.0, 0.0] },
+                 Vertex { position: [-1.0, 1.0, 0.0] },
+                 Vertex { position: [1.0, -1.0, 0.0] },
+                 ]
+    ]);
 
-            Vertex { position: [1.0, 1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, -1.0] },
-            Vertex { position: [-1.0, 1.0, -1.0] },
-        ].iter()
-            .cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    // Square pyramid
+    primitives_buffers_def.push(
+        vec![
+            vec![
+                Vertex { position: [-1.0, -1.0, -1.0] },
+                Vertex { position: [1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, 1.0, -1.0] },
 
-    let (square_pyramid_side_1, square_pyramid_side_1_future) =
-        ImmutableBuffer::from_iter(
-            [
+                Vertex { position: [1.0, 1.0, -1.0] },
+                Vertex { position: [1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, 1.0, -1.0] },
+            ],
+            vec![
                 Vertex { position: [-1.0, -1.0, -1.0] },
                 Vertex { position: [-1.0, 1.0, -1.0] },
                 Vertex { position: [0.0, 0.0, 1.0] },
-            ].iter()
-                .cloned(),
-            BufferUsage::vertex_buffer(),
-            queue.clone(),
-        ).expect("failed to create buffer");
-
-    let (square_pyramid_side_2, square_pyramid_side_2_future) =
-        ImmutableBuffer::from_iter(
-            [
+            ],
+            vec![
                 Vertex { position: [-1.0, 1.0, -1.0] },
                 Vertex { position: [1.0, 1.0, -1.0] },
                 Vertex { position: [0.0, 0.0, 1.0] },
-            ].iter()
-                .cloned(),
-            BufferUsage::vertex_buffer(),
-            queue.clone(),
-        ).expect("failed to create buffer");
-
-    let (square_pyramid_side_3, square_pyramid_side_3_future) =
-        ImmutableBuffer::from_iter(
-            [
+            ],
+            vec![
                 Vertex { position: [1.0, 1.0, -1.0] },
                 Vertex { position: [1.0, -1.0, -1.0] },
                 Vertex { position: [0.0, 0.0, 1.0] },
-            ].iter()
-                .cloned(),
-            BufferUsage::vertex_buffer(),
-            queue.clone(),
-        ).expect("failed to create buffer");
-
-    let (square_pyramid_side_4, square_pyramid_side_4_future) =
-        ImmutableBuffer::from_iter(
-            [
+            ],
+            vec![
                 Vertex { position: [1.0, -1.0, -1.0] },
                 Vertex { position: [-1.0, -1.0, -1.0] },
                 Vertex { position: [0.0, 0.0, 1.0] },
-            ].iter()
-                .cloned(),
-            BufferUsage::vertex_buffer(),
-            queue.clone(),
-        ).expect("failed to create buffer");
+            ],
+        ]
+    );
 
-    let (triangle_pyramid_base, triangle_pyramid_base_future) =
-        ImmutableBuffer::from_iter(
-            [
+    primitives_buffers_def.push(
+        vec![
+            vec![
                 Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
                 Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
                 Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
-            ].iter()
-                .cloned(),
-            BufferUsage::vertex_buffer(),
-            queue.clone(),
-        ).expect("failed to create buffer");
-
-    let (triangle_pyramid_side_1, triangle_pyramid_side_1_future) =
-        ImmutableBuffer::from_iter(
-            [
+            ],
+            vec![
                 Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
                 Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
                 Vertex { position: [0.0, 0.0, 1.0] },
-            ].iter()
-                .cloned(),
-            BufferUsage::vertex_buffer(),
-            queue.clone(),
-        ).expect("failed to create buffer");
-
-    let (triangle_pyramid_side_2, triangle_pyramid_side_2_future) =
-        ImmutableBuffer::from_iter(
-            [
+            ],
+            vec![
                 Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
                 Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
                 Vertex { position: [0.0, 0.0, 1.0] },
-            ].iter()
-                .cloned(),
-            BufferUsage::vertex_buffer(),
-            queue.clone(),
-        ).expect("failed to create buffer");
-
-    let (triangle_pyramid_side_3, triangle_pyramid_side_3_future) =
-        ImmutableBuffer::from_iter(
-            [
+            ],
+            vec![
                 Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
                 Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
                 Vertex { position: [0.0, 0.0, 1.0] },
-            ].iter()
-                .cloned(),
-            BufferUsage::vertex_buffer(),
-            queue.clone(),
-        ).expect("failed to create buffer");
+            ]
+        ]
+    );
 
     let sphere_vertices = {
         let sphere = ::ncollide::procedural::sphere(1.0, 16, 16, false);
@@ -171,87 +120,56 @@ pub fn instance_primitives(
         vertices
     };
 
-    let (sphere, sphere_future) = ImmutableBuffer::from_iter(
-        sphere_vertices.iter().cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
+    primitives_buffers_def.push(vec![sphere_vertices]);
 
-    let nine_vertices = {
-        let mut vertices = vec![];
-        for i in 0..9 {
-            let a0 = i as f32 * 2.0*PI/9.0;
-            let a1 = (i+1) as f32 * 2.0*PI/9.0;
+    let mut nine_buffers_def = vec![vec![], vec![]];
+    for i in 0..9 {
+        let a0 = i as f32 * 2.0*PI/9.0;
+        let a1 = (i+1) as f32 * 2.0*PI/9.0;
 
-            let p0 = [a0.cos(), a0.sin()];
-            let p1 = [a1.cos(), a1.sin()];
+        let p0 = [a0.cos(), a0.sin()];
+        let p1 = [a1.cos(), a1.sin()];
 
-            vertices.push(Vertex { position: [p0[0], p0[1], -1.0]});
-            vertices.push(Vertex { position: [p1[0], p1[1], -1.0]});
-            vertices.push(Vertex { position: [0.0, 0.0, -1.0]});
+        nine_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
+        nine_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0]});
+        nine_buffers_def[0].push(Vertex { position: [0.0, 0.0, -1.0]});
 
-            vertices.push(Vertex { position: [p0[0], p0[1], -1.0]});
-            vertices.push(Vertex { position: [p1[0], p1[1], -1.0]});
-            vertices.push(Vertex { position: [p1[0], p1[1], 1.0]});
+        nine_buffers_def[1].push(Vertex { position: [p0[0], p0[1], -1.0]});
+        nine_buffers_def[1].push(Vertex { position: [p1[0], p1[1], -1.0]});
+        nine_buffers_def[1].push(Vertex { position: [p1[0], p1[1], 1.0]});
 
-            vertices.push(Vertex { position: [p0[0], p0[1], -1.0]});
-            vertices.push(Vertex { position: [p0[0], p0[1], 1.0]});
-            vertices.push(Vertex { position: [p1[0], p1[1], 1.0]});
+        nine_buffers_def.push(
+            vec![
+                Vertex { position: [p0[0], p0[1], -1.0]},
+                Vertex { position: [p0[0], p0[1], 1.0]},
+                Vertex { position: [p1[0], p1[1], 1.0]},
 
-            vertices.push(Vertex { position: [p0[0], p0[1], 1.0]});
-            vertices.push(Vertex { position: [p1[0], p1[1], 1.0]});
-            vertices.push(Vertex { position: [0.0, 0.0, 1.0]});
+                Vertex { position: [p0[0], p0[1], 1.0]},
+                Vertex { position: [p1[0], p1[1], 1.0]},
+                Vertex { position: [0.0, 0.0, 1.0]},
+            ]
+        );
+    }
+    primitives_buffers_def.push(nine_buffers_def);
+
+    let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
+    let mut primitives_buffers = vec![];
+    for primitive_buffers_def in primitives_buffers_def {
+        let mut primitive_buffers = vec![];
+        for buffer_def in primitive_buffers_def {
+            let (buffer, future) = ImmutableBuffer::from_iter(
+                buffer_def.iter().cloned(),
+                BufferUsage::vertex_buffer(),
+                queue.clone(),
+            ).expect("failed to create buffer");
+
+            primitive_buffers.push(buffer);
+            final_future = Box::new(final_future.join(future)) as Box<GpuFuture>;
         }
-        vertices
-    };
+        primitives_buffers.push(primitive_buffers);
+    }
 
-    let (nine, nine_future) = ImmutableBuffer::from_iter(
-        nine_vertices.iter().cloned(),
-        BufferUsage::vertex_buffer(),
-        queue.clone(),
-    ).expect("failed to create buffer");
-
-    (
-        vec![
-            vec![plane],
-
-            vec![
-                square_pyramid_base,
-                square_pyramid_side_1,
-                square_pyramid_side_2,
-                square_pyramid_side_3,
-                square_pyramid_side_4,
-            ],
-
-            vec![
-                triangle_pyramid_base,
-                triangle_pyramid_side_1,
-                triangle_pyramid_side_2,
-                triangle_pyramid_side_3,
-            ],
-
-            vec![
-                sphere,
-            ],
-
-            vec![
-                nine,
-            ],
-        ],
-        Box::new(plane_future
-            .join(square_pyramid_base_future)
-            .join(square_pyramid_side_1_future)
-            .join(square_pyramid_side_2_future)
-            .join(square_pyramid_side_3_future)
-            .join(square_pyramid_side_4_future)
-            .join(triangle_pyramid_base_future)
-            .join(triangle_pyramid_side_1_future)
-            .join(triangle_pyramid_side_2_future)
-            .join(triangle_pyramid_side_3_future)
-            .join(sphere_future)
-            .join(nine_future)
-        ) as Box<GpuFuture>
-    )
+    (primitives_buffers, final_future)
 }
 
 #[allow(unused)]
