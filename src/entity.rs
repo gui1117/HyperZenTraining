@@ -28,6 +28,7 @@ pub fn create_player<'a>(
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     body.set_transformation(pos);
     body.set_collision_groups(group);
+
     let mass = 1.0 / body.inv_mass();
     let velocity = 10.0;
     let time_to_reach_v_max = 0.1;
