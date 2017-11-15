@@ -29,31 +29,9 @@ pub mod render_pass;
 mod primitives;
 mod colors;
 
-pub use self::primitives::primitive;
+pub use self::primitives::primitive::Primitive;
 pub use self::colors::color;
-
-lazy_static! {
-    pub static ref GROUP_COUNTER: GroupCounter = GroupCounter::new();
-}
-
-pub const GROUP_COUNTER_SIZE: usize = 65536;
-
-pub struct GroupCounter {
-    counter: ::std::sync::atomic::AtomicUsize,
-}
-
-impl GroupCounter {
-    fn new() -> Self {
-        GroupCounter { counter: ::std::sync::atomic::AtomicUsize::new(1) }
-    }
-
-    pub fn next(&self) -> u16 {
-        self.counter.fetch_add(
-            1,
-            ::std::sync::atomic::Ordering::Relaxed,
-        ) as u16
-    }
-}
+pub use self::primitives::primitive::GROUP_COUNTER_SIZE;
 
 lazy_static! {
     pub static ref DEBUG_ARROWS: DebugArrows = DebugArrows::new();
@@ -144,7 +122,7 @@ pub struct Data {
     pub dim: [u32; 2],
     pub cursor_tex_dim: [u32; 2],
 
-    pub primitives_vertex_buffers: Vec<Arc<ImmutableBuffer<[Vertex]>>>,
+    pub primitives_vertex_buffers: Vec<Vec<Arc<ImmutableBuffer<[Vertex]>>>>,
     pub debug_arrow_vertex_buffer: Arc<ImmutableBuffer<[DebugVertex]>>,
     pub fullscreen_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,
     pub cursor_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,

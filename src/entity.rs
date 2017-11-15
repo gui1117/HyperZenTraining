@@ -95,28 +95,8 @@ pub fn create_avoider<'a>(
     body.set_transformation(pos);
     body.set_collision_groups(group);
 
-    let primitives = vec![
-        (
-            ::graphics::primitive::SQUARE_PYRAMID_BASE,
-            ::graphics::GROUP_COUNTER.next()
-        ),
-        (
-            ::graphics::primitive::SQUARE_PYRAMID_SIDE_1,
-            ::graphics::GROUP_COUNTER.next()
-        ),
-        (
-            ::graphics::primitive::SQUARE_PYRAMID_SIDE_2,
-            ::graphics::GROUP_COUNTER.next()
-        ),
-        (
-            ::graphics::primitive::SQUARE_PYRAMID_SIDE_3,
-            ::graphics::GROUP_COUNTER.next()
-        ),
-        (
-            ::graphics::primitive::SQUARE_PYRAMID_SIDE_4,
-            ::graphics::GROUP_COUNTER.next()
-        ),
-    ];
+    let (primitive, groups) = ::graphics::Primitive::SquarePyramid.instantiate();
+    let color = ::graphics::color::GREEN;
 
     let entity = entities.create();
     avoiders.insert(entity, ::component::Avoider::new());
@@ -133,8 +113,9 @@ pub fn create_avoider<'a>(
     dynamic_graphics_assets.insert(
         entity,
         ::component::DynamicGraphicsAssets::new(
-            primitives,
-            ::graphics::color::GREEN,
+            primitive,
+            groups,
+            color,
             primitive_trans,
         ),
     );
@@ -185,13 +166,8 @@ pub fn create_bouncer<'a>(
     body.set_transformation(pos);
     body.set_collision_groups(group);
 
-    let primitives = vec![
-        (
-            // TODO: motif random
-            ::graphics::primitive::SPHERE,
-            ::graphics::GROUP_COUNTER.next()
-        ),
-    ];
+    let (primitive, groups) = ::graphics::Primitive::Sphere.instantiate();
+    let color = ::graphics::color::BLUE;
 
     let entity = entities.create();
     bouncers.insert(entity, ::component::Bouncer);
@@ -205,8 +181,9 @@ pub fn create_bouncer<'a>(
     dynamic_graphics_assets.insert(
         entity,
         ::component::DynamicGraphicsAssets::new(
-            primitives,
-            ::graphics::color::BLUE,
+            primitive,
+            groups,
+            color,
             primitive_trans,
         ),
     );
@@ -252,10 +229,11 @@ pub fn create_wall_side<'a>(
 
     let entity = entities.create();
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
+    let (primitive, groups) = ::graphics::Primitive::Plane.instantiate();
     ::component::StaticDraw::add(
         entity,
-        ::graphics::primitive::PLANE,
-        ::graphics::GROUP_COUNTER.next(),
+        primitive,
+        groups,
         ::graphics::color::PALE_RED,
         world_trans,
         static_draws,
@@ -292,10 +270,11 @@ pub fn create_floor_ceil<'a>(
     let entity = entities.create();
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
+    let (primitive, groups) = ::graphics::Primitive::Plane.instantiate();
     ::component::StaticDraw::add(
         entity,
-        ::graphics::primitive::PLANE,
-        ::graphics::GROUP_COUNTER.next(),
+        primitive,
+        groups,
         ::graphics::color::PALE_BROWN,
         world_trans,
         static_draws,

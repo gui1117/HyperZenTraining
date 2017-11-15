@@ -506,19 +506,22 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 .unwrap();
 
         for static_draw in static_draws.join() {
-            command_buffer_builder = command_buffer_builder
-                .draw(
-                    graphics.draw1_pipeline.clone(),
-                    screen_dynamic_state.clone(),
-                    graphics.primitives_vertex_buffers[static_draw.primitive].clone(),
-                    (view_set.clone(), static_draw.set.clone()),
-                    ::graphics::shader::draw1_fs::ty::Group {
-                        group_hb: high_byte(static_draw.group as u32),
-                        group_lb: low_byte(static_draw.group as u32),
-                        color: static_draw.color as u32,
-                    },
-                )
-                .unwrap();
+            debug_assert_eq!(graphics.primitives_vertex_buffers[static_draw.primitive].len(), static_draw.groups.len());
+            for i in 0..graphics.primitives_vertex_buffers[static_draw.primitive].len() {
+                command_buffer_builder = command_buffer_builder
+                    .draw(
+                        graphics.draw1_pipeline.clone(),
+                        screen_dynamic_state.clone(),
+                        graphics.primitives_vertex_buffers[static_draw.primitive][i].clone(),
+                        (view_set.clone(), static_draw.set.clone()),
+                        ::graphics::shader::draw1_fs::ty::Group {
+                            group_hb: high_byte(static_draw.groups[i] as u32),
+                            group_lb: low_byte(static_draw.groups[i] as u32),
+                            color: static_draw.color as u32,
+                        },
+                    )
+                    .unwrap();
+            }
         }
 
         for (_, assets) in (&dynamic_draws, &dynamic_graphics_assets).join() {
@@ -537,16 +540,17 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                     .unwrap(),
             );
 
-            for &primitive in &assets.primitives {
+            debug_assert_eq!(graphics.primitives_vertex_buffers[assets.primitive].len(), assets.groups.len());
+            for i in 0..graphics.primitives_vertex_buffers[assets.primitive].len() {
                 command_buffer_builder = command_buffer_builder
                     .draw(
                         graphics.draw1_pipeline.clone(),
                         screen_dynamic_state.clone(),
-                        graphics.primitives_vertex_buffers[primitive.0].clone(),
+                        graphics.primitives_vertex_buffers[assets.primitive][i].clone(),
                         (view_set.clone(), dynamic_draw_set.clone()),
                         ::graphics::shader::draw1_fs::ty::Group {
-                            group_hb: high_byte(primitive.1 as u32),
-                            group_lb: low_byte(primitive.1 as u32),
+                            group_hb: high_byte(assets.groups[i] as u32),
+                            group_lb: low_byte(assets.groups[i] as u32),
                             color: assets.color as u32,
                         },
                     )
@@ -572,12 +576,12 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                     .unwrap(),
             );
 
-            for &primitive in &assets.primitives {
+            for vertex_buffer in &graphics.primitives_vertex_buffers[assets.primitive] {
                 command_buffer_builder = command_buffer_builder
                     .draw(
                         graphics.draw1_eraser_pipeline.clone(),
                         screen_dynamic_state.clone(),
-                        graphics.primitives_vertex_buffers[primitive.0].clone(),
+                        vertex_buffer.clone(),
                         (view_set.clone(), dynamic_draw_set.clone()),
                         (),
                     )

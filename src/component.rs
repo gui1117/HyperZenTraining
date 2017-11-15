@@ -22,7 +22,7 @@ impl Life {
     pub fn kill(&mut self) {
         *self = match self.clone() {
             Life::EraserAlive => Life::EraserDead,
-            Life::DrawAlive => Life::DrawDead(0),
+            Life::DrawAlive => Life::DrawDead,
             s @ _ => s,
         };
     }
@@ -170,7 +170,7 @@ impl Momentum {
 
 pub struct StaticDraw {
     pub color: u16,
-    pub group: u16,
+    pub groups: Vec<u16>,
     pub primitive: usize,
     pub set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>, ((), PersistentDescriptorSetBuf<CpuBufferPoolSubbuffer<shader::draw1_vs::ty::World, Arc<StdMemoryPool>>>)>>,
 }
@@ -183,7 +183,7 @@ impl StaticDraw {
     pub fn add<'a>(
         entity: ::specs::Entity,
         primitive: usize,
-        group: u16,
+        groups: Vec<u16>,
         color: u16,
         world_trans: ::graphics::shader::draw1_vs::ty::World,
         static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
@@ -205,7 +205,7 @@ impl StaticDraw {
         let static_draw = StaticDraw {
             primitive,
             color,
-            group,
+            groups,
             set,
         };
 
@@ -214,8 +214,8 @@ impl StaticDraw {
 }
 
 pub struct DynamicGraphicsAssets {
-    /// index and group
-    pub primitives: Vec<(usize, u16)>,
+    pub primitive: usize,
+    pub groups: Vec<u16>,
     pub color: u16,
     pub primitive_trans: ::na::Transform3<f32>,
     pub world_trans: ::graphics::shader::draw1_vs::ty::World,
@@ -227,12 +227,14 @@ impl ::specs::Component for DynamicGraphicsAssets {
 
 impl DynamicGraphicsAssets {
     pub fn new(
-        primitives: Vec<(usize, u16)>,
+        primitive: usize,
+        groups: Vec<u16>,
         color: u16,
         primitive_trans: ::na::Transform3<f32>,
     ) -> Self {
         DynamicGraphicsAssets {
-            primitives,
+            primitive,
+            groups,
             primitive_trans,
             color,
             world_trans: shader::draw1_vs::ty::World { world: [[0f32; 4]; 4] },
