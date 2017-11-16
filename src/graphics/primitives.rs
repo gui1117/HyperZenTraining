@@ -221,6 +221,33 @@ pub fn instance_primitives(
         ]
     );
 
+    // Cylinder
+    let cylinder_div = 32;
+    let mut cylinder_buffers_def = vec![vec![]];
+    for i in 0..cylinder_div {
+        let a0 = (i as f32) * 2.0*PI/cylinder_div as f32;
+        let a1 = ((i+1) as f32) * 2.0*PI/cylinder_div as f32;
+
+        let p0 = [a0.cos(), a0.sin()];
+        let p1 = [a1.cos(), a1.sin()];
+
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [0.0, 0.0, -1.0]});
+
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], 1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [0.0, 0.0, 1.0]});
+
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], 1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0]});
+
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0]});
+    }
+
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];
     for primitive_buffers_def in primitives_buffers_def {
@@ -250,6 +277,7 @@ pub mod primitive {
         Sphere,
         Six,
         Cube,
+        Cylinder,
     }
 
     impl Primitive {
@@ -261,6 +289,7 @@ pub mod primitive {
                 Primitive::Sphere => (3, GROUP_COUNTER.instantiate(1)),
                 Primitive::Six => (4, GROUP_COUNTER.instantiate(11)),
                 Primitive::Cube => (5, GROUP_COUNTER.instantiate(6)),
+                Primitive::Cylinder => (6, GROUP_COUNTER.instantiate(1)),
             }
         }
     }
