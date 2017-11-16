@@ -33,6 +33,15 @@ pub use self::primitives::primitive::Primitive;
 pub use self::colors::color;
 pub use self::primitives::primitive::GROUP_COUNTER_SIZE;
 
+// TODO: use new_nonuniform_scaling
+pub fn resizer(x: f32, y: f32, z: f32) -> ::na::Transform3<f32> {
+    let mut resizer: ::na::Transform3<f32> = ::na::one();
+    resizer[(0, 0)] = x;
+    resizer[(1, 1)] = y;
+    resizer[(2, 2)] = z;
+    resizer
+}
+
 lazy_static! {
     pub static ref DEBUG_ARROWS: DebugArrows = DebugArrows::new();
 }

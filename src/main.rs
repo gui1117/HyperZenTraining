@@ -109,6 +109,8 @@ fn main() {
     let mut world = specs::World::new();
     world.register::<::component::Player>();
     world.register::<::component::Shooter>();
+    world.register::<::component::WeaponAnimation>();
+    world.register::<::component::WeaponAnchor>();
     world.register::<::component::Aim>();
     world.register::<::component::StaticDraw>();
     world.register::<::component::DynamicDraw>();
@@ -168,6 +170,10 @@ fn main() {
             world
                 .read_resource::<::resource::Maze>()
                 .random_free_float(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),

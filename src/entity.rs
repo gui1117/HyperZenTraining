@@ -1,10 +1,92 @@
 use alga::general::SubsetOf;
+use std::f32::consts::PI;
 
 pub const WALL_GROUP:       usize = 1;
 pub const FLOOR_CEIL_GROUP: usize = 2;
 pub const DIM2_GROUP:       usize = 3;
 pub const ALIVE_GROUP:      usize = 4;
 pub const LASER_GROUP:      usize = 5;
+
+pub fn create_weapon<'a>(
+    anchor: ::specs::Entity,
+    shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
+    weapon_animations: &mut ::specs::WriteStorage<'a, ::component::WeaponAnimation>,
+    weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
+    dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
+    entities: &::specs::Entities,
+) {
+    shooters.insert(anchor, ::component::Shooter::new(0.5));
+
+    let weapon_pos_y = -0.008;
+    let weapon_pos_z = -0.01;
+
+    let center_radius = 0.0018;
+
+    let nine_radius = 0.0028;
+    let nine_length = 0.028;
+
+    let bar_x_pos = 0.038;
+    let bar_x_radius = 0.02;
+    let bar_y_radius = 0.0011;
+    let bar_z_radius = 0.0007;
+
+    weapon_animations.insert(anchor, ::component::WeaponAnimation {
+        trans: ::na::Translation3::new(0.0, weapon_pos_z, weapon_pos_y).to_superset(),
+    });
+
+    // Six
+    let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
+    let color = ::graphics::color::RED;
+    let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, PI/2., 0.0))
+        * ::graphics::resizer(nine_radius, nine_radius, nine_length);
+
+    let entity = entities.create();
+    weapon_anchors.insert(
+        entity,
+        ::component::WeaponAnchor {
+            anchor: anchor
+        },
+    );
+    dynamic_draws.insert(entity, ::component::DynamicDraw);
+    dynamic_graphics_assets.insert(
+        entity,
+        ::component::DynamicGraphicsAssets::new(
+            primitive,
+            groups,
+            color,
+            primitive_trans,
+        ),
+    );
+
+    for angle in (0..3usize).map(|i| i as f32 * 2.0 * PI / 3.0) {
+        // Bar
+        let (primitive, groups) = ::graphics::Primitive::Cube.instantiate();
+        let color = ::graphics::color::PALE_PURPLE;
+        let primitive_trans = ::na::Isometry3::new(
+            ::na::Vector3::new(bar_x_pos, (center_radius + bar_y_radius)*angle.cos(), (center_radius + bar_y_radius)*angle.sin()),
+            ::na::Vector3::new(angle, 0.0, 0.0),
+            ) * ::graphics::resizer(bar_x_radius, bar_y_radius, bar_z_radius);
+
+        let entity = entities.create();
+        weapon_anchors.insert(
+            entity,
+            ::component::WeaponAnchor {
+                anchor: anchor
+            },
+        );
+        dynamic_draws.insert(entity, ::component::DynamicDraw);
+        dynamic_graphics_assets.insert(
+            entity,
+            ::component::DynamicGraphicsAssets::new(
+                primitive,
+                groups,
+                color,
+                primitive_trans,
+            ),
+        );
+    }
+}
 
 pub fn create_player<'a>(
     pos: [f32; 2],
@@ -13,6 +95,10 @@ pub fn create_player<'a>(
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
+    weapon_animations: &mut ::specs::WriteStorage<'a, ::component::WeaponAnimation>,
+    weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
+    dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     entities: &::specs::Entities,
 ) {
@@ -41,7 +127,7 @@ pub fn create_player<'a>(
         entity,
         ::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, None),
     );
-    shooters.insert(entity, ::component::Shooter::new(0.5));
+    create_weapon(entity, shooters, weapon_animations, weapon_anchors, dynamic_draws, dynamic_graphics_assets, entities);
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
 }
@@ -62,10 +148,7 @@ pub fn create_avoider<'a>(
 ) {
     let size = 0.1;
 
-    let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
-    primitive_trans[(0, 0)] = size;
-    primitive_trans[(1, 1)] = size;
-    primitive_trans[(2, 2)] = size;
+    let primitive_trans = ::graphics::resizer(size, size, size);
 
     let shape = {
         let mut points = vec![
@@ -147,10 +230,7 @@ pub fn create_bouncer<'a>(
 ) {
     let size = 0.05;
 
-    let mut primitive_trans: ::na::Transform3<f32> = ::na::one();
-    primitive_trans[(0, 0)] = size;
-    primitive_trans[(1, 1)] = size;
-    primitive_trans[(2, 2)] = size;
+    let primitive_trans = ::graphics::resizer(size, size, size);
 
     let shape = ::ncollide::shape::Ball3::new(size);
     let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());

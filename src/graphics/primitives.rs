@@ -60,6 +60,7 @@ pub fn instance_primitives(
         ]
     );
 
+    // Triangle pyramid
     primitives_buffers_def.push(
         vec![
             vec![
@@ -85,6 +86,7 @@ pub fn instance_primitives(
         ]
     );
 
+    // Sphere
     let sphere_vertices = {
         let sphere = ::ncollide::procedural::sphere(1.0, 16, 16, false);
         let indices = match sphere.indices {
@@ -122,35 +124,102 @@ pub fn instance_primitives(
 
     primitives_buffers_def.push(vec![sphere_vertices]);
 
-    let mut nine_buffers_def = vec![vec![], vec![]];
-    for i in 0..9 {
-        let a0 = i as f32 * 2.0*PI/9.0;
-        let a1 = (i+1) as f32 * 2.0*PI/9.0;
+    // Six
+    let mut six_buffers_def = vec![vec![], vec![]];
+    for i in 0..6 {
+        let a0 = (i as f32 - 0.5) * 2.0*PI/6.0;
+        let a1 = ((i+1) as f32 - 0.5) * 2.0*PI/6.0;
 
         let p0 = [a0.cos(), a0.sin()];
         let p1 = [a1.cos(), a1.sin()];
 
-        nine_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
-        nine_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0]});
-        nine_buffers_def[0].push(Vertex { position: [0.0, 0.0, -1.0]});
+        six_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
+        six_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0]});
+        six_buffers_def[0].push(Vertex { position: [0.0, 0.0, -1.0]});
 
-        nine_buffers_def[1].push(Vertex { position: [p0[0], p0[1], -1.0]});
-        nine_buffers_def[1].push(Vertex { position: [p1[0], p1[1], -1.0]});
-        nine_buffers_def[1].push(Vertex { position: [p1[0], p1[1], 1.0]});
+        six_buffers_def[1].push(Vertex { position: [p0[0], p0[1], 1.0]});
+        six_buffers_def[1].push(Vertex { position: [p1[0], p1[1], 1.0]});
+        six_buffers_def[1].push(Vertex { position: [0.0, 0.0, 1.0]});
 
-        nine_buffers_def.push(
+        six_buffers_def.push(
             vec![
                 Vertex { position: [p0[0], p0[1], -1.0]},
                 Vertex { position: [p0[0], p0[1], 1.0]},
                 Vertex { position: [p1[0], p1[1], 1.0]},
 
-                Vertex { position: [p0[0], p0[1], 1.0]},
+                Vertex { position: [p0[0], p0[1], -1.0]},
+                Vertex { position: [p1[0], p1[1], -1.0]},
                 Vertex { position: [p1[0], p1[1], 1.0]},
-                Vertex { position: [0.0, 0.0, 1.0]},
             ]
         );
     }
-    primitives_buffers_def.push(nine_buffers_def);
+    primitives_buffers_def.push(six_buffers_def);
+
+    // Cube
+    primitives_buffers_def.push(
+        vec![
+            // Floor
+            vec![
+                Vertex { position: [-1.0, -1.0, -1.0] },
+                Vertex { position: [ 1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0,  1.0, -1.0] },
+
+                Vertex { position: [ 1.0,  1.0, -1.0] },
+                Vertex { position: [ 1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0,  1.0, -1.0] },
+            ],
+            // Ceil
+            vec![
+                Vertex { position: [-1.0, -1.0,  1.0] },
+                Vertex { position: [ 1.0, -1.0,  1.0] },
+                Vertex { position: [-1.0,  1.0,  1.0] },
+
+                Vertex { position: [ 1.0,  1.0,  1.0] },
+                Vertex { position: [ 1.0, -1.0,  1.0] },
+                Vertex { position: [-1.0,  1.0,  1.0] },
+            ],
+            // Left
+            vec![
+                Vertex { position: [-1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, -1.0,  1.0] },
+                Vertex { position: [-1.0,  1.0, -1.0] },
+
+                Vertex { position: [-1.0,  1.0,  1.0] },
+                Vertex { position: [-1.0, -1.0,  1.0] },
+                Vertex { position: [-1.0,  1.0, -1.0] },
+            ],
+            // Right
+            vec![
+                Vertex { position: [ 1.0, -1.0, -1.0] },
+                Vertex { position: [ 1.0, -1.0,  1.0] },
+                Vertex { position: [ 1.0,  1.0, -1.0] },
+
+                Vertex { position: [ 1.0,  1.0,  1.0] },
+                Vertex { position: [ 1.0, -1.0,  1.0] },
+                Vertex { position: [ 1.0,  1.0, -1.0] },
+            ],
+            // Back
+            vec![
+                Vertex { position: [-1.0, -1.0, -1.0] },
+                Vertex { position: [ 1.0, -1.0, -1.0] },
+                Vertex { position: [-1.0, -1.0,  1.0] },
+
+                Vertex { position: [ 1.0, -1.0,  1.0] },
+                Vertex { position: [-1.0, -1.0,  1.0] },
+                Vertex { position: [ 1.0, -1.0, -1.0] },
+            ],
+            // Front
+            vec![
+                Vertex { position: [-1.0,  1.0, -1.0] },
+                Vertex { position: [ 1.0,  1.0, -1.0] },
+                Vertex { position: [-1.0,  1.0,  1.0] },
+
+                Vertex { position: [ 1.0,  1.0,  1.0] },
+                Vertex { position: [-1.0,  1.0,  1.0] },
+                Vertex { position: [ 1.0,  1.0, -1.0] },
+            ],
+        ]
+    );
 
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];
@@ -179,7 +248,8 @@ pub mod primitive {
         SquarePyramid,
         TrianglePyramid,
         Sphere,
-        Nine,
+        Six,
+        Cube,
     }
 
     impl Primitive {
@@ -189,7 +259,8 @@ pub mod primitive {
                 Primitive::SquarePyramid => (1, GROUP_COUNTER.instantiate(5)),
                 Primitive::TrianglePyramid => (2, GROUP_COUNTER.instantiate(4)),
                 Primitive::Sphere => (3, GROUP_COUNTER.instantiate(1)),
-                Primitive::Nine => (4, GROUP_COUNTER.instantiate(1)),
+                Primitive::Six => (4, GROUP_COUNTER.instantiate(11)),
+                Primitive::Cube => (5, GROUP_COUNTER.instantiate(6)),
             }
         }
     }
