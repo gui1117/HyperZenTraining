@@ -60,7 +60,7 @@ fn main() {
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
 
     let mut error_timer = 0;
-    while let Err(_) = window .window().set_cursor_state(winit::CursorState::Grab) {
+    while let Err(_) = window.window().set_cursor_state(winit::CursorState::Grab) {
         ::std::thread::sleep(::std::time::Duration::from_millis(1));
         error_timer += 1;
         if error_timer > 100 {
@@ -206,8 +206,7 @@ fn main() {
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
-    let mut fps =
-        fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps.clone());
+    let mut fps = fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps.clone());
 
     loop {
         previous_frame_end.cleanup_finished();

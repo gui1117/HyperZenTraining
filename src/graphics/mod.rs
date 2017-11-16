@@ -52,24 +52,24 @@ pub struct DebugArrows {
 
 impl DebugArrows {
     fn new() -> Self {
-        DebugArrows {
-            trans: Mutex::new(Vec::new()),
-        }
+        DebugArrows { trans: Mutex::new(Vec::new()) }
     }
 
     #[allow(dead_code)]
     pub fn add(&self, color: [f32; 3], pos: na::Vector3<f32>, vec: na::Vector3<f32>) {
-        let transform: na::Transform3<f32> = na::Similarity3::from_parts(
-            na::Translation::from_vector(pos),
-            na::UnitQuaternion::rotation_between(&na::Vector3::new(0.0, 0.0, 1.0), &vec).unwrap(),
-            vec.norm()*0.1,
-        ).to_superset();
+        let transform: na::Transform3<f32> =
+            na::Similarity3::from_parts(
+                na::Translation::from_vector(pos),
+                na::UnitQuaternion::rotation_between(&na::Vector3::new(0.0, 0.0, 1.0), &vec)
+                    .unwrap(),
+                vec.norm() * 0.1,
+            ).to_superset();
 
         self.trans.lock().unwrap().push((
             color,
             shader::debug_vs::ty::World {
                 world: transform.unwrap().into(),
-            }
+            },
         ));
     }
 
@@ -190,7 +190,7 @@ impl<'a> Graphics<'a> {
         Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage>)>>>,
         Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, (((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
         Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
-    ) {
+){
         let depth_buffer_attachment = AttachmentImage::transient(
             device.clone(),
             images[0].dimensions(),
@@ -562,19 +562,15 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let (
-            framebuffer,
-            second_framebuffers,
-            eraser1_descriptor_set_0,
-            draw2_descriptor_set_0,
-        ) = Graphics::framebuffers_and_descriptors(
-            device.clone(),
-            &images,
-            &render_pass,
-            &second_render_pass,
-            &eraser1_pipeline,
-            &draw2_pipeline,
-        );
+        let (framebuffer, second_framebuffers, eraser1_descriptor_set_0, draw2_descriptor_set_0) =
+            Graphics::framebuffers_and_descriptors(
+                device.clone(),
+                &images,
+                &render_pass,
+                &second_render_pass,
+                &eraser1_pipeline,
+                &draw2_pipeline,
+            );
 
         let view_uniform_buffer = CpuBufferPool::<::graphics::shader::draw1_vs::ty::View>::new(
             device.clone(),
@@ -592,10 +588,11 @@ impl<'a> Graphics<'a> {
             BufferUsage::uniform_buffer(),
         );
 
-        let debug_arrow_world_uniform_buffer = CpuBufferPool::<::graphics::shader::debug_vs::ty::World>::new(
-            device.clone(),
-            BufferUsage::uniform_buffer(),
-        );
+        let debug_arrow_world_uniform_buffer =
+            CpuBufferPool::<::graphics::shader::debug_vs::ty::World>::new(
+                device.clone(),
+                BufferUsage::uniform_buffer(),
+            );
 
         let (colors_buffer, colors_buf_future) = {
             let colors = colors::colors();
@@ -701,7 +698,8 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let (debug_arrow_vertex_buffer, debug_arrow_future) = primitives::load_debug_arrow(queue.clone());
+        let (debug_arrow_vertex_buffer, debug_arrow_future) =
+            primitives::load_debug_arrow(queue.clone());
 
         now(device.clone())
             .join(cursor_tex_future)
@@ -754,7 +752,7 @@ impl<'a> Graphics<'a> {
                 world_uniform_buffer,
                 debug_arrow_world_uniform_buffer,
                 erased_buffer,
-                debug_arrow_vertex_buffer
+                debug_arrow_vertex_buffer,
             },
         }
     }
@@ -763,15 +761,18 @@ impl<'a> Graphics<'a> {
         let recreate;
         loop {
             // TODO: Sleep and max number of try
-            let dimensions = window.surface().capabilities(self.physical)
+            let dimensions = window
+                .surface()
+                .capabilities(self.physical)
                 .expect("failed to get surface capabilities")
-                .current_extent.unwrap_or([1024, 768]);
+                .current_extent
+                .unwrap_or([1024, 768]);
             match self.data.swapchain.recreate_with_dimension(dimensions) {
                 Err(::vulkano::swapchain::SwapchainCreationError::UnsupportedDimensions) => (),
                 r @ _ => {
                     recreate = Some(r);
-                    break
-                },
+                    break;
+                }
             }
         }
 
@@ -780,19 +781,15 @@ impl<'a> Graphics<'a> {
         self.data.images = new_images;
         self.data.swapchain = new_swapchain;
 
-        let (
-            framebuffer,
-            second_framebuffers,
-            eraser1_descriptor_set_0,
-            draw2_descriptor_set_0,
-        ) = Graphics::framebuffers_and_descriptors(
-            self.data.device.clone(),
-            &self.data.images,
-            &self.data.render_pass,
-            &self.data.second_render_pass,
-            &self.data.eraser1_pipeline,
-            &self.data.draw2_pipeline,
-        );
+        let (framebuffer, second_framebuffers, eraser1_descriptor_set_0, draw2_descriptor_set_0) =
+            Graphics::framebuffers_and_descriptors(
+                self.data.device.clone(),
+                &self.data.images,
+                &self.data.render_pass,
+                &self.data.second_render_pass,
+                &self.data.eraser1_pipeline,
+                &self.data.draw2_pipeline,
+            );
 
         self.data.framebuffer = framebuffer;
         self.data.second_framebuffers = second_framebuffers;

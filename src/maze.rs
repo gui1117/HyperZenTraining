@@ -79,8 +79,8 @@ impl Maze {
             for j in 0..self.height {
                 if !self.walls[i][j] {
                     // the maze must be circled
-                    assert!(i != 0 && i != self.width-1);
-                    assert!(j != 0 && j != self.height-1);
+                    assert!(i != 0 && i != self.width - 1);
+                    assert!(j != 0 && j != self.height - 1);
                     unvisited.insert((i, j));
                 }
             }
@@ -97,12 +97,12 @@ impl Maze {
                 let i = cell.0;
                 let j = cell.1;
 
-                let is_corridor = (self.walls[i-1][j] && self.walls[i+1][j])
-                    || (self.walls[i][j-1] && self.walls[i][j+1])
-                    || (self.walls[i-1][j] && self.walls[i][j-1] && self.walls[i+1][j+1])
-                    || (self.walls[i-1][j] && self.walls[i][j+1] && self.walls[i+1][j-1])
-                    || (self.walls[i+1][j] && self.walls[i][j-1] && self.walls[i-1][j+1])
-                    || (self.walls[i+1][j] && self.walls[i][j+1] && self.walls[i-1][j-1]);
+                let is_corridor = (self.walls[i - 1][j] && self.walls[i + 1][j]) ||
+                    (self.walls[i][j - 1] && self.walls[i][j + 1]) ||
+                    (self.walls[i - 1][j] && self.walls[i][j - 1] && self.walls[i + 1][j + 1]) ||
+                    (self.walls[i - 1][j] && self.walls[i][j + 1] && self.walls[i + 1][j - 1]) ||
+                    (self.walls[i + 1][j] && self.walls[i][j - 1] && self.walls[i - 1][j + 1]) ||
+                    (self.walls[i + 1][j] && self.walls[i][j + 1] && self.walls[i - 1][j - 1]);
 
                 if corridor && !is_corridor {
                     continue;
@@ -167,10 +167,10 @@ impl Maze {
             let mut corridors = self.compute_zones(true);
             corridors.retain(|corridor| {
                 corridor.iter().any(|&(i, j)| {
-                    (self.walls[i-1][j] && self.walls[i][j-1] && self.walls[i][j+1])
-                    || (self.walls[i+1][j] && self.walls[i][j-1] && self.walls[i][j+1])
-                    || (self.walls[i][j-1] && self.walls[i-1][j] && self.walls[i+1][j])
-                    || (self.walls[i][j+1] && self.walls[i-1][j] && self.walls[i+1][j])
+                    (self.walls[i - 1][j] && self.walls[i][j - 1] && self.walls[i][j + 1]) ||
+                        (self.walls[i + 1][j] && self.walls[i][j - 1] && self.walls[i][j + 1]) ||
+                        (self.walls[i][j - 1] && self.walls[i - 1][j] && self.walls[i + 1][j]) ||
+                        (self.walls[i][j + 1] && self.walls[i - 1][j] && self.walls[i + 1][j])
                 })
             });
             if corridors.len() == 0 {
@@ -270,7 +270,9 @@ impl Maze {
 
         for &j in &[top, bottom] {
             if j >= 0 && j < self.height as isize {
-                for i in left.max(0).min(self.width as isize)..(right+1).max(0).min(self.width as isize) {
+                for i in left.max(0).min(self.width as isize)..
+                    (right + 1).max(0).min(self.width as isize)
+                {
                     if !self.walls[i as usize][j as usize] {
                         res.push([i as usize, j as usize]);
                     }
@@ -280,7 +282,9 @@ impl Maze {
 
         for &i in &[left, right] {
             if i >= 0 && i < self.width as isize {
-                for j in bottom.max(0).min(self.height as isize)..(top+1).max(0).min(self.height as isize) {
+                for j in bottom.max(0).min(self.height as isize)..
+                    (top + 1).max(0).min(self.height as isize)
+                {
                     if !self.walls[i as usize][j as usize] {
                         res.push([i as usize, j as usize]);
                     }

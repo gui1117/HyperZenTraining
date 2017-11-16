@@ -15,76 +15,90 @@ pub fn instance_primitives(
 
     // Plane
     primitives_buffers_def.push(vec![
-                 vec![
-                 Vertex { position: [-1.0, -1.0, 0.0] },
-                 Vertex { position: [1.0, -1.0, 0.0] },
-                 Vertex { position: [-1.0, 1.0, 0.0] },
-                 Vertex { position: [1.0, 1.0, 0.0] },
-                 Vertex { position: [-1.0, 1.0, 0.0] },
-                 Vertex { position: [1.0, -1.0, 0.0] },
-                 ]
+        vec![
+            Vertex { position: [-1.0, -1.0, 0.0] },
+            Vertex { position: [1.0, -1.0, 0.0] },
+            Vertex { position: [-1.0, 1.0, 0.0] },
+            Vertex { position: [1.0, 1.0, 0.0] },
+            Vertex { position: [-1.0, 1.0, 0.0] },
+            Vertex { position: [1.0, -1.0, 0.0] },
+        ],
     ]);
 
     // Square pyramid
-    primitives_buffers_def.push(
+    primitives_buffers_def.push(vec![
         vec![
-            vec![
-                Vertex { position: [-1.0, -1.0, -1.0] },
-                Vertex { position: [1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
 
-                Vertex { position: [1.0, 1.0, -1.0] },
-                Vertex { position: [1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, 1.0, -1.0] },
-            ],
-            vec![
-                Vertex { position: [-1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, 1.0, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-            ],
-            vec![
-                Vertex { position: [-1.0, 1.0, -1.0] },
-                Vertex { position: [1.0, 1.0, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-            ],
-            vec![
-                Vertex { position: [1.0, 1.0, -1.0] },
-                Vertex { position: [1.0, -1.0, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-            ],
-            vec![
-                Vertex { position: [1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, -1.0, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-            ],
-        ]
-    );
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+        ],
+        vec![
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [0.0, 0.0, 1.0] },
+        ],
+        vec![
+            Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [0.0, 0.0, 1.0] },
+        ],
+        vec![
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [0.0, 0.0, 1.0] },
+        ],
+        vec![
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [0.0, 0.0, 1.0] },
+        ],
+    ]);
 
     // Triangle pyramid
-    primitives_buffers_def.push(
+    primitives_buffers_def.push(vec![
         vec![
-            vec![
-                Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
-                Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
-                Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
-            ],
-            vec![
-                Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
-                Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-            ],
-            vec![
-                Vertex { position: [0.0, 0.86602540378443864676, -1.0] },
-                Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-            ],
-            vec![
-                Vertex { position: [-1.0, -0.86602540378443864676, -1.0] },
-                Vertex { position: [1.0, -0.86602540378443864676, -1.0] },
-                Vertex { position: [0.0, 0.0, 1.0] },
-            ]
-        ]
-    );
+            Vertex {
+                position: [-1.0, -0.86602540378443864676, -1.0],
+            },
+            Vertex {
+                position: [0.0, 0.86602540378443864676, -1.0],
+            },
+            Vertex {
+                position: [1.0, -0.86602540378443864676, -1.0],
+            },
+        ],
+        vec![
+            Vertex {
+                position: [-1.0, -0.86602540378443864676, -1.0],
+            },
+            Vertex {
+                position: [0.0, 0.86602540378443864676, -1.0],
+            },
+            Vertex { position: [0.0, 0.0, 1.0] },
+        ],
+        vec![
+            Vertex {
+                position: [0.0, 0.86602540378443864676, -1.0],
+            },
+            Vertex {
+                position: [1.0, -0.86602540378443864676, -1.0],
+            },
+            Vertex { position: [0.0, 0.0, 1.0] },
+        ],
+        vec![
+            Vertex {
+                position: [-1.0, -0.86602540378443864676, -1.0],
+            },
+            Vertex {
+                position: [1.0, -0.86602540378443864676, -1.0],
+            },
+            Vertex { position: [0.0, 0.0, 1.0] },
+        ],
+    ]);
 
     // Sphere
     let sphere_vertices = {
@@ -127,125 +141,121 @@ pub fn instance_primitives(
     // Six
     let mut six_buffers_def = vec![vec![], vec![]];
     for i in 0..6 {
-        let a0 = (i as f32 - 0.5) * 2.0*PI/6.0;
-        let a1 = ((i+1) as f32 - 0.5) * 2.0*PI/6.0;
+        let a0 = (i as f32 - 0.5) * 2.0 * PI / 6.0;
+        let a1 = ((i + 1) as f32 - 0.5) * 2.0 * PI / 6.0;
 
         let p0 = [a0.cos(), a0.sin()];
         let p1 = [a1.cos(), a1.sin()];
 
-        six_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
-        six_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0]});
-        six_buffers_def[0].push(Vertex { position: [0.0, 0.0, -1.0]});
+        six_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0] });
+        six_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0] });
+        six_buffers_def[0].push(Vertex { position: [0.0, 0.0, -1.0] });
 
-        six_buffers_def[1].push(Vertex { position: [p0[0], p0[1], 1.0]});
-        six_buffers_def[1].push(Vertex { position: [p1[0], p1[1], 1.0]});
-        six_buffers_def[1].push(Vertex { position: [0.0, 0.0, 1.0]});
+        six_buffers_def[1].push(Vertex { position: [p0[0], p0[1], 1.0] });
+        six_buffers_def[1].push(Vertex { position: [p1[0], p1[1], 1.0] });
+        six_buffers_def[1].push(Vertex { position: [0.0, 0.0, 1.0] });
 
-        six_buffers_def.push(
-            vec![
-                Vertex { position: [p0[0], p0[1], -1.0]},
-                Vertex { position: [p0[0], p0[1], 1.0]},
-                Vertex { position: [p1[0], p1[1], 1.0]},
+        six_buffers_def.push(vec![
+            Vertex { position: [p0[0], p0[1], -1.0] },
+            Vertex { position: [p0[0], p0[1], 1.0] },
+            Vertex { position: [p1[0], p1[1], 1.0] },
 
-                Vertex { position: [p0[0], p0[1], -1.0]},
-                Vertex { position: [p1[0], p1[1], -1.0]},
-                Vertex { position: [p1[0], p1[1], 1.0]},
-            ]
-        );
+            Vertex { position: [p0[0], p0[1], -1.0] },
+            Vertex { position: [p1[0], p1[1], -1.0] },
+            Vertex { position: [p1[0], p1[1], 1.0] },
+        ]);
     }
     primitives_buffers_def.push(six_buffers_def);
 
     // Cube
-    primitives_buffers_def.push(
+    primitives_buffers_def.push(vec![
+        // Floor
         vec![
-            // Floor
-            vec![
-                Vertex { position: [-1.0, -1.0, -1.0] },
-                Vertex { position: [ 1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0,  1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
 
-                Vertex { position: [ 1.0,  1.0, -1.0] },
-                Vertex { position: [ 1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0,  1.0, -1.0] },
-            ],
-            // Ceil
-            vec![
-                Vertex { position: [-1.0, -1.0,  1.0] },
-                Vertex { position: [ 1.0, -1.0,  1.0] },
-                Vertex { position: [-1.0,  1.0,  1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+        ],
+        // Ceil
+        vec![
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
 
-                Vertex { position: [ 1.0,  1.0,  1.0] },
-                Vertex { position: [ 1.0, -1.0,  1.0] },
-                Vertex { position: [-1.0,  1.0,  1.0] },
-            ],
-            // Left
-            vec![
-                Vertex { position: [-1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, -1.0,  1.0] },
-                Vertex { position: [-1.0,  1.0, -1.0] },
+            Vertex { position: [1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
+        ],
+        // Left
+        vec![
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
 
-                Vertex { position: [-1.0,  1.0,  1.0] },
-                Vertex { position: [-1.0, -1.0,  1.0] },
-                Vertex { position: [-1.0,  1.0, -1.0] },
-            ],
-            // Right
-            vec![
-                Vertex { position: [ 1.0, -1.0, -1.0] },
-                Vertex { position: [ 1.0, -1.0,  1.0] },
-                Vertex { position: [ 1.0,  1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+        ],
+        // Right
+        vec![
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
 
-                Vertex { position: [ 1.0,  1.0,  1.0] },
-                Vertex { position: [ 1.0, -1.0,  1.0] },
-                Vertex { position: [ 1.0,  1.0, -1.0] },
-            ],
-            // Back
-            vec![
-                Vertex { position: [-1.0, -1.0, -1.0] },
-                Vertex { position: [ 1.0, -1.0, -1.0] },
-                Vertex { position: [-1.0, -1.0,  1.0] },
+            Vertex { position: [1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+        ],
+        // Back
+        vec![
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
 
-                Vertex { position: [ 1.0, -1.0,  1.0] },
-                Vertex { position: [-1.0, -1.0,  1.0] },
-                Vertex { position: [ 1.0, -1.0, -1.0] },
-            ],
-            // Front
-            vec![
-                Vertex { position: [-1.0,  1.0, -1.0] },
-                Vertex { position: [ 1.0,  1.0, -1.0] },
-                Vertex { position: [-1.0,  1.0,  1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+        ],
+        // Front
+        vec![
+            Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
 
-                Vertex { position: [ 1.0,  1.0,  1.0] },
-                Vertex { position: [-1.0,  1.0,  1.0] },
-                Vertex { position: [ 1.0,  1.0, -1.0] },
-            ],
-        ]
-    );
+            Vertex { position: [1.0, 1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+        ],
+    ]);
 
     // Cylinder
     let cylinder_div = 32;
     let mut cylinder_buffers_def = vec![vec![]];
     for i in 0..cylinder_div {
-        let a0 = (i as f32) * 2.0*PI/cylinder_div as f32;
-        let a1 = ((i+1) as f32) * 2.0*PI/cylinder_div as f32;
+        let a0 = (i as f32) * 2.0 * PI / cylinder_div as f32;
+        let a1 = ((i + 1) as f32) * 2.0 * PI / cylinder_div as f32;
 
         let p0 = [a0.cos(), a0.sin()];
         let p1 = [a1.cos(), a1.sin()];
 
-        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
-        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0]});
-        cylinder_buffers_def[0].push(Vertex { position: [0.0, 0.0, -1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0] });
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0] });
+        cylinder_buffers_def[0].push(Vertex { position: [0.0, 0.0, -1.0] });
 
-        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], 1.0]});
-        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0]});
-        cylinder_buffers_def[0].push(Vertex { position: [0.0, 0.0, 1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], 1.0] });
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0] });
+        cylinder_buffers_def[0].push(Vertex { position: [0.0, 0.0, 1.0] });
 
-        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
-        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], 1.0]});
-        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0] });
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], 1.0] });
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0] });
 
-        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0]});
-        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0]});
-        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0]});
+        cylinder_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0] });
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0] });
+        cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0] });
     }
 
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
@@ -332,11 +342,13 @@ pub fn load_debug_arrow(
         assert!(object.geometry.len() == 1);
         for shape in &object.geometry[0].shapes {
             let indexes = match shape.primitive {
-                obj::Primitive::Triangle(a, b, c) => [
-                    (a.0, a.2.unwrap()),
-                    (b.0, b.2.unwrap()),
-                    (c.0, c.2.unwrap()),
-                ],
+                obj::Primitive::Triangle(a, b, c) => {
+                    [
+                        (a.0, a.2.unwrap()),
+                        (b.0, b.2.unwrap()),
+                        (c.0, c.2.unwrap()),
+                    ]
+                }
                 _ => panic!("arrow obj not handled"),
             };
             for &(v, n) in &indexes {

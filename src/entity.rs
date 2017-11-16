@@ -31,23 +31,21 @@ pub fn create_weapon<'a>(
     let bar_y_radius = 0.0011;
     let bar_z_radius = 0.0007;
 
-    weapon_animations.insert(anchor, ::component::WeaponAnimation {
-        trans: ::na::Translation3::new(0.0, weapon_pos_z, weapon_pos_y).to_superset(),
-    });
+    weapon_animations.insert(
+        anchor,
+        ::component::WeaponAnimation {
+            trans: ::na::Translation3::new(0.0, weapon_pos_z, weapon_pos_y).to_superset(),
+        },
+    );
 
     // Six
     let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
     let color = ::graphics::color::RED;
-    let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, PI/2., 0.0))
-        * ::graphics::resizer(nine_radius, nine_radius, nine_length);
+    let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, PI / 2., 0.0)) *
+        ::graphics::resizer(nine_radius, nine_radius, nine_length);
 
     let entity = entities.create();
-    weapon_anchors.insert(
-        entity,
-        ::component::WeaponAnchor {
-            anchor: anchor
-        },
-    );
+    weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
     dynamic_draws.insert(entity, ::component::DynamicDraw);
     dynamic_graphics_assets.insert(
         entity,
@@ -64,17 +62,17 @@ pub fn create_weapon<'a>(
         let (primitive, groups) = ::graphics::Primitive::Cube.instantiate();
         let color = ::graphics::color::PALE_PURPLE;
         let primitive_trans = ::na::Isometry3::new(
-            ::na::Vector3::new(bar_x_pos, (center_radius + bar_y_radius)*angle.cos(), (center_radius + bar_y_radius)*angle.sin()),
+            ::na::Vector3::new(
+                bar_x_pos,
+                (center_radius + bar_y_radius) * angle.cos(),
+                (center_radius + bar_y_radius) * angle.sin(),
+            ),
             ::na::Vector3::new(angle, 0.0, 0.0),
-            ) * ::graphics::resizer(bar_x_radius, bar_y_radius, bar_z_radius);
+        ) *
+            ::graphics::resizer(bar_x_radius, bar_y_radius, bar_z_radius);
 
         let entity = entities.create();
-        weapon_anchors.insert(
-            entity,
-            ::component::WeaponAnchor {
-                anchor: anchor
-            },
-        );
+        weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
         dynamic_draws.insert(entity, ::component::DynamicDraw);
         dynamic_graphics_assets.insert(
             entity,
@@ -127,7 +125,15 @@ pub fn create_player<'a>(
         entity,
         ::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, None),
     );
-    create_weapon(entity, shooters, weapon_animations, weapon_anchors, dynamic_draws, dynamic_graphics_assets, entities);
+    create_weapon(
+        entity,
+        shooters,
+        weapon_animations,
+        weapon_anchors,
+        dynamic_draws,
+        dynamic_graphics_assets,
+        entities,
+    );
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
 }

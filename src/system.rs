@@ -318,7 +318,7 @@ impl<'a> ::specs::System<'a> for BouncerControlSystem {
     fn run(&mut self, (contactors, bouncers, mut momentums): Self::SystemData) {
         for (_, momentum, contactor) in (&bouncers, &mut momentums, &contactors).join() {
             if contactor.contacts.is_empty() {
-               continue;
+                continue;
             }
 
             let mut normal = ::na::Vector3::new(0.0, 0.0, 0.0);
@@ -428,7 +428,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-    fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphics_assets, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData) {
+fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphics_assets, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData){
         let mut future = Vec::new();
 
         // Compute view uniform
@@ -476,11 +476,13 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         };
 
         let screen_dynamic_state = DynamicState {
-            viewports: Some(vec![Viewport {
-                origin: [0.0, 0.0],
-                dimensions: [graphics.dim[0] as f32, graphics.dim[1] as f32],
-                depth_range: 0.0..1.0,
-            }]),
+            viewports: Some(vec![
+                Viewport {
+                    origin: [0.0, 0.0],
+                    dimensions: [graphics.dim[0] as f32, graphics.dim[1] as f32],
+                    depth_range: 0.0..1.0,
+                },
+            ]),
             ..DynamicState::none()
         };
 
@@ -496,18 +498,22 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         );
 
         // Compute command
-        let mut command_buffer_builder =
-            AutoCommandBufferBuilder::primary_one_time_submit(graphics.device.clone(), graphics.queue.family())
-                .unwrap()
-                .begin_render_pass(
-                    graphics.framebuffer.clone(),
-                    false,
-                    vec![0u32.into(), 0u32.into(), 1f32.into()],
-                )
-                .unwrap();
+        let mut command_buffer_builder = AutoCommandBufferBuilder::primary_one_time_submit(
+            graphics.device.clone(),
+            graphics.queue.family(),
+        ).unwrap()
+            .begin_render_pass(
+                graphics.framebuffer.clone(),
+                false,
+                vec![0u32.into(), 0u32.into(), 1f32.into()],
+            )
+            .unwrap();
 
         for static_draw in static_draws.join() {
-            debug_assert_eq!(graphics.primitives_vertex_buffers[static_draw.primitive].len(), static_draw.groups.len());
+            debug_assert_eq!(
+                graphics.primitives_vertex_buffers[static_draw.primitive].len(),
+                static_draw.groups.len()
+            );
             for i in 0..graphics.primitives_vertex_buffers[static_draw.primitive].len() {
                 command_buffer_builder = command_buffer_builder
                     .draw(
@@ -541,7 +547,10 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                     .unwrap(),
             );
 
-            debug_assert_eq!(graphics.primitives_vertex_buffers[assets.primitive].len(), assets.groups.len());
+            debug_assert_eq!(
+                graphics.primitives_vertex_buffers[assets.primitive].len(),
+                assets.groups.len()
+            );
             for i in 0..graphics.primitives_vertex_buffers[assets.primitive].len() {
                 command_buffer_builder = command_buffer_builder
                     .draw(
@@ -645,10 +654,14 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                     .unwrap();
 
                 // This is not optimised.
-                let debug_arrow_set = Arc::new(PersistentDescriptorSet::start(graphics.debug_pipeline.clone(), 0)
-                    .add_buffer(world_trans_subbuffer).unwrap()
-                    .build().unwrap()
-                );
+                let debug_arrow_set =
+                    Arc::new(
+                        PersistentDescriptorSet::start(graphics.debug_pipeline.clone(), 0)
+                            .add_buffer(world_trans_subbuffer)
+                            .unwrap()
+                            .build()
+                            .unwrap(),
+                    );
 
                 second_command_buffer_builder = second_command_buffer_builder
                     .draw(
@@ -656,7 +669,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                         screen_dynamic_state.clone(),
                         graphics.debug_arrow_vertex_buffer.clone(),
                         (view_set.clone(), debug_arrow_set.clone()),
-                        arrow.0
+                        arrow.0,
                     )
                     .unwrap();
             }
@@ -773,7 +786,7 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
      ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-    fn run(&mut self, (bodies, weapon_anchors, weapon_animations, aims, mut dynamic_graphics_assets, physic_world): Self::SystemData) {
+fn run(&mut self, (bodies, weapon_anchors, weapon_animations, aims, mut dynamic_graphics_assets, physic_world): Self::SystemData){
         for (assets, body) in (&mut dynamic_graphics_assets, &bodies).join() {
             let trans = body.get(&physic_world).position() * assets.primitive_trans;
             assets.world_trans =
@@ -786,12 +799,16 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
             let aim = aims.get(anchor.anchor).unwrap();
 
             let aim_trans = {
-                let ah: ::na::Transform3<f32> = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -aim.x_dir)).to_superset();
-                let av: ::na::Transform3<f32> = ::na::Rotation3::new(::na::Vector3::new(0.0, -aim.dir[2].asin(), 0.0)).to_superset();
-                ah*av
+                let ah: ::na::Transform3<f32> =
+                    ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -aim.x_dir)).to_superset();
+                let av: ::na::Transform3<f32> = ::na::Rotation3::new(
+                    ::na::Vector3::new(0.0, -aim.dir[2].asin(), 0.0),
+                ).to_superset();
+                ah * av
             };
 
-            let trans = body.get(&physic_world).position().translation * aim_trans * animation.trans * assets.primitive_trans;
+            let trans = body.get(&physic_world).position().translation * aim_trans *
+                animation.trans * assets.primitive_trans;
             assets.world_trans =
                 ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
         }
@@ -811,17 +828,17 @@ impl<'a> ::specs::System<'a> for LifeSystem {
         &mut self,
         (mut dynamic_draws, mut dynamic_erasers, mut lives, config, entities): Self::SystemData,
     ) {
-        use ::component::Life;
+        use component::Life;
         for (life, entity) in (&mut lives, &*entities).join() {
             match *life {
                 Life::EraserDead => {
                     *life = Life::DrawAlive;
                     dynamic_draws.insert(entity, ::component::DynamicDraw);
                     dynamic_erasers.remove(entity).unwrap();
-                },
+                }
                 Life::DrawDead => {
                     entities.delete(entity).unwrap();
-                },
+                }
                 _ => (),
             }
         }
@@ -918,14 +935,20 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
     fn run(
         &mut self,
         (players, mut bodies, mut momentums, mut avoiders, mut bouncers, mut dynamic_erasers, mut dynamic_draws, mut dynamic_graphics_assets, mut lives, mut contactors, maze, mut physic_world, entities): Self::SystemData,
-    ) {
+){
         let avoider_population = 10;
         let bouncer_population = 10;
         let kill_distance = 15.0;
         let spawn_distance = 10;
 
         let player_pos = {
-            let p = (&players, &bodies).join().last().unwrap().1.get(&physic_world).position_center();
+            let p = (&players, &bodies)
+                .join()
+                .last()
+                .unwrap()
+                .1
+                .get(&physic_world)
+                .position_center();
             ::na::Vector3::new(p[0], p[1], p[2])
         };
 
@@ -956,7 +979,10 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
             return;
         }
 
-        let square = maze.free_in_square([player_pos[0] as usize, player_pos[1] as usize], spawn_distance);
+        let square = maze.free_in_square(
+            [player_pos[0] as usize, player_pos[1] as usize],
+            spawn_distance,
+        );
         if square.is_empty() {
             panic!("maze is too small to be able to create entities");
         }
@@ -967,14 +993,39 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
             let pos = square[square_range.ind_sample(&mut rng)];
             let pos = [pos[0] as f32 + 0.5, pos[1] as f32 + 0.5];
 
-            ::entity::create_avoider(pos, false, &mut momentums, &mut avoiders, &mut bodies, &mut dynamic_erasers, &mut dynamic_draws, &mut dynamic_graphics_assets, &mut lives, &mut physic_world, &entities);
+            ::entity::create_avoider(
+                pos,
+                false,
+                &mut momentums,
+                &mut avoiders,
+                &mut bodies,
+                &mut dynamic_erasers,
+                &mut dynamic_draws,
+                &mut dynamic_graphics_assets,
+                &mut lives,
+                &mut physic_world,
+                &entities,
+            );
         }
 
         for _ in bouncer_len..bouncer_population {
             let pos = square[square_range.ind_sample(&mut rng)];
             let pos = [pos[0] as f32 + 0.5, pos[1] as f32 + 0.5];
 
-            ::entity::create_bouncer(pos, false, &mut momentums, &mut bouncers, &mut bodies, &mut dynamic_erasers, &mut dynamic_draws, &mut dynamic_graphics_assets, &mut lives, &mut contactors, &mut physic_world, &entities);
+            ::entity::create_bouncer(
+                pos,
+                false,
+                &mut momentums,
+                &mut bouncers,
+                &mut bodies,
+                &mut dynamic_erasers,
+                &mut dynamic_draws,
+                &mut dynamic_graphics_assets,
+                &mut lives,
+                &mut contactors,
+                &mut physic_world,
+                &entities,
+            );
         }
     }
 }
