@@ -478,7 +478,7 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
                 ::std::f32::consts::FRAC_PI_3,
                 // IDEA: change to 0.0001 it's funny
                 0.001,
-                0.8,
+                0.3,
             ).unwrap();
 
             let hud_view_uniform = ::graphics::shader::draw1_vs::ty::View {

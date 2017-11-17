@@ -57,20 +57,21 @@ pub fn create_weapon<'a>(
 ) {
     shooters.insert(anchor, ::component::Shooter::new(0.5));
 
-    let shoot_pos_x = 0.4;
-    let weapon_pos_y = -0.1;
-    let weapon_pos_z = -0.08;
+    let coef = 2.0;
+    let shoot_pos_x = 0.08*coef;
+    let weapon_pos_y = -0.02*coef;
+    let weapon_pos_z = -0.016*coef;
 
-    let center_radius = 0.018;
-    let light_ray_radius = 0.010;
+    let center_radius = 0.0036*coef;
+    let light_ray_radius = 0.002*coef;
 
-    let nine_radius = 0.028;
-    let nine_length = 0.28;
+    let nine_radius = 0.0056*coef;
+    let nine_length = 0.056*coef;
 
-    let bar_x_pos = 0.38;
-    let bar_x_radius = 0.2;
-    let bar_y_radius = 0.011;
-    let bar_z_radius = 0.007;
+    let bar_x_pos = 0.076*coef;
+    let bar_x_radius = 0.04*coef;
+    let bar_y_radius = 0.0022*coef;
+    let bar_z_radius = 0.0014*coef;
 
     weapon_animations.insert(
         anchor,
