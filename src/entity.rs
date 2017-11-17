@@ -10,12 +10,12 @@ pub const LASER_GROUP:      usize = 5;
 pub fn create_light_ray<'a>(
     from: ::na::Vector3<f32>,
     to: ::na::Vector3<f32>,
+    radius: f32,
+    deleters: &mut ::specs::WriteStorage<'a, ::component::Deleter>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     entities: &::specs::Entities,
 ) {
-    let radius = 0.001;
-
     let (primitive, groups) = ::graphics::Primitive::Cylinder.instantiate();
     let color = ::graphics::color::YELLOW;
     let primitive_trans = {
@@ -41,6 +41,7 @@ pub fn create_light_ray<'a>(
             primitive_trans,
         ),
     );
+    deleters.insert(entity, ::component::Deleter::new(0.05));
 }
 
 pub fn create_weapon<'a>(
@@ -54,25 +55,28 @@ pub fn create_weapon<'a>(
 ) {
     shooters.insert(anchor, ::component::Shooter::new(0.5));
 
-    let shoot_pos_x = 0.01;
-    let weapon_pos_y = -0.01;
-    let weapon_pos_z = -0.008;
+    let coef = 0.2;
+    let shoot_pos_x = 0.4*coef;
+    let weapon_pos_y = -0.1*coef;
+    let weapon_pos_z = -0.08*coef;
 
-    let center_radius = 0.0018;
+    let center_radius = 0.018*coef;
+    let light_ray_radius = 0.010*coef;
 
-    let nine_radius = 0.0028;
-    let nine_length = 0.028;
+    let nine_radius = 0.028*coef;
+    let nine_length = 0.28*coef;
 
-    let bar_x_pos = 0.038;
-    let bar_x_radius = 0.02;
-    let bar_y_radius = 0.0011;
-    let bar_z_radius = 0.0007;
+    let bar_x_pos = 0.38*coef;
+    let bar_x_radius = 0.2*coef;
+    let bar_y_radius = 0.011*coef;
+    let bar_z_radius = 0.007*coef;
 
     weapon_animations.insert(
         anchor,
         ::component::WeaponAnimation {
             weapon_trans: ::na::Translation3::new(0.0, weapon_pos_y, weapon_pos_z).to_superset(),
             shoot_pos: ::na::Point3::new(shoot_pos_x, 0.0, 0.0),
+            light_ray_radius,
         },
     );
 

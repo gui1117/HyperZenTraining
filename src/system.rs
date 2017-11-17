@@ -821,12 +821,11 @@ impl<'a> ::specs::System<'a> for LifeSystem {
     type SystemData = (::specs::WriteStorage<'a, ::component::DynamicDraw>,
      ::specs::WriteStorage<'a, ::component::DynamicEraser>,
      ::specs::WriteStorage<'a, ::component::Life>,
-     ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Entities<'a>);
 
     fn run(
         &mut self,
-        (mut dynamic_draws, mut dynamic_erasers, mut lives, config, entities): Self::SystemData,
+        (mut dynamic_draws, mut dynamic_erasers, mut lives, entities): Self::SystemData,
     ) {
         use component::Life;
         for (life, entity) in (&mut lives, &*entities).join() {
@@ -861,6 +860,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
      ::specs::ReadStorage<'a, ::component::WeaponAnimation>,
      ::specs::WriteStorage<'a, ::component::Shooter>,
      ::specs::WriteStorage<'a, ::component::Life>,
+     ::specs::WriteStorage<'a, ::component::Deleter>,
      ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
      ::specs::WriteStorage<'a, ::component::DynamicDraw>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
@@ -869,7 +869,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
 
     fn run(
         &mut self,
-        (bodies, aims, animations, mut shooters, mut lifes, mut dynamic_assets, mut dynamic_draws, physic_world, config, entities): Self::SystemData,
+        (bodies, aims, animations, mut shooters, mut lifes, mut deleters, mut dynamic_assets, mut dynamic_draws, physic_world, config, entities): Self::SystemData,
     ) {
         for (aim, animation, body, shooter, entity) in (&aims, &animations, &bodies, &mut shooters, &*entities).join() {
             shooter.reload(config.dt().clone());
@@ -877,17 +877,8 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             if shooter.do_shoot() {
                 let body_pos = body.get(&physic_world).position().clone();
 
-                let aim_trans = {
-                    let ah: ::na::Transform3<f32> =
-                        ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -aim.x_dir)).to_superset();
-                    let av: ::na::Transform3<f32> = ::na::Rotation3::new(
-                        ::na::Vector3::new(0.0, -aim.dir[2].asin(), 0.0),
-                    ).to_superset();
-                    ah * av
-                };
-
                 let ray = ::ncollide::query::Ray {
-                    origin: body_pos.translation * aim_trans * animation.weapon_trans * animation.shoot_pos,
+                    origin: ::na::Point3::from_coordinates(body_pos.translation.vector),
                     dir: aim.dir,
                 };
 
@@ -926,9 +917,18 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     }
                 }
 
-                let ray_end = (ray.origin + size*ray.dir).coords;
+                let aim_trans = {
+                    let ah: ::na::Transform3<f32> =
+                        ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -aim.x_dir)).to_superset();
+                    let av: ::na::Transform3<f32> = ::na::Rotation3::new(
+                        ::na::Vector3::new(0.0, -aim.dir[2].asin(), 0.0),
+                    ).to_superset();
+                    ah * av
+                };
+                let ray_draw_origin = (body_pos.translation * aim_trans * animation.weapon_trans * animation.shoot_pos).coords;
+                let ray_draw_end = (ray.origin + size*ray.dir).coords;
 
-                ::entity::create_light_ray(ray.origin.coords, ray_end, &mut dynamic_draws, &mut dynamic_assets, &entities);
+                ::entity::create_light_ray(ray_draw_origin, ray_draw_end, animation.light_ray_radius, &mut deleters, &mut dynamic_draws, &mut dynamic_assets, &entities);
             }
         }
     }
@@ -1045,6 +1045,24 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
                 &mut physic_world,
                 &entities,
             );
+        }
+    }
+}
+
+pub struct DeleterSystem;
+
+impl<'a> ::specs::System<'a> for DeleterSystem {
+    type SystemData = (::specs::WriteStorage<'a, ::component::Deleter>,
+     ::specs::Fetch<'a, ::resource::Config>,
+     ::specs::Entities<'a>);
+
+    fn run(&mut self, (mut deleters, config, entities): Self::SystemData) {
+        for (deleter, entity) in (&mut deleters, &*entities).join() {
+            if deleter.timer <= 0.0 {
+                entities.delete(entity).unwrap();
+            }
+
+            deleter.timer -= config.dt();
         }
     }
 }

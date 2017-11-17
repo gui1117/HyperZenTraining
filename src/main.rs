@@ -116,6 +116,7 @@ fn main() {
     world.register::<::component::DynamicDraw>();
     world.register::<::component::DynamicEraser>();
     world.register::<::component::DynamicGraphicsAssets>();
+    world.register::<::component::Deleter>();
     world.register::<::component::PhysicBody>();
     world.register::<::component::Momentum>();
     world.register::<::component::Avoider>();
@@ -187,14 +188,15 @@ fn main() {
     world.maintain();
 
     let mut update_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::MenuControlSystem::new(), "menu_system", &[])
+        .add(::system::MenuControlSystem::new(), "menu", &[])
         .add(::system::PlayerControlSystem::new(), "player_control", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
         .add(::system::LifeSystem, "life", &[])
         .add(::system::MazeMasterSystem, "maze_master", &[])
-        .add(::system::PhysicSystem, "physic_system", &[])
+        .add(::system::PhysicSystem, "physic", &[])
+        .add(::system::DeleterSystem, "deleter", &[])
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()

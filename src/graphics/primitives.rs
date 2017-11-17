@@ -298,7 +298,7 @@ pub mod primitive {
                 Primitive::SquarePyramid => (1, GROUP_COUNTER.instantiate(5)),
                 Primitive::TrianglePyramid => (2, GROUP_COUNTER.instantiate(4)),
                 Primitive::Sphere => (3, GROUP_COUNTER.instantiate(1)),
-                Primitive::Six => (4, GROUP_COUNTER.instantiate(11)),
+                Primitive::Six => (4, GROUP_COUNTER.instantiate(8)),
                 Primitive::Cube => (5, GROUP_COUNTER.instantiate(6)),
                 Primitive::Cylinder => (6, GROUP_COUNTER.instantiate(1)),
             }
