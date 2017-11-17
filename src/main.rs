@@ -115,6 +115,7 @@ fn main() {
     world.register::<::component::StaticDraw>();
     world.register::<::component::DynamicDraw>();
     world.register::<::component::DynamicEraser>();
+    world.register::<::component::DynamicHud>();
     world.register::<::component::DynamicGraphicsAssets>();
     world.register::<::component::Deleter>();
     world.register::<::component::PhysicBody>();

@@ -13,6 +13,7 @@ pub fn create_light_ray<'a>(
     radius: f32,
     deleters: &mut ::specs::WriteStorage<'a, ::component::Deleter>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     entities: &::specs::Entities,
 ) {
@@ -31,6 +32,7 @@ pub fn create_light_ray<'a>(
     };
 
     let entity = entities.create();
+    dynamic_huds.insert(entity, ::component::DynamicHud);
     dynamic_draws.insert(entity, ::component::DynamicDraw);
     dynamic_graphics_assets.insert(
         entity,
@@ -41,7 +43,7 @@ pub fn create_light_ray<'a>(
             primitive_trans,
         ),
     );
-    deleters.insert(entity, ::component::Deleter::new(0.05));
+    deleters.insert(entity, ::component::Deleter::new(0.03));
 }
 
 pub fn create_weapon<'a>(
@@ -49,27 +51,26 @@ pub fn create_weapon<'a>(
     shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
     weapon_animations: &mut ::specs::WriteStorage<'a, ::component::WeaponAnimation>,
     weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
-    dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     entities: &::specs::Entities,
 ) {
     shooters.insert(anchor, ::component::Shooter::new(0.5));
 
-    let coef = 0.2;
-    let shoot_pos_x = 0.4*coef;
-    let weapon_pos_y = -0.1*coef;
-    let weapon_pos_z = -0.08*coef;
+    let shoot_pos_x = 0.4;
+    let weapon_pos_y = -0.1;
+    let weapon_pos_z = -0.08;
 
-    let center_radius = 0.018*coef;
-    let light_ray_radius = 0.010*coef;
+    let center_radius = 0.018;
+    let light_ray_radius = 0.010;
 
-    let nine_radius = 0.028*coef;
-    let nine_length = 0.28*coef;
+    let nine_radius = 0.028;
+    let nine_length = 0.28;
 
-    let bar_x_pos = 0.38*coef;
-    let bar_x_radius = 0.2*coef;
-    let bar_y_radius = 0.011*coef;
-    let bar_z_radius = 0.007*coef;
+    let bar_x_pos = 0.38;
+    let bar_x_radius = 0.2;
+    let bar_y_radius = 0.011;
+    let bar_z_radius = 0.007;
 
     weapon_animations.insert(
         anchor,
@@ -88,7 +89,7 @@ pub fn create_weapon<'a>(
 
     let entity = entities.create();
     weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
-    dynamic_draws.insert(entity, ::component::DynamicDraw);
+    dynamic_huds.insert(entity, ::component::DynamicHud);
     dynamic_graphics_assets.insert(
         entity,
         ::component::DynamicGraphicsAssets::new(
@@ -115,7 +116,7 @@ pub fn create_weapon<'a>(
 
         let entity = entities.create();
         weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
-        dynamic_draws.insert(entity, ::component::DynamicDraw);
+        dynamic_huds.insert(entity, ::component::DynamicHud);
         dynamic_graphics_assets.insert(
             entity,
             ::component::DynamicGraphicsAssets::new(
@@ -137,7 +138,7 @@ pub fn create_player<'a>(
     shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
     weapon_animations: &mut ::specs::WriteStorage<'a, ::component::WeaponAnimation>,
     weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
-    dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     entities: &::specs::Entities,
@@ -172,7 +173,7 @@ pub fn create_player<'a>(
         shooters,
         weapon_animations,
         weapon_anchors,
-        dynamic_draws,
+        dynamic_huds,
         dynamic_graphics_assets,
         entities,
     );

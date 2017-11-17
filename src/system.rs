@@ -418,6 +418,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::StaticDraw>,
      ::specs::ReadStorage<'a, ::component::DynamicDraw>,
      ::specs::ReadStorage<'a, ::component::DynamicEraser>,
+     ::specs::ReadStorage<'a, ::component::DynamicHud>,
      ::specs::ReadStorage<'a, ::component::DynamicGraphicsAssets>,
      ::specs::ReadStorage<'a, ::component::PhysicBody>,
      ::specs::ReadStorage<'a, ::component::Player>,
@@ -428,11 +429,11 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphics_assets, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData){
+fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, dynamic_graphics_assets, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData){
         let mut future = Vec::new();
 
         // Compute view uniform
-        let view_uniform_buffer_subbuffer = {
+        let (view_uniform_buffer_subbuffer, hud_view_uniform_buffer_subbuffer) = {
             let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
 
             let player_pos = player_body.get(&physic_world).position().clone();
@@ -463,7 +464,7 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphic
                 graphics.dim[0] as f32 / graphics.dim[1] as f32,
                 ::std::f32::consts::FRAC_PI_3,
                 // IDEA: change to 0.0001 it's funny
-                0.004,
+                0.05,
                 100.0,
             ).unwrap();
 
@@ -472,18 +473,21 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphic
                 proj: proj_matrix.into(),
             };
 
-            graphics.view_uniform_buffer.next(view_uniform).unwrap()
-        };
+            let hud_proj_matrix = ::na::Perspective3::new(
+                graphics.dim[0] as f32 / graphics.dim[1] as f32,
+                ::std::f32::consts::FRAC_PI_3,
+                // IDEA: change to 0.0001 it's funny
+                0.001,
+                0.8,
+            ).unwrap();
 
-        let screen_dynamic_state = DynamicState {
-            viewports: Some(vec![
-                Viewport {
-                    origin: [0.0, 0.0],
-                    dimensions: [graphics.dim[0] as f32, graphics.dim[1] as f32],
-                    depth_range: 0.0..1.0,
-                },
-            ]),
-            ..DynamicState::none()
+            let hud_view_uniform = ::graphics::shader::draw1_vs::ty::View {
+                view: view_matrix.into(),
+                proj: hud_proj_matrix.into(),
+            };
+
+            (graphics.view_uniform_buffer.next(view_uniform).unwrap(),
+             graphics.view_uniform_buffer.next(hud_view_uniform).unwrap())
         };
 
         // Compute view set
@@ -497,6 +501,28 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphic
                 .unwrap(),
         );
 
+        // Compute view set
+        let hud_view_set = Arc::new(
+            graphics
+                .draw1_view_descriptor_set_pool
+                .next()
+                .add_buffer(hud_view_uniform_buffer_subbuffer)
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+
+        let screen_dynamic_state = DynamicState {
+            viewports: Some(vec![
+                Viewport {
+                    origin: [0.0, 0.0],
+                    dimensions: [graphics.dim[0] as f32, graphics.dim[1] as f32],
+                    depth_range: 0.0..1.0,
+                },
+            ]),
+            ..DynamicState::none()
+        };
+
         // Compute command
         let mut command_buffer_builder = AutoCommandBufferBuilder::primary_one_time_submit(
             graphics.device.clone(),
@@ -505,10 +531,11 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphic
             .begin_render_pass(
                 graphics.framebuffer.clone(),
                 false,
-                vec![0u32.into(), 0u32.into(), 1f32.into()],
+                vec![0u32.into(), 0u32.into(), 1f32.into(), 1f32.into()],
             )
             .unwrap();
 
+        // Draw static
         for static_draw in static_draws.join() {
             debug_assert_eq!(
                 graphics.primitives_vertex_buffers[static_draw.primitive].len(),
@@ -531,6 +558,9 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphic
             }
         }
 
+        // TODO: factorise draw loops
+
+        // Draw dynamic
         for (_, assets) in (&dynamic_draws, &dynamic_graphics_assets).join() {
             let world_trans_subbuffer = graphics
                 .world_uniform_buffer
@@ -570,6 +600,7 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphic
 
         command_buffer_builder = command_buffer_builder.next_subpass(false).unwrap();
 
+        // Draw eraser
         for (_, assets) in (&dynamic_erasers, &dynamic_graphics_assets).join() {
             let world_trans_subbuffer = graphics
                 .world_uniform_buffer
@@ -594,6 +625,46 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_graphic
                         vertex_buffer.clone(),
                         (view_set.clone(), dynamic_draw_set.clone()),
                         (),
+                    )
+                    .unwrap();
+            }
+        }
+
+        command_buffer_builder = command_buffer_builder.next_subpass(false).unwrap();
+
+        // Draw hud
+        for (_, assets) in (&dynamic_huds, &dynamic_graphics_assets).join() {
+            let world_trans_subbuffer = graphics
+                .world_uniform_buffer
+                .next(assets.world_trans)
+                .unwrap();
+
+            let dynamic_draw_set = Arc::new(
+                graphics
+                    .draw1_dynamic_descriptor_set_pool
+                    .next()
+                    .add_buffer(world_trans_subbuffer)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
+            );
+
+            debug_assert_eq!(
+                graphics.primitives_vertex_buffers[assets.primitive].len(),
+                assets.groups.len()
+            );
+            for i in 0..graphics.primitives_vertex_buffers[assets.primitive].len() {
+                command_buffer_builder = command_buffer_builder
+                    .draw(
+                        graphics.draw1_hud_pipeline.clone(),
+                        screen_dynamic_state.clone(),
+                        graphics.primitives_vertex_buffers[assets.primitive][i].clone(),
+                        (hud_view_set.clone(), dynamic_draw_set.clone()),
+                        ::graphics::shader::draw1_fs::ty::Group {
+                            group_hb: high_byte(assets.groups[i] as u32),
+                            group_lb: low_byte(assets.groups[i] as u32),
+                            color: assets.color as u32,
+                        },
                     )
                     .unwrap();
             }
@@ -863,13 +934,14 @@ impl<'a> ::specs::System<'a> for ShootSystem {
      ::specs::WriteStorage<'a, ::component::Deleter>,
      ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
      ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+     ::specs::WriteStorage<'a, ::component::DynamicHud>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Entities<'a>);
 
     fn run(
         &mut self,
-        (bodies, aims, animations, mut shooters, mut lifes, mut deleters, mut dynamic_assets, mut dynamic_draws, physic_world, config, entities): Self::SystemData,
+        (bodies, aims, animations, mut shooters, mut lifes, mut deleters, mut dynamic_assets, mut dynamic_draws, mut dynamic_huds, physic_world, config, entities): Self::SystemData,
     ) {
         for (aim, animation, body, shooter, entity) in (&aims, &animations, &bodies, &mut shooters, &*entities).join() {
             shooter.reload(config.dt().clone());
@@ -928,7 +1000,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                 let ray_draw_origin = (body_pos.translation * aim_trans * animation.weapon_trans * animation.shoot_pos).coords;
                 let ray_draw_end = (ray.origin + size*ray.dir).coords;
 
-                ::entity::create_light_ray(ray_draw_origin, ray_draw_end, animation.light_ray_radius, &mut deleters, &mut dynamic_draws, &mut dynamic_assets, &entities);
+                ::entity::create_light_ray(ray_draw_origin, ray_draw_end, animation.light_ray_radius, &mut deleters, &mut dynamic_draws, &mut dynamic_huds, &mut dynamic_assets, &entities);
             }
         }
     }

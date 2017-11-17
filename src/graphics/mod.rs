@@ -146,11 +146,12 @@ pub struct Data {
     pub render_pass: Arc<RenderPass<render_pass::CustomRenderPassDesc>>,
     pub second_render_pass: Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>,
 
-    pub framebuffer: Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, ((((), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
+    pub framebuffer: Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, (((((), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
     pub second_framebuffers: Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage>)>>>,
 
     pub draw1_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>,
     pub draw1_eraser_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>,
+    pub draw1_hud_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>,
     pub eraser1_pipeline: Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>,
     pub eraser2_pipeline: Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser2_cs::Layout>>>,
     pub draw2_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
@@ -186,12 +187,18 @@ impl<'a> Graphics<'a> {
         eraser1_pipeline: &Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>,
         draw2_pipeline: &Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
     ) -> (
-        Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, ((((), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
+        Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, (((((), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
         Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage>)>>>,
         Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, (((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
         Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
 ){
         let depth_buffer_attachment = AttachmentImage::transient(
+            device.clone(),
+            images[0].dimensions(),
+            format::Format::D16Unorm,
+        ).unwrap();
+
+        let hud_depth_buffer_attachment = AttachmentImage::transient(
             device.clone(),
             images[0].dimensions(),
             format::Format::D16Unorm,
@@ -232,6 +239,8 @@ impl<'a> Graphics<'a> {
                 .add(tmp_erase_image_attachment.clone())
                 .unwrap()
                 .add(depth_buffer_attachment.clone())
+                .unwrap()
+                .add(hud_depth_buffer_attachment.clone())
                 .unwrap()
                 .build()
                 .unwrap(),
@@ -502,6 +511,19 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
+        let draw1_hud_pipeline = Arc::new(
+            GraphicsPipeline::start()
+                .vertex_input_single_buffer::<Vertex>()
+                .vertex_shader(draw1_vs.main_entry_point(), ())
+                .viewports_dynamic_scissors_irrelevant(1)
+                .fragment_shader(draw1_fs.main_entry_point(), ())
+                .depth_stencil_simple_depth()
+                .sample_shading_enabled(1.0)
+                .render_pass(Subpass::from(render_pass.clone(), 2).unwrap())
+                .build(device.clone())
+                .unwrap(),
+        );
+
         let eraser1_pipeline =
             Arc::new(
                 ComputePipeline::new(device.clone(), &eraser1_cs.main_entry_point(), &()).unwrap(),
@@ -681,6 +703,8 @@ impl<'a> Graphics<'a> {
             )
         };
 
+        // TODO: those descriptor are used by many pipeline other than
+        // draw1_pipeline. Is it OK ?
         let draw1_view_descriptor_set_pool =
             FixedSizeDescriptorSetsPool::new(draw1_pipeline.clone(), 0);
         let draw1_dynamic_descriptor_set_pool =
@@ -724,6 +748,7 @@ impl<'a> Graphics<'a> {
                 second_render_pass,
                 draw1_pipeline,
                 draw1_eraser_pipeline,
+                draw1_hud_pipeline,
                 draw2_pipeline,
                 debug_pipeline,
                 framebuffer,

@@ -278,6 +278,13 @@ impl ::specs::Component for DynamicEraser {
     type Storage = ::specs::NullStorage<Self>;
 }
 
+#[derive(Default)]
+pub struct DynamicHud;
+
+impl ::specs::Component for DynamicHud {
+    type Storage = ::specs::NullStorage<Self>;
+}
+
 pub struct PhysicBody(usize);
 
 impl ::specs::Component for PhysicBody {

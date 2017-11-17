@@ -9,12 +9,13 @@ pub struct CustomRenderPassDesc;
 unsafe impl RenderPassDesc for CustomRenderPassDesc {
     #[inline]
     fn num_attachments(&self) -> usize {
-        3
+        4
     }
 
     #[inline]
     fn attachment_desc(&self, id: usize) -> Option<LayoutAttachmentDescription> {
         match id {
+            // Colors
             0 => Some(LayoutAttachmentDescription {
                 format: Format::R8G8B8A8Uint,
                 samples: 1,
@@ -25,6 +26,7 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
                 initial_layout: ImageLayout::Undefined,
                 final_layout: ImageLayout::ColorAttachmentOptimal,
             }),
+            // Erasers
             1 => Some(LayoutAttachmentDescription {
                 format: Format::R8Uint,
                 samples: 1,
@@ -35,7 +37,19 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
                 initial_layout: ImageLayout::Undefined,
                 final_layout: ImageLayout::ColorAttachmentOptimal,
             }),
+            // Depth buffer
             2 => Some(LayoutAttachmentDescription {
+                format: Format::D16Unorm,
+                samples: 1,
+                load: LoadOp::Clear,
+                store: StoreOp::DontCare,
+                stencil_load: LoadOp::Clear,
+                stencil_store: StoreOp::DontCare,
+                initial_layout: ImageLayout::Undefined,
+                final_layout: ImageLayout::DepthStencilAttachmentOptimal,
+            }),
+            // HUD depth buffer
+            3 => Some(LayoutAttachmentDescription {
                 format: Format::D16Unorm,
                 samples: 1,
                 load: LoadOp::Clear,
@@ -51,12 +65,13 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
 
     #[inline]
     fn num_subpasses(&self) -> usize {
-        2
+        3
     }
 
     #[inline]
     fn subpass_desc(&self, id: usize) -> Option<LayoutPassDescription> {
         match id {
+            // draw
             0 => Some(LayoutPassDescription {
                 color_attachments: vec![(0, ImageLayout::ColorAttachmentOptimal)],
                 depth_stencil: Some((2, ImageLayout::DepthStencilAttachmentOptimal)),
@@ -64,9 +79,18 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
                 resolve_attachments: vec![],
                 preserve_attachments: vec![1],
             }),
+            // erase
             1 => Some(LayoutPassDescription {
                 color_attachments: vec![(1, ImageLayout::ColorAttachmentOptimal)],
                 depth_stencil: Some((2, ImageLayout::DepthStencilAttachmentOptimal)),
+                input_attachments: vec![],
+                resolve_attachments: vec![],
+                preserve_attachments: vec![0],
+            }),
+            // draw HUD
+            2 => Some(LayoutPassDescription {
+                color_attachments: vec![(0, ImageLayout::ColorAttachmentOptimal)],
+                depth_stencil: Some((3, ImageLayout::DepthStencilAttachmentOptimal)),
                 input_attachments: vec![],
                 resolve_attachments: vec![],
                 preserve_attachments: vec![0],
@@ -77,7 +101,7 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
 
     #[inline]
     fn num_dependencies(&self) -> usize {
-        1
+        2
     }
 
     #[inline]
@@ -95,13 +119,36 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
                     ..PipelineStages::none()
                 },
                 source_access: AccessFlagBits {
+                    // TODO: color attachment ?
                     depth_stencil_attachment_write: true,
                     depth_stencil_attachment_read: true,
                     ..AccessFlagBits::none()
                 },
                 destination_access: AccessFlagBits {
+                    // TODO: color attachment ?
                     depth_stencil_attachment_write: true,
                     depth_stencil_attachment_read: true,
+                    ..AccessFlagBits::none()
+                },
+                by_region: true,
+            }),
+            1 => Some(LayoutPassDependencyDescription {
+                source_subpass: 0,
+                destination_subpass: 2,
+                source_stages: PipelineStages {
+                    late_fragment_tests: true,
+                    ..PipelineStages::none()
+                },
+                destination_stages: PipelineStages {
+                    early_fragment_tests: true,
+                    ..PipelineStages::none()
+                },
+                source_access: AccessFlagBits {
+                    color_attachment_write: true,
+                    ..AccessFlagBits::none()
+                },
+                destination_access: AccessFlagBits {
+                    color_attachment_write: true,
                     ..AccessFlagBits::none()
                 },
                 by_region: true,
