@@ -224,7 +224,8 @@ impl ::specs::Component for WeaponAnchor {
 }
 
 pub struct WeaponAnimation {
-    pub trans: ::na::Isometry3<f32>,
+    pub weapon_trans: ::na::Isometry3<f32>,
+    pub shoot_pos: ::na::Point3<f32>,
 }
 
 impl ::specs::Component for WeaponAnimation {
@@ -255,7 +256,9 @@ impl DynamicGraphicsAssets {
             groups,
             primitive_trans,
             color,
-            world_trans: shader::draw1_vs::ty::World { world: [[0f32; 4]; 4] },
+            world_trans: shader::draw1_vs::ty::World {
+                world: primitive_trans.unwrap().into(),
+            },
         }
     }
 }

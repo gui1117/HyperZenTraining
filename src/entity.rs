@@ -1,11 +1,47 @@
 use alga::general::SubsetOf;
-use std::f32::consts::PI;
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_3};
 
 pub const WALL_GROUP:       usize = 1;
 pub const FLOOR_CEIL_GROUP: usize = 2;
 pub const DIM2_GROUP:       usize = 3;
 pub const ALIVE_GROUP:      usize = 4;
 pub const LASER_GROUP:      usize = 5;
+
+pub fn create_light_ray<'a>(
+    from: ::na::Vector3<f32>,
+    to: ::na::Vector3<f32>,
+    dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
+    entities: &::specs::Entities,
+) {
+    let radius = 0.001;
+
+    let (primitive, groups) = ::graphics::Primitive::Cylinder.instantiate();
+    let color = ::graphics::color::YELLOW;
+    let primitive_trans = {
+        let i = ::na::Translation::from_vector((from + to) / 2.0) *
+            ::na::Rotation3::rotation_between(
+                &::na::Vector3::new(1.0, 0.0, 0.0),
+                &(to - from),
+            ).unwrap();
+
+        let r = ::na::Rotation3::new(::na::Vector3::new(0.0, -FRAC_PI_2, 0.0));
+
+        i * r * ::graphics::resizer(radius, radius, (to - from).norm() / 2.0)
+    };
+
+    let entity = entities.create();
+    dynamic_draws.insert(entity, ::component::DynamicDraw);
+    dynamic_graphics_assets.insert(
+        entity,
+        ::component::DynamicGraphicsAssets::new(
+            primitive,
+            groups,
+            color,
+            primitive_trans,
+        ),
+    );
+}
 
 pub fn create_weapon<'a>(
     anchor: ::specs::Entity,
@@ -18,8 +54,9 @@ pub fn create_weapon<'a>(
 ) {
     shooters.insert(anchor, ::component::Shooter::new(0.5));
 
-    let weapon_pos_y = -0.008;
-    let weapon_pos_z = -0.01;
+    let shoot_pos_x = 0.01;
+    let weapon_pos_y = -0.01;
+    let weapon_pos_z = -0.008;
 
     let center_radius = 0.0018;
 
@@ -34,14 +71,15 @@ pub fn create_weapon<'a>(
     weapon_animations.insert(
         anchor,
         ::component::WeaponAnimation {
-            trans: ::na::Translation3::new(0.0, weapon_pos_z, weapon_pos_y).to_superset(),
+            weapon_trans: ::na::Translation3::new(0.0, weapon_pos_y, weapon_pos_z).to_superset(),
+            shoot_pos: ::na::Point3::new(shoot_pos_x, 0.0, 0.0),
         },
     );
 
     // Six
     let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
     let color = ::graphics::color::RED;
-    let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, PI / 2., 0.0)) *
+    let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0)) *
         ::graphics::resizer(nine_radius, nine_radius, nine_length);
 
     let entity = entities.create();
@@ -57,7 +95,7 @@ pub fn create_weapon<'a>(
         ),
     );
 
-    for angle in (0..3usize).map(|i| i as f32 * 2.0 * PI / 3.0) {
+    for angle in (0..3usize).map(|i| i as f32 * 2.0 * FRAC_PI_3) {
         // Bar
         let (primitive, groups) = ::graphics::Primitive::Cube.instantiate();
         let color = ::graphics::color::PALE_PURPLE;
@@ -431,7 +469,7 @@ pub fn create_maze_walls<'a>(
                 let y_radius = (c.1 - c.0 + 1) as f32 / 2.0;
                 let pos = ::na::Isometry3::new(
                     ::na::Vector3::new(x as f32, c.0 as f32 + y_radius, 0.5),
-                    ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
+                    ::na::Vector3::y() * FRAC_PI_2,
                 );
                 create_wall_side(
                     pos,
@@ -455,7 +493,7 @@ pub fn create_maze_walls<'a>(
                 let y_radius = (c.1 - c.0 + 1) as f32 / 2.0;
                 let pos = ::na::Isometry3::new(
                     ::na::Vector3::new(x as f32 + 1.0, c.0 as f32 + y_radius, 0.5),
-                    ::na::Vector3::y() * ::std::f32::consts::FRAC_PI_2,
+                    ::na::Vector3::y() * FRAC_PI_2,
                 );
                 create_wall_side(
                     pos,
@@ -500,7 +538,7 @@ pub fn create_maze_walls<'a>(
                 let y_radius = 0.5;
                 let pos = ::na::Isometry3::new(
                     ::na::Vector3::new(c.0 as f32 + x_radius, y as f32, 0.5),
-                    ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
+                    ::na::Vector3::x() * FRAC_PI_2,
                 );
                 create_wall_side(
                     pos,
@@ -524,7 +562,7 @@ pub fn create_maze_walls<'a>(
                 let y_radius = 0.5;
                 let pos = ::na::Isometry3::new(
                     ::na::Vector3::new(c.0 as f32 + x_radius, y as f32 + 1.0, 0.5),
-                    ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
+                    ::na::Vector3::x() * FRAC_PI_2,
                 );
                 create_wall_side(
                     pos,

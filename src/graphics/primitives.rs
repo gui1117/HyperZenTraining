@@ -257,6 +257,7 @@ pub fn instance_primitives(
         cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0] });
         cylinder_buffers_def[0].push(Vertex { position: [p1[0], p1[1], 1.0] });
     }
+    primitives_buffers_def.push(cylinder_buffers_def);
 
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];

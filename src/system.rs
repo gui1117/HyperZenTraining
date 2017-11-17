@@ -808,7 +808,7 @@ fn run(&mut self, (bodies, weapon_anchors, weapon_animations, aims, mut dynamic_
             };
 
             let trans = body.get(&physic_world).position().translation * aim_trans *
-                animation.trans * assets.primitive_trans;
+                animation.weapon_trans * assets.primitive_trans;
             assets.world_trans =
                 ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
         }
@@ -858,32 +858,44 @@ impl ShootSystem {
 impl<'a> ::specs::System<'a> for ShootSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::PhysicBody>,
      ::specs::ReadStorage<'a, ::component::Aim>,
+     ::specs::ReadStorage<'a, ::component::WeaponAnimation>,
      ::specs::WriteStorage<'a, ::component::Shooter>,
      ::specs::WriteStorage<'a, ::component::Life>,
+     ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
+     ::specs::WriteStorage<'a, ::component::DynamicDraw>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>,
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Entities<'a>);
 
     fn run(
         &mut self,
-        (bodies, aims, mut shooters, mut lifes, physic_world, config, entities): Self::SystemData,
+        (bodies, aims, animations, mut shooters, mut lifes, mut dynamic_assets, mut dynamic_draws, physic_world, config, entities): Self::SystemData,
     ) {
-        for (aim, body, shooter, entity) in (&aims, &bodies, &mut shooters, &*entities).join() {
-            let body_pos = body.get(&physic_world).position().clone();
+        for (aim, animation, body, shooter, entity) in (&aims, &animations, &bodies, &mut shooters, &*entities).join() {
             shooter.reload(config.dt().clone());
 
-            let ray = ::ncollide::query::Ray {
-                origin: ::na::Point3::from_coordinates(body_pos.translation.vector),
-                dir: aim.dir,
-            };
-
-            let mut group = ::ncollide::world::CollisionGroups::new();
-            // TODO: resolve hack with membership nphysic #82
-            group.set_membership(&[::entity::LASER_GROUP]);
-            group.set_whitelist(&[::entity::LASER_GROUP]);
-
             if shooter.do_shoot() {
-                // TODO: factorise this.
+                let body_pos = body.get(&physic_world).position().clone();
+
+                let aim_trans = {
+                    let ah: ::na::Transform3<f32> =
+                        ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -aim.x_dir)).to_superset();
+                    let av: ::na::Transform3<f32> = ::na::Rotation3::new(
+                        ::na::Vector3::new(0.0, -aim.dir[2].asin(), 0.0),
+                    ).to_superset();
+                    ah * av
+                };
+
+                let ray = ::ncollide::query::Ray {
+                    origin: body_pos.translation * aim_trans * animation.weapon_trans * animation.shoot_pos,
+                    dir: aim.dir,
+                };
+
+                let mut group = ::ncollide::world::CollisionGroups::new();
+                // TODO: resolve hack with membership nphysic #82
+                group.set_membership(&[::entity::LASER_GROUP]);
+                group.set_whitelist(&[::entity::LASER_GROUP]);
+
                 self.collided.clear();
                 for (other_body, collision) in
                     physic_world.collision_world().interferences_with_ray(
@@ -904,12 +916,19 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                 self.collided.sort_by(
                     |a, b| (a.1).partial_cmp(&b.1).unwrap(),
                 );
+                let mut size = 100.0; // Infinite
                 for collided in &self.collided {
                     if let Some(ref mut life) = lifes.get_mut(collided.0) {
                         life.kill();
+                    } else {
+                        size = collided.1;
+                        break;
                     }
-                    break;
                 }
+
+                let ray_end = (ray.origin + size*ray.dir).coords;
+
+                ::entity::create_light_ray(ray.origin.coords, ray_end, &mut dynamic_draws, &mut dynamic_assets, &entities);
             }
         }
     }
