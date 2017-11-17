@@ -15,6 +15,7 @@ pub fn colors() -> Vec<[f32; 4]> {
         [0xc7, 0x5f, 0x7a, 0xff],
         [0xe2, 0xc5, 0xc9, 0xff],
         [0x97, 0x5d, 0xb2, 0xff],
+        [0x41, 0x60, 0x70, 0xff],
     ].into_iter()
         .map(|color| {
             let mut out_color = [0f32; 4];
@@ -43,4 +44,5 @@ pub mod color {
     pub const PINK:        u16 = 12; //c75f7a
     pub const PALE_PURPLE: u16 = 13; //e2c5c9
     pub const PURPLE:      u16 = 14; //975db2
+    pub const GREY:        u16 = 15;
 }

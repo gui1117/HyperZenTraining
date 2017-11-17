@@ -55,9 +55,7 @@ pub fn create_weapon<'a>(
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     entities: &::specs::Entities,
 ) {
-    shooters.insert(anchor, ::component::Shooter::new(0.5));
-
-    let coef = 2.0;
+    let coef = 3.0;
     let shoot_pos_x = 0.08*coef;
     let weapon_pos_y = -0.02*coef;
     let weapon_pos_z = -0.016*coef;
@@ -65,28 +63,26 @@ pub fn create_weapon<'a>(
     let center_radius = 0.0036*coef;
     let light_ray_radius = 0.002*coef;
 
-    let nine_radius = 0.0056*coef;
-    let nine_length = 0.056*coef;
+    let six_radius = 0.0056*coef;
+    let six_length = 0.051*coef;
 
-    let bar_x_pos = 0.076*coef;
+    let bar_x_pos = 0.071*coef;
     let bar_x_radius = 0.04*coef;
     let bar_y_radius = 0.0022*coef;
     let bar_z_radius = 0.0014*coef;
 
-    weapon_animations.insert(
-        anchor,
-        ::component::WeaponAnimation {
-            weapon_trans: ::na::Translation3::new(0.0, weapon_pos_y, weapon_pos_z).to_superset(),
-            shoot_pos: ::na::Point3::new(shoot_pos_x, 0.0, 0.0),
-            light_ray_radius,
-        },
-    );
+    let bullet_radius= 0.006*coef;
+    let bullet_length = 0.0005*coef;
+    let bullet_x = 0.035*coef;
+    let bullet_dx = 0.003*coef;
+    let bullet_nbr = 5;
+    let mut bullets = vec![];
 
     // Six
     let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
     let color = ::graphics::color::RED;
     let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0)) *
-        ::graphics::resizer(nine_radius, nine_radius, nine_length);
+        ::graphics::resizer(six_radius, six_radius, six_length);
 
     let entity = entities.create();
     weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
@@ -100,6 +96,32 @@ pub fn create_weapon<'a>(
             primitive_trans,
         ),
     );
+
+    // Bullet
+    for i in 0..bullet_nbr {
+        let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
+        let color = ::graphics::color::PALE_BLUE;
+        let primitive_trans = ::na::Isometry3::new(
+                ::na::Vector3::new(bullet_x + bullet_dx*i as f32, 0.0, 0.0),
+                ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
+            ) *
+            ::graphics::resizer(bullet_radius, bullet_radius, bullet_length);
+
+        let entity = entities.create();
+        bullets.push(entity);
+        weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
+        dynamic_huds.insert(entity, ::component::DynamicHud);
+        dynamic_graphics_assets.insert(
+            entity,
+            ::component::DynamicGraphicsAssets::new(
+                primitive,
+                groups,
+                color,
+                primitive_trans,
+            ),
+        );
+    }
+    bullets.reverse();
 
     for angle in (0..3usize).map(|i| i as f32 * 2.0 * FRAC_PI_3) {
         // Bar
@@ -128,6 +150,17 @@ pub fn create_weapon<'a>(
             ),
         );
     }
+
+    weapon_animations.insert(
+        anchor,
+        ::component::WeaponAnimation {
+            weapon_trans: ::na::Translation3::new(0.0, weapon_pos_y, weapon_pos_z).to_superset(),
+            shoot_pos: ::na::Point3::new(shoot_pos_x, 0.0, 0.0),
+            light_ray_radius,
+            bullets,
+        },
+    );
+    shooters.insert(anchor, ::component::Shooter::new(0.5, bullet_nbr));
 }
 
 pub fn create_player<'a>(

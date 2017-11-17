@@ -32,54 +32,27 @@ impl ::specs::Component for Life {
     type Storage = ::specs::VecStorage<Self>;
 }
 
-enum ShooterState {
-    Reloading(f32),
-    Loaded,
-}
-
 pub struct Shooter {
-    reload_time: f32,
-    state: ShooterState,
-    shoot: bool,
+    pub reload_time: f32,
+    pub timer: f32,
+    pub max_bullets: usize,
+    pub bullets: usize,
+    pub shoot: bool,
 }
 
 impl Shooter {
-    pub fn new(reload_time: f32) -> Self {
+    pub fn new(reload_time: f32, max_bullets: usize) -> Self {
         Shooter {
             reload_time,
-            state: ShooterState::Loaded,
             shoot: false,
-        }
-    }
-
-    pub fn reload(&mut self, dt: f32) {
-        let set_ready = if let ShooterState::Reloading(ref mut remaining) = self.state {
-            *remaining -= dt;
-            *remaining <= 0.0
-        } else {
-            false
-        };
-
-        if set_ready {
-            self.state = ShooterState::Loaded
+            max_bullets,
+            timer: 0.0,
+            bullets: max_bullets,
         }
     }
 
     pub fn set_shoot(&mut self, shoot: bool) {
         self.shoot = shoot;
-    }
-
-    pub fn do_shoot(&mut self) -> bool {
-        if !self.shoot {
-            return false;
-        }
-
-        if let ShooterState::Loaded = self.state {
-            self.state = ShooterState::Reloading(self.reload_time);
-            true
-        } else {
-            false
-        }
     }
 }
 
@@ -227,6 +200,7 @@ pub struct WeaponAnimation {
     pub weapon_trans: ::na::Isometry3<f32>,
     pub shoot_pos: ::na::Point3<f32>,
     pub light_ray_radius: f32,
+    pub bullets: Vec<::specs::Entity>,
 }
 
 impl ::specs::Component for WeaponAnimation {

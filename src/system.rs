@@ -944,9 +944,22 @@ impl<'a> ::specs::System<'a> for ShootSystem {
         (bodies, aims, animations, mut shooters, mut lifes, mut deleters, mut dynamic_assets, mut dynamic_draws, mut dynamic_huds, physic_world, config, entities): Self::SystemData,
     ) {
         for (aim, animation, body, shooter, entity) in (&aims, &animations, &bodies, &mut shooters, &*entities).join() {
-            shooter.reload(config.dt().clone());
+            // Reload
+            if shooter.bullets != shooter.max_bullets {
+                shooter.timer += config.dt();
+                if shooter.timer >= shooter.reload_time {
+                    shooter.bullets += 1;
+                    shooter.timer = 0.0;
+                    dynamic_assets.get_mut(animation.bullets[shooter.bullets - 1]).unwrap().color = ::graphics::color::PALE_BLUE;
+                }
+            }
 
-            if shooter.do_shoot() {
+            // Shoot
+            if shooter.shoot && shooter.bullets > 0 {
+                shooter.bullets -= 1;
+                shooter.shoot = false;
+                dynamic_assets.get_mut(animation.bullets[shooter.bullets]).unwrap().color = ::graphics::color::GREY;
+
                 let body_pos = body.get(&physic_world).position().clone();
 
                 let ray = ::ncollide::query::Ray {
