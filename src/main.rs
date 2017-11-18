@@ -194,10 +194,11 @@ fn main() {
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
-        .add(::system::LifeSystem, "life", &[])
         .add(::system::MazeMasterSystem, "maze_master", &[])
         .add(::system::PhysicSystem, "physic", &[])
         .add(::system::DeleterSystem, "deleter", &[])
+        .add_barrier() // following systems will delete physic bodies
+        .add(::system::LifeSystem, "life", &[])
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()

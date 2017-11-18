@@ -259,10 +259,19 @@ impl ::specs::Component for DynamicHud {
     type Storage = ::specs::NullStorage<Self>;
 }
 
-pub struct PhysicBody(usize);
+// Rigid body handle and whereas it has been deleted
+pub struct PhysicBody(usize, bool);
 
 impl ::specs::Component for PhysicBody {
     type Storage = ::specs::VecStorage<Self>;
+}
+
+impl Drop for PhysicBody {
+    fn drop(&mut self) {
+        if !self.1 {
+            debug_assert!(eprintln!("physic body hasn't been removed from physic world") == ());
+        }
+    }
 }
 
 impl PhysicBody {
@@ -280,7 +289,7 @@ impl PhysicBody {
     ) {
         body.set_user_data(Some(Box::new(entity)));
         let bodyhandle = physic_world.add_rigid_body(body);
-        bodies.insert(entity, PhysicBody(bodyhandle));
+        bodies.insert(entity, PhysicBody(bodyhandle, false));
     }
 
     #[inline]
@@ -297,6 +306,14 @@ impl PhysicBody {
         physic_world: &'a mut ::resource::PhysicWorld,
     ) -> &'a mut ::nphysics::object::RigidBody<f32> {
         physic_world.mut_rigid_body(self.0)
+    }
+
+    pub fn remove(&mut self, physic_world: &mut ::resource::PhysicWorld) {
+        if self.1 {
+            panic!("physic body already removed from physic world");
+        }
+        physic_world.remove_rigid_body(self.0);
+        self.1 = true;
     }
 }
 

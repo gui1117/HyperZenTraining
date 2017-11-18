@@ -752,13 +752,15 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
             rendering.size_pixels.take().unwrap(),
             config.dt().clone(),
         );
-        ui.window(im_str!("Hello world"))
-            .size((300.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
-            .build(|| {
-                ui.text(im_str!("Hello world!"));
-                ui.separator();
-                ui.text(im_str!("This...is...imgui-rs!"));
-            });
+        if false {
+            ui.window(im_str!("Hello world"))
+                .size((300.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
+                .build(|| {
+                    ui.text(im_str!("Hello world!"));
+                    ui.separator();
+                    ui.text(im_str!("This...is...imgui-rs!"));
+                });
+        }
 
         // TODO: change imgui so that it use an iterator instead of a callback
         let ref_cell_cmd_builder = RefCell::new(Some(second_command_buffer_builder));
@@ -889,14 +891,16 @@ fn run(&mut self, (bodies, weapon_anchors, weapon_animations, aims, mut dynamic_
 pub struct LifeSystem;
 
 impl<'a> ::specs::System<'a> for LifeSystem {
-    type SystemData = (::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    type SystemData = (::specs::WriteStorage<'a, ::component::PhysicBody>,
+     ::specs::WriteStorage<'a, ::component::DynamicDraw>,
      ::specs::WriteStorage<'a, ::component::DynamicEraser>,
      ::specs::WriteStorage<'a, ::component::Life>,
+     ::specs::FetchMut<'a, ::resource::PhysicWorld>,
      ::specs::Entities<'a>);
 
     fn run(
         &mut self,
-        (mut dynamic_draws, mut dynamic_erasers, mut lives, entities): Self::SystemData,
+        (mut bodies, mut dynamic_draws, mut dynamic_erasers, mut lives, mut physic_world, entities): Self::SystemData,
     ) {
         use component::Life;
         for (life, entity) in (&mut lives, &*entities).join() {
@@ -907,6 +911,9 @@ impl<'a> ::specs::System<'a> for LifeSystem {
                     dynamic_erasers.remove(entity).unwrap();
                 }
                 Life::DrawDead => {
+                    if let Some(body) = bodies.get_mut(entity) {
+                        body.remove(&mut physic_world);
+                    }
                     entities.delete(entity).unwrap();
                 }
                 _ => (),

@@ -77,7 +77,7 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
                 depth_stencil: Some((2, ImageLayout::DepthStencilAttachmentOptimal)),
                 input_attachments: vec![],
                 resolve_attachments: vec![],
-                preserve_attachments: vec![1],
+                preserve_attachments: vec![1, 3],
             }),
             // erase
             1 => Some(LayoutPassDescription {
@@ -85,7 +85,7 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
                 depth_stencil: Some((2, ImageLayout::DepthStencilAttachmentOptimal)),
                 input_attachments: vec![],
                 resolve_attachments: vec![],
-                preserve_attachments: vec![0],
+                preserve_attachments: vec![0, 3],
             }),
             // draw HUD
             2 => Some(LayoutPassDescription {
@@ -93,7 +93,7 @@ unsafe impl RenderPassDesc for CustomRenderPassDesc {
                 depth_stencil: Some((3, ImageLayout::DepthStencilAttachmentOptimal)),
                 input_attachments: vec![],
                 resolve_attachments: vec![],
-                preserve_attachments: vec![0],
+                preserve_attachments: vec![1, 2],
             }),
             _ => None,
         }
