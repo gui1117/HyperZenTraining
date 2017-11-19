@@ -259,6 +259,149 @@ pub fn instance_primitives(
     }
     primitives_buffers_def.push(cylinder_buffers_def);
 
+    // Cube pitted
+    let pit_radius = 0.4;
+    primitives_buffers_def.push(vec![
+        // Floor
+        vec![
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+        ],
+        // Inner floor
+        vec![
+            Vertex { position: [-pit_radius, -pit_radius, 1.0-pit_radius] },
+            Vertex { position: [pit_radius, -pit_radius, 1.0-pit_radius] },
+            Vertex { position: [-pit_radius, pit_radius, 1.0-pit_radius] },
+
+            Vertex { position: [pit_radius, pit_radius, 1.0-pit_radius] },
+            Vertex { position: [pit_radius, -pit_radius, 1.0-pit_radius] },
+            Vertex { position: [-pit_radius, pit_radius, 1.0-pit_radius] },
+        ],
+        // Left
+        vec![
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+
+            Vertex { position: [-1.0, 1.0, 1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
+        ],
+        // Inner left
+        vec![
+            Vertex { position: [-pit_radius, -pit_radius, 1.0-pit_radius] },
+            Vertex { position: [-pit_radius, -pit_radius, 1.0+pit_radius] },
+            Vertex { position: [-pit_radius, pit_radius, 1.0-pit_radius] },
+
+            Vertex { position: [-pit_radius, pit_radius, 1.0+pit_radius] },
+            Vertex { position: [-pit_radius, -pit_radius, 1.0+pit_radius] },
+            Vertex { position: [-pit_radius, pit_radius, 1.0-pit_radius] },
+        ],
+        // Right
+        vec![
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+
+            Vertex { position: [1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+        ],
+        // Inner right
+        vec![
+            Vertex { position: [pit_radius, -pit_radius, 1.0-pit_radius] },
+            Vertex { position: [pit_radius, -pit_radius, 1.0+pit_radius] },
+            Vertex { position: [pit_radius, pit_radius, 1.0-pit_radius] },
+
+            Vertex { position: [pit_radius, pit_radius, 1.0+pit_radius] },
+            Vertex { position: [pit_radius, -pit_radius, 1.0+pit_radius] },
+            Vertex { position: [pit_radius, pit_radius, 1.0-pit_radius] },
+        ],
+        // Back
+        vec![
+            Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+
+            Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
+        ],
+        // Inner back
+        vec![
+            Vertex { position: [-pit_radius, -pit_radius, 1.0-pit_radius] },
+            Vertex { position: [pit_radius, -pit_radius, 1.0-pit_radius] },
+            Vertex { position: [-pit_radius, -pit_radius, 1.0+pit_radius] },
+
+            Vertex { position: [pit_radius, -pit_radius, 1.0+pit_radius] },
+            Vertex { position: [-pit_radius, -pit_radius, 1.0+pit_radius] },
+            Vertex { position: [pit_radius, -pit_radius, 1.0-pit_radius] },
+        ],
+        // Front
+        vec![
+            Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
+
+            Vertex { position: [1.0, 1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+        ],
+        // Inner front
+        vec![
+            Vertex { position: [-pit_radius, pit_radius, 1.0-pit_radius] },
+            Vertex { position: [pit_radius, pit_radius, 1.0-pit_radius] },
+            Vertex { position: [-pit_radius, pit_radius, 1.0+pit_radius] },
+
+            Vertex { position: [pit_radius, pit_radius, 1.0+pit_radius] },
+            Vertex { position: [-pit_radius, pit_radius, 1.0+pit_radius] },
+            Vertex { position: [pit_radius, pit_radius, 1.0-pit_radius] },
+        ],
+        // Ceil
+        vec![
+            // Minor rectangle
+            Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [-pit_radius, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
+
+            Vertex { position: [-pit_radius, 1.0, 1.0] },
+            Vertex { position: [-pit_radius, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
+
+            // Major rectangle
+            Vertex { position: [1.0, 1.0, 1.0] },
+            Vertex { position: [pit_radius, 1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+
+            Vertex { position: [pit_radius, -1.0, 1.0] },
+            Vertex { position: [pit_radius, 1.0, 1.0] },
+            Vertex { position: [1.0, -1.0, 1.0] },
+
+            // Minor square
+            Vertex { position: [-pit_radius, -1.0, 1.0] },
+            Vertex { position: [pit_radius, -1.0, 1.0] },
+            Vertex { position: [-pit_radius, -pit_radius, 1.0] },
+
+            Vertex { position: [pit_radius, -pit_radius, 1.0] },
+            Vertex { position: [pit_radius, -1.0, 1.0] },
+            Vertex { position: [-pit_radius, -pit_radius, 1.0] },
+
+            // Minor square
+            Vertex { position: [pit_radius, 1.0, 1.0] },
+            Vertex { position: [-pit_radius, 1.0, 1.0] },
+            Vertex { position: [pit_radius, pit_radius, 1.0] },
+
+            Vertex { position: [-pit_radius, pit_radius, 1.0] },
+            Vertex { position: [-pit_radius, 1.0, 1.0] },
+            Vertex { position: [pit_radius, pit_radius, 1.0] },
+        ],
+    ]);
+
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];
     for primitive_buffers_def in primitives_buffers_def {
@@ -289,6 +432,7 @@ pub mod primitive {
         Six,
         Cube,
         Cylinder,
+        PitCube,
     }
 
     impl Primitive {
@@ -301,6 +445,7 @@ pub mod primitive {
                 Primitive::Six => (4, GROUP_COUNTER.instantiate(8)),
                 Primitive::Cube => (5, GROUP_COUNTER.instantiate(6)),
                 Primitive::Cylinder => (6, GROUP_COUNTER.instantiate(1)),
+                Primitive::PitCube => (7, GROUP_COUNTER.instantiate(11)),
             }
         }
     }

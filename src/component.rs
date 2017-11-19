@@ -6,6 +6,7 @@ use vulkano::pipeline::GraphicsPipeline;
 use vulkano::pipeline::vertex::SingleBufferDefinition;
 use vulkano::framebuffer::RenderPass;
 use graphics::{shader, Vertex, render_pass};
+use nphysics::detection::joint;
 
 use std::sync::Arc;
 use std::any::Any;
@@ -260,7 +261,10 @@ impl ::specs::Component for DynamicHud {
 }
 
 // Rigid body handle and whereas it has been deleted
-pub struct PhysicBody(usize, bool);
+pub struct PhysicBody {
+    handle: usize,
+    removed: bool,
+}
 
 impl ::specs::Component for PhysicBody {
     type Storage = ::specs::VecStorage<Self>;
@@ -268,7 +272,7 @@ impl ::specs::Component for PhysicBody {
 
 impl Drop for PhysicBody {
     fn drop(&mut self) {
-        if !self.1 {
+        if !self.removed {
             debug_assert!(eprintln!("physic body hasn't been removed from physic world") == ());
         }
     }
@@ -281,6 +285,7 @@ impl PhysicBody {
         let entity = unsafe { ::std::mem::transmute::<&Box<_>, &Box<Any>>(entity) };
         entity.downcast_ref::<::specs::Entity>().unwrap().clone()
     }
+
     pub fn add<'a>(
         entity: ::specs::Entity,
         mut body: ::nphysics::object::RigidBody<f32>,
@@ -289,7 +294,22 @@ impl PhysicBody {
     ) {
         body.set_user_data(Some(Box::new(entity)));
         let bodyhandle = physic_world.add_rigid_body(body);
-        bodies.insert(entity, PhysicBody(bodyhandle, false));
+        bodies.insert(entity, PhysicBody {
+            handle: bodyhandle,
+            removed: false,
+        });
+    }
+
+    #[inline]
+    pub fn ball_in_socket(
+        &mut self,
+        physic_world: &mut ::resource::PhysicWorld,
+        position: ::na::Point3<f32>
+    ) {
+        physic_world.add_ball_in_socket(joint::BallInSocket::new(
+            joint::Anchor::new(None, position),
+            joint::Anchor::new(Some(self.handle), ::na::Point3::new(0.0, 0.0, 0.0)),
+        ));
     }
 
     #[inline]
@@ -297,7 +317,7 @@ impl PhysicBody {
         &'a self,
         physic_world: &'a ::resource::PhysicWorld,
     ) -> &'a ::nphysics::object::RigidBody<f32> {
-        physic_world.rigid_body(self.0)
+        physic_world.rigid_body(self.handle)
     }
 
     #[inline]
@@ -305,15 +325,15 @@ impl PhysicBody {
         &'a mut self,
         physic_world: &'a mut ::resource::PhysicWorld,
     ) -> &'a mut ::nphysics::object::RigidBody<f32> {
-        physic_world.mut_rigid_body(self.0)
+        physic_world.mut_rigid_body(self.handle)
     }
 
     pub fn remove(&mut self, physic_world: &mut ::resource::PhysicWorld) {
-        if self.1 {
+        if self.removed {
             panic!("physic body already removed from physic world");
         }
-        physic_world.remove_rigid_body(self.0);
-        self.1 = true;
+        physic_world.remove_rigid_body(self.handle);
+        self.removed = true;
     }
 }
 
@@ -345,4 +365,10 @@ impl Deleter {
     pub fn new(timer: f32) -> Self {
         Deleter { timer }
     }
+}
+
+pub struct Turret;
+
+impl ::specs::Component for Turret {
+    type Storage = ::specs::VecStorage<Self>;
 }

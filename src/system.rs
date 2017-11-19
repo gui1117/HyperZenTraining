@@ -334,6 +334,29 @@ impl<'a> ::specs::System<'a> for BouncerControlSystem {
     }
 }
 
+pub struct TurretControlSystem;
+
+impl<'a> ::specs::System<'a> for TurretControlSystem {
+    type SystemData = (::specs::ReadStorage<'a, ::component::Turret>,
+     ::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::ReadStorage<'a, ::component::PhysicBody>,
+     ::specs::WriteStorage<'a, ::component::Momentum>,
+     ::specs::Fetch<'a, ::resource::PhysicWorld>);
+
+    fn run(&mut self, (turrets, players, bodies, mut momentums, physic_world): Self::SystemData) {
+        let player_pos = (&players, &bodies).join().next().unwrap().1.get(&physic_world).position().translation.vector;
+        for (_, body, momentum) in (&turrets, &bodies, &mut momentums).join() {
+            let pos = body.get(&physic_world).position();
+            let shoot_dir = pos.rotation * ::na::Vector3::new(0.0, 0.0, 1.0);
+
+            let player_to_body = player_pos - pos.translation.vector;
+            let proj = player_to_body.dot(&shoot_dir)*shoot_dir;
+            let force_dir = (player_to_body - proj).normalize();
+
+            momentum.direction = force_dir;
+        }
+    }
+}
 
 pub struct PhysicSystem;
 
@@ -965,7 +988,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             if shooter.shoot && shooter.bullets > 0 {
                 shooter.bullets -= 1;
                 shooter.shoot = false;
-                dynamic_assets.get_mut(animation.bullets[shooter.bullets]).unwrap().color = ::graphics::color::GREY;
+                dynamic_assets.get_mut(animation.bullets[shooter.bullets]).unwrap().color = ::graphics::color::DARK_BLUE;
 
                 let body_pos = body.get(&physic_world).position().clone();
 

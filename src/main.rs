@@ -100,7 +100,7 @@ fn main() {
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
-    let mut maze = ::maze::kruskal(51, 51, 20.0);
+    let mut maze = ::maze::kruskal(11, 11, 20.0);
     maze.reduce(2);
     maze.circle();
     maze.fill_smallest();
@@ -122,6 +122,7 @@ fn main() {
     world.register::<::component::Momentum>();
     world.register::<::component::Avoider>();
     world.register::<::component::Bouncer>();
+    world.register::<::component::Turret>();
     world.register::<::component::Life>();
     world.register::<::component::Contactor>();
     world.add_resource(graphics.data.clone());
@@ -143,6 +144,7 @@ fn main() {
             &world.read_resource(),
             &world.read_resource(),
         );
+    world.maintain();
         // ::entity::create_avoider(
         //     world
         //         .read_resource::<::resource::Maze>()
@@ -168,6 +170,18 @@ fn main() {
         //     &mut world.write(),
         //     &mut world.write_resource(),
         //     &world.read_resource());
+        ::entity::create_turret(
+            world
+                .read_resource::<::resource::Maze>()
+                .random_free_float(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write(),
+            &mut world.write_resource(),
+            &world.read_resource());
         ::entity::create_player(
             world
                 .read_resource::<::resource::Maze>()
@@ -193,8 +207,9 @@ fn main() {
         .add(::system::PlayerControlSystem::new(), "player_control", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
+        .add(::system::TurretControlSystem, "turret_control", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
-        .add(::system::MazeMasterSystem, "maze_master", &[])
+        // .add(::system::MazeMasterSystem, "maze_master", &[])
         .add(::system::PhysicSystem, "physic", &[])
         .add(::system::DeleterSystem, "deleter", &[])
         .add_barrier() // following systems will delete physic bodies

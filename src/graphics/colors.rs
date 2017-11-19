@@ -44,5 +44,5 @@ pub mod color {
     pub const PINK:        u16 = 12; //c75f7a
     pub const PALE_PURPLE: u16 = 13; //e2c5c9
     pub const PURPLE:      u16 = 14; //975db2
-    pub const GREY:        u16 = 15;
+    pub const DARK_BLUE:   u16 = 15;
 }

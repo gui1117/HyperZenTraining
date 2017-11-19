@@ -362,6 +362,59 @@ pub fn create_bouncer<'a>(
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
 }
 
+pub fn create_turret<'a>(
+    pos: [f32; 2],
+    momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
+    turrets: &mut ::specs::WriteStorage<'a, ::component::Turret>,
+    bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+    dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
+    lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
+    physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    entities: &::specs::Entities,
+) {
+    let size = 0.15;
+
+    let primitive_trans = ::graphics::resizer(size, size, size);
+
+    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(size, size, size));
+    let pos = ::na::Point3::new(pos[0], pos[1], 0.5);
+    let trans = ::na::Isometry3::new(pos.coords, ::na::Vector3::new(0.0, FRAC_PI_2, 0.0));
+
+    let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
+    group.set_membership(&[ALIVE_GROUP, LASER_GROUP]);
+
+    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 10.0, 0.0, 0.0);
+    let mass = 1.0 / body.inv_mass();
+    let velocity = 0.05;
+    let time_to_reach_v_max = 0.05;
+    let ang_damping = 0.6;
+
+    body.set_transformation(trans);
+    body.set_collision_groups(group);
+
+    let (primitive, groups) = ::graphics::Primitive::PitCube.instantiate();
+    let color = ::graphics::color::PURPLE;
+
+    let entity = entities.create();
+    turrets.insert(entity, ::component::Turret);
+    momentums.insert(entity, ::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, Some(::na::Vector3::new(0.0, 0.0, 1.0))));
+    dynamic_graphics_assets.insert(
+        entity,
+        ::component::DynamicGraphicsAssets::new(
+            primitive,
+            groups,
+            color,
+            primitive_trans,
+        ),
+    );
+    lifes.insert(entity, ::component::Life::DrawAlive);
+    dynamic_draws.insert(entity, ::component::DynamicDraw);
+
+    ::component::PhysicBody::add(entity, body, bodies, physic_world);
+    bodies.get_mut(entity).unwrap().ball_in_socket(physic_world, ::na::Point3::new(pos[0], pos[1], 0.5));
+}
+
 pub fn create_wall_side<'a>(
     pos: ::na::Isometry3<f32>,
     x_radius: f32,
