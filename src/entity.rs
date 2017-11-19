@@ -1,11 +1,10 @@
 use alga::general::SubsetOf;
 use std::f32::consts::{FRAC_PI_2, FRAC_PI_3};
 
-pub const WALL_GROUP:       usize = 1;
+pub const WALL_GROUP:       usize = 1; // Both vertical walls and ceil and floor
 pub const FLOOR_CEIL_GROUP: usize = 2;
-pub const DIM2_GROUP:       usize = 3;
-pub const ALIVE_GROUP:      usize = 4;
-pub const LASER_GROUP:      usize = 5;
+pub const ALIVE_GROUP:      usize = 3;
+pub const MONSTER_GROUP:    usize = 4;
 
 pub fn create_light_ray<'a>(
     from: ::na::Vector3<f32>,
@@ -184,7 +183,7 @@ pub fn create_player<'a>(
     );
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[DIM2_GROUP, ALIVE_GROUP]);
+    group.set_membership(&[ALIVE_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     body.set_transformation(pos);
@@ -250,7 +249,7 @@ pub fn create_avoider<'a>(
     let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[ALIVE_GROUP, LASER_GROUP]);
+    group.set_membership(&[ALIVE_GROUP, MONSTER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
@@ -319,7 +318,7 @@ pub fn create_bouncer<'a>(
     let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[ALIVE_GROUP, LASER_GROUP]);
+    group.set_membership(&[ALIVE_GROUP, MONSTER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
@@ -382,22 +381,40 @@ pub fn create_turret<'a>(
     let trans = ::na::Isometry3::new(pos.coords, ::na::Vector3::new(0.0, FRAC_PI_2, 0.0));
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[ALIVE_GROUP, LASER_GROUP]);
+    group.set_membership(&[ALIVE_GROUP, MONSTER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 10.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
-    let velocity = 0.05;
+    let velocity = 0.01;
     let time_to_reach_v_max = 0.05;
-    let ang_damping = 0.6;
+    let ang_damping = 0.1;
 
     body.set_transformation(trans);
     body.set_collision_groups(group);
 
+    // Create laser
+    let (laser_primitive, laser_groups) = ::graphics::Primitive::Cylinder.instantiate();
+    let laser_color = ::graphics::color::BLACK;
+    let laser_entity = entities.create();
+    dynamic_graphics_assets.insert(
+        laser_entity,
+        ::component::DynamicGraphicsAssets::new(
+            laser_primitive,
+            laser_groups,
+            laser_color,
+            ::na::one(),
+        ),
+    );
+    dynamic_draws.insert(laser_entity, ::component::DynamicDraw);
+
+    // Create turret
     let (primitive, groups) = ::graphics::Primitive::PitCube.instantiate();
     let color = ::graphics::color::PURPLE;
 
     let entity = entities.create();
-    turrets.insert(entity, ::component::Turret);
+    turrets.insert(entity, ::component::Turret {
+        laser: laser_entity,
+    });
     momentums.insert(entity, ::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, Some(::na::Vector3::new(0.0, 0.0, 1.0))));
     dynamic_graphics_assets.insert(
         entity,
@@ -426,8 +443,7 @@ pub fn create_wall_side<'a>(
     entities: &::specs::Entities,
 ) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
-    group.set_membership(&[WALL_GROUP, LASER_GROUP]);
-    group.set_blacklist(&[WALL_GROUP, FLOOR_CEIL_GROUP]);
+    group.set_membership(&[WALL_GROUP]);
 
     let world_trans = {
         let pos_trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 1.0)
@@ -468,8 +484,7 @@ pub fn create_floor_ceil<'a>(
     entities: &::specs::Entities,
 ) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
-    group.set_membership(&[FLOOR_CEIL_GROUP, LASER_GROUP]);
-    group.set_blacklist(&[WALL_GROUP, FLOOR_CEIL_GROUP, DIM2_GROUP]);
+    group.set_membership(&[FLOOR_CEIL_GROUP, WALL_GROUP]);
 
     let pos = ::na::Isometry3::new(::na::Vector3::z() * z, ::na::zero());
     let world_trans = {

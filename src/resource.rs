@@ -30,3 +30,5 @@ impl Rendering {
 }
 
 pub struct DebugMode(pub bool);
+
+pub struct DepthCoef(pub f32);

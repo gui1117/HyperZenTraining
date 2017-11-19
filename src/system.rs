@@ -334,27 +334,90 @@ impl<'a> ::specs::System<'a> for BouncerControlSystem {
     }
 }
 
-pub struct TurretControlSystem;
+pub struct TurretControlSystem {
+    collided: Vec<(::specs::Entity, f32)>,
+}
+
+impl TurretControlSystem {
+    pub fn new() -> Self {
+        TurretControlSystem { collided: vec![] }
+    }
+}
 
 impl<'a> ::specs::System<'a> for TurretControlSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Turret>,
      ::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::PhysicBody>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
-     ::specs::Fetch<'a, ::resource::PhysicWorld>);
+     ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
+     ::specs::Fetch<'a, ::resource::PhysicWorld>,
+     ::specs::FetchMut<'a, ::resource::DepthCoef>,
+     ::specs::Entities<'a>);
 
-    fn run(&mut self, (turrets, players, bodies, mut momentums, physic_world): Self::SystemData) {
+    fn run(&mut self, (turrets, players, bodies, mut momentums, mut assets, physic_world, mut depth_coef, entities): Self::SystemData) {
+        let depth_coef_velocity = 1.05;
+        let depth_coef_min = 0.001;
+        let ray_radius = 0.01;
+
+        depth_coef.0 *= depth_coef_velocity;
+
         let player_pos = (&players, &bodies).join().next().unwrap().1.get(&physic_world).position().translation.vector;
-        for (_, body, momentum) in (&turrets, &bodies, &mut momentums).join() {
+        for (turret, body, momentum, entity) in (&turrets, &bodies, &mut momentums, &*entities).join() {
             let pos = body.get(&physic_world).position();
             let shoot_dir = pos.rotation * ::na::Vector3::new(0.0, 0.0, 1.0);
 
-            let player_to_body = player_pos - pos.translation.vector;
-            let proj = player_to_body.dot(&shoot_dir)*shoot_dir;
-            let force_dir = (player_to_body - proj).normalize();
+            let body_to_player = player_pos - pos.translation.vector;
+            let proj = body_to_player.dot(&shoot_dir)*shoot_dir;
+            let force_dir = (body_to_player - proj).normalize();
 
             momentum.direction = force_dir;
+
+            // TODO: factorise raycast
+            let ray = ::ncollide::query::Ray {
+                origin: ::na::Point3::from_coordinates(pos.translation.vector),
+                dir: shoot_dir,
+            };
+
+            let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
+            group.set_whitelist(&[::entity::ALIVE_GROUP, ::entity::WALL_GROUP]);
+
+            self.collided.clear();
+            for (other_body, collision) in
+                physic_world.collision_world().interferences_with_ray(
+                    &ray,
+                    &group.as_collision_groups(),
+                )
+            {
+                if let ::nphysics::object::WorldObject::RigidBody(other_body) = other_body.data {
+                    let other_entity = ::component::PhysicBody::entity(physic_world.rigid_body(other_body));
+                    if entity != other_entity {
+                        self.collided.push((other_entity, collision.toi));
+                    }
+                }
+            }
+            self.collided.sort_by(
+                |a, b| (a.1).partial_cmp(&b.1).unwrap(),
+            );
+            let ray_length = if let Some(collided) = self.collided.first() {
+                if players.get(collided.0).is_some() {
+                    depth_coef.0 /= depth_coef_velocity.powi(2);
+                }
+                collided.1
+            } else {
+                100.0 // infinite
+            };
+
+            let world_trans = ::na::Isometry3::from_parts(
+                ::na::Translation { vector: pos.translation.vector + ray_length/2.0*shoot_dir },
+                pos.rotation,
+            ) *
+                ::graphics::resizer(ray_radius, ray_radius, ray_length/2.);
+            assets.get_mut(turret.laser).unwrap().world_trans = ::graphics::shader::draw1_vs::ty::World {
+                world: world_trans.unwrap().into(),
+            };
         }
+
+        depth_coef.0 = depth_coef.0.min(1.0).max(depth_coef_min);
     }
 }
 
@@ -450,9 +513,10 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::FetchMut<'a, ::resource::ImGui>,
      ::specs::FetchMut<'a, ::resource::Graphics>,
      ::specs::Fetch<'a, ::resource::Config>,
+     ::specs::Fetch<'a, ::resource::DepthCoef>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, dynamic_graphics_assets, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, physic_world): Self::SystemData){
+fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, dynamic_graphics_assets, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, depth_coef, physic_world): Self::SystemData){
         let mut future = Vec::new();
 
         // Compute view uniform
@@ -487,7 +551,7 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
                 graphics.dim[0] as f32 / graphics.dim[1] as f32,
                 ::std::f32::consts::FRAC_PI_3,
                 // IDEA: change to 0.0001 it's funny
-                0.05,
+                0.05*depth_coef.0,
                 100.0,
             ).unwrap();
 
@@ -500,7 +564,7 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
                 graphics.dim[0] as f32 / graphics.dim[1] as f32,
                 ::std::f32::consts::FRAC_PI_3,
                 // IDEA: change to 0.0001 it's funny
-                0.001,
+                0.001*depth_coef.0,
                 0.3,
             ).unwrap();
 
@@ -997,16 +1061,15 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     dir: aim.dir,
                 };
 
-                let mut group = ::ncollide::world::CollisionGroups::new();
                 // TODO: resolve hack with membership nphysic #82
-                group.set_membership(&[::entity::LASER_GROUP]);
-                group.set_whitelist(&[::entity::LASER_GROUP]);
+                let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
+                group.set_whitelist(&[::entity::MONSTER_GROUP, ::entity::WALL_GROUP]);
 
                 self.collided.clear();
                 for (other_body, collision) in
                     physic_world.collision_world().interferences_with_ray(
                         &ray,
-                        &group,
+                        &group.as_collision_groups(),
                     )
                 {
                     if let ::nphysics::object::WorldObject::RigidBody(other_body) =

@@ -367,7 +367,9 @@ impl Deleter {
     }
 }
 
-pub struct Turret;
+pub struct Turret {
+    pub laser: ::specs::Entity,
+}
 
 impl ::specs::Component for Turret {
     type Storage = ::specs::VecStorage<Self>;

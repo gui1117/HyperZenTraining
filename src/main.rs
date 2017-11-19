@@ -134,6 +134,7 @@ fn main() {
     world.add_resource(::resource::MenuEvents(vec![]));
     world.add_resource(maze);
     world.add_resource(::resource::DebugMode(false));
+    world.add_resource(::resource::DepthCoef(1.0));
 
     {
         ::entity::create_maze_walls(
@@ -149,6 +150,8 @@ fn main() {
         //     world
         //         .read_resource::<::resource::Maze>()
         //         .random_free_float(),
+        //     false,
+        //     &mut world.write(),
         //     &mut world.write(),
         //     &mut world.write(),
         //     &mut world.write(),
@@ -207,7 +210,7 @@ fn main() {
         .add(::system::PlayerControlSystem::new(), "player_control", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
-        .add(::system::TurretControlSystem, "turret_control", &[])
+        .add(::system::TurretControlSystem::new(), "turret_control", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
         // .add(::system::MazeMasterSystem, "maze_master", &[])
         .add(::system::PhysicSystem, "physic", &[])
