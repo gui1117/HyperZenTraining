@@ -425,8 +425,10 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
             let ray_length = if let Some(collided) = self.collided.first() {
                 if collided.1 < shoot_length && players.get(collided.0).is_some() {
                     depth_coef.0 /= depth_coef_velocity.powi(2);
+                    collided.1
+                } else {
+                    shoot_length
                 }
-                collided.1
             } else {
                 shoot_length
             };
