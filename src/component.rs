@@ -368,9 +368,17 @@ impl Deleter {
 }
 
 pub struct Turret {
-    pub laser: ::specs::Entity,
+    pub laser_draw: ::specs::Entity,
+    pub laser_physic: ::specs::Entity,
 }
 
 impl ::specs::Component for Turret {
     type Storage = ::specs::VecStorage<Self>;
+}
+
+#[derive(Default)]
+pub struct FollowPlayer;
+
+impl ::specs::Component for FollowPlayer {
+    type Storage = ::specs::NullStorage<Self>;
 }

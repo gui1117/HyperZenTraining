@@ -334,6 +334,27 @@ impl<'a> ::specs::System<'a> for BouncerControlSystem {
     }
 }
 
+pub struct FollowPlayerSystem;
+
+impl<'a> ::specs::System<'a> for FollowPlayerSystem {
+    type SystemData = (::specs::ReadStorage<'a, ::component::FollowPlayer>,
+     ::specs::ReadStorage<'a, ::component::Player>,
+     ::specs::ReadStorage<'a, ::component::PhysicBody>,
+     ::specs::WriteStorage<'a, ::component::Momentum>,
+     ::specs::Fetch<'a, ::resource::PhysicWorld>);
+
+    fn run(&mut self, (followers, players, bodies, mut momentums, physic_world): Self::SystemData) {
+        let player_pos = (&players, &bodies).join().next().unwrap().1.get(&physic_world).position().translation.vector;
+
+        for (_, body, momentum) in (&followers, &bodies, &mut momentums).join() {
+            let pos = body.get(&physic_world).position().translation.vector;
+            let vec = player_pos - pos;
+            // TODO: maybe not the right norm if too close
+            momentum.direction = vec.normalize();
+        }
+    }
+}
+
 pub struct TurretControlSystem {
     collided: Vec<(::specs::Entity, f32)>,
 }
@@ -361,16 +382,19 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
 
         depth_coef.0 *= depth_coef_velocity;
 
-        let player_pos = (&players, &bodies).join().next().unwrap().1.get(&physic_world).position().translation.vector;
+        // Update turrets
         for (turret, body, momentum, entity) in (&turrets, &bodies, &mut momentums, &*entities).join() {
             let pos = body.get(&physic_world).position();
-            let shoot_dir = pos.rotation * ::na::Vector3::new(0.0, 0.0, 1.0);
+            let laser_pos = bodies.get(turret.laser_physic).unwrap().get(&physic_world).position();
 
-            let body_to_player = player_pos - pos.translation.vector;
-            let proj = body_to_player.dot(&shoot_dir)*shoot_dir;
-            let force_dir = (body_to_player - proj).normalize();
+            // TODO: maybe not the right norm if to close ?
+            momentum.direction = (laser_pos.translation.vector - pos.translation.vector).normalize();
 
-            momentum.direction = force_dir;
+            let (shoot_dir, shoot_length) = {
+                let vec = laser_pos.translation.vector - pos.translation.vector;
+                let norm = vec.norm();
+                (vec/norm, norm)
+            };
 
             // TODO: factorise raycast
             let ray = ::ncollide::query::Ray {
@@ -399,20 +423,20 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
                 |a, b| (a.1).partial_cmp(&b.1).unwrap(),
             );
             let ray_length = if let Some(collided) = self.collided.first() {
-                if players.get(collided.0).is_some() {
+                if collided.1 < shoot_length && players.get(collided.0).is_some() {
                     depth_coef.0 /= depth_coef_velocity.powi(2);
                 }
                 collided.1
             } else {
-                100.0 // infinite
+                shoot_length
             };
 
             let world_trans = ::na::Isometry3::from_parts(
-                ::na::Translation { vector: pos.translation.vector + ray_length/2.0*shoot_dir },
+                ::na::Translation { vector: pos.translation.vector + (laser_pos.translation.vector - pos.translation.vector)/2.0 },
                 pos.rotation,
             ) *
-                ::graphics::resizer(ray_radius, ray_radius, ray_length/2.);
-            assets.get_mut(turret.laser).unwrap().world_trans = ::graphics::shader::draw1_vs::ty::World {
+                ::graphics::resizer(ray_radius, ray_radius, ray_length/2.0);
+            assets.get_mut(turret.laser_draw).unwrap().world_trans = ::graphics::shader::draw1_vs::ty::World {
                 world: world_trans.unwrap().into(),
             };
         }
@@ -1085,7 +1109,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                 self.collided.sort_by(
                     |a, b| (a.1).partial_cmp(&b.1).unwrap(),
                 );
-                let mut size = 100.0; // Infinite
+                let mut size = 1000.0; // infinite
                 for collided in &self.collided {
                     if let Some(ref mut life) = lifes.get_mut(collided.0) {
                         life.kill();
