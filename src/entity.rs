@@ -580,11 +580,8 @@ pub fn create_maze_walls<'a>(
         entities,
     );
 
-    let size = {
-        assert_eq!(maze.height, maze.width);
-        maze.height
-    };
-    let maze = &maze.walls;
+    maze.assert_square();
+    let size = maze.size[0];
 
     for x in 0..size {
         let mut up_coords = None;
@@ -593,13 +590,13 @@ pub fn create_maze_walls<'a>(
             let up_wall = if x == 0 || y == size {
                 false
             } else {
-                maze[x - 1][y]
+                maze.wall(x - 1, y)
             };
-            let wall = if y == size { false } else { maze[x][y] };
+            let wall = if y == size { false } else { maze.wall(x, y) };
             let down_wall = if x + 1 == size || y == size {
                 false
             } else {
-                maze[x + 1][y]
+                maze.wall(x + 1, y)
             };
 
             let up_side_wall = wall && !up_wall;
@@ -662,13 +659,13 @@ pub fn create_maze_walls<'a>(
             let up_wall = if y == 0 || x == size {
                 false
             } else {
-                maze[x][y - 1]
+                maze.wall(x, y - 1)
             };
-            let wall = if x == size { false } else { maze[x][y] };
+            let wall = if x == size { false } else { maze.wall(x, y) };
             let down_wall = if y + 1 == size || x == size {
                 false
             } else {
-                maze[x][y + 1]
+                maze.wall(x, y + 1)
             };
 
             let up_side_wall = wall && !up_wall;

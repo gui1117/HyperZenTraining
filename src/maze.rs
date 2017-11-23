@@ -1,88 +1,116 @@
 use rand::distributions::{IndependentSample, Range};
 use std::collections::HashSet;
-
+use std::collections::HashMap;
+use std::hash::Hash;
 use util::Pop;
+use std;
+use typenum;
 
-#[derive(Clone)]
-pub struct Maze {
-    pub walls: Vec<Vec<bool>>,
-    pub width: usize,
-    pub height: usize,
+mod maze3d;
+mod maze2d;
+
+struct Opening<D>
+    where
+        D: ::na::Dim + ::na::DimName,
+        D::Value: std::ops::Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output= D::Value> + ::generic_array::ArrayLength<isize>,
+{
+    cell: ::na::VectorN<isize, D>,
+    requires: Vec<::na::VectorN<isize, D>>,
+    cost: isize,
 }
 
-impl ::std::fmt::Display for Maze {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
-        write!(f, "\n")?;
-        for j in 0..self.height {
-            for i in 0..self.width {
-                if self.walls[i][j] {
-                    write!(f, "#")?;
-                } else {
-                    write!(f, " ")?;
-                }
-            }
-            write!(f, "\n")?;
+pub struct Maze<D>
+    where
+        D: ::na::Dim + ::na::DimName,
+        D::Value: std::ops::Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output= D::Value> + ::generic_array::ArrayLength<isize>,
+{
+    pub walls: HashSet<::na::VectorN<isize, D>>,
+    pub size: ::na::VectorN<isize, D>,
+    openings: Vec<Opening<D>>,
+    neighbours: Vec<::na::VectorN<isize, D>>,
+}
+
+impl<D> Maze<D>
+    where
+        D: ::na::Dim + ::na::DimName + Hash,
+        D::Value: std::ops::Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output= D::Value> + ::generic_array::ArrayLength<isize>,
+{
+    pub fn assert_square(&self) {
+        for &s in self.size.iter() {
+            assert_eq!(s, self.size[0]);
         }
-        write!(f, "\n")
     }
-}
 
-#[allow(unused)]
-impl Maze {
+    #[allow(unused)]
     pub fn check(&self) {
-        assert_eq!(self.walls.len(), self.width);
-        for column in &self.walls {
-            assert_eq!(column.len(), self.height);
+        for wall in self.walls.iter() {
+            assert!(wall < &self.size);
         }
-    }
-
-    pub fn full(&self) -> bool {
-        for wall in self.walls.iter().flat_map(|column| column.iter()) {
-            if !wall {
-                return false;
-            }
-        }
-        true
     }
 
     /// Remove the circle of the maze
-    pub fn reduce(&mut self, x: usize) {
-        for _ in 0..x {
-            self.walls.remove(0);
-            self.walls.pop().unwrap();
-        }
-
-        for column in &mut self.walls {
-            for _ in 0..x {
-                column.remove(0);
-                column.pop().unwrap();
+    pub fn reduce(&mut self, size: isize) {
+        assert!(size > 0);
+        let dl = size * ::na::VectorN::<isize, D>::identity();
+        let mut new_walls = HashSet::new();
+        for wall in self.walls.iter() {
+            if wall > &dl && wall < &(self.size.clone() - dl.clone()) {
+                new_walls.insert(wall - dl.clone());
             }
         }
+        self.walls = new_walls;
+        self.size -= dl*2;
+    }
 
-        self.width -= x * 2;
-        self.height -= x * 2;
+    pub fn iterate_maze(&self) -> Vec<::na::VectorN<isize, D>> {
+        Self::iterate_area(&self.size)
+    }
+
+    pub fn iterate_area(size: &::na::VectorN<isize, D>) -> Vec<::na::VectorN<isize, D>> {
+        let mut res = vec!(::na::VectorN::<isize, D>::identity());
+
+        match D::dim() {
+            2 => {
+                for x in 0..size[0] {
+                    for y in 0..size[1] {
+                        res.push(Self::new_vec2(x, y));
+                    }
+                }
+            }
+            3 => {
+                for x in 0..size[0] {
+                    for y in 0..size[1] {
+                        for z in 0..size[2] {
+                            res.push(Self::new_vec3(x, y, z));
+                        }
+                    }
+                }
+            }
+            _ => unimplemented!(),
+        }
+        res
     }
 
     /// Create a wall that circle the maze
     pub fn circle(&mut self) {
-        self.walls[0] = (0..self.width).map(|_| true).collect();
-        self.walls[self.width - 1] = (0..self.width).map(|_| true).collect();
-        for column in &mut self.walls {
-            column[0] = true;
-            column[self.height - 1] = true;
+        for cell in self.iterate_maze() {
+            for i in 0..D::dim() {
+                if cell[i] == 0 || cell[i] == self.size[i] - 1 {
+                    self.walls.insert(cell.clone());
+                }
+            }
         }
     }
 
-    fn compute_zones(&self, corridor: bool) -> Vec<Vec<(usize, usize)>> {
+    fn compute_zones(&self, corridor: bool) -> Vec<Vec<::na::VectorN<isize, D>>> {
         let mut unvisited = HashSet::new();
-        for i in 0..self.width {
-            for j in 0..self.height {
-                if !self.walls[i][j] {
-                    // the maze must be circled
-                    assert!(i != 0 && i != self.width - 1);
-                    assert!(j != 0 && j != self.height - 1);
-                    unvisited.insert((i, j));
+        for cell in self.iterate_maze() {
+            if !self.walls.contains(&cell) {
+                // the maze must be circled
+                for i in 0..D::dim() {
+                    assert!(cell[i] == 0 || cell[i] == self.size[i] - 1);
                 }
+                unvisited.insert(cell);
             }
         }
 
@@ -94,37 +122,16 @@ impl Maze {
             to_visit.insert(cell);
 
             while let Some(cell) = to_visit.pop() {
-                let i = cell.0;
-                let j = cell.1;
-
-                let is_corridor = (self.walls[i - 1][j] && self.walls[i + 1][j]) ||
-                    (self.walls[i][j - 1] && self.walls[i][j + 1]) ||
-                    (self.walls[i - 1][j] && self.walls[i][j - 1] && self.walls[i + 1][j + 1]) ||
-                    (self.walls[i - 1][j] && self.walls[i][j + 1] && self.walls[i + 1][j - 1]) ||
-                    (self.walls[i + 1][j] && self.walls[i][j - 1] && self.walls[i - 1][j + 1]) ||
-                    (self.walls[i + 1][j] && self.walls[i][j + 1] && self.walls[i - 1][j - 1]);
+                let opened = self.openings.iter().filter(|opening| opening.requires.iter().all(|o| !self.walls.contains(&(cell.clone() + o)))).count();
+                let is_corridor = opened <= 2;
 
                 if corridor && !is_corridor {
                     continue;
                 }
 
-                let mut neighboors = vec![];
-                if !self.walls[i + 1][j] {
-                    neighboors.push((i + 1, j));
-                }
-                if !self.walls[i - 1][j] {
-                    neighboors.push((i - 1, j));
-                }
-                if !self.walls[i][j - 1] {
-                    neighboors.push((i, j - 1));
-                }
-                if !self.walls[i][j + 1] {
-                    neighboors.push((i, j + 1));
-                }
-
-                for n in neighboors {
-                    if unvisited.contains(&n) {
-                        to_visit.insert(n);
+                for neighbour in self.neighbours.iter().map(|n| n + cell.clone()) {
+                    if !self.walls.contains(&neighbour) && unvisited.contains(&neighbour) {
+                        to_visit.insert(neighbour);
                     }
                 }
 
@@ -156,9 +163,9 @@ impl Maze {
         );
         zones.remove(max_id.unwrap());
         zones.iter().flat_map(|zone| zone.iter()).for_each(
-            |&(i, j)| {
-                self.walls[i][j] = true
-            },
+            |pos| {
+                self.walls.insert(pos.clone());
+            }
         );
     }
 
@@ -166,222 +173,551 @@ impl Maze {
         loop {
             let mut corridors = self.compute_zones(true);
             corridors.retain(|corridor| {
-                corridor.iter().any(|&(i, j)| {
-                    (self.walls[i - 1][j] && self.walls[i][j - 1] && self.walls[i][j + 1]) ||
-                        (self.walls[i + 1][j] && self.walls[i][j - 1] && self.walls[i][j + 1]) ||
-                        (self.walls[i][j - 1] && self.walls[i - 1][j] && self.walls[i + 1][j]) ||
-                        (self.walls[i][j + 1] && self.walls[i - 1][j] && self.walls[i + 1][j])
+                corridor.iter().any(|cell| {
+                    let neighbours_wall = self.neighbours.iter().map(|n| n+cell).fold(0, |acc, n| {
+                        if self.walls.contains(&n) {
+                            acc + 1
+                        } else {
+                            acc
+                        }
+                    });
+                    neighbours_wall >= self.neighbours.len() - 1
                 })
             });
             if corridors.len() == 0 {
                 break;
             }
-            for &(i, j) in corridors.iter().flat_map(|z| z) {
-                self.walls[i][j] = true;
+            for pos in corridors.iter().flat_map(|z| z) {
+                self.walls.insert(pos.clone());
             }
         }
     }
 
-    pub fn random_free(&self) -> (usize, usize) {
-        let x_range = Range::new(0, self.width);
-        let y_range = Range::new(0, self.height);
-        let mut rng = ::rand::thread_rng();
-
-        let mut x = x_range.ind_sample(&mut rng);
-        let mut y = x_range.ind_sample(&mut rng);
-        while self.walls[x][y] {
-            x = x_range.ind_sample(&mut rng);
-            y = x_range.ind_sample(&mut rng);
-        }
-        (x, y)
+    fn new_vec2(x: isize, y: isize) -> ::na::VectorN<isize, D> {
+        let mut v = ::na::VectorN::<isize, D>::identity();
+        v[0] = x;
+        v[1] = y;
+        v
     }
 
-    pub fn random_free_float(&self) -> [f32; 2] {
-        let cell = self.random_free();
-        [cell.0 as f32 + 0.5, cell.1 as f32 + 0.5]
+    fn new_vec3(x: isize, y: isize, z: isize) -> ::na::VectorN<isize, D> {
+        let mut v = ::na::VectorN::<isize, D>::identity();
+        v[0] = x;
+        v[1] = y;
+        v[2] = z;
+        v
     }
 
     pub fn find_path(
         &self,
-        pos: (usize, usize),
-        goal: (usize, usize),
-    ) -> Option<(Vec<(usize, usize)>, usize)> {
+        pos: ::na::VectorN<isize, D>,
+        goal: ::na::VectorN<isize, D>,
+    ) -> Option<Vec<::na::VectorN<isize, D>>> {
         ::pathfinding::astar(
             &pos,
-            |&(x, y)| {
-                let right = !self.walls[x + 1][y];
-                let left = x > 0 && !self.walls[x - 1][y];
-                let up = !self.walls[x][y + 1];
-                let down = y > 0 && !self.walls[x][y - 1];
-                let down_left = x > 0 && y > 0 && !self.walls[x - 1][y - 1];
-                let down_right = y > 0 && !self.walls[x + 1][y - 1];
-                let up_left = x > 0 && !self.walls[x - 1][y + 1];
-                let up_right = !self.walls[x + 1][y + 1];
-
+            |cell| {
                 let mut res = vec![];
-
-                if right {
-                    res.push(((x + 1, y), 10))
+                for opening in self.openings.iter() {
+                    if opening.requires.iter().all(|o| !self.walls.contains(&(o+cell.clone()))) {
+                        res.push((opening.cell.clone(), opening.cost));
+                    }
                 }
-                if left {
-                    res.push(((x - 1, y), 10))
-                }
-                if up {
-                    res.push(((x, y + 1), 10))
-                }
-                if down {
-                    res.push(((x, y - 1), 10))
-                }
-                if up && right && up_right {
-                    res.push(((x + 1, y + 1), 15))
-                }
-                if up && left && up_left {
-                    res.push(((x - 1, y + 1), 15))
-                }
-                if down && right && down_right {
-                    res.push(((x + 1, y - 1), 15))
-                }
-                if down && left && down_left {
-                    res.push(((x - 1, y - 1), 15))
-                }
-
                 res
             },
-            |&(x, y)| {
-                let dx = if x > goal.0 { x - goal.0 } else { goal.0 - x };
-                let dy = if y > goal.1 { y - goal.1 } else { goal.1 - y };
-                ::std::cmp::min(dx, dy) * 10
+            |cell| {
+                let mut min = (cell[0] - goal[0]).abs();
+                for i in 1..D::dim() {
+                    min = min.min((cell[i] - goal[i]).abs());
+                }
+                min * 10
             },
-            |&p| p == goal,
-        )
+            |cell| *cell == goal,
+        ).map(|p| p.0)
     }
 
-    pub fn free_in_circle(&self, center: [usize; 2], radius: usize) -> Vec<[usize; 2]> {
-        unimplemented!();
-    }
+    /// Generate partial reverse randomized_kruskal
+    /// `https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm`
+    pub fn kruskal(size: ::na::VectorN<isize, D>, percent: f64) -> Self {
+        struct GridCell {
+            wall: bool,
+            group: usize,
+        }
 
-    pub fn free_in_square(&self, center: [usize; 2], radius: usize) -> Vec<[usize; 2]> {
-        let mut res = vec![];
+        for size in size.iter() {
+            assert_eq!(size.wrapping_rem(2), 1);
+        }
 
-        let top = center[1] as isize + radius as isize;
-        let left = center[0] as isize - radius as isize;
-        let right = center[0] as isize + radius as isize;
-        let bottom = center[1] as isize - radius as isize;
+        let mut grid = HashMap::new();
 
-        for &j in &[top, bottom] {
-            if j >= 0 && j < self.height as isize {
-                for i in left.max(0).min(self.width as isize)..
-                    (right + 1).max(0).min(self.width as isize)
-                {
-                    if !self.walls[i as usize][j as usize] {
-                        res.push([i as usize, j as usize]);
+        for (i, cell) in Self::iterate_area(&size).iter().enumerate() {
+            grid.insert(cell.clone(), GridCell {
+                wall: false,
+                group: i,
+            });
+        }
+
+        let mut walls: Vec<Vec<::na::VectorN<isize, D>>> = Vec::new();
+        let mut x_wall = vec![]; // 1x3x3 wall centered on 0
+        let mut y_wall = vec![]; // 3x1x3 wall centered on 0
+        let mut z_wall = vec![]; // 3x3x1 wall centered on 0
+
+        match D::dim() {
+            2 => {
+                for i in -1..2 {
+                    x_wall.push(Self::new_vec2(0, i));
+                    y_wall.push(Self::new_vec2(i, 0));
+                }
+
+                for x in 1..size[0]/2 + 1 {
+                    for y in 1..size[1]/2 + 1 {
+                        if y != size[1]/2 { walls.push(x_wall.iter().map(|c| c+Self::new_vec2(x*2, y*2)).collect()); }
+                        if x != size[0]/2 { walls.push(y_wall.iter().map(|c| c+Self::new_vec2(x*2, y*2)).collect()); }
+                    }
+                }
+            },
+            3 => {
+                for i in -1..2 {
+                    for j in -1..2 {
+                        x_wall.push(Self::new_vec3(0, i, j));
+                        y_wall.push(Self::new_vec3(i, 0, j));
+                        z_wall.push(Self::new_vec3(i, j, 0));
+                    }
+                }
+
+                for x in 1..size[0]/2 + 1 {
+                    for y in 1..size[1]/2 + 1 {
+                        for z in 1..size[2]/2 + 1 {
+                            let x_end = x == size[0]/2;
+                            let y_end = y == size[1]/2;
+                            let z_end = z == size[2]/2;
+                            if !y_end && !z_end { walls.push(x_wall.iter().map(|c| c+Self::new_vec3(x*2, y*2, z*2)).collect()); }
+                            if !x_end && !z_end { walls.push(y_wall.iter().map(|c| c+Self::new_vec3(x*2, y*2, z*2)).collect()); }
+                            if !x_end && !y_end { walls.push(z_wall.iter().map(|c| c+Self::new_vec3(x*2, y*2, z*2)).collect()); }
+                        }
+                    }
+                }
+            },
+            _ => unimplemented!(),
+        }
+
+        let mut rng = ::rand::thread_rng();
+
+        let stop = ((walls.len() as f64) * (1. - percent / 100.)) as usize;
+
+        while walls.len() > stop {
+            let i = ::rand::distributions::Range::new(0, walls.len()).ind_sample(&mut rng);
+            let wall = walls.swap_remove(i);
+
+            let mut groups = HashSet::new();
+            for cell in &wall {
+                groups.insert(grid[cell].group);
+            }
+            let one_group = grid[&wall[0]].group; // a random group in the set
+
+            if groups.len() > 2 {
+                for cell in &wall {
+                    grid.get_mut(cell).unwrap().wall = true
+                }
+                for cell in grid.values_mut() {
+                    if groups.contains(&cell.group) {
+                        cell.group = one_group;
                     }
                 }
             }
         }
 
-        for &i in &[left, right] {
-            if i >= 0 && i < self.width as isize {
-                for j in bottom.max(0).min(self.height as isize)..
-                    (top + 1).max(0).min(self.height as isize)
-                {
-                    if !self.walls[i as usize][j as usize] {
-                        res.push([i as usize, j as usize]);
-                    }
-                }
+        let mut walls = HashSet::new();
+        for (key, value) in grid {
+            if value.wall {
+                walls.insert(key);
             }
         }
 
-        res
+        Maze {
+            size,
+            walls,
+            neighbours: Self::neighbours(),
+            openings: Self::openings(),
+        }
+    }
+
+    fn neighbours() -> Vec<::na::VectorN<isize, D>> {
+        match D::dim() {
+            2 => vec![
+                Self::new_vec2(-1,  0),
+                Self::new_vec2( 1,  0),
+                Self::new_vec2( 0, -1),
+                Self::new_vec2( 0,  1),
+            ],
+            3 => vec![
+                Self::new_vec3(-1,  0,  0),
+                Self::new_vec3( 1,  0,  0),
+                Self::new_vec3( 0, -1,  0),
+                Self::new_vec3( 0,  1,  0),
+                Self::new_vec3( 0,  0, -1),
+                Self::new_vec3( 0,  0,  1),
+            ],
+            _ => unimplemented!(),
+        }
+    }
+
+    fn openings() -> Vec<Opening<D>> {
+        match D::dim() {
+            2 => vec![
+                Opening {
+                    cell: Self::new_vec2(-1, 0),
+                    cost: 10,
+                    requires: vec!(Self::new_vec2(-1, 0)),
+                },
+                Opening {
+                    cell: Self::new_vec2(1, 0),
+                    cost: 10,
+                    requires: vec!(Self::new_vec2(1, 0)),
+                },
+                Opening {
+                    cell: Self::new_vec2(0, -1),
+                    cost: 10,
+                    requires: vec!(Self::new_vec2(0, -1)),
+                },
+                Opening {
+                    cell: Self::new_vec2(0, 1),
+                    cost: 10,
+                    requires: vec!(Self::new_vec2(0, 1)),
+                },
+                Opening {
+                    cell: Self::new_vec2(-1, -1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec2(-1, 0), Self::new_vec2(0, -1), Self::new_vec2(-1, -1)),
+                },
+                Opening {
+                    cell: Self::new_vec2(-1, 1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec2(-1, 0), Self::new_vec2(0, 1), Self::new_vec2(-1, 1)),
+                },
+                Opening {
+                    cell: Self::new_vec2(1, -1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec2(1, 0), Self::new_vec2(0, -1), Self::new_vec2(1, -1)),
+                },
+                Opening {
+                    cell: Self::new_vec2(1, 1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec2(1, 0), Self::new_vec2(0, 1), Self::new_vec2(1, 1)),
+                },
+            ],
+            3 => vec![
+                Opening {
+                    cell: Self::new_vec3(-1, 0, 0),
+                    cost: 10,
+                    requires: vec!(Self::new_vec3(-1, 0, 0)),
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 0, 0),
+                    cost: 10,
+                    requires: vec!(Self::new_vec3(1, 0, 0)),
+                },
+                Opening {
+                    cell: Self::new_vec3(0, -1, 0),
+                    cost: 10,
+                    requires: vec!(Self::new_vec3(0, -1, 0)),
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 1, 0),
+                    cost: 10,
+                    requires: vec!(Self::new_vec3(0, 1, 0)),
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 0, -1),
+                    cost: 10,
+                    requires: vec!(Self::new_vec3(0, 0, -1)),
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 0, 1),
+                    cost: 10,
+                    requires: vec!(Self::new_vec3(0, 0, 1)),
+                },
+
+                Opening {
+                    cell: Self::new_vec3(-1, -1, 0),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(-1, 0, 0), Self::new_vec3(0, -1, 0), Self::new_vec3(-1, -1, 0)),
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, 1, 0),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(-1, 0, 0), Self::new_vec3(0, 1, 0), Self::new_vec3(-1, 1, 0)),
+                },
+                Opening {
+                    cell: Self::new_vec3(1, -1, 0),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(1, 0, 0), Self::new_vec3(0, -1, 0), Self::new_vec3(1, -1, 0)),
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 1, 0),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(1, 0, 0), Self::new_vec3(0, 1, 0), Self::new_vec3(1, 1, 0)),
+                },
+
+                Opening {
+                    cell: Self::new_vec3(0, -1, -1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(0, -1, 0), Self::new_vec3(0, 0, -1), Self::new_vec3(0, -1, -1)),
+                },
+                Opening {
+                    cell: Self::new_vec3(0, -1, 1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(0, -1, 0), Self::new_vec3(0, 0, 1), Self::new_vec3(0, -1, 1)),
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 1, -1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(0, 1, 0), Self::new_vec3(0, 0, -1), Self::new_vec3(0, 1, -1)),
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 1, 1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(0, 1, 0), Self::new_vec3(0, 0, 1), Self::new_vec3(0, 1, 1)),
+                },
+
+                Opening {
+                    cell: Self::new_vec3(-1, 0, -1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(-1, 0, 0), Self::new_vec3(0, 0, -1), Self::new_vec3(-1, 0, -1)),
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, 0,  1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(-1, 0, 0), Self::new_vec3(0, 0, 1), Self::new_vec3(-1, 0, 1)),
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 0, -1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(1, 0, 0), Self::new_vec3(0, 0, -1), Self::new_vec3(1, 0, -1)),
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 0, 1),
+                    cost: 15,
+                    requires: vec!(Self::new_vec3(1, 0, 0), Self::new_vec3(0, 0, 1), Self::new_vec3(1, 0, 1)),
+                },
+
+                Opening {
+                    cell: Self::new_vec3(-1, -1, -1),
+                    cost: 17,
+                    requires: vec!(
+                        Self::new_vec3(-1, 0, 0), Self::new_vec3(0, -1, 0), Self::new_vec3(-1, -1, 0),
+                        Self::new_vec3(-1, 0, -1), Self::new_vec3(0, -1, -1), Self::new_vec3(-1, -1, -1),
+                        Self::new_vec3(-1, -1, -1)
+                        )
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 1, 1),
+                    cost: 17,
+                    requires: vec!(
+                        Self::new_vec3(1, 0, 0), Self::new_vec3(0, 1, 0), Self::new_vec3(1, 1, 0),
+                        Self::new_vec3(1, 0, 1), Self::new_vec3(0, 1, 1), Self::new_vec3(1, 1, 1),
+                        Self::new_vec3(1, 1, 1)
+                        )
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, -1, 1),
+                    cost: 17,
+                    requires: vec!(
+                        Self::new_vec3(-1, 0, 0), Self::new_vec3(0, -1, 0), Self::new_vec3(-1, -1, 0),
+                        Self::new_vec3(-1, 0, 1), Self::new_vec3(0, -1, 1), Self::new_vec3(-1, -1, 1),
+                        Self::new_vec3(-1, -1, 1)
+                        )
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, 1, -1),
+                    cost: 17,
+                    requires: vec!(
+                        Self::new_vec3(-1, 0, 0), Self::new_vec3(0, 1, 0), Self::new_vec3(-1, 1, 0),
+                        Self::new_vec3(-1, 0, -1), Self::new_vec3(0, 1, -1), Self::new_vec3(-1, 1, -1),
+                        Self::new_vec3(-1, 1, -1)
+                        )
+                },
+                Opening {
+                    cell: Self::new_vec3(1, -1, -1),
+                    cost: 17,
+                    requires: vec!(
+                        Self::new_vec3(1, 0, 0), Self::new_vec3(0, -1, 0), Self::new_vec3(1, -1, 0),
+                        Self::new_vec3(1, 0, -1), Self::new_vec3(0, -1, -1), Self::new_vec3(1, -1, -1),
+                        Self::new_vec3(1, -1, -1)
+                        )
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, 1, 1),
+                    cost: 17,
+                    requires: vec!(
+                        Self::new_vec3(-1, 0, 0), Self::new_vec3(0, 1, 0), Self::new_vec3(-1, 1, 0),
+                        Self::new_vec3(-1, 0, 1), Self::new_vec3(0, 1, 1), Self::new_vec3(-1, 1, 1),
+                        Self::new_vec3(-1, 1, 1)
+                        )
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 1, -1),
+                    cost: 17,
+                    requires: vec!(
+                        Self::new_vec3(1, 0, 0), Self::new_vec3(0, 1, 0), Self::new_vec3(1, 1, 0),
+                        Self::new_vec3(1, 0, -1), Self::new_vec3(0, 1, -1), Self::new_vec3(1, 1, -1),
+                        Self::new_vec3(1, 1, -1)
+                        )
+                },
+                Opening {
+                    cell: Self::new_vec3(1, -1, 1),
+                    cost: 17,
+                    requires: vec!(
+                        Self::new_vec3(1, 0, 0), Self::new_vec3(0, -1, 0), Self::new_vec3(1, -1, 0),
+                        Self::new_vec3(1, 0, 1), Self::new_vec3(0, -1, 1), Self::new_vec3(1, -1, 1),
+                        Self::new_vec3(1, -1, 1)
+                        )
+                },
+            ],
+            _ => unimplemented!(),
+        }
     }
 }
 
-/// Generate partial reverse randomized_kruskal
-/// `https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm`
-pub fn kruskal(width: usize, height: usize, percent: f64) -> Maze {
-    enum WallPos {
-        Vertical(usize, usize),
-        Horizontal(usize, usize),
+impl ::std::fmt::Display for Maze<::na::U2> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+        write!(f, "\n")?;
+        for y in 0..self.size[1] {
+            for x in 0..self.size[0] {
+                if self.walls.contains(&::na::Vector2::new(x, y)) {
+                    write!(f, "#")?;
+                } else {
+                    write!(f, " ")?;
+                }
+            }
+            write!(f, "\n")?;
+        }
+        write!(f, "\n")
     }
+}
 
-    assert_eq!(width.wrapping_rem(2), 1);
-    assert_eq!(height.wrapping_rem(2), 1);
+impl Maze<::na::U2> {
+    pub fn free_in_square(&self, center: ::na::Vector2<isize>, radius: isize) -> Vec<::na::Vector2<isize>> {
+        let mut res = vec![];
 
-    let index = |x: usize, y: usize| y * width + x;
+        let x_clip_start = (center[0] - radius).max(0);
+        let y_clip_start = (center[1] - radius).max(0);
 
-    let mut grid = Vec::with_capacity(width * height);
-    for i in 0..width * height {
-        grid.push((false, i));
-    }
+        let x_clip_end = (center[0] + radius).min(self.size[0] - 1);
+        let y_clip_end = (center[1] + radius).min(self.size[1] - 1);
 
-    for i in 0..width {
-        grid[i] = (true, i);
-        let j = height * (width - 1) + i;
-        grid[j] = (true, j);
-    }
-
-    for i in 0..height {
-        grid[i * width] = (true, i * width);
-        let j = (i + 1) * width - 1;
-        grid[j] = (true, j);
-    }
-
-    let horizontal_wall = (width - 5) / 2 * (height - 3) / 2;
-    let vertical_wall = (width - 3) / 2 * (height - 5) / 2;
-    let horizontal_wall_width = (width - 5) / 2;
-    let vertical_wall_width = (width - 3) / 2;
-
-    let mut walls = Vec::with_capacity(horizontal_wall + vertical_wall);
-    for i in 0..vertical_wall {
-        walls.push(WallPos::Vertical(
-            i.wrapping_rem(vertical_wall_width) * 2 + 2,
-            (i / vertical_wall_width) * 2 + 3,
-        ));
-    }
-    for i in 0..horizontal_wall {
-        walls.push(WallPos::Horizontal(
-            i.wrapping_rem(horizontal_wall_width) * 2 + 3,
-            (i / horizontal_wall_width) * 2 + 2,
-        ));
-    }
-
-    let mut rng = ::rand::thread_rng();
-
-    let stop = ((walls.len() as f64) * (1. - percent / 100.)) as usize;
-
-    while walls.len() > stop {
-        let i = ::rand::distributions::Range::new(0, walls.len()).ind_sample(&mut rng);
-        assert!(i < walls.len());
-        let (c1, c2, c3) = match walls.swap_remove(i) {
-            WallPos::Vertical(x, y) => (index(x, y - 1), index(x, y), index(x, y + 1)),
-            WallPos::Horizontal(x, y) => (index(x - 1, y), index(x, y), index(x + 1, y)),
-        };
-
-        let ((_, s1), (_, s2), (_, s3)) = (grid[c1], grid[c2], grid[c3]);
-
-        if s1 != s3 {
-            grid[c1] = (true, s1);
-            grid[c2] = (true, s2);
-            grid[c3] = (true, s3);
-            for &mut (_, ref mut s) in &mut grid {
-                if *s == s2 || *s == s3 {
-                    *s = s1;
+        for y in y_clip_start..y_clip_end + 1 {
+            for &x in [x_clip_start, x_clip_end].iter() {
+                if !self.walls.contains(&::na::Vector2::new(x, y)) {
+                    res.push(::na::Vector2::new(x, y));
                 }
             }
         }
-    }
-
-    let mut res = Vec::with_capacity(width);
-    for i in 0..width {
-        res.push(Vec::with_capacity(height));
-        for j in 0..height {
-            res[i].push(grid[index(i, j)].0);
+        for x in x_clip_start..x_clip_end + 1 {
+            for &y in [y_clip_start, y_clip_end].iter() {
+                if !self.walls.contains(&::na::Vector2::new(x, y)) {
+                    res.push(::na::Vector2::new(x, y));
+                }
+            }
         }
+        res
     }
 
-    Maze {
-        width,
-        height,
-        walls: res,
+    pub fn random_free(&self) -> ::na::Vector2<isize> {
+        let x_range = Range::new(0, self.size[0]);
+        let y_range = Range::new(0, self.size[1]);
+        let mut rng = ::rand::thread_rng();
+
+        let mut x = x_range.ind_sample(&mut rng);
+        let mut y = y_range.ind_sample(&mut rng);
+        while self.walls.contains(&::na::Vector2::new(x, y)) {
+            x = x_range.ind_sample(&mut rng);
+            y = y_range.ind_sample(&mut rng);
+        }
+        ::na::Vector2::new(x, y)
+    }
+
+    pub fn random_free_float(&self) -> [f32; 2] {
+        let cell = self.random_free();
+        [
+            cell[0] as f32 + 0.5,
+            cell[1] as f32 + 0.5,
+        ]
+    }
+
+    pub fn wall(&self, x: isize, y: isize) -> bool {
+        self.walls.contains(&::na::Vector2::new(x, y))
+    }
+}
+
+impl Maze<::na::U3> {
+    pub fn free_in_square(&self, center: ::na::Vector3<isize>, radius: isize) -> Vec<::na::Vector3<isize>> {
+        let mut res = vec![];
+
+        let x_clip_start = (center[0] - radius).max(0);
+        let y_clip_start = (center[1] - radius).max(0);
+        let z_clip_start = (center[2] - radius).max(0);
+
+        let x_clip_end = (center[0] + radius).min(self.size[0] - 1);
+        let y_clip_end = (center[1] + radius).min(self.size[1] - 1);
+        let z_clip_end = (center[2] + radius).min(self.size[2] - 1);
+
+        for x in x_clip_start..x_clip_end + 1 {
+            for y in y_clip_start..y_clip_end + 1 {
+                for &z in [z_clip_start, z_clip_end].iter() {
+                    if !self.walls.contains(&::na::Vector3::new(x, y, z)) {
+                        res.push(::na::Vector3::new(x, y, z));
+                    }
+                }
+            }
+        }
+        for y in y_clip_start..y_clip_end + 1 {
+            for z in z_clip_start..z_clip_end + 1 {
+                for &x in [x_clip_start, x_clip_end].iter() {
+                    if !self.walls.contains(&::na::Vector3::new(x, y, z)) {
+                        res.push(::na::Vector3::new(x, y, z));
+                    }
+                }
+            }
+        }
+        for x in x_clip_start..x_clip_end + 1 {
+            for z in z_clip_start..z_clip_end + 1 {
+                for &y in [y_clip_start, y_clip_end].iter() {
+                    if !self.walls.contains(&::na::Vector3::new(x, y, z)) {
+                        res.push(::na::Vector3::new(x, y, z));
+                    }
+                }
+            }
+        }
+        res
+    }
+
+    pub fn random_free(&self) -> ::na::Vector3<isize> {
+        let x_range = Range::new(0, self.size[0]);
+        let y_range = Range::new(0, self.size[1]);
+        let z_range = Range::new(0, self.size[2]);
+        let mut rng = ::rand::thread_rng();
+
+        let mut x = x_range.ind_sample(&mut rng);
+        let mut y = y_range.ind_sample(&mut rng);
+        let mut z = z_range.ind_sample(&mut rng);
+        while self.walls.contains(&::na::Vector3::new(x, y, z)) {
+            x = x_range.ind_sample(&mut rng);
+            y = y_range.ind_sample(&mut rng);
+            z = z_range.ind_sample(&mut rng);
+        }
+        ::na::Vector3::new(x, y, z)
+    }
+
+    pub fn random_free_float(&self) -> [f32; 3] {
+        let cell = self.random_free();
+        [
+            cell[0] as f32 + 0.5,
+            cell[1] as f32 + 0.5,
+            cell[2] as f32 + 0.5,
+        ]
+    }
+
+    pub fn wall(&self, x: isize, y: isize, z: isize) -> bool {
+        self.walls.contains(&::na::Vector3::new(x, y, z))
     }
 }

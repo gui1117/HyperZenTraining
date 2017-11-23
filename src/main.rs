@@ -21,6 +21,8 @@ extern crate imgui;
 extern crate serde_derive;
 extern crate ron;
 extern crate wavefront_obj;
+extern crate typenum;
+extern crate generic_array;
 
 mod util;
 mod graphics;
@@ -100,8 +102,8 @@ fn main() {
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
-    let mut maze = ::maze::kruskal(51, 51, 0.0);
-    maze.reduce(2);
+    let mut maze = ::resource::Maze::kruskal(::na::Vector2::new(51, 51), 20.0);
+    maze.reduce(1);
     maze.circle();
     maze.fill_smallest();
     maze.fill_dead_end();

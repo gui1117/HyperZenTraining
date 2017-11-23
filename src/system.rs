@@ -236,8 +236,8 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             let recompute_goal = if let Some(goal) = avoider.goal {
                 (avoider_pos.translation.vector -
                      ::na::Vector3::new(
-                        goal.0 as f32 + 0.5,
-                        goal.1 as f32 + 0.5,
+                        goal[0] as f32 + 0.5,
+                        goal[1] as f32 + 0.5,
                         avoider_pos.translation.vector[2],
                     )).norm() < 0.5
             } else {
@@ -250,22 +250,22 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             };
 
             if recompute_goal {
-                let pos = (
-                    avoider_pos.translation.vector[0] as usize,
-                    avoider_pos.translation.vector[1] as usize,
+                let pos = ::na::Vector2::new(
+                    avoider_pos.translation.vector[0] as isize,
+                    avoider_pos.translation.vector[1] as isize,
                 );
-                let goal = (
-                    player_pos.translation.vector[0] as usize,
-                    player_pos.translation.vector[1] as usize,
+                let goal = ::na::Vector2::new(
+                    player_pos.translation.vector[0] as isize,
+                    player_pos.translation.vector[1] as isize,
                 );
-                avoider.goal = maze.find_path(pos, goal).unwrap().0.get(1).cloned();
+                avoider.goal = maze.find_path(pos, goal).unwrap().get(1).cloned();
             }
 
             let (goal_direction, goal_coef) = {
                 let goal_pos = if let Some(goal) = avoider.goal {
                     ::na::Vector3::new(
-                        goal.0 as f32 + 0.5,
-                        goal.1 as f32 + 0.5,
+                        goal[0] as f32 + 0.5,
+                        goal[1] as f32 + 0.5,
                         avoider_pos.translation.vector[2],
                     )
                 } else {
@@ -1203,7 +1203,7 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
         }
 
         let square = maze.free_in_square(
-            [player_pos[0] as usize, player_pos[1] as usize],
+            ::na::Vector2::new(player_pos[0] as isize, player_pos[1] as isize),
             spawn_distance,
         );
         if square.is_empty() {

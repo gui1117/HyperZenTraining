@@ -69,7 +69,7 @@ impl ::specs::Component for Bouncer {
 }
 
 pub struct Avoider {
-    pub goal: Option<(usize, usize)>,
+    pub goal: Option<::na::Vector2<isize>>,
 }
 
 impl ::specs::Component for Avoider {
