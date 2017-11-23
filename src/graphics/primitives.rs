@@ -484,6 +484,7 @@ pub fn instance_primitives(
 
 #[allow(unused)]
 pub mod primitive {
+    // TODO: We don't need an atomic usize
     pub enum Primitive {
         Plane,
         SquarePyramid,
@@ -496,17 +497,39 @@ pub mod primitive {
     }
 
     impl Primitive {
-        pub fn instantiate(&self) -> (usize, Vec<u16>) {
+        pub fn index(&self) -> usize {
             match *self {
-                Primitive::Plane => (0, GROUP_COUNTER.instantiate(1)),
-                Primitive::SquarePyramid => (1, GROUP_COUNTER.instantiate(5)),
-                Primitive::TrianglePyramid => (2, GROUP_COUNTER.instantiate(4)),
-                Primitive::Sphere => (3, GROUP_COUNTER.instantiate(1)),
-                Primitive::Six => (4, GROUP_COUNTER.instantiate(8)),
-                Primitive::Cube => (5, GROUP_COUNTER.instantiate(6)),
-                Primitive::Cylinder => (6, GROUP_COUNTER.instantiate(1)),
-                Primitive::PitCube => (7, GROUP_COUNTER.instantiate(11)),
+                Primitive::Plane => 0,
+                Primitive::SquarePyramid => 1,
+                Primitive::TrianglePyramid => 2,
+                Primitive::Sphere => 3,
+                Primitive::Six => 4,
+                Primitive::Cube => 5,
+                Primitive::Cylinder => 6,
+                Primitive::PitCube => 7,
             }
+        }
+
+        fn groups_size(&self) -> usize {
+            match *self {
+                Primitive::Plane => 1,
+                Primitive::SquarePyramid => 5,
+                Primitive::TrianglePyramid => 4,
+                Primitive::Sphere => 1,
+                Primitive::Six => 8,
+                Primitive::Cube => 6,
+                Primitive::Cylinder => 1,
+                Primitive::PitCube => 11,
+            }
+        }
+
+        pub fn reserve(&self, size: usize) -> Vec<Vec<u16>> {
+            let groups_size = self.groups_size();
+            (0..size).map(|_| GROUP_COUNTER.instantiate(groups_size)).collect()
+        }
+
+        pub fn instantiate(&self) -> (usize, Vec<u16>) {
+            (self.index(), GROUP_COUNTER.instantiate(self.groups_size()))
         }
     }
 

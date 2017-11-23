@@ -27,44 +27,22 @@ pub fn create_maze_walls<'a>(
         entities,
     );
 
-    maze.assert_square();
-    let size = maze.size[0];
+    let groups = ::graphics::Primitive::Plane.reserve(maze.size[0].max(maze.size[1]) as usize * 2 + 2);
+    let compute_group = |x, o| (2*x + o) as usize;
 
-    for x in 0..size {
-        let mut up_coords = None;
-        let mut down_coords = None;
-        for y in 0..size + 1 {
-            let up_wall = if x == 0 || y == size {
-                false
-            } else {
-                maze.wall(x - 1, y)
-            };
-            let wall = if y == size { false } else { maze.wall(x, y) };
-            let down_wall = if x + 1 == size || y == size {
-                false
-            } else {
-                maze.wall(x + 1, y)
-            };
-
-            let up_side_wall = wall && !up_wall;
-            let down_side_wall = wall && !down_wall;
-
-            if up_side_wall && up_coords.is_none() {
-                up_coords = Some((y, y));
-            } else if up_side_wall && up_coords.is_some() {
-                up_coords.as_mut().unwrap().1 = y;
-            } else if !up_side_wall && up_coords.is_some() {
-                let c = up_coords.take().unwrap();
-                let x_radius = 0.5;
-                let y_radius = (c.1 - c.0 + 1) as f32 / 2.0;
+    // actually 0 and last are not necessary if it is circled and it must be
+    for x in 1..maze.size[0] {
+        for y in 1..maze.size[1] {
+            let pos = ::na::Vector3::new(x as f32 + 0.5, y as f32 + 0.5, 0.5);
+            if maze.wall(x-1, y) != maze.wall(x, y) {
                 let pos = ::na::Isometry3::new(
-                    ::na::Vector3::new(x as f32, c.0 as f32 + y_radius, 0.5),
+                    pos + ::na::Vector3::new(-0.5, 0.0, 0.0),
                     ::na::Vector3::y() * FRAC_PI_2,
                 );
+                let groups = groups[compute_group(x, 0)].clone();
                 super::create_wall_side(
                     pos,
-                    x_radius,
-                    y_radius,
+                    groups,
                     bodies,
                     static_draws,
                     physic_world,
@@ -72,92 +50,15 @@ pub fn create_maze_walls<'a>(
                     entities,
                 );
             }
-
-            if down_side_wall && down_coords.is_none() {
-                down_coords = Some((y, y));
-            } else if down_side_wall && down_coords.is_some() {
-                down_coords.as_mut().unwrap().1 = y;
-            } else if !down_side_wall && down_coords.is_some() {
-                let c = down_coords.take().unwrap();
-                let x_radius = 0.5;
-                let y_radius = (c.1 - c.0 + 1) as f32 / 2.0;
+            if maze.wall(x, y-1) != maze.wall(x, y) {
                 let pos = ::na::Isometry3::new(
-                    ::na::Vector3::new(x as f32 + 1.0, c.0 as f32 + y_radius, 0.5),
-                    ::na::Vector3::y() * FRAC_PI_2,
-                );
-                super::create_wall_side(
-                    pos,
-                    x_radius,
-                    y_radius,
-                    bodies,
-                    static_draws,
-                    physic_world,
-                    graphics,
-                    entities,
-                );
-            }
-        }
-    }
-
-    for y in 0..size {
-        let mut up_coords = None;
-        let mut down_coords = None;
-        for x in 0..size + 1 {
-            let up_wall = if y == 0 || x == size {
-                false
-            } else {
-                maze.wall(x, y - 1)
-            };
-            let wall = if x == size { false } else { maze.wall(x, y) };
-            let down_wall = if y + 1 == size || x == size {
-                false
-            } else {
-                maze.wall(x, y + 1)
-            };
-
-            let up_side_wall = wall && !up_wall;
-            let down_side_wall = wall && !down_wall;
-
-            if up_side_wall && up_coords.is_none() {
-                up_coords = Some((x, x));
-            } else if up_side_wall && up_coords.is_some() {
-                up_coords.as_mut().unwrap().1 = x;
-            } else if !up_side_wall && up_coords.is_some() {
-                let c = up_coords.take().unwrap();
-                let x_radius = (c.1 - c.0 + 1) as f32 / 2.0;
-                let y_radius = 0.5;
-                let pos = ::na::Isometry3::new(
-                    ::na::Vector3::new(c.0 as f32 + x_radius, y as f32, 0.5),
+                    pos + ::na::Vector3::new(0.0, -0.5, 0.0),
                     ::na::Vector3::x() * FRAC_PI_2,
                 );
+                let groups = groups[compute_group(y, 1)].clone();
                 super::create_wall_side(
                     pos,
-                    x_radius,
-                    y_radius,
-                    bodies,
-                    static_draws,
-                    physic_world,
-                    graphics,
-                    entities,
-                );
-            }
-
-            if down_side_wall && down_coords.is_none() {
-                down_coords = Some((x, x));
-            } else if down_side_wall && down_coords.is_some() {
-                down_coords.as_mut().unwrap().1 = x;
-            } else if !down_side_wall && down_coords.is_some() {
-                let c = down_coords.take().unwrap();
-                let x_radius = (c.1 - c.0 + 1) as f32 / 2.0;
-                let y_radius = 0.5;
-                let pos = ::na::Isometry3::new(
-                    ::na::Vector3::new(c.0 as f32 + x_radius, y as f32 + 1.0, 0.5),
-                    ::na::Vector3::x() * FRAC_PI_2,
-                );
-                super::create_wall_side(
-                    pos,
-                    x_radius,
-                    y_radius,
+                    groups,
                     bodies,
                     static_draws,
                     physic_world,

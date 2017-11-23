@@ -2,35 +2,33 @@ use alga::general::SubsetOf;
 
 pub fn create_wall_side<'a>(
     pos: ::na::Isometry3<f32>,
-    x_radius: f32,
-    y_radius: f32,
+    groups: Vec<u16>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     entities: &::specs::Entities,
 ) {
+    let radius = 0.5;
+
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
     group.set_membership(&[super::WALL_GROUP]);
 
     let world_trans = {
         let pos_trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 1.0)
             .to_superset();
-        let mut dim_trans: ::na::Transform3<f32> = ::na::one();
-        dim_trans[(0, 0)] = x_radius;
-        dim_trans[(1, 1)] = y_radius;
-        let trans = pos_trans * dim_trans;
+        let trans = pos_trans * ::graphics::resizer(radius, radius, 1.0);
         ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
     };
 
-    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(x_radius, y_radius, 0.0));
+    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(radius, radius, 0.0));
     let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
     body.set_collision_groups(group);
     body.set_transformation(pos);
 
     let entity = entities.create();
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
-    let (primitive, groups) = ::graphics::Primitive::Plane.instantiate();
+    let primitive = ::graphics::Primitive::Plane.index();
     ::component::StaticDraw::add(
         entity,
         primitive,

@@ -29,6 +29,7 @@ where
     neighbours: Vec<::na::VectorN<isize, D>>,
 }
 
+#[allow(unused)]
 impl<D> Maze<D>
 where
     D: ::na::Dim + ::na::DimName + Hash,
