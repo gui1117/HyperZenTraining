@@ -288,7 +288,7 @@ where
 
     /// Generate partial reverse randomized_kruskal
     /// `https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm`
-    // I suspect there is some errors but I don't know. But it OK this way
+    // There is an error
     pub fn kruskal(size: ::na::VectorN<isize, D>, percent: f64) -> Self {
         struct GridCell {
             wall: bool,
