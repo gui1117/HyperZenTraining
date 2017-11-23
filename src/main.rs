@@ -105,8 +105,8 @@ fn main() {
     let mut maze = ::resource::Maze::kruskal(::na::Vector2::new(51, 51), 20.0);
     maze.reduce(1);
     maze.circle();
-    maze.fill_smallest();
-    maze.fill_dead_end();
+    maze.fill_smallests();
+    while maze.fill_dead_corridors() || maze.fill_dead_rooms() { }
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();

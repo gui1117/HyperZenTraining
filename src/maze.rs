@@ -103,7 +103,7 @@ where
     }
 
     /// Filter(openings) -> if we keep the cell
-    fn compute_zones<F>(&self, filter: F) -> Vec<Vec<::na::VectorN<isize, D>>>
+    fn compute_zones<F>(&self, filter: F) -> Vec<HashSet<::na::VectorN<isize, D>>>
         where F: Fn(usize) -> bool,
     {
         let mut unvisited = HashSet::new();
@@ -121,7 +121,7 @@ where
         let mut zones = Vec::new();
 
         while let Some(cell) = unvisited.pop() {
-            let mut zone = Vec::new();
+            let mut zone = HashSet::new();
             to_visit.insert(cell);
 
             while let Some(cell) = to_visit.pop() {
@@ -145,7 +145,7 @@ where
                 }
 
                 unvisited.remove(&cell);
-                zone.push(cell)
+                assert!(zone.insert(cell));
             }
             zones.push(zone);
         }
@@ -156,7 +156,7 @@ where
     /// Compute the largest zone and fill all other zone
     ///
     /// Return whereas change have been made
-    pub fn fill_smallest(&mut self) -> bool {
+    pub fn fill_smallests(&mut self) -> bool {
         let mut zones = self.compute_zones(|_| true);
         if zones.is_empty() {
             return false;
@@ -182,7 +182,28 @@ where
         changes
     }
 
-    pub fn fill_dead_end(&mut self) -> bool {
+    pub fn fill_dead_rooms(&mut self) -> bool {
+        let mut changes = false;
+        let mut rooms = self.compute_zones(|opened| opened > 2);
+        rooms.retain(|room| {
+            let superset = room.iter().fold(HashSet::new(), |mut acc, cell| {
+                self.neighbours
+                    .iter()
+                    .map(|n| n + cell)
+                    .filter(|n| !self.walls.contains(n))
+                    .for_each(|n| {acc.insert(n);});
+                acc
+            });
+            superset.difference(room).count() == 1
+        });
+        for pos in rooms.iter().flat_map(|z| z) {
+            changes = true;
+            self.walls.insert(pos.clone());
+        }
+        changes
+    }
+
+    pub fn fill_dead_corridors(&mut self) -> bool {
         let mut changes = false;
         loop {
             let mut corridors = self.compute_zones(|opened| opened <= 2);
