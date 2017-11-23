@@ -51,3 +51,23 @@ impl<T: Eq + Hash + Clone> Pop for HashSet<T> {
         })
     }
 }
+
+pub trait ConvCoord {
+    fn conv(&self) -> ::na::Vector3<f32>;
+}
+
+impl ConvCoord for ::na::Vector2<isize> {
+    fn conv(&self) -> ::na::Vector3<f32> {
+        ::na::Vector3::new(self[0] as f32 + 0.5, self[1] as f32 + 0.5, 0.5)
+    }
+}
+
+impl ConvCoord for ::na::Vector3<isize> {
+    fn conv(&self) -> ::na::Vector3<f32> {
+        ::na::Vector3::new(
+            self[0] as f32 + 0.5,
+            self[1] as f32 + 0.5,
+            self[2] as f32 + 0.5,
+        )
+    }
+}

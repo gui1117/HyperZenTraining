@@ -421,6 +421,20 @@ where
         }
     }
 
+    pub fn random_free(&self) -> ::na::VectorN<isize, D> {
+        let ranges: Vec<_> = self.size.iter().map(|&s| Range::new(0, s)).collect();
+        let mut rng = ::rand::thread_rng();
+
+        let mut vec =
+            ::na::VectorN::<isize, D>::from_iterator(ranges.iter().map(|r| r.ind_sample(&mut rng)));
+        while self.walls.contains(&vec) {
+            vec = ::na::VectorN::<isize, D>::from_iterator(
+                ranges.iter().map(|r| r.ind_sample(&mut rng)),
+            );
+        }
+        vec
+    }
+
     fn neighbours() -> Vec<::na::VectorN<isize, D>> {
         match D::dim() {
             2 => {
@@ -810,25 +824,6 @@ impl Maze<::na::U2> {
         res
     }
 
-    pub fn random_free(&self) -> ::na::Vector2<isize> {
-        let x_range = Range::new(0, self.size[0]);
-        let y_range = Range::new(0, self.size[1]);
-        let mut rng = ::rand::thread_rng();
-
-        let mut x = x_range.ind_sample(&mut rng);
-        let mut y = y_range.ind_sample(&mut rng);
-        while self.walls.contains(&::na::Vector2::new(x, y)) {
-            x = x_range.ind_sample(&mut rng);
-            y = y_range.ind_sample(&mut rng);
-        }
-        ::na::Vector2::new(x, y)
-    }
-
-    pub fn random_free_float(&self) -> [f32; 2] {
-        let cell = self.random_free();
-        [cell[0] as f32 + 0.5, cell[1] as f32 + 0.5]
-    }
-
     pub fn wall(&self, x: isize, y: isize) -> bool {
         self.walls.contains(&::na::Vector2::new(x, y))
     }
@@ -878,32 +873,6 @@ impl Maze<::na::U3> {
             }
         }
         res
-    }
-
-    pub fn random_free(&self) -> ::na::Vector3<isize> {
-        let x_range = Range::new(0, self.size[0]);
-        let y_range = Range::new(0, self.size[1]);
-        let z_range = Range::new(0, self.size[2]);
-        let mut rng = ::rand::thread_rng();
-
-        let mut x = x_range.ind_sample(&mut rng);
-        let mut y = y_range.ind_sample(&mut rng);
-        let mut z = z_range.ind_sample(&mut rng);
-        while self.walls.contains(&::na::Vector3::new(x, y, z)) {
-            x = x_range.ind_sample(&mut rng);
-            y = y_range.ind_sample(&mut rng);
-            z = z_range.ind_sample(&mut rng);
-        }
-        ::na::Vector3::new(x, y, z)
-    }
-
-    pub fn random_free_float(&self) -> [f32; 3] {
-        let cell = self.random_free();
-        [
-            cell[0] as f32 + 0.5,
-            cell[1] as f32 + 0.5,
-            cell[2] as f32 + 0.5,
-        ]
     }
 
     pub fn wall(&self, x: isize, y: isize, z: isize) -> bool {

@@ -1,4 +1,5 @@
 use specs::Join;
+use util::ConvCoord;
 use rand::distributions::{IndependentSample, Range};
 
 pub struct MazeMasterSystem;
@@ -77,10 +78,9 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
 
         for _ in avoider_len..avoider_population {
             let pos = square[square_range.ind_sample(&mut rng)];
-            let pos = [pos[0] as f32 + 0.5, pos[1] as f32 + 0.5];
 
             ::entity::create_avoider(
-                pos,
+                pos.conv(),
                 false,
                 &mut momentums,
                 &mut avoiders,
@@ -96,10 +96,9 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
 
         for _ in bouncer_len..bouncer_population {
             let pos = square[square_range.ind_sample(&mut rng)];
-            let pos = [pos[0] as f32 + 0.5, pos[1] as f32 + 0.5];
 
             ::entity::create_bouncer(
-                pos,
+                pos.conv(),
                 false,
                 &mut momentums,
                 &mut bouncers,

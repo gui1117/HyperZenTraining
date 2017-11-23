@@ -1,6 +1,6 @@
 // IDEA: mabye make it turn on itself
 pub fn create_avoider<'a>(
-    pos: [f32; 2],
+    pos: ::na::Vector3<f32>,
     eraser: bool,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
     avoiders: &mut ::specs::WriteStorage<'a, ::component::Avoider>,
@@ -30,7 +30,7 @@ pub fn create_avoider<'a>(
         ::ncollide::shape::ConvexHull::new(points)
     };
 
-    let pos = ::na::Isometry3::new(::na::Vector3::new(pos[0], pos[1], 0.5), ::na::zero());
+    let pos = ::na::Isometry3::new(pos, ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
     group.set_membership(&[super::ALIVE_GROUP, super::MONSTER_GROUP]);

@@ -43,6 +43,8 @@ use vulkano::instance::Instance;
 
 use winit::{WindowEvent, Event, ElementState, VirtualKeyCode, KeyboardInput, DeviceEvent};
 
+use util::ConvCoord;
+
 use std::sync::Arc;
 
 pub use testing::TS;
@@ -178,7 +180,8 @@ fn main() {
         ::entity::create_turret(
             world
                 .read_resource::<::resource::Maze>()
-                .random_free_float(),
+                .random_free()
+                .conv(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
@@ -192,7 +195,8 @@ fn main() {
         ::entity::create_player(
             world
                 .read_resource::<::resource::Maze>()
-                .random_free_float(),
+                .random_free()
+                .conv(),
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
