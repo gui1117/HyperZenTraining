@@ -435,6 +435,78 @@ where
         vec
     }
 
+    pub fn free_in_square(
+        &self,
+        center: ::na::VectorN<isize, D>,
+        radius: isize,
+    ) -> Vec<::na::VectorN<isize, D>> {
+        let mut res = vec![];
+
+        let clip_start = center.iter()
+            .map(|c| (c - radius).max(0))
+            .collect::<Vec<_>>();
+
+        let clip_end = center.iter()
+            .zip(self.size.iter())
+            .map(|(c, s)| (c + radius).min(s - 1))
+            .collect::<Vec<_>>();
+
+        match D::dim() {
+            2 => {
+                for y in clip_start[1]..clip_end[1] + 1 {
+                    for &x in [clip_start[0], clip_end[0]].iter() {
+                        let vec = Self::new_vec2(x, y);
+                        if !self.walls.contains(&vec) {
+                            res.push(vec);
+                        }
+                    }
+                }
+                for x in clip_start[0]..clip_end[0] + 1 {
+                    for &y in [clip_start[1], clip_end[1]].iter() {
+                        let vec = Self::new_vec2(x, y);
+                        if !self.walls.contains(&vec) {
+                            res.push(vec);
+                        }
+                    }
+                }
+            },
+            3 => {
+                for x in clip_start[0]..clip_end[0] + 1 {
+                    for y in clip_start[1]..clip_end[1] + 1 {
+                        for &z in [clip_start[2], clip_end[2]].iter() {
+                            let vec = Self::new_vec3(x, y, z);
+                            if !self.walls.contains(&vec) {
+                                res.push(vec);
+                            }
+                        }
+                    }
+                }
+                for y in clip_start[1]..clip_end[1] + 1 {
+                    for z in clip_start[2]..clip_end[2] + 1 {
+                        for &x in [clip_start[0], clip_end[0]].iter() {
+                            let vec = Self::new_vec3(x, y, z);
+                            if !self.walls.contains(&vec) {
+                                res.push(vec);
+                            }
+                        }
+                    }
+                }
+                for x in clip_start[0]..clip_end[0] + 1 {
+                    for z in clip_start[2]..clip_end[2] + 1 {
+                        for &y in [clip_start[1], clip_end[1]].iter() {
+                            let vec = Self::new_vec3(x, y, z);
+                            if !self.walls.contains(&vec) {
+                                res.push(vec);
+                            }
+                        }
+                    }
+                }
+            },
+            _ => unimplemented!(),
+        }
+        res
+    }
+
     fn neighbours() -> Vec<::na::VectorN<isize, D>> {
         match D::dim() {
             2 => {
@@ -794,87 +866,12 @@ impl ::std::fmt::Display for Maze<::na::U2> {
 }
 
 impl Maze<::na::U2> {
-    pub fn free_in_square(
-        &self,
-        center: ::na::Vector2<isize>,
-        radius: isize,
-    ) -> Vec<::na::Vector2<isize>> {
-        let mut res = vec![];
-
-        let x_clip_start = (center[0] - radius).max(0);
-        let y_clip_start = (center[1] - radius).max(0);
-
-        let x_clip_end = (center[0] + radius).min(self.size[0] - 1);
-        let y_clip_end = (center[1] + radius).min(self.size[1] - 1);
-
-        for y in y_clip_start..y_clip_end + 1 {
-            for &x in [x_clip_start, x_clip_end].iter() {
-                if !self.walls.contains(&::na::Vector2::new(x, y)) {
-                    res.push(::na::Vector2::new(x, y));
-                }
-            }
-        }
-        for x in x_clip_start..x_clip_end + 1 {
-            for &y in [y_clip_start, y_clip_end].iter() {
-                if !self.walls.contains(&::na::Vector2::new(x, y)) {
-                    res.push(::na::Vector2::new(x, y));
-                }
-            }
-        }
-        res
-    }
-
     pub fn wall(&self, x: isize, y: isize) -> bool {
         self.walls.contains(&::na::Vector2::new(x, y))
     }
 }
 
 impl Maze<::na::U3> {
-    pub fn free_in_square(
-        &self,
-        center: ::na::Vector3<isize>,
-        radius: isize,
-    ) -> Vec<::na::Vector3<isize>> {
-        let mut res = vec![];
-
-        let x_clip_start = (center[0] - radius).max(0);
-        let y_clip_start = (center[1] - radius).max(0);
-        let z_clip_start = (center[2] - radius).max(0);
-
-        let x_clip_end = (center[0] + radius).min(self.size[0] - 1);
-        let y_clip_end = (center[1] + radius).min(self.size[1] - 1);
-        let z_clip_end = (center[2] + radius).min(self.size[2] - 1);
-
-        for x in x_clip_start..x_clip_end + 1 {
-            for y in y_clip_start..y_clip_end + 1 {
-                for &z in [z_clip_start, z_clip_end].iter() {
-                    if !self.walls.contains(&::na::Vector3::new(x, y, z)) {
-                        res.push(::na::Vector3::new(x, y, z));
-                    }
-                }
-            }
-        }
-        for y in y_clip_start..y_clip_end + 1 {
-            for z in z_clip_start..z_clip_end + 1 {
-                for &x in [x_clip_start, x_clip_end].iter() {
-                    if !self.walls.contains(&::na::Vector3::new(x, y, z)) {
-                        res.push(::na::Vector3::new(x, y, z));
-                    }
-                }
-            }
-        }
-        for x in x_clip_start..x_clip_end + 1 {
-            for z in z_clip_start..z_clip_end + 1 {
-                for &y in [y_clip_start, y_clip_end].iter() {
-                    if !self.walls.contains(&::na::Vector3::new(x, y, z)) {
-                        res.push(::na::Vector3::new(x, y, z));
-                    }
-                }
-            }
-        }
-        res
-    }
-
     pub fn wall(&self, x: isize, y: isize, z: isize) -> bool {
         self.walls.contains(&::na::Vector3::new(x, y, z))
     }
