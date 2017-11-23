@@ -102,7 +102,10 @@ where
         }
     }
 
-    fn compute_zones(&self, corridor: bool) -> Vec<Vec<::na::VectorN<isize, D>>> {
+    /// Filter(openings) -> if we keep the cell
+    fn compute_zones<F>(&self, filter: F) -> Vec<Vec<::na::VectorN<isize, D>>>
+        where F: Fn(usize) -> bool,
+    {
         let mut unvisited = HashSet::new();
         for cell in self.iterate_maze() {
             if !self.walls.contains(&cell) {
@@ -130,9 +133,8 @@ where
                         })
                     })
                     .count();
-                let is_corridor = opened <= 2;
 
-                if corridor && !is_corridor {
+                if !filter(opened) {
                     continue;
                 }
 
@@ -153,7 +155,7 @@ where
 
     /// Compute the largest zone and fill all other zone
     pub fn fill_smallest(&mut self) {
-        let mut zones = self.compute_zones(false);
+        let mut zones = self.compute_zones(|_| true);
         if zones.is_empty() {
             return;
         }
@@ -176,7 +178,7 @@ where
 
     pub fn fill_dead_end(&mut self) {
         loop {
-            let mut corridors = self.compute_zones(true);
+            let mut corridors = self.compute_zones(|opened| opened <= 2);
             corridors.retain(|corridor| {
                 corridor.iter().any(|cell| {
                     let neighbours_wall =
