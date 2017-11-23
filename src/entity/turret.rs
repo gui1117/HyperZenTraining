@@ -22,7 +22,10 @@ pub fn create_turret<'a>(
     laser_group.set_whitelist(&[super::TURRET_GROUP]);
     let mut laser_body = ::nphysics::object::RigidBody::new_dynamic(laser_shape, 1.0, 0.0, 0.0);
 
-    laser_body.set_transformation(::na::Isometry3::new(pos.coords + ::na::Vector3::new(1.0, 0.0, 0.0), ::na::zero()));
+    laser_body.set_transformation(::na::Isometry3::new(
+        pos.coords + ::na::Vector3::new(1.0, 0.0, 0.0),
+        ::na::zero(),
+    ));
     laser_body.set_collision_groups(laser_group);
 
     let laser_mass = 1.0 / laser_body.inv_mass();
@@ -32,13 +35,16 @@ pub fn create_turret<'a>(
 
     let laser_physic_entity = entities.create();
     followers.insert(laser_physic_entity, ::component::FollowPlayer);
-    momentums.insert(laser_physic_entity, ::component::Momentum::new(
+    momentums.insert(
+        laser_physic_entity,
+        ::component::Momentum::new(
             laser_mass,
             laser_velocity,
             laser_time_to_reach_v_max,
             laser_ang_damping,
             None,
-    ));
+        ),
+    );
     ::component::PhysicBody::add(laser_physic_entity, laser_body, bodies, physic_world);
 
     let (laser_primitive, laser_groups) = ::graphics::Primitive::Cylinder.instantiate();
@@ -81,17 +87,23 @@ pub fn create_turret<'a>(
     let color = ::graphics::color::PURPLE;
 
     let entity = entities.create();
-    turrets.insert(entity, ::component::Turret {
-        laser_draw: laser_draw_entity,
-        laser_physic: laser_physic_entity,
-    });
-    momentums.insert(entity, ::component::Momentum::new(
+    turrets.insert(
+        entity,
+        ::component::Turret {
+            laser_draw: laser_draw_entity,
+            laser_physic: laser_physic_entity,
+        },
+    );
+    momentums.insert(
+        entity,
+        ::component::Momentum::new(
             mass,
             velocity,
             time_to_reach_v_max,
             ang_damping,
             pnt_to_com,
-    ));
+        ),
+    );
 
     dynamic_graphics_assets.insert(
         entity,
@@ -106,5 +118,12 @@ pub fn create_turret<'a>(
     dynamic_draws.insert(entity, ::component::DynamicDraw);
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
-    bodies.get_mut(entity).unwrap().ball_in_socket(physic_world, ::na::Point3::new(pos[0], pos[1], 0.5));
+    bodies.get_mut(entity).unwrap().ball_in_socket(
+        physic_world,
+        ::na::Point3::new(
+            pos[0],
+            pos[1],
+            0.5,
+        ),
+    );
 }

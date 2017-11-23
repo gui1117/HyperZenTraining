@@ -232,9 +232,7 @@ impl DynamicGraphicsAssets {
             groups,
             primitive_trans,
             color,
-            world_trans: shader::draw1_vs::ty::World {
-                world: primitive_trans.unwrap().into(),
-            },
+            world_trans: shader::draw1_vs::ty::World { world: primitive_trans.unwrap().into() },
         }
     }
 }
@@ -294,21 +292,27 @@ impl PhysicBody {
     ) {
         body.set_user_data(Some(Box::new(entity)));
         let bodyhandle = physic_world.add_rigid_body(body);
-        bodies.insert(entity, PhysicBody {
-            handle: bodyhandle,
-            removed: false,
-        });
+        bodies.insert(
+            entity,
+            PhysicBody {
+                handle: bodyhandle,
+                removed: false,
+            },
+        );
     }
 
     #[inline]
     pub fn ball_in_socket(
         &mut self,
         physic_world: &mut ::resource::PhysicWorld,
-        position: ::na::Point3<f32>
+        position: ::na::Point3<f32>,
     ) {
         physic_world.add_ball_in_socket(joint::BallInSocket::new(
             joint::Anchor::new(None, position),
-            joint::Anchor::new(Some(self.handle), ::na::Point3::new(0.0, 0.0, 0.0)),
+            joint::Anchor::new(
+                Some(self.handle),
+                ::na::Point3::new(0.0, 0.0, 0.0),
+            ),
         ));
     }
 

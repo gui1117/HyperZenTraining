@@ -10,7 +10,15 @@ impl<'a> ::specs::System<'a> for FollowPlayerSystem {
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
     fn run(&mut self, (followers, players, bodies, mut momentums, physic_world): Self::SystemData) {
-        let player_pos = (&players, &bodies).join().next().unwrap().1.get(&physic_world).position().translation.vector;
+        let player_pos = (&players, &bodies)
+            .join()
+            .next()
+            .unwrap()
+            .1
+            .get(&physic_world)
+            .position()
+            .translation
+            .vector;
 
         for (_, body, momentum) in (&followers, &bodies, &mut momentums).join() {
             let pos = body.get(&physic_world).position().translation.vector;

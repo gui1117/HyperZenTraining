@@ -28,17 +28,24 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
         depth_coef.0 *= depth_coef_velocity;
 
         // Update turrets
-        for (turret, body, momentum, entity) in (&turrets, &bodies, &mut momentums, &*entities).join() {
+        for (turret, body, momentum, entity) in
+            (&turrets, &bodies, &mut momentums, &*entities).join()
+        {
             let pos = body.get(&physic_world).position();
-            let laser_pos = bodies.get(turret.laser_physic).unwrap().get(&physic_world).position();
+            let laser_pos = bodies
+                .get(turret.laser_physic)
+                .unwrap()
+                .get(&physic_world)
+                .position();
 
             // TODO: maybe not the right norm if to close ?
-            momentum.direction = (laser_pos.translation.vector - pos.translation.vector).normalize();
+            momentum.direction = (laser_pos.translation.vector - pos.translation.vector)
+                .normalize();
 
             let (shoot_dir, shoot_length) = {
                 let vec = laser_pos.translation.vector - pos.translation.vector;
                 let norm = vec.norm();
-                (vec/norm, norm)
+                (vec / norm, norm)
             };
 
             // TODO: factorise raycast
@@ -58,7 +65,8 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
                 )
             {
                 if let ::nphysics::object::WorldObject::RigidBody(other_body) = other_body.data {
-                    let other_entity = ::component::PhysicBody::entity(physic_world.rigid_body(other_body));
+                    let other_entity =
+                        ::component::PhysicBody::entity(physic_world.rigid_body(other_body));
                     if entity != other_entity {
                         self.collided.push((other_entity, collision.toi));
                     }
@@ -79,13 +87,15 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
             };
 
             let world_trans = ::na::Isometry3::from_parts(
-                ::na::Translation { vector: pos.translation.vector + (laser_pos.translation.vector - pos.translation.vector)/2.0 },
+                ::na::Translation {
+                    vector: pos.translation.vector +
+                        (laser_pos.translation.vector - pos.translation.vector) / 2.0,
+                },
                 pos.rotation,
             ) *
-                ::graphics::resizer(ray_radius, ray_radius, ray_length/2.0);
-            assets.get_mut(turret.laser_draw).unwrap().world_trans = ::graphics::shader::draw1_vs::ty::World {
-                world: world_trans.unwrap().into(),
-            };
+                ::graphics::resizer(ray_radius, ray_radius, ray_length / 2.0);
+            assets.get_mut(turret.laser_draw).unwrap().world_trans =
+                ::graphics::shader::draw1_vs::ty::World { world: world_trans.unwrap().into() };
         }
 
         depth_coef.0 = depth_coef.0.min(1.0).max(depth_coef_min);

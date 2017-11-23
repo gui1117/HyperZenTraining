@@ -28,15 +28,20 @@ impl<'a> ::specs::System<'a> for ShootSystem {
     fn run(
         &mut self,
         (bodies, aims, animations, mut shooters, mut lifes, mut deleters, mut dynamic_assets, mut dynamic_draws, mut dynamic_huds, physic_world, config, entities): Self::SystemData,
-    ) {
-        for (aim, animation, body, shooter, entity) in (&aims, &animations, &bodies, &mut shooters, &*entities).join() {
+){
+        for (aim, animation, body, shooter, entity) in
+            (&aims, &animations, &bodies, &mut shooters, &*entities).join()
+        {
             // Reload
             if shooter.bullets != shooter.max_bullets {
                 shooter.timer += config.dt();
                 if shooter.timer >= shooter.reload_time {
                     shooter.bullets += 1;
                     shooter.timer = 0.0;
-                    dynamic_assets.get_mut(animation.bullets[shooter.bullets - 1]).unwrap().color = ::graphics::color::PALE_BLUE;
+                    dynamic_assets
+                        .get_mut(animation.bullets[shooter.bullets - 1])
+                        .unwrap()
+                        .color = ::graphics::color::PALE_BLUE;
                 }
             }
 
@@ -44,7 +49,10 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             if shooter.shoot && shooter.bullets > 0 {
                 shooter.bullets -= 1;
                 shooter.shoot = false;
-                dynamic_assets.get_mut(animation.bullets[shooter.bullets]).unwrap().color = ::graphics::color::DARK_BLUE;
+                dynamic_assets
+                    .get_mut(animation.bullets[shooter.bullets])
+                    .unwrap()
+                    .color = ::graphics::color::DARK_BLUE;
 
                 let body_pos = body.get(&physic_world).position().clone();
 
@@ -88,17 +96,29 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                 }
 
                 let aim_trans = {
-                    let ah: ::na::Transform3<f32> =
-                        ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -aim.x_dir)).to_superset();
-                    let av: ::na::Transform3<f32> = ::na::Rotation3::new(
-                        ::na::Vector3::new(0.0, -aim.dir[2].asin(), 0.0),
+                    let ah: ::na::Transform3<f32> = ::na::Rotation3::new(
+                        ::na::Vector3::new(0.0, 0.0, -aim.x_dir),
                     ).to_superset();
+                    let av: ::na::Transform3<f32> =
+                        ::na::Rotation3::new(::na::Vector3::new(0.0, -aim.dir[2].asin(), 0.0))
+                            .to_superset();
                     ah * av
                 };
-                let ray_draw_origin = (body_pos.translation * aim_trans * animation.weapon_trans * animation.shoot_pos).coords;
-                let ray_draw_end = (ray.origin + size*ray.dir).coords;
+                let ray_draw_origin = (body_pos.translation * aim_trans * animation.weapon_trans *
+                                           animation.shoot_pos)
+                    .coords;
+                let ray_draw_end = (ray.origin + size * ray.dir).coords;
 
-                ::entity::create_light_ray(ray_draw_origin, ray_draw_end, animation.light_ray_radius, &mut deleters, &mut dynamic_draws, &mut dynamic_huds, &mut dynamic_assets, &entities);
+                ::entity::create_light_ray(
+                    ray_draw_origin,
+                    ray_draw_end,
+                    animation.light_ray_radius,
+                    &mut deleters,
+                    &mut dynamic_draws,
+                    &mut dynamic_huds,
+                    &mut dynamic_assets,
+                    &entities,
+                );
             }
         }
     }

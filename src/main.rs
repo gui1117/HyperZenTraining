@@ -148,7 +148,6 @@ fn main() {
             &world.read_resource(),
             &world.read_resource(),
         );
-    world.maintain();
         // ::entity::create_avoider(
         //     world
         //         .read_resource::<::resource::Maze>()
@@ -188,7 +187,8 @@ fn main() {
             &mut world.write(),
             &mut world.write(),
             &mut world.write_resource(),
-            &world.read_resource());
+            &world.read_resource(),
+        );
         ::entity::create_player(
             world
                 .read_resource::<::resource::Maze>()

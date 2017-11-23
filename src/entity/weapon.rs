@@ -15,10 +15,8 @@ pub fn create_light_ray<'a>(
     let color = ::graphics::color::YELLOW;
     let primitive_trans = {
         let i = ::na::Translation::from_vector((from + to) / 2.0) *
-            ::na::Rotation3::rotation_between(
-                &::na::Vector3::new(1.0, 0.0, 0.0),
-                &(to - from),
-            ).unwrap();
+            ::na::Rotation3::rotation_between(&::na::Vector3::new(1.0, 0.0, 0.0), &(to - from))
+                .unwrap();
 
         let r = ::na::Rotation3::new(::na::Vector3::new(0.0, -FRAC_PI_2, 0.0));
 
@@ -50,25 +48,25 @@ pub fn create_weapon<'a>(
     entities: &::specs::Entities,
 ) {
     let coef = 3.0;
-    let shoot_pos_x = 0.08*coef;
-    let weapon_pos_y = -0.02*coef;
-    let weapon_pos_z = -0.016*coef;
+    let shoot_pos_x = 0.08 * coef;
+    let weapon_pos_y = -0.02 * coef;
+    let weapon_pos_z = -0.016 * coef;
 
-    let center_radius = 0.0036*coef;
-    let light_ray_radius = 0.002*coef;
+    let center_radius = 0.0036 * coef;
+    let light_ray_radius = 0.002 * coef;
 
-    let six_radius = 0.0056*coef;
-    let six_length = 0.051*coef;
+    let six_radius = 0.0056 * coef;
+    let six_length = 0.051 * coef;
 
-    let bar_x_pos = 0.071*coef;
-    let bar_x_radius = 0.04*coef;
-    let bar_y_radius = 0.0022*coef;
-    let bar_z_radius = 0.0014*coef;
+    let bar_x_pos = 0.071 * coef;
+    let bar_x_radius = 0.04 * coef;
+    let bar_y_radius = 0.0022 * coef;
+    let bar_z_radius = 0.0014 * coef;
 
-    let bullet_radius= 0.006*coef;
-    let bullet_length = 0.0005*coef;
-    let bullet_x = 0.035*coef;
-    let bullet_dx = 0.003*coef;
+    let bullet_radius = 0.006 * coef;
+    let bullet_length = 0.0005 * coef;
+    let bullet_x = 0.035 * coef;
+    let bullet_dx = 0.003 * coef;
     let bullet_nbr = 5;
     let mut bullets = vec![];
 
@@ -96,9 +94,9 @@ pub fn create_weapon<'a>(
         let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
         let color = ::graphics::color::PALE_BLUE;
         let primitive_trans = ::na::Isometry3::new(
-                ::na::Vector3::new(bullet_x + bullet_dx*i as f32, 0.0, 0.0),
-                ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
-            ) *
+            ::na::Vector3::new(bullet_x + bullet_dx * i as f32, 0.0, 0.0),
+            ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
+        ) *
             ::graphics::resizer(bullet_radius, bullet_radius, bullet_length);
 
         let entity = entities.create();

@@ -61,7 +61,7 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
                 graphics.dim[0] as f32 / graphics.dim[1] as f32,
                 ::std::f32::consts::FRAC_PI_3,
                 // IDEA: change to 0.0001 it's funny
-                0.05*depth_coef.0,
+                0.05 * depth_coef.0,
                 100.0,
             ).unwrap();
 
@@ -74,7 +74,7 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
                 graphics.dim[0] as f32 / graphics.dim[1] as f32,
                 ::std::f32::consts::FRAC_PI_3,
                 // IDEA: change to 0.0001 it's funny
-                0.001*depth_coef.0,
+                0.001 * depth_coef.0,
                 0.3,
             ).unwrap();
 
@@ -83,8 +83,10 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
                 proj: hud_proj_matrix.into(),
             };
 
-            (graphics.view_uniform_buffer.next(view_uniform).unwrap(),
-             graphics.view_uniform_buffer.next(hud_view_uniform).unwrap())
+            (
+                graphics.view_uniform_buffer.next(view_uniform).unwrap(),
+                graphics.view_uniform_buffer.next(hud_view_uniform).unwrap(),
+            )
         };
 
         // Compute view set
