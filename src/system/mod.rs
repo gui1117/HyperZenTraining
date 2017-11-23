@@ -1,0 +1,27 @@
+mod menu_control;
+mod player_control;
+mod avoider_control;
+mod bouncer_control;
+mod follower;
+mod turret_control;
+mod physic;
+mod draw;
+mod update_draw_eraser;
+mod life;
+mod shoot;
+mod maze_master;
+mod deleter;
+
+pub use self::menu_control::MenuControlSystem;
+pub use self::player_control::PlayerControlSystem;
+pub use self::avoider_control::AvoiderControlSystem;
+pub use self::bouncer_control::BouncerControlSystem;
+pub use self::follower::FollowPlayerSystem;
+pub use self::turret_control::TurretControlSystem;
+pub use self::physic::PhysicSystem;
+pub use self::draw::DrawSystem;
+pub use self::update_draw_eraser::UpdateDynamicDrawEraserSystem;
+pub use self::life::LifeSystem;
+pub use self::shoot::ShootSystem;
+pub use self::maze_master::MazeMasterSystem;
+pub use self::deleter::DeleterSystem;

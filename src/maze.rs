@@ -3,16 +3,13 @@ use std::collections::HashSet;
 use std::collections::HashMap;
 use std::hash::Hash;
 use util::Pop;
-use std;
+use std::ops::Mul;
 use typenum;
-
-mod maze3d;
-mod maze2d;
 
 struct Opening<D>
     where
         D: ::na::Dim + ::na::DimName,
-        D::Value: std::ops::Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output= D::Value> + ::generic_array::ArrayLength<isize>,
+        D::Value: Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output= D::Value> + ::generic_array::ArrayLength<isize>,
 {
     cell: ::na::VectorN<isize, D>,
     requires: Vec<::na::VectorN<isize, D>>,
@@ -22,7 +19,7 @@ struct Opening<D>
 pub struct Maze<D>
     where
         D: ::na::Dim + ::na::DimName,
-        D::Value: std::ops::Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output= D::Value> + ::generic_array::ArrayLength<isize>,
+        D::Value: Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output= D::Value> + ::generic_array::ArrayLength<isize>,
 {
     pub walls: HashSet<::na::VectorN<isize, D>>,
     pub size: ::na::VectorN<isize, D>,
@@ -33,7 +30,7 @@ pub struct Maze<D>
 impl<D> Maze<D>
     where
         D: ::na::Dim + ::na::DimName + Hash,
-        D::Value: std::ops::Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output= D::Value> + ::generic_array::ArrayLength<isize>,
+        D::Value: Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output= D::Value> + ::generic_array::ArrayLength<isize>,
 {
     pub fn assert_square(&self) {
         for &s in self.size.iter() {
