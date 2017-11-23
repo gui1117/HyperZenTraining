@@ -104,7 +104,8 @@ where
 
     /// Filter(openings) -> if we keep the cell
     fn compute_zones<F>(&self, filter: F) -> Vec<HashSet<::na::VectorN<isize, D>>>
-        where F: Fn(usize) -> bool,
+    where
+        F: Fn(usize) -> bool,
     {
         let mut unvisited = HashSet::new();
         for cell in self.iterate_maze() {
@@ -191,7 +192,7 @@ where
                     .iter()
                     .map(|n| n + cell)
                     .filter(|n| !self.walls.contains(n))
-                    .for_each(|n| {acc.insert(n);});
+                    .for_each(|n| { acc.insert(n); });
                 acc
             });
             superset.difference(room).count() == 1

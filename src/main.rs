@@ -106,7 +106,7 @@ fn main() {
     maze.reduce(1);
     maze.circle();
     maze.fill_smallests();
-    while maze.fill_dead_corridors() || maze.fill_dead_rooms() { }
+    while maze.fill_dead_corridors() || maze.fill_dead_rooms() {}
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();
