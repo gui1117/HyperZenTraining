@@ -154,10 +154,12 @@ where
     }
 
     /// Compute the largest zone and fill all other zone
-    pub fn fill_smallest(&mut self) {
+    ///
+    /// Return whereas change have been made
+    pub fn fill_smallest(&mut self) -> bool {
         let mut zones = self.compute_zones(|_| true);
         if zones.is_empty() {
-            return;
+            return false;
         }
         let (_, max_id) = zones.iter().enumerate().fold(
             (-1, None),
@@ -171,12 +173,17 @@ where
             },
         );
         zones.remove(max_id.unwrap());
+
+        let mut changes = false;
         zones.iter().flat_map(|zone| zone.iter()).for_each(|pos| {
+            changes = true;
             self.walls.insert(pos.clone());
         });
+        changes
     }
 
-    pub fn fill_dead_end(&mut self) {
+    pub fn fill_dead_end(&mut self) -> bool {
+        let mut changes = false;
         loop {
             let mut corridors = self.compute_zones(|opened| opened <= 2);
             corridors.retain(|corridor| {
@@ -196,9 +203,11 @@ where
                 break;
             }
             for pos in corridors.iter().flat_map(|z| z) {
+                changes = true;
                 self.walls.insert(pos.clone());
             }
         }
+        changes
     }
 
     fn new_vec2(x: isize, y: isize) -> ::na::VectorN<isize, D> {
