@@ -105,10 +105,15 @@ fn main() {
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
     let mut maze = ::resource::Maze::kruskal(::na::Vector2::new(51, 51), 20.0);
+    println!("{}", maze);
     maze.reduce(1);
+    println!("{}", maze);
     maze.circle();
+    println!("{}", maze);
     maze.fill_smallests();
+    println!("{}", maze);
     while maze.fill_dead_corridors() || maze.fill_dead_rooms() {}
+    println!("{}", maze);
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();

@@ -104,19 +104,13 @@ where
     }
 
     /// Filter(openings) -> if we keep the cell
-    fn compute_zones<F>(&self, filter: F) -> Vec<HashSet<::na::VectorN<isize, D>>>
+    pub fn compute_zones<F>(&self, filter: F) -> Vec<HashSet<::na::VectorN<isize, D>>>
     where
-        F: Fn(usize) -> bool,
+        F: Fn(&Self, &::na::VectorN<isize, D>) -> bool,
     {
         let mut unvisited = HashSet::new();
         for cell in self.iterate_maze() {
-            if !self.walls.contains(&cell) {
-                // the maze must be circled
-                for i in 0..D::dim() {
-                    assert!(cell[i] != 0 && cell[i] != self.size[i] - 1);
-                }
-                unvisited.insert(cell);
-            }
+            unvisited.insert(cell);
         }
 
         let mut to_visit = HashSet::new();
@@ -127,21 +121,12 @@ where
             to_visit.insert(cell);
 
             while let Some(cell) = to_visit.pop() {
-                let opened = self.openings
-                    .iter()
-                    .filter(|opening| {
-                        opening.requires.iter().all(|o| {
-                            !self.walls.contains(&(cell.clone() + o))
-                        })
-                    })
-                    .count();
-
-                if !filter(opened) {
+                if !filter(&self, &cell) {
                     continue;
                 }
 
                 for neighbour in self.neighbours.iter().map(|n| n + cell.clone()) {
-                    if !self.walls.contains(&neighbour) && unvisited.contains(&neighbour) {
+                    if unvisited.contains(&neighbour) {
                         to_visit.insert(neighbour);
                     }
                 }
@@ -149,7 +134,9 @@ where
                 unvisited.remove(&cell);
                 assert!(zone.insert(cell));
             }
-            zones.push(zone);
+            if !zone.is_empty() {
+                zones.push(zone);
+            }
         }
 
         zones
@@ -159,7 +146,7 @@ where
     ///
     /// Return whereas change have been made
     pub fn fill_smallests(&mut self) -> bool {
-        let mut zones = self.compute_zones(|_| true);
+        let mut zones = self.compute_zones(|maze, cell| !maze.walls.contains(cell));
         if zones.is_empty() {
             return false;
         }
@@ -186,7 +173,18 @@ where
 
     pub fn fill_dead_rooms(&mut self) -> bool {
         let mut changes = false;
-        let mut rooms = self.compute_zones(|opened| opened > 2);
+        let mut rooms = self.compute_zones(|maze, cell| {
+            !maze.walls.contains(cell) &&
+                maze.openings
+                    .iter()
+                    .filter(|opening| {
+                        opening.requires.iter().all(|o| {
+                            !self.walls.contains(&(cell.clone() + o))
+                        })
+                    })
+                    .count() > 2
+        });
+
         rooms.retain(|room| {
             let superset = room.iter().fold(HashSet::new(), |mut acc, cell| {
                 self.neighbours
@@ -208,7 +206,17 @@ where
     pub fn fill_dead_corridors(&mut self) -> bool {
         let mut changes = false;
         loop {
-            let mut corridors = self.compute_zones(|opened| opened <= 2);
+            let mut corridors = self.compute_zones(|maze, cell| {
+                !maze.walls.contains(cell) &&
+                    maze.openings
+                        .iter()
+                        .filter(|opening| {
+                            opening.requires.iter().all(|o| {
+                                !self.walls.contains(&(cell.clone() + o))
+                            })
+                        })
+                        .count() <= 2
+            });
             corridors.retain(|corridor| {
                 corridor.iter().any(|cell| {
                     let neighbours_wall =
@@ -280,6 +288,7 @@ where
 
     /// Generate partial reverse randomized_kruskal
     /// `https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm`
+    // I suspect there is some errors but I don't know. But it OK this way
     pub fn kruskal(size: ::na::VectorN<isize, D>, percent: f64) -> Self {
         struct GridCell {
             wall: bool,

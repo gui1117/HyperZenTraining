@@ -27,45 +27,49 @@ pub fn create_maze_walls<'a>(
         entities,
     );
 
-    let groups = ::graphics::Primitive::Plane.reserve(maze.size[0].max(maze.size[1]) as usize * 2 + 2);
-    let compute_group = |x, o| (2*x + o) as usize;
+    let mut create_wall_side_closure = |pos, x_radius, y_radius| {
+        super::create_wall_side(
+            pos,
+            x_radius,
+            y_radius,
+            bodies,
+            static_draws,
+            physic_world,
+            graphics,
+            entities,
+        );
+    };
 
-    // actually 0 and last are not necessary if it is circled and it must be
-    for x in 1..maze.size[0] {
-        for y in 1..maze.size[1] {
-            let pos = ::na::Vector3::new(x as f32 + 0.5, y as f32 + 0.5, 0.5);
-            if maze.wall(x-1, y) != maze.wall(x, y) {
-                let pos = ::na::Isometry3::new(
-                    pos + ::na::Vector3::new(-0.5, 0.0, 0.0),
-                    ::na::Vector3::y() * FRAC_PI_2,
-                );
-                let groups = groups[compute_group(x, 0)].clone();
-                super::create_wall_side(
-                    pos,
-                    groups,
-                    bodies,
-                    static_draws,
-                    physic_world,
-                    graphics,
-                    entities,
-                );
-            }
-            if maze.wall(x, y-1) != maze.wall(x, y) {
-                let pos = ::na::Isometry3::new(
-                    pos + ::na::Vector3::new(0.0, -0.5, 0.0),
-                    ::na::Vector3::x() * FRAC_PI_2,
-                );
-                let groups = groups[compute_group(y, 1)].clone();
-                super::create_wall_side(
-                    pos,
-                    groups,
-                    bodies,
-                    static_draws,
-                    physic_world,
-                    graphics,
-                    entities,
-                );
-            }
-        }
+    let minus_x_sides = maze.compute_zones(|maze, cell| maze.walls.contains(cell) && !maze.walls.contains(&(cell + ::na::Vector2::new(-1, 0))));
+    let plus_x_sides = maze.compute_zones(|maze, cell| maze.walls.contains(cell) && !maze.walls.contains(&(cell + ::na::Vector2::new(1, 0))));
+    let minus_y_sides = maze.compute_zones(|maze, cell| maze.walls.contains(cell) && !maze.walls.contains(&(cell + ::na::Vector2::new(0, -1))));
+    let plus_y_sides = maze.compute_zones(|maze, cell| maze.walls.contains(cell) && !maze.walls.contains(&(cell + ::na::Vector2::new(0, 1))));
+
+    for (dx, x_side) in minus_x_sides.iter().map(|side| (::na::Vector3::new(-0.5, 0.0, 0.0), side))
+        .chain(plus_x_sides.iter().map(|side| (::na::Vector3::new(0.5, 0.0, 0.0), side)))
+    {
+        let x = x_side.iter().next().unwrap()[0];
+        let (y_min, y_max) = x_side.iter().fold((isize::max_value(), isize::min_value()), |acc, cell| (acc.0.min(cell[1]), acc.1.max(cell[1])));
+        let x_radius = 0.5;
+        let y_radius = (y_max - y_min + 1) as f32 / 2.0;
+        let pos = ::na::Isometry3::new(
+            ::na::Vector3::new(x as f32 + 0.5, y_min as f32 + y_radius, 0.5) + dx,
+            ::na::Vector3::y() * FRAC_PI_2,
+        );
+        create_wall_side_closure(pos, x_radius, y_radius);
+    }
+
+    for (dy, y_side) in minus_y_sides.iter().map(|side| (::na::Vector3::new(0.0, -0.5, 0.0), side))
+        .chain(plus_y_sides.iter().map(|side| (::na::Vector3::new(0.0, 0.5, 0.0), side)))
+    {
+        let y = y_side.iter().next().unwrap()[1];
+        let (x_min, x_max) = y_side.iter().fold((isize::max_value(), isize::min_value()), |acc, cell| (acc.0.min(cell[0]), acc.1.max(cell[0])));
+        let y_radius = 0.5;
+        let x_radius = (x_max - x_min + 1) as f32 / 2.0;
+        let pos = ::na::Isometry3::new(
+            ::na::Vector3::new(x_min as f32 + x_radius, y as f32 + 0.5, 0.5) + dy,
+            ::na::Vector3::x() * FRAC_PI_2,
+        );
+        create_wall_side_closure(pos, x_radius, y_radius);
     }
 }
