@@ -51,7 +51,7 @@ where
     /// Remove the circle of the maze
     pub fn reduce(&mut self, size: isize) {
         assert!(size > 0);
-        let dl = size * ::na::VectorN::<isize, D>::identity();
+        let dl = size * ::na::VectorN::<isize, D>::from_iterator((1..2).cycle());
         let mut new_walls = HashSet::new();
         for wall in self.walls.iter() {
             if wall > &dl && wall < &(self.size.clone() - dl.clone()) {
@@ -67,7 +67,7 @@ where
     }
 
     pub fn iterate_area(size: &::na::VectorN<isize, D>) -> Vec<::na::VectorN<isize, D>> {
-        let mut res = vec![::na::VectorN::<isize, D>::identity()];
+        let mut res = vec![];
 
         match D::dim() {
             2 => {
@@ -108,7 +108,7 @@ where
             if !self.walls.contains(&cell) {
                 // the maze must be circled
                 for i in 0..D::dim() {
-                    assert!(cell[i] == 0 || cell[i] == self.size[i] - 1);
+                    assert!(cell[i] != 0 && cell[i] != self.size[i] - 1);
                 }
                 unvisited.insert(cell);
             }
@@ -200,14 +200,14 @@ where
     }
 
     fn new_vec2(x: isize, y: isize) -> ::na::VectorN<isize, D> {
-        let mut v = ::na::VectorN::<isize, D>::identity();
+        let mut v = ::na::VectorN::<isize, D>::zeros();
         v[0] = x;
         v[1] = y;
         v
     }
 
     fn new_vec3(x: isize, y: isize, z: isize) -> ::na::VectorN<isize, D> {
-        let mut v = ::na::VectorN::<isize, D>::identity();
+        let mut v = ::na::VectorN::<isize, D>::zeros();
         v[0] = x;
         v[1] = y;
         v[2] = z;
