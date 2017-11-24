@@ -104,7 +104,7 @@ fn main() {
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
-    let mut maze = ::resource::Maze::kruskal(::na::Vector2::new(51, 51), 20.0);
+    let mut maze = ::resource::Maze::kruskal(::na::Vector2::new(51, 51), 20.0, ::na::zero());
     println!("{}", maze);
     maze.reduce(1);
     println!("{}", maze);

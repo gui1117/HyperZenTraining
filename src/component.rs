@@ -271,7 +271,7 @@ impl ::specs::Component for PhysicBody {
 impl Drop for PhysicBody {
     fn drop(&mut self) {
         if !self.removed {
-            debug_assert!(eprintln!("physic body hasn't been removed from physic world") == ());
+            // debug_assert!(eprintln!("physic body hasn't been removed from physic world") == ());
         }
     }
 }

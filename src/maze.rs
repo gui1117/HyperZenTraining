@@ -288,8 +288,7 @@ where
 
     /// Generate partial reverse randomized_kruskal
     /// `https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm`
-    // There is an error
-    pub fn kruskal(size: ::na::VectorN<isize, D>, percent: f64) -> Self {
+    pub fn kruskal(size: ::na::VectorN<isize, D>, percent: f64, bug: ::na::VectorN<isize, D>) -> Self {
         struct GridCell {
             wall: bool,
             group: usize,
@@ -329,7 +328,7 @@ where
                             walls.push(
                                 x_wall
                                     .iter()
-                                    .map(|c| c + Self::new_vec2(x * 2, y * 2))
+                                    .map(|c| c + Self::new_vec2(x * 2 - 1 + bug[0], y * 2))
                                     .collect(),
                             );
                         }
@@ -337,7 +336,7 @@ where
                             walls.push(
                                 y_wall
                                     .iter()
-                                    .map(|c| c + Self::new_vec2(x * 2, y * 2))
+                                    .map(|c| c + Self::new_vec2(x * 2, y * 2 - 1 + bug[1]))
                                     .collect(),
                             );
                         }
@@ -363,7 +362,7 @@ where
                                 walls.push(
                                     x_wall
                                         .iter()
-                                        .map(|c| c + Self::new_vec3(x * 2, y * 2, z * 2))
+                                        .map(|c| c + Self::new_vec3(x * 2 - 1 + bug[0], y * 2, z * 2))
                                         .collect(),
                                 );
                             }
@@ -371,7 +370,7 @@ where
                                 walls.push(
                                     y_wall
                                         .iter()
-                                        .map(|c| c + Self::new_vec3(x * 2, y * 2, z * 2))
+                                        .map(|c| c + Self::new_vec3(x * 2, y * 2 - 1 + bug[1], z * 2))
                                         .collect(),
                                 );
                             }
@@ -379,7 +378,7 @@ where
                                 walls.push(
                                     z_wall
                                         .iter()
-                                        .map(|c| c + Self::new_vec3(x * 2, y * 2, z * 2))
+                                        .map(|c| c + Self::new_vec3(x * 2, y * 2, z * 2 - 1 + bug[2]))
                                         .collect(),
                                 );
                             }
