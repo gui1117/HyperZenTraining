@@ -3,7 +3,9 @@ pub const FLOOR_CEIL_GROUP: usize = 2;
 pub const ALIVE_GROUP: usize = 3;
 pub const MONSTER_GROUP: usize = 4;
 pub const TURRET_GROUP: usize = 5;
+pub const PLAYER_GROUP: usize = 6;
 
+mod teleport;
 mod weapon;
 mod player;
 mod bouncer;
@@ -12,6 +14,7 @@ mod turret;
 mod wall;
 mod maze;
 
+pub use self::teleport::create_teleport;
 pub use self::weapon::{create_light_ray, create_weapon};
 pub use self::player::create_player;
 pub use self::bouncer::create_bouncer;

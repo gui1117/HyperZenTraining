@@ -11,6 +11,7 @@ mod life;
 mod shoot;
 mod maze_master;
 mod deleter;
+mod game;
 
 pub use self::menu_control::MenuControlSystem;
 pub use self::player_control::PlayerControlSystem;
@@ -24,4 +25,5 @@ pub use self::update_draw_eraser::UpdateDynamicDrawEraserSystem;
 pub use self::life::LifeSystem;
 pub use self::shoot::ShootSystem;
 pub use self::maze_master::MazeMasterSystem;
+pub use self::game::GameSystem;
 pub use self::deleter::DeleterSystem;

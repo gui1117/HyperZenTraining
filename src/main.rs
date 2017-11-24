@@ -43,8 +43,6 @@ use vulkano::instance::Instance;
 
 use winit::{WindowEvent, Event, ElementState, VirtualKeyCode, KeyboardInput, DeviceEvent};
 
-use util::ConvCoord;
-
 use std::sync::Arc;
 
 pub use testing::TS;
@@ -104,19 +102,9 @@ fn main() {
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
-    let mut maze = ::resource::Maze::kruskal(::na::Vector2::new(51, 51), 20.0, ::na::zero());
-    println!("{}", maze);
-    maze.reduce(1);
-    println!("{}", maze);
-    maze.circle();
-    println!("{}", maze);
-    maze.fill_smallests();
-    println!("{}", maze);
-    while maze.fill_dead_corridors() || maze.fill_dead_rooms() {}
-    println!("{}", maze);
-
     let mut world = specs::World::new();
     world.register::<::component::Player>();
+    world.register::<::component::Teleport>();
     world.register::<::component::Shooter>();
     world.register::<::component::WeaponAnimation>();
     world.register::<::component::WeaponAnchor>();
@@ -134,89 +122,19 @@ fn main() {
     world.register::<::component::Turret>();
     world.register::<::component::Life>();
     world.register::<::component::Contactor>();
+    world.register::<::component::Proximitor>();
     world.register::<::component::FollowPlayer>();
+    world.register::<::component::PhysicSensor>();
     world.add_resource(graphics.data.clone());
     world.add_resource(imgui);
     world.add_resource(config);
-    world.add_resource(::resource::PhysicWorld::new());
-    world.add_resource(::resource::Rendering::new());
-    world.add_resource(::resource::GameEvents(vec![]));
     world.add_resource(::resource::MenuEvents(vec![]));
-    world.add_resource(maze);
+    world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::DebugMode(false));
-    world.add_resource(::resource::DepthCoef(1.0));
-
-    {
-        ::entity::create_maze_walls(
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write_resource(),
-            &world.read_resource(),
-            &world.read_resource(),
-            &world.read_resource(),
-        );
-        // ::entity::create_avoider(
-        //     world
-        //         .read_resource::<::resource::Maze>()
-        //         .random_free_float(),
-        //     false,
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write_resource(),
-        //     &world.read_resource());
-        // ::entity::create_bouncer(
-        //     world
-        //         .read_resource::<::resource::Maze>()
-        //         .random_free_float(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write(),
-        //     &mut world.write_resource(),
-        //     &world.read_resource());
-        ::entity::create_turret(
-            world
-                .read_resource::<::resource::Maze>()
-                .random_free()
-                .conv(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write_resource(),
-            &world.read_resource(),
-        );
-        ::entity::create_player(
-            world
-                .read_resource::<::resource::Maze>()
-                .random_free()
-                .conv(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write_resource(),
-            &world.read_resource(),
-        );
-    }
-
     world.maintain();
+
+    let mut game_system = ::system::GameSystem::new();
+    game_system.run(&mut world);
 
     let mut update_dispatcher = ::specs::DispatcherBuilder::new()
         .add(::system::MenuControlSystem::new(), "menu", &[])
@@ -316,8 +234,8 @@ fn main() {
         }
 
         update_dispatcher.dispatch(&mut world.res);
-
         world.maintain();
+        game_system.run(&mut world);
 
         // Render world
         let mut next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), None);

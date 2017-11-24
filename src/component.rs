@@ -341,6 +341,75 @@ impl PhysicBody {
     }
 }
 
+// Sensor handle and whereas it has been deleted
+pub struct PhysicSensor {
+    handle: usize,
+    removed: bool,
+}
+
+impl ::specs::Component for PhysicSensor {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl Drop for PhysicSensor {
+    fn drop(&mut self) {
+        if !self.removed {
+            // debug_assert!(eprintln!("physic body hasn't been removed from physic world") == ());
+        }
+    }
+}
+
+#[allow(unused)]
+impl PhysicSensor {
+    pub fn entity(body: &::nphysics::object::Sensor<f32>) -> ::specs::Entity {
+
+        let entity = body.user_data().unwrap();
+        let entity = unsafe { ::std::mem::transmute::<&Box<_>, &Box<Any>>(entity) };
+        entity.downcast_ref::<::specs::Entity>().unwrap().clone()
+    }
+
+    pub fn add<'a>(
+        entity: ::specs::Entity,
+        mut sensor: ::nphysics::object::Sensor<f32>,
+        sensors: &mut ::specs::WriteStorage<'a, ::component::PhysicSensor>,
+        physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    ) {
+        sensor.set_user_data(Some(Box::new(entity)));
+        let sensorhandle = physic_world.add_sensor(sensor);
+        sensors.insert(
+            entity,
+            PhysicSensor {
+                handle: sensorhandle,
+                removed: false,
+            },
+        );
+    }
+
+    #[inline]
+    pub fn get<'a>(
+        &'a self,
+        physic_world: &'a ::resource::PhysicWorld,
+    ) -> &'a ::nphysics::object::Sensor<f32> {
+        physic_world.sensor(self.handle)
+    }
+
+    #[inline]
+    pub fn get_mut<'a>(
+        &'a mut self,
+        physic_world: &'a mut ::resource::PhysicWorld,
+    ) -> &'a mut ::nphysics::object::Sensor<f32> {
+        physic_world.mut_sensor(self.handle)
+    }
+
+    pub fn remove(&mut self, physic_world: &mut ::resource::PhysicWorld) {
+        if self.removed {
+            panic!("physic body already removed from physic world");
+        }
+        physic_world.remove_sensor(self.handle);
+        self.removed = true;
+    }
+}
+
 pub type Contact = ::ncollide::query::Contact<::na::Point3<f32>>;
 
 pub struct Contactor {
@@ -354,6 +423,20 @@ impl ::specs::Component for Contactor {
 impl Contactor {
     pub fn new() -> Self {
         Contactor { contacts: vec![] }
+    }
+}
+
+pub struct Proximitor {
+    pub intersections: Vec<::specs::Entity>,
+}
+
+impl ::specs::Component for Proximitor {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl Proximitor {
+    pub fn new() -> Self {
+        Proximitor { intersections: vec![] }
     }
 }
 
@@ -384,5 +467,12 @@ impl ::specs::Component for Turret {
 pub struct FollowPlayer;
 
 impl ::specs::Component for FollowPlayer {
+    type Storage = ::specs::NullStorage<Self>;
+}
+
+#[derive(Default)]
+pub struct Teleport;
+
+impl ::specs::Component for Teleport {
     type Storage = ::specs::NullStorage<Self>;
 }

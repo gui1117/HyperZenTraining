@@ -36,10 +36,22 @@ where
     D::Value: Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output = D::Value>
         + ::generic_array::ArrayLength<isize>,
 {
-    pub fn assert_square(&self) {
-        for &s in self.size.iter() {
-            assert_eq!(s, self.size[0]);
+    pub fn new_empty() -> Self {
+        Maze {
+            walls: HashSet::new(),
+            size: ::na::zero(),
+            openings: Self::openings(),
+            neighbours: Self::neighbours(),
         }
+    }
+
+    pub fn is_cuboid(&self) -> bool {
+        for &s in self.size.iter() {
+            if s != self.size[0] {
+                return false;
+            }
+        }
+        true
     }
 
     #[allow(unused)]
@@ -52,15 +64,29 @@ where
     /// Remove the circle of the maze
     pub fn reduce(&mut self, size: isize) {
         assert!(size > 0);
+        for &s in self.size.iter() {
+            assert!(s >= size*2);
+        }
         let dl = size * ::na::VectorN::<isize, D>::from_iterator((1..2).cycle());
         let mut new_walls = HashSet::new();
         for wall in self.walls.iter() {
-            if wall > &dl && wall < &(self.size.clone() - dl.clone()) {
+            if wall >= &dl && wall < &(self.size.clone() - dl.clone()) {
                 new_walls.insert(wall - dl.clone());
             }
         }
         self.walls = new_walls;
         self.size -= dl * 2;
+    }
+
+    /// Extend the maze with empty cell
+    pub fn extend(&mut self, size: isize) {
+        let dl = size * ::na::VectorN::<isize, D>::from_iterator((1..2).cycle());
+        let mut new_walls = HashSet::new();
+        for wall in self.walls.iter() {
+            new_walls.insert(wall + dl.clone());
+        }
+        self.walls = new_walls;
+        self.size += dl * 2;
     }
 
     pub fn iterate_maze(&self) -> Vec<::na::VectorN<isize, D>> {
@@ -142,6 +168,110 @@ where
         zones
     }
 
+    pub fn compute_room_zones(&self) -> Vec<HashSet<::na::VectorN<isize, D>>> {
+        self.compute_zones(|maze, cell| {
+            !maze.walls.contains(cell) &&
+                maze.openings
+                    .iter()
+                    .filter(|opening| {
+                        opening.requires.iter().all(|o| {
+                            !self.walls.contains(&(cell.clone() + o))
+                        })
+                    })
+                    .count() > 2
+        })
+    }
+
+    pub fn compute_dead_room_zones(&self) -> Vec<HashSet<::na::VectorN<isize, D>>> {
+        let mut rooms = self.compute_room_zones();
+        rooms.retain(|room| {
+            let superset = room.iter().fold(HashSet::new(), |mut acc, cell| {
+                self.neighbours
+                    .iter()
+                    .map(|n| n + cell)
+                    .filter(|n| !self.walls.contains(n))
+                    .for_each(|n| { acc.insert(n); });
+                acc
+            });
+            superset.difference(room).count() == 1
+        });
+        rooms
+    }
+
+    pub fn compute_corridor_zones(&self) -> Vec<HashSet<::na::VectorN<isize, D>>> {
+        self.compute_zones(|maze, cell| {
+            !maze.walls.contains(cell) &&
+                maze.openings
+                    .iter()
+                    .filter(|opening| {
+                        opening.requires.iter().all(|o| {
+                            !self.walls.contains(&(cell.clone() + o))
+                        })
+                    })
+                    .count() <= 2
+        })
+    }
+
+    /// Return all dead room with its entry corridor
+    pub fn compute_dead_room_and_corridor_zones(&self) -> Vec<HashSet<::na::VectorN<isize, D>>> {
+        let mut rooms = self.compute_dead_room_zones();
+        let corridors = self.compute_corridor_zones();
+        for room in &mut rooms {
+            let opening = {
+                let superset = room.iter().fold(HashSet::new(), |mut acc, cell| {
+                    self.neighbours
+                        .iter()
+                        .map(|n| n + cell)
+                        .filter(|n| !self.walls.contains(n))
+                        .for_each(|n| { acc.insert(n); });
+                    acc
+                });
+                superset.difference(&room).next().unwrap().clone()
+            };
+            for cell in corridors.iter().find(|corridor| corridor.contains(&opening)).unwrap().clone() {
+                room.insert(cell);
+            }
+        }
+        rooms
+    }
+
+    fn is_on_border(&self, v: &::na::VectorN<isize, D>) -> bool {
+        let one = ::na::VectorN::<isize, D>::from_iterator((1..2).cycle());
+        !(v >= &one && v + one < self.size)
+    }
+
+    /// Filter allowed entry
+    /// Return cell and its opening
+    /// The vector returned may contains less than nbr cell if it can't dig further
+    pub fn dig_cells<F>(&mut self, nbr: usize, filter: F) -> Vec<(::na::VectorN<isize, D>, ::na::VectorN<isize, D>)>
+    where
+        F: Fn(&::na::VectorN<isize, D>) -> bool,
+    {
+        let mut res = vec![];
+        let mut rng = ::rand::thread_rng();
+        let mut candidates = self.iterate_maze();
+        candidates.retain(|cell| filter(cell));
+
+        for i in 0..nbr {
+            candidates.retain(|cell| {
+                self.neighbours.iter()
+                    .map(|n| n + cell)
+                    .filter(|n| !self.walls.contains(n))
+                    .count() == 1 &&
+                    !self.is_on_border(cell)
+            });
+            if candidates.is_empty() {
+                return res;
+            }
+            let choosen = Range::new(0, candidates.len()).ind_sample(&mut rng);
+            let cell = candidates.swap_remove(choosen);
+            self.walls.remove(&cell);
+            let opening = self.neighbours.iter().map(|n| n + cell.clone()).filter(|n| !self.walls.contains(n)).next().unwrap();
+            res.push((cell, opening));
+        }
+        res
+    }
+
     /// Compute the largest zone and fill all other zone
     ///
     /// Return whereas change have been made
@@ -173,29 +303,8 @@ where
 
     pub fn fill_dead_rooms(&mut self) -> bool {
         let mut changes = false;
-        let mut rooms = self.compute_zones(|maze, cell| {
-            !maze.walls.contains(cell) &&
-                maze.openings
-                    .iter()
-                    .filter(|opening| {
-                        opening.requires.iter().all(|o| {
-                            !self.walls.contains(&(cell.clone() + o))
-                        })
-                    })
-                    .count() > 2
-        });
-
-        rooms.retain(|room| {
-            let superset = room.iter().fold(HashSet::new(), |mut acc, cell| {
-                self.neighbours
-                    .iter()
-                    .map(|n| n + cell)
-                    .filter(|n| !self.walls.contains(n))
-                    .for_each(|n| { acc.insert(n); });
-                acc
-            });
-            superset.difference(room).count() == 1
-        });
+        let rooms = self.compute_dead_room_zones();
+        println!("delete {} rooms", rooms.len());
         for pos in rooms.iter().flat_map(|z| z) {
             changes = true;
             self.walls.insert(pos.clone());
@@ -206,17 +315,7 @@ where
     pub fn fill_dead_corridors(&mut self) -> bool {
         let mut changes = false;
         loop {
-            let mut corridors = self.compute_zones(|maze, cell| {
-                !maze.walls.contains(cell) &&
-                    maze.openings
-                        .iter()
-                        .filter(|opening| {
-                            opening.requires.iter().all(|o| {
-                                !self.walls.contains(&(cell.clone() + o))
-                            })
-                        })
-                        .count() <= 2
-            });
+            let mut corridors = self.compute_corridor_zones();
             corridors.retain(|corridor| {
                 corridor.iter().any(|cell| {
                     let neighbours_wall =
@@ -230,6 +329,7 @@ where
                     neighbours_wall >= self.neighbours.len() - 1
                 })
             });
+            println!("delete {} corridors", corridors.len());
             if corridors.len() == 0 {
                 break;
             }
@@ -871,17 +971,5 @@ impl ::std::fmt::Display for Maze<::na::U2> {
             write!(f, "\n")?;
         }
         write!(f, "\n")
-    }
-}
-
-impl Maze<::na::U2> {
-    pub fn wall(&self, x: isize, y: isize) -> bool {
-        self.walls.contains(&::na::Vector2::new(x, y))
-    }
-}
-
-impl Maze<::na::U3> {
-    pub fn wall(&self, x: isize, y: isize, z: isize) -> bool {
-        self.walls.contains(&::na::Vector3::new(x, y, z))
     }
 }

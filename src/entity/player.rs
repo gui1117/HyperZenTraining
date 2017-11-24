@@ -16,7 +16,7 @@ pub fn create_player<'a>(
     let pos = ::na::Isometry3::new(pos, ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2);
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[super::ALIVE_GROUP]);
+    group.set_membership(&[super::ALIVE_GROUP, super::PLAYER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     body.set_transformation(pos);
