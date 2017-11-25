@@ -38,7 +38,7 @@ pub fn create_bouncer<'a>(
     bouncers.insert(entity, ::component::Bouncer);
     momentums.insert(entity, {
         let mut momentum =
-            ::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, None);
+            ::component::Momentum::new(mass, velocity, time_to_reach_v_max, None, ang_damping, None);
         momentum.direction = ::na::Vector3::new_random().normalize();
         momentum
     });

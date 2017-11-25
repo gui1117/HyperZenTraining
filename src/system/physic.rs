@@ -33,6 +33,9 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             } else {
                 body.append_lin_force(direction_force);
             }
+            if let Some(ang_force) = momentum.ang_force {
+                body.append_ang_force(ang_force);
+            }
             body.set_ang_vel_internal(momentum.ang_damping * ang_vel);
 
             // TODO: gravity if not touching floor

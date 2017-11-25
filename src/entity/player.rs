@@ -32,7 +32,7 @@ pub fn create_player<'a>(
     aims.insert(entity, ::component::Aim::new());
     momentums.insert(
         entity,
-        ::component::Momentum::new(mass, velocity, time_to_reach_v_max, ang_damping, None),
+        ::component::Momentum::new(mass, velocity, time_to_reach_v_max, None, ang_damping, None),
     );
     super::create_weapon(
         entity,

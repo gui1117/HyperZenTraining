@@ -36,6 +36,25 @@ where
     D::Value: Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output = D::Value>
         + ::generic_array::ArrayLength<isize>,
 {
+    pub fn is_neighbouring_corridor(&self, cell: &::na::VectorN<isize, D>) -> bool {
+        self.neighbours
+            .iter()
+            .map(|n| n+cell)
+            .any(|n| self.is_corridor(&n))
+    }
+
+    pub fn is_corridor(&self, cell: &::na::VectorN<isize, D>) -> bool {
+        !self.walls.contains(cell) &&
+            self.openings
+                .iter()
+                .filter(|opening| {
+                    opening.requires.iter().all(|o| {
+                        !self.walls.contains(&(cell.clone() + o))
+                    })
+                })
+                .count() <= 2
+    }
+
     pub fn new_empty() -> Self {
         Maze {
             walls: HashSet::new(),
@@ -199,17 +218,7 @@ where
     }
 
     pub fn compute_corridor_zones(&self) -> Vec<HashSet<::na::VectorN<isize, D>>> {
-        self.compute_zones(|maze, cell| {
-            !maze.walls.contains(cell) &&
-                maze.openings
-                    .iter()
-                    .filter(|opening| {
-                        opening.requires.iter().all(|o| {
-                            !self.walls.contains(&(cell.clone() + o))
-                        })
-                    })
-                    .count() <= 2
-        })
+        self.compute_zones(|maze, cell| maze.is_corridor(cell))
     }
 
     /// Return all dead room with its entry corridor

@@ -56,6 +56,7 @@ pub fn create_avoider<'a>(
             mass,
             velocity,
             time_to_reach_v_max,
+            None,
             ang_damping,
             Some(pnt_to_com),
         ),

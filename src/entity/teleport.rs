@@ -1,5 +1,3 @@
-use alga::general::SubsetOf;
-
 pub fn create_teleport<'a>(
     pos: ::na::Isometry3<f32>,
     teleports: &mut ::specs::WriteStorage<'a, ::component::Teleport>,

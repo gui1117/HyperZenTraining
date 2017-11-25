@@ -109,6 +109,7 @@ impl ::specs::Component for Player {
 
 pub struct Momentum {
     pub ang_damping: f32,
+    pub ang_force: Option<::na::Vector3<f32>>,
     pub damping: f32,
     pub force: f32,
     pub direction: ::na::Vector3<f32>,
@@ -126,6 +127,7 @@ impl Momentum {
         mass: f32,
         velocity: f32,
         time_to_reach_v_max: f32,
+        ang_force: Option<::na::Vector3<f32>>,
         ang_damping: f32,
         pnt_to_com: Option<::na::Vector3<f32>>,
     ) -> Self {
@@ -136,6 +138,7 @@ impl Momentum {
             ang_damping,
             damping,
             force,
+            ang_force,
             direction: ::na::zero(),
             pnt_to_com,
         }

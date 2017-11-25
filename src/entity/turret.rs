@@ -39,6 +39,7 @@ pub fn create_turret<'a>(
             laser_mass,
             laser_velocity,
             laser_time_to_reach_v_max,
+            None,
             laser_ang_damping,
             None,
         ),
@@ -79,7 +80,7 @@ pub fn create_turret<'a>(
     let velocity = 1.0;
     let time_to_reach_v_max = 0.05;
     let ang_damping = 0.8;
-    let pnt_to_com = Some(::na::Vector3::new(0.0, 0.0, 1.0));
+    let pnt_to_com = None;
 
     let (primitive, groups) = ::graphics::Primitive::PitCube.instantiate();
     let color = ::graphics::color::PURPLE;
@@ -98,6 +99,7 @@ pub fn create_turret<'a>(
             mass,
             velocity,
             time_to_reach_v_max,
+            None,
             ang_damping,
             pnt_to_com,
         ),
