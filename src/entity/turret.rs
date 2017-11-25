@@ -27,7 +27,7 @@ pub fn create_turret<'a>(
     laser_body.set_collision_groups(laser_group);
 
     let laser_mass = 1.0 / laser_body.inv_mass();
-    let laser_velocity = 10.0;
+    let laser_velocity = 3.0;
     let laser_time_to_reach_v_max = 1.0;
     let laser_ang_damping = 0.8;
 

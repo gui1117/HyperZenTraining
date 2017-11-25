@@ -38,7 +38,7 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
                 .get(&physic_world)
                 .position();
 
-            momentum.ang_force = Some(pos.rotation.rotation_to(&::na::UnitQuaternion::rotation_between(&::na::Vector3::new(0.0, 0.0, 1.0), &(laser_pos.translation.vector-pos.translation.vector)).unwrap_or(::na::UnitQuaternion::new(::na::zero()))).scaled_axis());
+            momentum.ang_force = Some(pos.rotation.rotation_to(&::na::UnitQuaternion::rotation_between(&::na::Vector3::new(0.0, 0.0, 1.0), &(laser_pos.translation.vector-pos.translation.vector)).unwrap_or(::na::UnitQuaternion::new(::na::zero()))).scaled_axis()*5.0);
 
             let shoot_dir = (pos.rotation * ::na::Point3::new(0.0, 0.0, 1.0)).coords;
 

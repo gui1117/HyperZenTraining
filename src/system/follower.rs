@@ -23,7 +23,7 @@ impl<'a> ::specs::System<'a> for FollowPlayerSystem {
         for (_, body, momentum) in (&followers, &bodies, &mut momentums).join() {
             let pos = body.get(&physic_world).position().translation.vector;
             let vec = player_pos - pos;
-            // TODO: maybe not the right norm if too close
+
             momentum.direction = vec.normalize();
         }
     }
