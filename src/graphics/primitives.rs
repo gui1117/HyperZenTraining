@@ -525,7 +525,9 @@ pub mod primitive {
 
         pub fn reserve(&self, size: usize) -> Vec<Vec<u16>> {
             let groups_size = self.groups_size();
-            (0..size).map(|_| GROUP_COUNTER.instantiate(groups_size)).collect()
+            (0..size)
+                .map(|_| GROUP_COUNTER.instantiate(groups_size))
+                .collect()
         }
 
         pub fn instantiate(&self) -> (usize, Vec<u16>) {

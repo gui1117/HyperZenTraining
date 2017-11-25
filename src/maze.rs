@@ -65,7 +65,7 @@ where
     pub fn reduce(&mut self, size: isize) {
         assert!(size > 0);
         for &s in self.size.iter() {
-            assert!(s >= size*2);
+            assert!(s >= size * 2);
         }
         let dl = size * ::na::VectorN::<isize, D>::from_iterator((1..2).cycle());
         let mut new_walls = HashSet::new();
@@ -228,7 +228,12 @@ where
                 });
                 superset.difference(&room).next().unwrap().clone()
             };
-            for cell in corridors.iter().find(|corridor| corridor.contains(&opening)).unwrap().clone() {
+            for cell in corridors
+                .iter()
+                .find(|corridor| corridor.contains(&opening))
+                .unwrap()
+                .clone()
+            {
                 room.insert(cell);
             }
         }
@@ -243,7 +248,11 @@ where
     /// Filter allowed entry
     /// Return cell and its opening
     /// The vector returned may contains less than nbr cell if it can't dig further
-    pub fn dig_cells<F>(&mut self, nbr: usize, filter: F) -> Vec<(::na::VectorN<isize, D>, ::na::VectorN<isize, D>)>
+    pub fn dig_cells<F>(
+        &mut self,
+        nbr: usize,
+        filter: F,
+    ) -> Vec<(::na::VectorN<isize, D>, ::na::VectorN<isize, D>)>
     where
         F: Fn(&::na::VectorN<isize, D>) -> bool,
     {
@@ -254,11 +263,11 @@ where
 
         for i in 0..nbr {
             candidates.retain(|cell| {
-                self.neighbours.iter()
+                self.neighbours
+                    .iter()
                     .map(|n| n + cell)
                     .filter(|n| !self.walls.contains(n))
-                    .count() == 1 &&
-                    !self.is_on_border(cell)
+                    .count() == 1 && !self.is_on_border(cell)
             });
             if candidates.is_empty() {
                 return res;
@@ -266,7 +275,12 @@ where
             let choosen = Range::new(0, candidates.len()).ind_sample(&mut rng);
             let cell = candidates.swap_remove(choosen);
             self.walls.remove(&cell);
-            let opening = self.neighbours.iter().map(|n| n + cell.clone()).filter(|n| !self.walls.contains(n)).next().unwrap();
+            let opening = self.neighbours
+                .iter()
+                .map(|n| n + cell.clone())
+                .filter(|n| !self.walls.contains(n))
+                .next()
+                .unwrap();
             res.push((cell, opening));
         }
         res
@@ -388,7 +402,11 @@ where
 
     /// Generate partial reverse randomized_kruskal
     /// `https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_Kruskal.27s_algorithm`
-    pub fn kruskal(size: ::na::VectorN<isize, D>, percent: f64, bug: ::na::VectorN<isize, D>) -> Self {
+    pub fn kruskal(
+        size: ::na::VectorN<isize, D>,
+        percent: f64,
+        bug: ::na::VectorN<isize, D>,
+    ) -> Self {
         struct GridCell {
             wall: bool,
             group: usize,
@@ -551,11 +569,13 @@ where
     ) -> Vec<::na::VectorN<isize, D>> {
         let mut res = vec![];
 
-        let clip_start = center.iter()
+        let clip_start = center
+            .iter()
             .map(|c| (c - radius).max(0))
             .collect::<Vec<_>>();
 
-        let clip_end = center.iter()
+        let clip_end = center
+            .iter()
             .zip(self.size.iter())
             .map(|(c, s)| (c + radius).min(s - 1))
             .collect::<Vec<_>>();
@@ -578,7 +598,7 @@ where
                         }
                     }
                 }
-            },
+            }
             3 => {
                 for x in clip_start[0]..clip_end[0] + 1 {
                     for y in clip_start[1]..clip_end[1] + 1 {
@@ -610,7 +630,7 @@ where
                         }
                     }
                 }
-            },
+            }
             _ => unimplemented!(),
         }
         res

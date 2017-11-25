@@ -9,16 +9,19 @@ pub struct GameSystem {
 
 impl GameSystem {
     pub fn new() -> Self {
-        GameSystem {
-            init: false,
-        }
+        GameSystem { init: false }
     }
     pub fn run(&mut self, world: &mut ::specs::World) {
         if !self.init {
             self.init = true;
             self.create_level(world);
         }
-        if (&world.read::<::component::Teleport>(), &world.read::<::component::Proximitor>()).join().any(|(_, p)| !p.intersections.is_empty()) {
+        if (
+            &world.read::<::component::Teleport>(),
+            &world.read::<::component::Proximitor>(),
+        ).join()
+            .any(|(_, p)| !p.intersections.is_empty())
+        {
             world.delete_all();
             self.create_level(world);
         }

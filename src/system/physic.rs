@@ -53,9 +53,12 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
                     (&WorldObject::RigidBody(w1), &WorldObject::RigidBody(w2)) => {
                         let e1 = physic_world.rigid_body(w1);
                         let e2 = physic_world.rigid_body(w2);
-                        (::component::PhysicBody::entity(e1), ::component::PhysicBody::entity(e2))
-                    },
-                    _ => unreachable!()
+                        (
+                            ::component::PhysicBody::entity(e1),
+                            ::component::PhysicBody::entity(e2),
+                        )
+                    }
+                    _ => unreachable!(),
                 };
 
                 if let Some(contactor) = contactors.get_mut(entity_1) {
@@ -69,9 +72,21 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             }
 
             for event in physic_world.collision_world().proximity_events() {
-                if let &ProximityEvent { co1, co2, new_status: Proximity::Intersecting, .. } = event {
-                    let co1 = physic_world.collision_world().collision_object(co1).unwrap();
-                    let co2 = physic_world.collision_world().collision_object(co2).unwrap();
+                if let &ProximityEvent {
+                    co1,
+                    co2,
+                    new_status: Proximity::Intersecting,
+                    ..
+                } = event
+                {
+                    let co1 = physic_world
+                        .collision_world()
+                        .collision_object(co1)
+                        .unwrap();
+                    let co2 = physic_world
+                        .collision_world()
+                        .collision_object(co2)
+                        .unwrap();
                     // we can't just get e1 and e2 and check for each if there is a proximitor
                     // because the rigid body of eX may be involve in a proximity even if the
                     // proximitor is associated to eX sensor

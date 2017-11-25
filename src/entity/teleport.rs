@@ -9,7 +9,7 @@ pub fn create_teleport<'a>(
     entities: &::specs::Entities,
 ) {
     let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(0.4, 0.4, 0.0));
-    let pos = pos * ::na::Translation3::from_vector(::na::Vector3::new(0.0, 0.0, - 0.4));
+    let pos = pos * ::na::Translation3::from_vector(::na::Vector3::new(0.0, 0.0, -0.4));
 
     let mut group = ::nphysics::object::SensorCollisionGroups::new();
     group.set_whitelist(&[super::PLAYER_GROUP]);
