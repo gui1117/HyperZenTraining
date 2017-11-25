@@ -1,6 +1,7 @@
 use specs::Join;
 use util::ConvCoord;
 use std::collections::HashSet;
+use std::collections::HashMap;
 
 pub struct GameSystem {
     init: bool,
@@ -27,7 +28,7 @@ impl GameSystem {
         let mut maze;
         let mut cells_digged;
         loop {
-            maze = ::resource::Maze::kruskal(::na::Vector2::new(11, 11), 40.0, ::na::zero());
+            maze = ::resource::Maze::kruskal(::na::Vector2::new(11, 11), 20.0, ::na::zero());
             println!("{}", maze);
             maze.reduce(1);
             println!("{}", maze);
@@ -49,7 +50,10 @@ impl GameSystem {
             }
         }
         println!("{}", maze);
+
+        let mut maze_colors = HashMap::new();
         let teleport_cell = cells_digged.first().unwrap();
+        maze_colors.insert(teleport_cell.0, ::graphics::color::GREEN);
 
         world.add_resource(::resource::GameEvents(vec![]));
         world.add_resource(::resource::PhysicWorld::new());
@@ -57,6 +61,7 @@ impl GameSystem {
         world.add_resource(::resource::DepthCoef(1.0));
 
         ::entity::create_maze_walls(
+            &maze_colors,
             &mut world.write(),
             &mut world.write(),
             &mut world.write_resource(),
@@ -72,9 +77,7 @@ impl GameSystem {
             &mut world.write(),
             &mut world.write(),
             &mut world.write(),
-            &mut world.write(),
             &mut world.write_resource(),
-            &world.read_resource(),
             &world.read_resource(),
         );
         // ::entity::create_avoider(
