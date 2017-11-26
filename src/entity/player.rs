@@ -39,6 +39,7 @@ pub fn create_player<'a>(
         weapon_anchors,
         dynamic_huds,
         dynamic_graphics_assets,
+        config,
         entities,
     );
 

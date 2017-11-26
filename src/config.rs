@@ -17,6 +17,7 @@ pub struct Config {
     pub avoider_time_to_reach_vmax: f32,
     pub avoider_ang_damping: f32,
     pub avoider_color: ::graphics::Color,
+    pub avoider_avoid_norm: f32,
 
     pub bouncer_size: f32,
     pub bouncer_velocity: f32,
@@ -54,6 +55,16 @@ pub struct Config {
 
     pub wall_color: ::graphics::Color,
     pub floor_ceil_color: ::graphics::Color,
+
+    pub weapon_reload_time: f32,
+    pub weapon_bullet_nbr: usize,
+    pub weapon_bullet_radius: f32,
+    pub weapon_bullet_length: f32,
+    pub weapon_bullet_x: f32,
+    pub weapon_bullet_dx: f32,
+    pub weapon_bullet_color: ::graphics::Color,
+    pub weapon_six_color: ::graphics::Color,
+    pub weapon_angle_color: ::graphics::Color,
 }
 
 impl Config {

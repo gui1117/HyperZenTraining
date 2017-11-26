@@ -45,6 +45,7 @@ pub fn create_weapon<'a>(
     weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
     dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
+    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let coef = 3.0;
@@ -63,16 +64,15 @@ pub fn create_weapon<'a>(
     let bar_y_radius = 0.0022 * coef;
     let bar_z_radius = 0.0014 * coef;
 
-    let bullet_radius = 0.006 * coef;
-    let bullet_length = 0.0005 * coef;
-    let bullet_x = 0.035 * coef;
-    let bullet_dx = 0.003 * coef;
-    let bullet_nbr = 5;
+    let bullet_radius = config.weapon_bullet_radius * coef;
+    let bullet_length = config.weapon_bullet_length * coef;
+    let bullet_x = config.weapon_bullet_x * coef;
+    let bullet_dx = config.weapon_bullet_dx * coef;
+    let bullet_nbr = config.weapon_bullet_nbr;
     let mut bullets = vec![];
 
     // Six
     let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
-    let color = ::graphics::Color::Red;
     let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0)) *
         ::graphics::resizer(six_radius, six_radius, six_length);
 
@@ -84,7 +84,7 @@ pub fn create_weapon<'a>(
         ::component::DynamicGraphicsAssets::new(
             primitive,
             groups,
-            color,
+            config.weapon_six_color,
             primitive_trans,
         ),
     );
@@ -92,7 +92,6 @@ pub fn create_weapon<'a>(
     // Bullet
     for i in 0..bullet_nbr {
         let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
-        let color = ::graphics::Color::PaleBlue;
         let primitive_trans = ::na::Isometry3::new(
             ::na::Vector3::new(bullet_x + bullet_dx * i as f32, 0.0, 0.0),
             ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
@@ -108,7 +107,7 @@ pub fn create_weapon<'a>(
             ::component::DynamicGraphicsAssets::new(
                 primitive,
                 groups,
-                color,
+                config.weapon_bullet_color,
                 primitive_trans,
             ),
         );
@@ -118,7 +117,6 @@ pub fn create_weapon<'a>(
     for angle in (0..3usize).map(|i| i as f32 * 2.0 * FRAC_PI_3) {
         // Bar
         let (primitive, groups) = ::graphics::Primitive::Cube.instantiate();
-        let color = ::graphics::Color::PalePurple;
         let primitive_trans = ::na::Isometry3::new(
             ::na::Vector3::new(
                 bar_x_pos,
@@ -137,7 +135,7 @@ pub fn create_weapon<'a>(
             ::component::DynamicGraphicsAssets::new(
                 primitive,
                 groups,
-                color,
+                config.weapon_angle_color,
                 primitive_trans,
             ),
         );
@@ -152,5 +150,5 @@ pub fn create_weapon<'a>(
             bullets,
         },
     );
-    shooters.insert(anchor, ::component::Shooter::new(0.5, bullet_nbr));
+    shooters.insert(anchor, ::component::Shooter::new(config.weapon_reload_time, bullet_nbr));
 }
