@@ -15,7 +15,7 @@ mod turret;
 mod wall;
 mod maze;
 
-pub use self::generator::{create_bouncer_generator, create_avoider_generator};
+pub use self::generator::create_generator;
 pub use self::teleport::create_teleport;
 pub use self::weapon::{create_light_ray, create_weapon};
 pub use self::player::create_player;

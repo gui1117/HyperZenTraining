@@ -1,5 +1,5 @@
 pub fn create_player<'a>(
-    pos: ::na::Vector3<f32>,
+    pos: ::na::Isometry3<f32>,
     players: &mut ::specs::WriteStorage<'a, ::component::Player>,
     aims: &mut ::specs::WriteStorage<'a, ::component::Aim>,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
@@ -14,7 +14,6 @@ pub fn create_player<'a>(
     entities: &::specs::Entities,
 ) {
     let shape = ::ncollide::shape::Cylinder::new(config.player_height, config.player_radius);
-    let pos = ::na::Isometry3::new(pos, ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2);
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
     group.set_membership(&[super::ALIVE_GROUP, super::PLAYER_GROUP]);
