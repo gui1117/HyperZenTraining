@@ -1,3 +1,25 @@
+pub fn create_bouncer_w(
+    pos: ::na::Vector3<f32>,
+    eraser: bool,
+    world: &mut ::specs::World,
+) {
+    create_bouncer(
+        pos,
+        eraser,
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write_resource(),
+        &world.read_resource(),
+        &world.read_resource()
+    );
+}
+
 pub fn create_bouncer<'a>(
     pos: ::na::Vector3<f32>,
     eraser: bool,

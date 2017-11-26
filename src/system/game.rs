@@ -89,106 +89,39 @@ impl GameSystem {
 
         world.add_resource(maze);
 
-        ::entity::create_maze_walls(
-            &maze_colors,
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write_resource(),
-            &world.read_resource(),
-            &world.read_resource(),
-            &world.read_resource(),
-            &world.read_resource(),
-        );
-        ::entity::create_teleport(
+        ::entity::create_maze_walls_w(&maze_colors, world);
+        ::entity::create_teleport_w(
             ::na::Isometry3::new(
                 teleport_end_cell.0.conv(),
                 (teleport_end_cell.1 - teleport_end_cell.0).axis_angle(),
             ),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write_resource(),
-            &world.read_resource(),
-            &world.read_resource(),
+            world,
         );
-        ::entity::create_player(
+        ::entity::create_player_w(
             ::na::Isometry3::new(
                 teleport_start_cell.0.conv(),
                 (teleport_start_cell.1 - teleport_start_cell.0).axis_angle(),
             ),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write(),
-            &mut world.write_resource(),
-            &world.read_resource(),
-            &world.read_resource(),
+            world,
         );
         for i in 0..turrets {
-            ::entity::create_turret(
-                {
-                    let index = Range::new(0, rooms_cells[i].len()).ind_sample(&mut rng);
-                    let cell = rooms_cells[i].iter().skip(index).next().unwrap().clone();
-                    rooms_cells[i].remove(&cell);
-                    cell.conv()
-                },
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write_resource(),
-                &world.read_resource(),
-                &world.read_resource(),
-            );
+            let index = Range::new(0, rooms_cells[i].len()).ind_sample(&mut rng);
+            let cell = rooms_cells[i].iter().skip(index).next().unwrap().clone();
+            rooms_cells[i].remove(&cell);
+            let pos = cell.conv();
+            ::entity::create_turret_w(pos, world);
         }
 
         let mut rooms_cells = rooms_cells.drain(..).flat_map(|r| r.into_iter()).collect::<Vec<_>>();
         for black in (0..avoiders).map(|_| false).chain((0..black_avoiders).map(|_| true)) {
-            ::entity::create_avoider(
-                {
-                    let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
-                    rooms_cells.swap_remove(index).conv()
-                },
-                black,
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write_resource(),
-                &world.read_resource(),
-                &world.read_resource()
-            );
+            let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
+            let pos = rooms_cells.swap_remove(index).conv();
+            ::entity::create_avoider_w(pos, black, world);
         }
         for black in (0..bouncers).map(|_| false).chain((0..black_bouncers).map(|_| true)) {
-            ::entity::create_bouncer(
-                {
-                    let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
-                    rooms_cells.swap_remove(index).conv()
-                },
-                black,
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write(),
-                &mut world.write_resource(),
-                &world.read_resource(),
-                &world.read_resource()
-            );
+            let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
+            let pos = rooms_cells.swap_remove(index).conv();
+            ::entity::create_bouncer_w(pos, black, world);
         }
     }
 }

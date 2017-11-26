@@ -1,5 +1,24 @@
 use std::f32::consts::FRAC_PI_2;
 
+pub fn create_turret_w(
+    pos: ::na::Vector3<f32>,
+    world: &mut ::specs::World,
+) {
+    create_turret(
+        pos,
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write_resource(),
+        &world.read_resource(),
+        &world.read_resource(),
+    );
+}
+
 pub fn create_turret<'a>(
     pos: ::na::Vector3<f32>,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,

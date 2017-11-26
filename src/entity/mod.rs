@@ -16,11 +16,11 @@ mod wall;
 mod maze;
 
 pub use self::generator::create_generator;
-pub use self::teleport::create_teleport;
+pub use self::teleport::{create_teleport, create_teleport_w};
 pub use self::weapon::{create_light_ray, create_weapon};
-pub use self::player::create_player;
-pub use self::bouncer::create_bouncer;
-pub use self::avoider::create_avoider;
-pub use self::turret::create_turret;
+pub use self::player::{create_player, create_player_w};
+pub use self::bouncer::{create_bouncer, create_bouncer_w};
+pub use self::avoider::{create_avoider, create_avoider_w};
+pub use self::turret::{create_turret, create_turret_w};
 pub use self::wall::{create_wall_side, create_floor_ceil};
-pub use self::maze::create_maze_walls;
+pub use self::maze::{create_maze_walls, create_maze_walls_w};

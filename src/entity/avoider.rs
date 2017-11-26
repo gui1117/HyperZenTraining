@@ -1,3 +1,24 @@
+pub fn create_avoider_w(
+    pos: ::na::Vector3<f32>,
+    eraser: bool,
+    world: &mut ::specs::World
+) {
+    create_avoider(
+        pos,
+        eraser,
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write_resource(),
+        &world.read_resource(),
+        &world.read_resource()
+    )
+}
+
 // IDEA: mabye make it turn on itself
 pub fn create_avoider<'a>(
     pos: ::na::Vector3<f32>,

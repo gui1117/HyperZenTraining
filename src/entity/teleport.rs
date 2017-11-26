@@ -1,3 +1,17 @@
+pub fn create_teleport_w(
+    pos: ::na::Isometry3<f32>,
+    world: &mut ::specs::World,
+) {
+    create_teleport(
+        pos,
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write_resource(),
+        &world.read_resource(),
+        &world.read_resource(),
+    );
+}
 pub fn create_teleport<'a>(
     pos: ::na::Isometry3<f32>,
     teleports: &mut ::specs::WriteStorage<'a, ::component::Teleport>,

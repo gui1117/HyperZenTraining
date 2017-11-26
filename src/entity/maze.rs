@@ -1,6 +1,22 @@
 use std::collections::HashMap;
 use std::f32::consts::FRAC_PI_2;
 
+pub fn create_maze_walls_w(
+    colors: &HashMap<::na::Vector2<isize>, ::graphics::Color>,
+    world: &mut ::specs::World,
+) {
+    create_maze_walls(
+        &colors,
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write_resource(),
+        &world.read_resource(),
+        &world.read_resource(),
+        &world.read_resource(),
+        &world.read_resource(),
+    );
+}
+
 pub fn create_maze_walls<'a>(
     colors: &HashMap<::na::Vector2<isize>, ::graphics::Color>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,

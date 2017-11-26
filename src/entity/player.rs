@@ -1,3 +1,24 @@
+pub fn create_player_w(
+    pos: ::na::Isometry3<f32>,
+    world: &mut ::specs::World,
+) {
+    create_player(
+        pos,
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
+        &mut world.write_resource(),
+        &world.read_resource(),
+        &world.read_resource(),
+    );
+}
+
 pub fn create_player<'a>(
     pos: ::na::Isometry3<f32>,
     players: &mut ::specs::WriteStorage<'a, ::component::Player>,
