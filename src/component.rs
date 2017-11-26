@@ -467,10 +467,18 @@ impl ::specs::Component for Turret {
 }
 
 #[derive(Default)]
-pub struct FollowPlayer;
+pub struct FollowPlayer {
+    pub amortization: f32
+}
 
 impl ::specs::Component for FollowPlayer {
-    type Storage = ::specs::NullStorage<Self>;
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl FollowPlayer {
+    pub fn new(amortization: f32) -> Self {
+        FollowPlayer { amortization }
+    }
 }
 
 #[derive(Default)]

@@ -20,11 +20,15 @@ impl<'a> ::specs::System<'a> for FollowPlayerSystem {
             .translation
             .vector;
 
-        for (_, body, momentum) in (&followers, &bodies, &mut momentums).join() {
+        for (follower, body, momentum) in (&followers, &bodies, &mut momentums).join() {
             let pos = body.get(&physic_world).position().translation.vector;
             let vec = player_pos - pos;
 
-            momentum.direction = vec.normalize();
+            momentum.direction = if vec.norm() < follower.amortization {
+                vec/follower.amortization
+            } else {
+                vec.normalize()
+            };
         }
     }
 }

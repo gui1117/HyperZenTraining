@@ -27,12 +27,13 @@ pub fn create_turret<'a>(
     laser_body.set_collision_groups(laser_group);
 
     let laser_mass = 1.0 / laser_body.inv_mass();
-    let laser_velocity = 3.0;
-    let laser_time_to_reach_v_max = 1.0;
+    let laser_velocity = 10.0;
+    let laser_time_to_reach_v_max = 0.1;
     let laser_ang_damping = 0.8;
+    let laser_amortization = 2.0;
 
     let laser_physic_entity = entities.create();
-    followers.insert(laser_physic_entity, ::component::FollowPlayer);
+    followers.insert(laser_physic_entity, ::component::FollowPlayer::new(laser_amortization));
     momentums.insert(
         laser_physic_entity,
         ::component::Momentum::new(
