@@ -393,7 +393,7 @@ where
                         !self.walls.contains(&(o + cell.clone()))
                     })
                     {
-                        res.push((opening.cell.clone(), opening.cost));
+                        res.push((opening.cell.clone() + cell, opening.cost));
                     }
                 }
                 res
