@@ -487,3 +487,21 @@ pub struct Teleport;
 impl ::specs::Component for Teleport {
     type Storage = ::specs::NullStorage<Self>;
 }
+
+pub enum GeneratedEntity {
+    Avoider,
+    Bouncer,
+}
+
+pub struct Generator {
+    pub pos: ::na::Vector3<f32>,
+    pub entity: GeneratedEntity,
+    pub salvo: usize,
+    pub timer: f32,
+    pub time_between_salvo: f32,
+    pub black_probability: f32,
+}
+
+impl ::specs::Component for Generator {
+    type Storage = ::specs::VecStorage<Self>;
+}

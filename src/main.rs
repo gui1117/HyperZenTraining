@@ -105,6 +105,7 @@ fn main() {
     let mut world = specs::World::new();
     world.register::<::component::Player>();
     world.register::<::component::Teleport>();
+    world.register::<::component::Generator>();
     world.register::<::component::Shooter>();
     world.register::<::component::WeaponAnimation>();
     world.register::<::component::WeaponAnchor>();
@@ -143,6 +144,7 @@ fn main() {
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::FollowPlayerSystem, "follower_control", &[])
         .add(::system::TurretControlSystem::new(), "turret_control", &[])
+        .add(::system::GeneratorSystem, "generator", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
         // .add(::system::MazeMasterSystem, "maze_master", &[])
         .add(::system::PhysicSystem, "physic", &[])

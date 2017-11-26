@@ -43,6 +43,7 @@ impl GameSystem {
     fn create_level(&self, world: &mut ::specs::World) {
         let mut rng = ::rand::thread_rng();
         let mut maze;
+        let to_dig = 1;
         let mut cells_digged;
         let mut rooms_cells;
         loop {
@@ -61,7 +62,6 @@ impl GameSystem {
             let dead_rooms = maze.compute_dead_room_and_corridor_zones();
             let dead_rooms_cells: HashSet<_> = dead_rooms.iter().flat_map(|r| r.iter()).collect();
 
-            let to_dig = 1;
             cells_digged = maze.dig_cells(to_dig, |cell| !dead_rooms_cells.contains(cell));
             if cells_digged.len() != to_dig {
                 continue;
@@ -82,8 +82,22 @@ impl GameSystem {
 
         let mut maze_colors = HashMap::new();
 
-        let teleport_cell = cells_digged.first().unwrap();
+        let teleport_cell = cells_digged.pop().unwrap();
         maze_colors.insert(teleport_cell.0, ::graphics::color::GREEN);
+
+        // TODO
+        if false {
+            ::entity::create_bouncer_generator(
+                ::na::zero(),
+                &mut world.write(),
+                &world.read_resource(),
+            );
+            ::entity::create_avoider_generator(
+                ::na::zero(),
+                &mut world.write(),
+                &world.read_resource(),
+            );
+        }
 
         world.add_resource(::resource::GameEvents(vec![]));
         world.add_resource(::resource::PhysicWorld::new());
