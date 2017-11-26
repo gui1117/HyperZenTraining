@@ -4,11 +4,12 @@ pub fn create_wall_side<'a>(
     pos: ::na::Isometry3<f32>,
     x_radius: f32,
     y_radius: f32,
-    color: Option<u16>,
+    color: Option<::graphics::Color>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
+    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
@@ -33,7 +34,7 @@ pub fn create_wall_side<'a>(
         entity,
         primitive,
         groups,
-        color.unwrap_or(::graphics::color::PALE_RED),
+        color.unwrap_or(config.wall_color),
         world_trans,
         static_draws,
         graphics,
@@ -47,6 +48,7 @@ pub fn create_floor_ceil<'a>(
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
+    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
@@ -73,7 +75,7 @@ pub fn create_floor_ceil<'a>(
         entity,
         primitive,
         groups,
-        ::graphics::color::PALE_BROWN,
+        config.floor_ceil_color,
         world_trans,
         static_draws,
         graphics,

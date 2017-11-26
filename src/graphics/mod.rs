@@ -30,7 +30,7 @@ mod primitives;
 mod colors;
 
 pub use self::primitives::primitive::Primitive;
-pub use self::colors::color;
+pub use self::colors::Color;
 pub use self::primitives::primitive::GROUP_COUNTER_SIZE;
 
 // TODO: use new_nonuniform_scaling

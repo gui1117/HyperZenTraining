@@ -17,11 +17,12 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
      ::specs::WriteStorage<'a, ::component::Contactor>,
      ::specs::Fetch<'a, ::resource::Maze>,
      ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+     ::specs::Fetch<'a, ::resource::Config>,
      ::specs::Entities<'a>);
 
     fn run(
         &mut self,
-        (players, mut bodies, mut momentums, mut avoiders, mut bouncers, mut dynamic_erasers, mut dynamic_draws, mut dynamic_graphics_assets, mut lives, mut contactors, maze, mut physic_world, entities): Self::SystemData,
+        (players, mut bodies, mut momentums, mut avoiders, mut bouncers, mut dynamic_erasers, mut dynamic_draws, mut dynamic_graphics_assets, mut lives, mut contactors, maze, mut physic_world, config, entities): Self::SystemData,
 ){
         let avoider_population = 10;
         let bouncer_population = 10;
@@ -90,6 +91,7 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
                 &mut dynamic_graphics_assets,
                 &mut lives,
                 &mut physic_world,
+                &config,
                 &entities,
             );
         }
@@ -109,6 +111,7 @@ impl<'a> ::specs::System<'a> for MazeMasterSystem {
                 &mut lives,
                 &mut contactors,
                 &mut physic_world,
+                &config,
                 &entities,
             );
         }

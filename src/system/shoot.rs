@@ -41,7 +41,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     dynamic_assets
                         .get_mut(animation.bullets[shooter.bullets - 1])
                         .unwrap()
-                        .color = ::graphics::color::PALE_BLUE;
+                        .color = ::graphics::Color::PaleBlue;
                 }
             }
 
@@ -52,7 +52,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                 dynamic_assets
                     .get_mut(animation.bullets[shooter.bullets])
                     .unwrap()
-                    .color = ::graphics::color::DARK_BLUE;
+                    .color = ::graphics::Color::DarkBlue;
 
                 let body_pos = body.get(&physic_world).position().clone();
 

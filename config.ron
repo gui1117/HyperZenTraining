@@ -1,4 +1,47 @@
 Config(
+    avoider_size: 0.1,
+    avoider_velocity: 5.5,
+    avoider_time_to_reach_vmax: 1.0,
+    avoider_ang_damping: 0.8,
+    avoider_color: Green,
+
+    bouncer_size: 0.05,
+    bouncer_velocity: 1.0,
+    bouncer_time_to_reach_vmax: 0.05,
+    bouncer_ang_damping: 0.8,
+    bouncer_color: Blue,
+
+    avoider_generator_salvo: 4,
+    avoider_generator_black_probability: 0.0,
+    avoider_generator_time_between_salvo: 1.0,
+    bouncer_generator_salvo: 1,
+    bouncer_generator_black_probability: 0.0,
+    bouncer_generator_time_between_salvo: 1.0,
+
+    player_height: 0.4,
+    player_radius: 0.1,
+    player_velocity: 10.0,
+    player_time_to_reach_vmax: 0.1,
+    player_ang_damping: 0.0,
+
+    teleport_dl: -0.4,
+
+    laser_size: 0.01,
+    laser_velocity: 10.0,
+    laser_time_to_reach_vmax: 0.1,
+    laser_ang_damping: 0.8,
+    laser_amortization: 2.0,
+    laser_color: Red,
+
+    turret_size: 0.15,
+    turret_velocity: 1.0,
+    turret_time_to_reach_vmax: 0.05,
+    turret_ang_damping: 0.8,
+    turret_color: Purple,
+
+    wall_color: PaleRed,
+    floor_ceil_color: PaleBrown,
+
     fps: 60,
     mouse_sensibility: 0.001,
     eraser_time: 0.6,

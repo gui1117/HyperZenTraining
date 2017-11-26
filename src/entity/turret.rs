@@ -10,6 +10,7 @@ pub fn create_turret<'a>(
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
     followers: &mut ::specs::WriteStorage<'a, ::component::FollowPlayer>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     // Create laser
@@ -27,64 +28,51 @@ pub fn create_turret<'a>(
     laser_body.set_collision_groups(laser_group);
 
     let laser_mass = 1.0 / laser_body.inv_mass();
-    let laser_velocity = 10.0;
-    let laser_time_to_reach_v_max = 0.1;
-    let laser_ang_damping = 0.8;
-    let laser_amortization = 2.0;
 
     let laser_physic_entity = entities.create();
-    followers.insert(laser_physic_entity, ::component::FollowPlayer::new(laser_amortization));
+    followers.insert(laser_physic_entity, ::component::FollowPlayer::new(config.laser_amortization));
     momentums.insert(
         laser_physic_entity,
         ::component::Momentum::new(
             laser_mass,
-            laser_velocity,
-            laser_time_to_reach_v_max,
+            config.laser_velocity,
+            config.laser_time_to_reach_vmax,
             None,
-            laser_ang_damping,
+            config.laser_ang_damping,
             None,
         ),
     );
     ::component::PhysicBody::add(laser_physic_entity, laser_body, bodies, physic_world);
 
     let (laser_primitive, laser_groups) = ::graphics::Primitive::Cylinder.instantiate();
-    let laser_color = ::graphics::color::RED;
     let laser_draw_entity = entities.create();
     dynamic_graphics_assets.insert(
         laser_draw_entity,
         ::component::DynamicGraphicsAssets::new(
             laser_primitive,
             laser_groups,
-            laser_color,
+            config.laser_color,
             ::na::one(),
         ),
     );
     dynamic_draws.insert(laser_draw_entity, ::component::DynamicDraw);
 
     // Create turret
-    let size = 0.15;
+    let primitive_trans = ::graphics::resizer(config.turret_size, config.turret_size, config.turret_size);
 
-    let primitive_trans = ::graphics::resizer(size, size, size);
-
-    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(size, size, size));
+    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(config.turret_size, config.turret_size, config.turret_size));
     let trans = ::na::Isometry3::new(pos, ::na::Vector3::new(0.0, FRAC_PI_2, 0.0));
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
     group.set_membership(&[super::ALIVE_GROUP, super::MONSTER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 10.0, 0.0, 0.0);
+    let mass = 1.0 / body.inv_mass();
 
     body.set_transformation(trans);
     body.set_collision_groups(group);
 
-    let mass = 1.0 / body.inv_mass();
-    let velocity = 1.0;
-    let time_to_reach_v_max = 0.05;
-    let ang_damping = 0.8;
-    let pnt_to_com = None;
-
     let (primitive, groups) = ::graphics::Primitive::PitCube.instantiate();
-    let color = ::graphics::color::PURPLE;
 
     let entity = entities.create();
     turrets.insert(
@@ -98,11 +86,11 @@ pub fn create_turret<'a>(
         entity,
         ::component::Momentum::new(
             mass,
-            velocity,
-            time_to_reach_v_max,
+            config.turret_velocity,
+            config.turret_time_to_reach_vmax,
             None,
-            ang_damping,
-            pnt_to_com,
+            config.turret_ang_damping,
+            None,
         ),
     );
 
@@ -111,7 +99,7 @@ pub fn create_turret<'a>(
         ::component::DynamicGraphicsAssets::new(
             primitive,
             groups,
-            color,
+            config.turret_color,
             primitive_trans,
         ),
     );

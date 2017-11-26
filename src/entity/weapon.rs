@@ -12,7 +12,7 @@ pub fn create_light_ray<'a>(
     entities: &::specs::Entities,
 ) {
     let (primitive, groups) = ::graphics::Primitive::Cylinder.instantiate();
-    let color = ::graphics::color::YELLOW;
+    let color = ::graphics::Color::Yellow;
     let primitive_trans = {
         let i = ::na::Translation::from_vector((from + to) / 2.0) *
             ::na::Rotation3::rotation_between(&::na::Vector3::new(1.0, 0.0, 0.0), &(to - from))
@@ -72,7 +72,7 @@ pub fn create_weapon<'a>(
 
     // Six
     let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
-    let color = ::graphics::color::RED;
+    let color = ::graphics::Color::Red;
     let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0)) *
         ::graphics::resizer(six_radius, six_radius, six_length);
 
@@ -92,7 +92,7 @@ pub fn create_weapon<'a>(
     // Bullet
     for i in 0..bullet_nbr {
         let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
-        let color = ::graphics::color::PALE_BLUE;
+        let color = ::graphics::Color::PaleBlue;
         let primitive_trans = ::na::Isometry3::new(
             ::na::Vector3::new(bullet_x + bullet_dx * i as f32, 0.0, 0.0),
             ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
@@ -118,7 +118,7 @@ pub fn create_weapon<'a>(
     for angle in (0..3usize).map(|i| i as f32 * 2.0 * FRAC_PI_3) {
         // Bar
         let (primitive, groups) = ::graphics::Primitive::Cube.instantiate();
-        let color = ::graphics::color::PALE_PURPLE;
+        let color = ::graphics::Color::PalePurple;
         let primitive_trans = ::na::Isometry3::new(
             ::na::Vector3::new(
                 bar_x_pos,

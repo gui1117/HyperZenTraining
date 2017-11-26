@@ -83,7 +83,7 @@ impl GameSystem {
         let mut maze_colors = HashMap::new();
 
         let teleport_cell = cells_digged.pop().unwrap();
-        maze_colors.insert(teleport_cell.0, ::graphics::color::GREEN);
+        maze_colors.insert(teleport_cell.0, ::graphics::Color::Green);
 
         // TODO
         if false {
@@ -91,10 +91,12 @@ impl GameSystem {
                 ::na::zero(),
                 &mut world.write(),
                 &world.read_resource(),
+                &world.read_resource(),
             );
             ::entity::create_avoider_generator(
                 ::na::zero(),
                 &mut world.write(),
+                &world.read_resource(),
                 &world.read_resource(),
             );
         }
@@ -112,6 +114,7 @@ impl GameSystem {
             &world.read_resource(),
             &world.read_resource(),
             &world.read_resource(),
+            &world.read_resource(),
         );
         ::entity::create_teleport(
             ::na::Isometry3::new(
@@ -122,6 +125,7 @@ impl GameSystem {
             &mut world.write(),
             &mut world.write(),
             &mut world.write_resource(),
+            &world.read_resource(),
             &world.read_resource(),
         );
         ::entity::create_turret(
@@ -139,6 +143,7 @@ impl GameSystem {
             &mut world.write(),
             &mut world.write(),
             &mut world.write_resource(),
+            &world.read_resource(),
             &world.read_resource(),
         );
         // ::entity::create_avoider(
@@ -183,6 +188,7 @@ impl GameSystem {
             &mut world.write(),
             &mut world.write(),
             &mut world.write_resource(),
+            &world.read_resource(),
             &world.read_resource(),
         );
 

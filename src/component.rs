@@ -146,7 +146,7 @@ impl Momentum {
 }
 
 pub struct StaticDraw {
-    pub color: u16,
+    pub color: ::graphics::Color,
     pub groups: Vec<u16>,
     pub primitive: usize,
     pub set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>, ((), PersistentDescriptorSetBuf<CpuBufferPoolSubbuffer<shader::draw1_vs::ty::World, Arc<StdMemoryPool>>>)>>,
@@ -161,7 +161,7 @@ impl StaticDraw {
         entity: ::specs::Entity,
         primitive: usize,
         groups: Vec<u16>,
-        color: u16,
+        color: ::graphics::Color,
         world_trans: ::graphics::shader::draw1_vs::ty::World,
         static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
         graphics: &::specs::Fetch<'a, ::resource::Graphics>,
@@ -214,7 +214,7 @@ impl ::specs::Component for WeaponAnimation {
 pub struct DynamicGraphicsAssets {
     pub primitive: usize,
     pub groups: Vec<u16>,
-    pub color: u16,
+    pub color: ::graphics::Color,
     pub primitive_trans: ::na::Transform3<f32>,
     pub world_trans: ::graphics::shader::draw1_vs::ty::World,
 }
@@ -227,7 +227,7 @@ impl DynamicGraphicsAssets {
     pub fn new(
         primitive: usize,
         groups: Vec<u16>,
-        color: u16,
+        color: ::graphics::Color,
         primitive_trans: ::na::Transform3<f32>,
     ) -> Self {
         DynamicGraphicsAssets {

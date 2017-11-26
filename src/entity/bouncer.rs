@@ -10,13 +10,12 @@ pub fn create_bouncer<'a>(
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
     contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
-    let size = 0.05;
+    let primitive_trans = ::graphics::resizer(config.bouncer_size, config.bouncer_size, config.bouncer_size);
 
-    let primitive_trans = ::graphics::resizer(size, size, size);
-
-    let shape = ::ncollide::shape::Ball3::new(size);
+    let shape = ::ncollide::shape::Ball3::new(config.bouncer_size);
     let pos = ::na::Isometry3::new(pos, ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
@@ -24,21 +23,17 @@ pub fn create_bouncer<'a>(
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
-    let velocity = 1.0;
-    let time_to_reach_v_max = 0.05;
-    let ang_damping = 0.8;
 
     body.set_transformation(pos);
     body.set_collision_groups(group);
 
     let (primitive, groups) = ::graphics::Primitive::Sphere.instantiate();
-    let color = ::graphics::color::BLUE;
 
     let entity = entities.create();
     bouncers.insert(entity, ::component::Bouncer);
     momentums.insert(entity, {
         let mut momentum =
-            ::component::Momentum::new(mass, velocity, time_to_reach_v_max, None, ang_damping, None);
+            ::component::Momentum::new(mass, config.bouncer_velocity, config.bouncer_time_to_reach_vmax, None, config.bouncer_ang_damping, None);
         momentum.direction = ::na::Vector3::new_random().normalize();
         momentum
     });
@@ -48,7 +43,7 @@ pub fn create_bouncer<'a>(
         ::component::DynamicGraphicsAssets::new(
             primitive,
             groups,
-            color,
+            config.bouncer_color,
             primitive_trans,
         ),
     );

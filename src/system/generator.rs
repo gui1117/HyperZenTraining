@@ -43,6 +43,7 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
                             &mut lives,
                             &mut contactors,
                             &mut physic_world,
+                            &config,
                             &entities,
                         ),
                         GeneratedEntity::Avoider => ::entity::create_avoider(
@@ -56,6 +57,7 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
                             &mut dynamic_graphics_assets,
                             &mut lives,
                             &mut physic_world,
+                            &config,
                             &entities,
                         ),
                     }

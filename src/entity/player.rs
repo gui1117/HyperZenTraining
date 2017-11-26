@@ -10,9 +10,10 @@ pub fn create_player<'a>(
     dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
-    let shape = ::ncollide::shape::Cylinder::new(0.4, 0.1);
+    let shape = ::ncollide::shape::Cylinder::new(config.player_height, config.player_radius);
     let pos = ::na::Isometry3::new(pos, ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2);
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
@@ -23,16 +24,13 @@ pub fn create_player<'a>(
     body.set_collision_groups(group);
 
     let mass = 1.0 / body.inv_mass();
-    let velocity = 10.0;
-    let time_to_reach_v_max = 0.1;
-    let ang_damping = 0.0;
 
     let entity = entities.create();
     players.insert(entity, ::component::Player);
     aims.insert(entity, ::component::Aim::new());
     momentums.insert(
         entity,
-        ::component::Momentum::new(mass, velocity, time_to_reach_v_max, None, ang_damping, None),
+        ::component::Momentum::new(mass, config.player_velocity, config.player_time_to_reach_vmax, None, config.player_ang_damping, None),
     );
     super::create_weapon(
         entity,

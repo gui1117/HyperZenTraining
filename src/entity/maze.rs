@@ -2,12 +2,13 @@ use std::collections::HashMap;
 use std::f32::consts::FRAC_PI_2;
 
 pub fn create_maze_walls<'a>(
-    colors: &HashMap<::na::Vector2<isize>, u16>,
+    colors: &HashMap<::na::Vector2<isize>, ::graphics::Color>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     maze: &::specs::Fetch<'a, ::resource::Maze>,
+    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     super::create_floor_ceil(
@@ -17,6 +18,7 @@ pub fn create_maze_walls<'a>(
         static_draws,
         physic_world,
         graphics,
+        config,
         entities,
     );
     super::create_floor_ceil(
@@ -26,6 +28,7 @@ pub fn create_maze_walls<'a>(
         static_draws,
         physic_world,
         graphics,
+        config,
         entities,
     );
 
@@ -39,6 +42,7 @@ pub fn create_maze_walls<'a>(
             static_draws,
             physic_world,
             graphics,
+            config,
             entities,
         );
     };

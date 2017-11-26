@@ -11,6 +11,49 @@ pub struct Config {
     pub mouse_sensibility: f32,
     pub fps: u32,
     pub eraser_time: f32,
+
+    pub avoider_size: f32,
+    pub avoider_velocity: f32,
+    pub avoider_time_to_reach_vmax: f32,
+    pub avoider_ang_damping: f32,
+    pub avoider_color: ::graphics::Color,
+
+    pub bouncer_size: f32,
+    pub bouncer_velocity: f32,
+    pub bouncer_time_to_reach_vmax: f32,
+    pub bouncer_ang_damping: f32,
+    pub bouncer_color: ::graphics::Color,
+
+    pub avoider_generator_salvo: usize,
+    pub avoider_generator_black_probability: f32,
+    pub avoider_generator_time_between_salvo: f32,
+    pub bouncer_generator_salvo: usize,
+    pub bouncer_generator_black_probability: f32,
+    pub bouncer_generator_time_between_salvo: f32,
+
+    pub player_height: f32,
+    pub player_radius: f32,
+    pub player_velocity: f32,
+    pub player_time_to_reach_vmax: f32,
+    pub player_ang_damping: f32,
+
+    pub teleport_dl: f32,
+
+    pub laser_size: f32,
+    pub laser_velocity: f32,
+    pub laser_time_to_reach_vmax: f32,
+    pub laser_ang_damping: f32,
+    pub laser_amortization: f32,
+    pub laser_color: ::graphics::Color,
+
+    pub turret_size: f32,
+    pub turret_velocity: f32,
+    pub turret_time_to_reach_vmax: f32,
+    pub turret_ang_damping: f32,
+    pub turret_color: ::graphics::Color,
+
+    pub wall_color: ::graphics::Color,
+    pub floor_ceil_color: ::graphics::Color,
 }
 
 impl Config {
