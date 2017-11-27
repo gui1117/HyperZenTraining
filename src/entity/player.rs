@@ -1,5 +1,5 @@
 pub fn create_player_w(
-    pos: ::na::Isometry3<f32>,
+    pos: ::na::Vector3<f32>,
     world: &mut ::specs::World,
 ) {
     create_player(
@@ -20,7 +20,7 @@ pub fn create_player_w(
 }
 
 pub fn create_player<'a>(
-    pos: ::na::Isometry3<f32>,
+    pos: ::na::Vector3<f32>,
     players: &mut ::specs::WriteStorage<'a, ::component::Player>,
     aims: &mut ::specs::WriteStorage<'a, ::component::Aim>,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
@@ -40,6 +40,7 @@ pub fn create_player<'a>(
     group.set_membership(&[super::ALIVE_GROUP, super::PLAYER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
+    let pos = ::na::Isometry3::new(pos, ::na::zero());
     body.set_transformation(pos);
     body.set_collision_groups(group);
 

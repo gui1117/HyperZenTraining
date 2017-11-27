@@ -34,20 +34,15 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
             let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
 
             let player_pos = player_body.get(&physic_world).position().clone();
-
-            // IDEA: if we change -player.x here to + then it is fun
-            let camera_top = if player_aim.dir[2].abs() > 0.8 {
-                ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -player_aim.x_dir)) *
-                    ::na::Vector3::x() * -player_aim.dir[2].signum()
-            } else {
-                ::na::Vector3::z()
-            };
+            let player_aim_dir = player_aim.rotation * ::na::Vector3::x();
+            // IDEA: we can do some fun things by changing this value
+            let camera_top = player_aim.rotation * ::na::Vector3::z();
 
             let view_matrix = {
                 let i: ::na::Transform3<f32> =
                     ::na::Similarity3::look_at_rh(
                         &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector)),
-                        &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector) + player_aim.dir),
+                        &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector) + player_aim_dir),
                         &camera_top.into(),
                         // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + ::na::Vector3::new(0.0, 0.0, -10.0)),
                         // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),

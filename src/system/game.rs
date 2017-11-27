@@ -17,6 +17,7 @@ impl GameSystem {
             self.init = true;
             self.create_level(world);
         }
+
         if (
             &world.read::<::component::Teleport>(),
             &world.read::<::component::Proximitor>(),
@@ -33,18 +34,18 @@ impl GameSystem {
         world.add_resource(::resource::PhysicWorld::new());
         world.add_resource(::resource::DepthCoef(1.0));
 
-        self.create_2d_walkthrough_level(world, 21, 40.0, ::na::zero(), 0, 1, 0, 0, 0);
+        self.create_2d_kill_all_level(world, 21, 40.0, ::na::zero(), 0, 0, 0, 0, 0);
 
         world.maintain();
     }
 
-//     fn _create_2D_kill_all_level(&self, world: &mut ::specs::World, size: usize, turrets: usize, avoiders: usize, bouncers: usize, black_avoiders: usize, black_bouncers: usize) {
-//         // TODO:
-//         // turrets are in larger rooms
-//         unimplemented!();
-//     }
+    // fn create_2d_walkthrough_level(&self, world: &mut ::specs::World, size: usize, turrets: usize, avoiders: usize, bouncers: usize, black_avoiders: usize, black_bouncers: usize) {
+    //     // TODO:
+    //     // turrets are in larger rooms
+    //     unimplemented!();
+    // }
 
-    fn create_2d_walkthrough_level(&self, world: &mut ::specs::World, size: usize, percent: f32, bug: ::na::Vector2<isize>, turrets: usize, avoiders: usize, bouncers: usize, black_avoiders: usize, black_bouncers: usize) {
+    fn create_2d_kill_all_level(&self, world: &mut ::specs::World, size: usize, percent: f32, bug: ::na::Vector2<isize>, turrets: usize, avoiders: usize, bouncers: usize, black_avoiders: usize, black_bouncers: usize) {
         let mut rng = ::rand::thread_rng();
         let mut maze;
         let to_dig = 2;
@@ -93,17 +94,19 @@ impl GameSystem {
         ::entity::create_teleport_w(
             ::na::Isometry3::new(
                 teleport_end_cell.0.conv(),
-                (teleport_end_cell.1 - teleport_end_cell.0).axis_angle(),
+                (teleport_end_cell.1 - teleport_end_cell.0).axis_angle_z(),
             ),
             world,
         );
-        ::entity::create_player_w(
-            ::na::Isometry3::new(
-                teleport_start_cell.0.conv(),
-                (teleport_start_cell.1 - teleport_start_cell.0).axis_angle(),
-            ),
-            world,
-        );
+
+        let dir = teleport_start_cell.1 - teleport_start_cell.0;
+        let player_pos = teleport_start_cell.0.conv() - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
+        world.write_resource::<::resource::PlayerControl>().pointer = [
+            (-dir[1] as f32).atan2(dir[0] as f32),
+            0.0,
+        ];
+        ::entity::create_player_w(player_pos, world);
+
         for i in 0..turrets {
             let index = Range::new(0, rooms_cells[i].len()).ind_sample(&mut rng);
             let cell = rooms_cells[i].iter().skip(index).next().unwrap().clone();

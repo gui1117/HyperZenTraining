@@ -132,6 +132,7 @@ fn main() {
     world.add_resource(::resource::MenuEvents(vec![]));
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::DebugMode(false));
+    world.add_resource(::resource::PlayerControl::new());
     world.maintain();
 
     let mut game_system = ::system::GameSystem::new();
@@ -139,7 +140,7 @@ fn main() {
 
     let mut update_dispatcher = ::specs::DispatcherBuilder::new()
         .add(::system::MenuControlSystem::new(), "menu", &[])
-        .add(::system::PlayerControlSystem::new(), "player_control", &[])
+        .add(::system::PlayerControlSystem, "player_control", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::FollowPlayerSystem, "follower_control", &[])

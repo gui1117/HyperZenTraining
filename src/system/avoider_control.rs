@@ -17,6 +17,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
         (players, aims, bodies, mut avoiders, mut momentums, physic_world, config, maze): Self::SystemData,
     ) {
         let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
+        let player_aim_dir = player_aim.rotation * ::na::Vector3::x();
 
         let player_pos = player_body.get(&physic_world).position().clone();
 
@@ -48,6 +49,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                     player_pos.translation.vector[0] as isize,
                     player_pos.translation.vector[1] as isize,
                 );
+                // TODO: it crash sometimes here because it doesn't find path
                 avoider.goal = maze.find_path(pos, goal).unwrap().get(1).cloned();
             }
 
@@ -72,7 +74,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                 let avoider_pos_rel_player = avoider_pos.translation.vector -
                     player_pos.translation.vector;
                 let avoid_vector = avoider_pos_rel_player -
-                    avoider_pos_rel_player.dot(&player_aim.dir) * player_aim.dir;
+                    avoider_pos_rel_player.dot(&player_aim_dir) * player_aim_dir;
                 if avoid_vector.norm() != 0.0 {
                     let avoid_norm = avoid_vector.norm();
                     let avoid_direction = avoid_vector.normalize();
@@ -86,7 +88,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                     let random = ::na::Vector3::new_random();
                     // TODO: coefficient
                     (
-                        (random - random.dot(&player_aim.dir) * player_aim.dir).normalize(),
+                        (random - random.dot(&player_aim_dir) * player_aim_dir).normalize(),
                         1f32,
                     )
                 }

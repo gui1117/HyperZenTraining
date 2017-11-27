@@ -2,19 +2,7 @@ use winit::{Event, WindowEvent, ElementState, MouseButton, DeviceEvent};
 use util::Direction;
 use specs::Join;
 
-pub struct PlayerControlSystem {
-    directions: Vec<::util::Direction>,
-    pointer: [f32; 2],
-}
-
-impl PlayerControlSystem {
-    pub fn new() -> Self {
-        PlayerControlSystem {
-            directions: vec![],
-            pointer: [0.0, 0.0],
-        }
-    }
-}
+pub struct PlayerControlSystem;
 
 impl<'a> ::specs::System<'a> for PlayerControlSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
@@ -22,11 +10,12 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
      ::specs::WriteStorage<'a, ::component::Shooter>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
      ::specs::Fetch<'a, ::resource::GameEvents>,
-     ::specs::Fetch<'a, ::resource::Config>);
+     ::specs::Fetch<'a, ::resource::Config>,
+     ::specs::FetchMut<'a, ::resource::PlayerControl>);
 
     fn run(
         &mut self,
-        (players, mut aims, mut shooters, mut momentums, events, config): Self::SystemData,
+        (players, mut aims, mut shooters, mut momentums, events, config, mut player_control): Self::SystemData,
     ) {
         let (_, player_aim, player_shooter, player_momentum) =
             (&players, &mut aims, &mut shooters, &mut momentums)
@@ -51,13 +40,13 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                 Event::DeviceEvent {
                     event: DeviceEvent::Motion { axis: 0, value: dx }, ..
                 } => {
-                    self.pointer[0] += dx as f32 * config.mouse_sensibility;
+                    player_control.pointer[0] += dx as f32 * config.mouse_sensibility;
                 }
                 Event::DeviceEvent {
                     event: DeviceEvent::Motion { axis: 1, value: dy }, ..
                 } => {
-                    self.pointer[1] += dy as f32 * config.mouse_sensibility;
-                    self.pointer[1] = self.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
+                    player_control.pointer[1] += dy as f32 * config.mouse_sensibility;
+                    player_control.pointer[1] = player_control.pointer[1].min(::std::f32::consts::FRAC_PI_2).max(
                         -::std::f32::consts::FRAC_PI_2,
                     );
                 }
@@ -70,9 +59,9 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                         _ => None,
                     };
                     if let Some(direction) = direction {
-                        self.directions.retain(|&elt| elt != direction);
+                        player_control.directions.retain(|&elt| elt != direction);
                         if let ElementState::Pressed = input.state {
-                            self.directions.push(direction);
+                            player_control.directions.push(direction);
                         }
                     }
                 }
@@ -80,16 +69,15 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
             }
         }
 
-        player_aim.dir = ::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -self.pointer[0])) *
-            ::na::Rotation3::new(::na::Vector3::new(0.0, self.pointer[1], 0.0)) *
-            ::na::Vector3::x();
-        player_aim.x_dir = self.pointer[0];
+        // TODO: factorise
+        player_aim.rotation = ::na::UnitQuaternion::from_rotation_matrix(&(::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -player_control.pointer[0])) *
+            ::na::Rotation3::new(::na::Vector3::new(0.0, player_control.pointer[1], 0.0))));
 
         let mut move_vector: ::na::Vector3<f32> = ::na::zero();
-        if self.directions.is_empty() {
+        if player_control.directions.is_empty() {
             player_momentum.direction = ::na::zero();
         } else {
-            for &direction in &self.directions {
+            for &direction in &player_control.directions {
                 match direction {
                     Direction::Forward => move_vector[0] = 1.0,
                     Direction::Backward => move_vector[0] = -1.0,
@@ -97,7 +85,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                     Direction::Right => move_vector[1] = -1.0,
                 }
             }
-            move_vector = (::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -self.pointer[0])) *
+            move_vector = (::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -player_control.pointer[0])) *
                                move_vector)
                 .normalize();
             player_momentum.direction = move_vector;

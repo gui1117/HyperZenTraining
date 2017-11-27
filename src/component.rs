@@ -83,16 +83,12 @@ impl Avoider {
 }
 
 pub struct Aim {
-    pub dir: ::na::Vector3<f32>,
-    pub x_dir: f32,
+    pub rotation: ::na::UnitQuaternion<f32>,
 }
 
 impl Aim {
     pub fn new() -> Self {
-        Aim {
-            dir: ::na::Vector3::x(),
-            x_dir: 0.0,
-        }
+        Aim { rotation: ::na::Unit::new_normalize(::na::Quaternion::from_vector(::na::zero())) }
     }
 }
 

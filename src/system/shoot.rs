@@ -1,5 +1,4 @@
 use specs::Join;
-use alga::general::SubsetOf;
 
 pub struct ShootSystem {
     collided: Vec<(::specs::Entity, f32)>,
@@ -58,7 +57,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
 
                 let ray = ::ncollide::query::Ray {
                     origin: ::na::Point3::from_coordinates(body_pos.translation.vector),
-                    dir: aim.dir,
+                    dir: aim.rotation * ::na::Vector3::x(),
                 };
 
                 // TODO: resolve hack with membership nphysic #82
@@ -95,16 +94,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     }
                 }
 
-                let aim_trans = {
-                    let ah: ::na::Transform3<f32> = ::na::Rotation3::new(
-                        ::na::Vector3::new(0.0, 0.0, -aim.x_dir),
-                    ).to_superset();
-                    let av: ::na::Transform3<f32> =
-                        ::na::Rotation3::new(::na::Vector3::new(0.0, -aim.dir[2].asin(), 0.0))
-                            .to_superset();
-                    ah * av
-                };
-                let ray_draw_origin = (body_pos.translation * aim_trans * animation.weapon_trans *
+                let ray_draw_origin = (body_pos.translation * aim.rotation * animation.weapon_trans *
                                            animation.shoot_pos)
                     .coords;
                 let ray_draw_end = (ray.origin + size * ray.dir).coords;

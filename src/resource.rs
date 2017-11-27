@@ -32,3 +32,17 @@ impl Rendering {
 pub struct DebugMode(pub bool);
 
 pub struct DepthCoef(pub f32);
+
+pub struct PlayerControl {
+    pub directions: Vec<::util::Direction>,
+    pub pointer: [f32; 2],
+}
+
+impl PlayerControl {
+    pub fn new() -> Self {
+        PlayerControl {
+            directions: vec![],
+            pointer: [0.0, 0.0],
+        }
+    }
+}
