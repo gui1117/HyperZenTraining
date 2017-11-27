@@ -34,7 +34,7 @@ impl GameSystem {
         world.add_resource(::resource::PhysicWorld::new());
         world.add_resource(::resource::DepthCoef(1.0));
 
-        self.create_2d_kill_all_level(world, 21, 40.0, ::na::zero(), 0, 0, 0, 0, 0);
+        self.create_2d_kill_all_level(world, 21, 40.0, ::na::zero(), 0, 1, 0, 0, 0);
 
         world.maintain();
     }
