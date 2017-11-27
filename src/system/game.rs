@@ -1,130 +1,40 @@
-use rand::distributions::{IndependentSample, Range};
-use specs::Join;
-use util::ConvCoord;
-use std::collections::HashSet;
-use std::collections::HashMap;
-
 pub struct GameSystem {
-    init: bool,
+    current_level: Option<usize>,
 }
 
 impl GameSystem {
     pub fn new() -> Self {
-        GameSystem { init: false }
+        GameSystem {
+            current_level: None,
+        }
     }
     pub fn run(&mut self, world: &mut ::specs::World) {
-        if !self.init {
-            self.init = true;
-            self.create_level(world);
-        }
+        let recreate_level = match self.current_level {
+            Some(ref mut current_level) => {
+                let end = world.read_resource::<::resource::EndLevel>().0;
+                if end {
+                    *current_level += 1;
+                }
+                end
+            }
+            None => {
+                self.current_level = Some(0);
+                true
+            }
+        };
 
-        if (
-            &world.read::<::component::Teleport>(),
-            &world.read::<::component::Proximitor>(),
-        ).join()
-            .any(|(_, p)| !p.intersections.is_empty())
-        {
+        if recreate_level {
+            let current_level = self.current_level.unwrap();
             world.delete_all();
-            self.create_level(world);
-        }
-    }
+            world.add_resource(::resource::GameEvents(vec![]));
+            world.add_resource(::resource::PhysicWorld::new());
+            world.add_resource(::resource::DepthCoef(1.0));
+            world.add_resource(::resource::EndLevel(false));
 
-    fn create_level(&self, world: &mut ::specs::World) {
-        world.add_resource(::resource::GameEvents(vec![]));
-        world.add_resource(::resource::PhysicWorld::new());
-        world.add_resource(::resource::DepthCoef(1.0));
+            let level = world.read_resource::<::resource::Config>().levels[current_level].clone();
+            level.create(world);
 
-        self.create_2d_kill_all_level(world, 21, 40.0, ::na::zero(), 0, 1, 0, 0, 0);
-
-        world.maintain();
-    }
-
-    // fn create_2d_walkthrough_level(&self, world: &mut ::specs::World, size: usize, turrets: usize, avoiders: usize, bouncers: usize, black_avoiders: usize, black_bouncers: usize) {
-    //     // TODO:
-    //     // turrets are in larger rooms
-    //     unimplemented!();
-    // }
-
-    fn create_2d_kill_all_level(&self, world: &mut ::specs::World, size: usize, percent: f32, bug: ::na::Vector2<isize>, turrets: usize, avoiders: usize, bouncers: usize, black_avoiders: usize, black_bouncers: usize) {
-        let mut rng = ::rand::thread_rng();
-        let mut maze;
-        let to_dig = 2;
-        let mut cells_digged;
-        let to_rooms_cells = turrets + avoiders + black_avoiders + bouncers + black_bouncers;
-        let mut rooms_cells;
-        loop {
-            maze = ::resource::Maze::kruskal(::na::Vector2::new(size as isize, size as isize), percent as f64, bug);
-            maze.reduce(1);
-            maze.circle();
-            maze.fill_smallests();
-            while maze.fill_dead_corridors() {}
-            maze.extend(1);
-            maze.circle();
-            let dead_rooms = maze.compute_dead_room_and_corridor_zones();
-            let dead_rooms_cells: HashSet<_> = dead_rooms.iter().flat_map(|r| r.iter()).collect();
-
-            cells_digged = maze.dig_cells(to_dig, |cell| !dead_rooms_cells.contains(cell));
-            if cells_digged.len() != to_dig {
-                continue;
-            }
-
-            rooms_cells = maze.compute_room_zones();
-            rooms_cells.sort_unstable_by(|r1, r2| r2.len().cmp(&r1.len()));
-            for room in &mut rooms_cells {
-                room.retain(|cell| !maze.is_neighbouring_corridor(cell));
-            }
-            rooms_cells.retain(|r| !r.is_empty());
-            if rooms_cells.len() < to_rooms_cells {
-                continue;
-            }
-            break;
-        }
-        println!("{}", maze);
-
-        let mut maze_colors = HashMap::new();
-
-        let teleport_end_cell = cells_digged.pop().unwrap();
-        maze_colors.insert(teleport_end_cell.0, ::graphics::Color::Green);
-        let teleport_start_cell = cells_digged.pop().unwrap();
-        maze_colors.insert(teleport_start_cell.0, ::graphics::Color::Red);
-
-        world.add_resource(maze);
-
-        ::entity::create_maze_walls_w(&maze_colors, world);
-        ::entity::create_teleport_w(
-            ::na::Isometry3::new(
-                teleport_end_cell.0.conv(),
-                (teleport_end_cell.1 - teleport_end_cell.0).axis_angle_z(),
-            ),
-            world,
-        );
-
-        let dir = teleport_start_cell.1 - teleport_start_cell.0;
-        let player_pos = teleport_start_cell.0.conv() - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
-        world.write_resource::<::resource::PlayerControl>().pointer = [
-            (-dir[1] as f32).atan2(dir[0] as f32),
-            0.0,
-        ];
-        ::entity::create_player_w(player_pos, world);
-
-        for i in 0..turrets {
-            let index = Range::new(0, rooms_cells[i].len()).ind_sample(&mut rng);
-            let cell = rooms_cells[i].iter().skip(index).next().unwrap().clone();
-            rooms_cells[i].remove(&cell);
-            let pos = cell.conv();
-            ::entity::create_turret_w(pos, world);
-        }
-
-        let mut rooms_cells = rooms_cells.drain(..).flat_map(|r| r.into_iter()).collect::<Vec<_>>();
-        for black in (0..avoiders).map(|_| false).chain((0..black_avoiders).map(|_| true)) {
-            let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
-            let pos = rooms_cells.swap_remove(index).conv();
-            ::entity::create_avoider_w(pos, black, world);
-        }
-        for black in (0..bouncers).map(|_| false).chain((0..black_bouncers).map(|_| true)) {
-            let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
-            let pos = rooms_cells.swap_remove(index).conv();
-            ::entity::create_bouncer_w(pos, black, world);
+            world.maintain();
         }
     }
 }

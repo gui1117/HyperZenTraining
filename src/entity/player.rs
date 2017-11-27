@@ -1,6 +1,6 @@
 pub fn create_player_w(
     pos: ::na::Vector3<f32>,
-    world: &mut ::specs::World,
+    world: &::specs::World,
 ) {
     create_player(
         pos,

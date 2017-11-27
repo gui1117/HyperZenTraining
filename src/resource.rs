@@ -46,3 +46,6 @@ impl PlayerControl {
         }
     }
 }
+
+// TODO: change into an enum that can be Retry, Next, None
+pub struct EndLevel(pub bool);

@@ -2,7 +2,7 @@ use std::f32::consts::FRAC_PI_2;
 
 pub fn create_turret_w(
     pos: ::na::Vector3<f32>,
-    world: &mut ::specs::World,
+    world: &::specs::World,
 ) {
     create_turret(
         pos,

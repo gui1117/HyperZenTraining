@@ -13,7 +13,9 @@ mod maze_master;
 mod deleter;
 mod game;
 mod generator;
+mod teleport;
 
+pub use self::teleport::TeleportSystem;
 pub use self::menu_control::MenuControlSystem;
 pub use self::player_control::PlayerControlSystem;
 pub use self::avoider_control::AvoiderControlSystem;

@@ -1,7 +1,7 @@
 pub fn create_bouncer_w(
     pos: ::na::Vector3<f32>,
     eraser: bool,
-    world: &mut ::specs::World,
+    world: &::specs::World,
 ) {
     create_bouncer(
         pos,

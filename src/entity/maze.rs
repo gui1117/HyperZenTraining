@@ -3,7 +3,7 @@ use std::f32::consts::FRAC_PI_2;
 
 pub fn create_maze_walls_w(
     colors: &HashMap<::na::Vector2<isize>, ::graphics::Color>,
-    world: &mut ::specs::World,
+    world: &::specs::World,
 ) {
     create_maze_walls(
         &colors,

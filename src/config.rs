@@ -26,10 +26,10 @@ pub struct Config {
     pub bouncer_color: ::graphics::Color,
 
     pub avoider_generator_salvo: usize,
-    pub avoider_generator_black_probability: f32,
+    pub avoider_generator_eraser_probability: f32,
     pub avoider_generator_time_between_salvo: f32,
     pub bouncer_generator_salvo: usize,
-    pub bouncer_generator_black_probability: f32,
+    pub bouncer_generator_eraser_probability: f32,
     pub bouncer_generator_time_between_salvo: f32,
 
     pub player_height: f32,
@@ -65,6 +65,8 @@ pub struct Config {
     pub weapon_bullet_color: ::graphics::Color,
     pub weapon_six_color: ::graphics::Color,
     pub weapon_angle_color: ::graphics::Color,
+
+    pub levels: Vec<::level::Level>,
 }
 
 impl Config {

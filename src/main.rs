@@ -33,6 +33,7 @@ mod resource;
 mod maze;
 mod config;
 mod testing;
+mod level;
 
 use vulkano_win::VkSurfaceBuild;
 
@@ -143,6 +144,7 @@ fn main() {
         .add(::system::PlayerControlSystem, "player_control", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
+        .add(::system::TeleportSystem, "teleport", &[])
         .add(::system::FollowPlayerSystem, "follower_control", &[])
         .add(::system::TurretControlSystem::new(), "turret_control", &[])
         .add(::system::GeneratorSystem, "generator", &[])

@@ -33,7 +33,7 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
                     match generator.entity {
                         GeneratedEntity::Bouncer => ::entity::create_bouncer(
                             generator.pos,
-                            f32::rand(&mut rng) < generator.black_probability,
+                            f32::rand(&mut rng) < generator.eraser_probability,
                             &mut momentums,
                             &mut bouncers,
                             &mut bodies,
@@ -48,7 +48,7 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
                         ),
                         GeneratedEntity::Avoider => ::entity::create_avoider(
                             generator.pos,
-                            f32::rand(&mut rng) < generator.black_probability,
+                            f32::rand(&mut rng) < generator.eraser_probability,
                             &mut momentums,
                             &mut avoiders,
                             &mut bodies,

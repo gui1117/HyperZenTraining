@@ -12,12 +12,12 @@ Config(
     bouncer_ang_damping: 0.8,
     bouncer_color: Blue,
 
-    avoider_generator_salvo: 4,
-    avoider_generator_black_probability: 0.0,
-    avoider_generator_time_between_salvo: 1.0,
-    bouncer_generator_salvo: 1,
-    bouncer_generator_black_probability: 0.0,
-    bouncer_generator_time_between_salvo: 1.0,
+    avoider_generator_salvo: 0,
+    avoider_generator_eraser_probability: 0.0,
+    avoider_generator_time_between_salvo: 0.0,
+    bouncer_generator_salvo: 0,
+    bouncer_generator_eraser_probability: 0.0,
+    bouncer_generator_time_between_salvo: 0.0,
 
     player_height: 0.4,
     player_radius: 0.1,
@@ -52,6 +52,35 @@ Config(
     weapon_bullet_color: PaleBlue,
     weapon_six_color: Red,
     weapon_angle_color: PalePurple,
+
+    levels: [
+        KillAll(Conf(
+            size: 21,
+            percent: 40.0,
+            bug: (0, 0),
+            turrets: 0,
+            avoiders: 1,
+            bouncers: 0,
+            eraser_avoiders: 0,
+            eraser_bouncers: 0
+        )),
+        Walkthrough(Conf(
+            size: 21,
+            percent: 40.0,
+            bug: (0, 0),
+            turrets: 0,
+
+            avoider_generators: 1,
+            avoider_salvo: 1,
+            avoider_eraser_proba: 0.5,
+            avoider_time_between_salvo: 1.0,
+
+            bouncer_generators: 1,
+            bouncer_salvo: 1,
+            bouncer_eraser_proba: 0.5,
+            bouncer_time_between_salvo: 0.5,
+        )),
+    ],
 
     fps: 60,
     mouse_sensibility: 0.001,

@@ -1,6 +1,6 @@
 pub fn create_teleport_w(
     pos: ::na::Isometry3<f32>,
-    world: &mut ::specs::World,
+    world: &::specs::World,
 ) {
     create_teleport(
         pos,

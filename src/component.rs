@@ -495,7 +495,7 @@ pub struct Generator {
     pub salvo: usize,
     pub timer: f32,
     pub time_between_salvo: f32,
-    pub black_probability: f32,
+    pub eraser_probability: f32,
 }
 
 impl ::specs::Component for Generator {
