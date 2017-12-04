@@ -25,12 +25,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             let avoider_pos = body.get(&physic_world).position().clone();
 
             let recompute_goal = if let Some(goal) = avoider.goal {
-                (avoider_pos.translation.vector -
-                     ::na::Vector3::new(
-                        goal[0] as f32 + 0.5,
-                        goal[1] as f32 + 0.5,
-                        avoider_pos.translation.vector[2],
-                    )).norm() < 0.5
+                (avoider_pos.translation.vector - goal).norm() < 0.5
             } else {
                 if (avoider_pos.translation.vector - player_pos.translation.vector).norm() < 1.0 {
                     avoider.goal.take();
@@ -41,34 +36,12 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             };
 
             if recompute_goal {
-                let pos = ::na::Vector2::new(
-                    avoider_pos.translation.vector[0] as isize,
-                    avoider_pos.translation.vector[1] as isize,
-                );
-                let goal = ::na::Vector2::new(
-                    player_pos.translation.vector[0] as isize,
-                    player_pos.translation.vector[1] as isize,
-                );
                 // TODO: it crash sometimes here because it doesn't find path
-                avoider.goal = maze.find_path(pos, goal).unwrap().get(1).cloned();
+                avoider.goal = maze.find_path(avoider_pos.translation.vector, player_pos.translation.vector).unwrap().get(1).cloned();
             }
 
-            let (goal_direction, goal_coef) = {
-                let goal_pos = if let Some(goal) = avoider.goal {
-                    ::na::Vector3::new(
-                        goal[0] as f32 + 0.5,
-                        goal[1] as f32 + 0.5,
-                        avoider_pos.translation.vector[2],
-                    )
-                } else {
-                    player_pos.translation.vector
-                };
-
-                (
-                    (goal_pos - avoider_pos.translation.vector).normalize(),
-                    1f32,
-                )
-            };
+            let goal_coef = 1f32;
+            let goal_direction = (avoider.goal.unwrap_or(player_pos.translation.vector) - avoider_pos.translation.vector).normalize();
 
             let (avoid_direction, avoid_coef) = {
                 let avoider_pos_rel_player = avoider_pos.translation.vector -

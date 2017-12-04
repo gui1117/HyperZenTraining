@@ -12,6 +12,15 @@ pub struct Config {
     pub fps: u32,
     pub eraser_time: f32,
 
+    pub accumulated_impulse_solver_step: f32,
+    pub correction_mode_a: f32,
+    pub correction_mode_b: f32,
+    pub correction_mode_c: f32,
+    pub accumulated_impulse_solver_joint_corr_factor: f32,
+    pub accumulated_impulse_solver_rest_eps: f32,
+    pub accumulated_impulse_solver_num_first_order_iter: usize,
+    pub accumulated_impulse_solver_num_second_order_iter: usize,
+
     pub avoider_size: f32,
     pub avoider_velocity: f32,
     pub avoider_time_to_reach_vmax: f32,
@@ -37,6 +46,8 @@ pub struct Config {
     pub player_velocity: f32,
     pub player_time_to_reach_vmax: f32,
     pub player_ang_damping: f32,
+    pub player_air_damping: f32,
+    pub player_gravity: f32,
 
     pub teleport_dl: f32,
 

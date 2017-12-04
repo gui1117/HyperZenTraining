@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Conf {
-    pub size: usize,
+    pub size: (usize, usize),
     pub percent: f32,
     pub bug: (isize, isize),
     pub turrets: usize,
@@ -23,7 +23,7 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     let to_rooms_cells = conf.turrets + conf.avoiders + conf.eraser_avoiders + conf.bouncers + conf.eraser_bouncers;
     let mut rooms_cells;
     loop {
-        maze = ::resource::Maze::kruskal(::na::Vector2::new(conf.size as isize, conf.size as isize), conf.percent as f64, ::na::Vector2::new(conf.bug.0, conf.bug.1));
+        maze = ::maze::Maze::kruskal(::na::Vector2::new(conf.size.0 as isize, conf.size.1 as isize), conf.percent as f64, ::na::Vector2::new(conf.bug.0, conf.bug.1));
         maze.reduce(1);
         maze.circle();
         maze.fill_smallests();
@@ -58,19 +58,19 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     let teleport_start_cell = cells_digged.pop().unwrap();
     maze_colors.insert(teleport_start_cell.0, ::graphics::Color::Red);
 
-    world.add_resource(maze);
+    ::entity::create_2d_maze_walls_w(&maze_colors, &maze, world);
+    world.add_resource(::resource::Maze::Maze2D(maze));
 
-    ::entity::create_maze_walls_w(&maze_colors, world);
     ::entity::create_teleport_w(
         ::na::Isometry3::new(
-            teleport_end_cell.0.conv(),
+            teleport_end_cell.0.conv_3f32(),
             (teleport_end_cell.1 - teleport_end_cell.0).axis_angle_z(),
         ),
         world,
     );
 
     let dir = teleport_start_cell.1 - teleport_start_cell.0;
-    let player_pos = teleport_start_cell.0.conv() - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
+    let player_pos = teleport_start_cell.0.conv_3f32() - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
     world.write_resource::<::resource::PlayerControl>().pointer = [
         (-dir[1] as f32).atan2(dir[0] as f32),
         0.0,
@@ -81,19 +81,19 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
         let index = Range::new(0, rooms_cells[i].len()).ind_sample(&mut rng);
         let cell = rooms_cells[i].iter().skip(index).next().unwrap().clone();
         rooms_cells[i].remove(&cell);
-        let pos = cell.conv();
+        let pos = cell.conv_3f32();
         ::entity::create_turret_w(pos, world);
     }
 
     let mut rooms_cells = rooms_cells.drain(..).flat_map(|r| r.into_iter()).collect::<Vec<_>>();
     for eraser in (0..conf.avoiders).map(|_| false).chain((0..conf.eraser_avoiders).map(|_| true)) {
         let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
-        let pos = rooms_cells.swap_remove(index).conv();
+        let pos = rooms_cells.swap_remove(index).conv_3f32();
         ::entity::create_avoider_w(pos, eraser, world);
     }
     for eraser in (0..conf.bouncers).map(|_| false).chain((0..conf.eraser_bouncers).map(|_| true)) {
         let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
-        let pos = rooms_cells.swap_remove(index).conv();
+        let pos = rooms_cells.swap_remove(index).conv_3f32();
         ::entity::create_bouncer_w(pos, eraser, world);
     }
 }

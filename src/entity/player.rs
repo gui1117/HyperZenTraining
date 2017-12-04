@@ -13,6 +13,8 @@ pub fn create_player_w(
         &mut world.write(),
         &mut world.write(),
         &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
         &world.read_resource(),
@@ -24,12 +26,14 @@ pub fn create_player<'a>(
     players: &mut ::specs::WriteStorage<'a, ::component::Player>,
     aims: &mut ::specs::WriteStorage<'a, ::component::Aim>,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
+    air_momentums: &mut ::specs::WriteStorage<'a, ::component::AirMomentum>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
     weapon_animations: &mut ::specs::WriteStorage<'a, ::component::WeaponAnimation>,
     weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
     dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
+    contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
@@ -49,9 +53,17 @@ pub fn create_player<'a>(
     let entity = entities.create();
     players.insert(entity, ::component::Player);
     aims.insert(entity, ::component::Aim::new());
+    contactors.insert(entity, ::component::Contactor::new());
     momentums.insert(
         entity,
         ::component::Momentum::new(mass, config.player_velocity, config.player_time_to_reach_vmax, None, config.player_ang_damping, None),
+    );
+    air_momentums.insert(
+        entity,
+        ::component::AirMomentum {
+            gravity_force: config.player_gravity,
+            damping: config.player_air_damping,
+        },
     );
     super::create_weapon(
         entity,

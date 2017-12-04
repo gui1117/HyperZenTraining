@@ -69,7 +69,7 @@ impl ::specs::Component for Bouncer {
 }
 
 pub struct Avoider {
-    pub goal: Option<::na::Vector2<isize>>,
+    pub goal: Option<::na::Vector3<f32>>,
 }
 
 impl ::specs::Component for Avoider {
@@ -139,6 +139,15 @@ impl Momentum {
             pnt_to_com,
         }
     }
+}
+
+pub struct AirMomentum {
+    pub gravity_force: f32,
+    pub damping: f32,
+}
+
+impl ::specs::Component for AirMomentum {
+    type Storage = ::specs::VecStorage<Self>;
 }
 
 pub struct StaticDraw {

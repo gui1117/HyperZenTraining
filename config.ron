@@ -1,4 +1,13 @@
 Config(
+    accumulated_impulse_solver_step: 0.1,
+    correction_mode_a: 0.2,
+    correction_mode_b: 0.2,
+    correction_mode_c: 0.08,
+    accumulated_impulse_solver_joint_corr_factor: 0.4,
+    accumulated_impulse_solver_rest_eps: 1.0,
+    accumulated_impulse_solver_num_first_order_iter: 10,
+    accumulated_impulse_solver_num_second_order_iter: 10,
+
     avoider_size: 0.1,
     avoider_velocity: 5.5,
     avoider_time_to_reach_vmax: 1.0,
@@ -24,6 +33,8 @@ Config(
     player_velocity: 10.0,
     player_time_to_reach_vmax: 0.1,
     player_ang_damping: 0.0,
+    player_air_damping: 0.1,
+    player_gravity: 1.0,
 
     teleport_dl: -0.4,
 
@@ -54,8 +65,24 @@ Config(
     weapon_angle_color: PalePurple,
 
     levels: [
+        Walkthrough3D(Conf(
+            size: (11, 11, 11),
+            percent: 40.0,
+            bug: (0, 0, 0),
+            turrets: 0,
+
+            avoider_generators: 0,
+            avoider_salvo: 1,
+            avoider_eraser_proba: 0.5,
+            avoider_time_between_salvo: 1.0,
+
+            bouncer_generators: 0,
+            bouncer_salvo: 1,
+            bouncer_eraser_proba: 0.5,
+            bouncer_time_between_salvo: 0.5,
+        )),
         KillAll(Conf(
-            size: 21,
+            size: (21, 21),
             percent: 40.0,
             bug: (0, 0),
             turrets: 0,
@@ -65,7 +92,7 @@ Config(
             eraser_bouncers: 0
         )),
         Walkthrough(Conf(
-            size: 21,
+            size: (21, 21),
             percent: 40.0,
             bug: (0, 0),
             turrets: 0,

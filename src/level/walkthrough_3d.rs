@@ -5,9 +5,9 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Conf {
-    pub size: (usize, usize),
+    pub size: (usize, usize, usize),
     pub percent: f32,
-    pub bug: (isize, isize),
+    pub bug: (isize, isize, isize),
     pub turrets: usize,
 
     pub avoider_generators: usize,
@@ -29,7 +29,7 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     let to_rooms_cells = conf.turrets;
     let mut rooms_cells;
     loop {
-        maze = ::maze::Maze::kruskal(::na::Vector2::new(conf.size.0 as isize, conf.size.1 as isize), conf.percent as f64, ::na::Vector2::new(conf.bug.0, conf.bug.1));
+        maze = ::maze::Maze::kruskal(::na::Vector3::new(conf.size.0 as isize, conf.size.1 as isize, conf.size.2 as isize), conf.percent as f64, ::na::Vector3::new(conf.bug.0, conf.bug.1, conf.bug.2));
         maze.reduce(1);
         maze.circle();
         maze.fill_smallests();
@@ -55,7 +55,6 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
         }
         break;
     }
-    println!("{}", maze);
 
     let mut maze_colors = HashMap::new();
 
@@ -78,8 +77,8 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
         bouncer_generator_cells.push(cell.0)
     }
 
-    ::entity::create_2d_maze_walls_w(&maze_colors, &maze, world);
-    world.add_resource(::resource::Maze::Maze2D(maze));
+    ::entity::create_3d_maze_walls_w(&maze_colors, &maze, world);
+    world.add_resource(::resource::Maze::Maze3D(maze));
 
     ::entity::create_teleport_w(
         ::na::Isometry3::new(
@@ -90,7 +89,7 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     );
 
     let dir = teleport_start_cell.1 - teleport_start_cell.0;
-    let player_pos = teleport_start_cell.0.conv_3f32() - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
+    let player_pos = teleport_start_cell.0.conv_3f32() - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, dir[2] as f32);
     world.write_resource::<::resource::PlayerControl>().pointer = [
         (-dir[1] as f32).atan2(dir[0] as f32),
         0.0,

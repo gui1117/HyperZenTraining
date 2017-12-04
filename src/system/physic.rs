@@ -8,24 +8,37 @@ pub struct PhysicSystem;
 impl<'a> ::specs::System<'a> for PhysicSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::Momentum>,
+     ::specs::ReadStorage<'a, ::component::AirMomentum>,
      ::specs::WriteStorage<'a, ::component::PhysicBody>,
      ::specs::WriteStorage<'a, ::component::Contactor>,
      ::specs::WriteStorage<'a, ::component::Proximitor>,
      ::specs::Fetch<'a, ::resource::Config>,
-     ::specs::FetchMut<'a, ::resource::PhysicWorld>);
+     ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+     ::specs::Entities<'a>);
 
     fn run(
         &mut self,
-        (player, momentums, mut bodies, mut contactors, mut proximitors, config, mut physic_world): Self::SystemData,
+        (players, momentums, air_momentums, mut bodies, mut contactors, mut proximitors, config, mut physic_world, entities): Self::SystemData,
     ) {
-        for (momentum, body) in (&momentums, &mut bodies).join() {
+        // TODO: use integrator to modify rigidbody
+        for (momentum, body, entity) in (&momentums, &mut bodies, &*entities).join() {
             let body = body.get_mut(&mut physic_world);
             let lin_vel = body.lin_vel();
             let ang_vel = body.ang_vel();
 
-            // TODO: use integrator to modify rigidbody
             body.clear_forces();
-            body.append_lin_force(-momentum.damping * lin_vel);
+
+            match (contactors.get(entity), air_momentums.get(entity)) {
+                (Some(contactor), Some(air_momentum)) => {
+                    if contactor.contacts.iter().any(|&(_, ref c)| c.normal[2] < -0.8) {
+                        body.append_lin_force(-momentum.damping * lin_vel);
+                    } else {
+                        body.append_lin_force(air_momentum.gravity_force * ::na::Vector3::new(0.0, 0.0, -1.0));
+                        body.append_lin_force(-air_momentum.damping * lin_vel);
+                    }
+                },
+                _ => body.append_lin_force(-momentum.damping * lin_vel),
+            }
             let direction_force = momentum.force * momentum.direction;
             if let Some(pnt_to_com) = momentum.pnt_to_com {
                 let pnt_to_com = body.position().rotation * pnt_to_com;
@@ -37,9 +50,6 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
                 body.append_ang_force(ang_force);
             }
             body.set_ang_vel_internal(momentum.ang_damping * ang_vel);
-
-            // TODO: gravity if not touching floor
-            // body.append_lin_force(10.0*::na::Vector3::new(0.0,0.0,-1.0));
         }
         for contactor in (&mut contactors).join() {
             contactor.contacts.clear();
@@ -113,14 +123,14 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
                 }
             }
         }
-        for (_, body) in (&player, &mut bodies).join() {
+        for (_, body) in (&players, &mut bodies).join() {
             let body = body.get_mut(&mut physic_world);
             body.set_ang_acc_scale(::na::zero());
             body.set_ang_vel(::na::zero());
 
             let mut pos = body.position().clone();
             pos = ::na::Isometry3::new(
-                ::na::Vector3::new(pos.translation.vector[0], pos.translation.vector[1], 0.5),
+                pos.translation.vector,
                 ::na::Vector3::x() * ::std::f32::consts::FRAC_PI_2,
             );
             body.set_transformation(pos);

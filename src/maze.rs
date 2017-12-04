@@ -6,15 +6,15 @@ use util::Pop;
 use std::ops::Mul;
 use typenum;
 
-struct Opening<D>
+pub struct Opening<D>
 where
     D: ::na::Dim + ::na::DimName,
     D::Value: Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output = D::Value>
         + ::generic_array::ArrayLength<isize>,
 {
-    cell: ::na::VectorN<isize, D>,
-    requires: Vec<::na::VectorN<isize, D>>,
-    cost: isize,
+    pub cell: ::na::VectorN<isize, D>,
+    pub requires: Vec<::na::VectorN<isize, D>>,
+    pub cost: isize,
 }
 
 pub struct Maze<D>
@@ -25,8 +25,8 @@ where
 {
     pub walls: HashSet<::na::VectorN<isize, D>>,
     pub size: ::na::VectorN<isize, D>,
-    openings: Vec<Opening<D>>,
-    neighbours: Vec<::na::VectorN<isize, D>>,
+    pub openings: Vec<Opening<D>>,
+    pub neighbours: Vec<::na::VectorN<isize, D>>,
 }
 
 #[allow(unused)]
@@ -75,8 +75,10 @@ where
 
     #[allow(unused)]
     pub fn check(&self) {
+        let zero = ::na::VectorN::<isize, D>::from_iterator((0..1).cycle());
         for wall in self.walls.iter() {
             assert!(wall < &self.size);
+            assert!(wall >= &zero);
         }
     }
 

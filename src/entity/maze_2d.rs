@@ -1,29 +1,30 @@
 use std::collections::HashMap;
 use std::f32::consts::FRAC_PI_2;
 
-pub fn create_maze_walls_w(
+pub fn create_2d_maze_walls_w(
     colors: &HashMap<::na::Vector2<isize>, ::graphics::Color>,
+    maze: &::maze::Maze<::na::U2>,
     world: &::specs::World,
 ) {
-    create_maze_walls(
-        &colors,
+    create_2d_maze_walls(
+        colors,
+        maze,
         &mut world.write(),
         &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
         &world.read_resource(),
         &world.read_resource(),
-        &world.read_resource(),
     );
 }
 
-pub fn create_maze_walls<'a>(
+pub fn create_2d_maze_walls<'a>(
     colors: &HashMap<::na::Vector2<isize>, ::graphics::Color>,
+    maze: &::maze::Maze<::na::U2>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
-    maze: &::specs::Fetch<'a, ::resource::Maze>,
     config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
