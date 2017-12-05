@@ -68,4 +68,11 @@ impl Maze {
             }
         }
     }
+
+    pub fn is_3d(&self) -> bool {
+        match *self {
+            Maze::Maze2D(_) => false,
+            Maze::Maze3D(_) => true,
+        }
+    }
 }

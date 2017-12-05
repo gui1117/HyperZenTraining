@@ -48,6 +48,7 @@ pub struct Config {
     pub player_ang_damping: f32,
     pub player_air_damping: f32,
     pub player_gravity: f32,
+    pub player_hook_force: f32,
 
     pub teleport_dl: f32,
 

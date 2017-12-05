@@ -448,17 +448,27 @@ impl Proximitor {
     }
 }
 
-pub struct Deleter {
-    pub timer: f32,
-}
+pub struct DeletTimer(pub f32);
 
-impl ::specs::Component for Deleter {
+impl ::specs::Component for DeletTimer {
     type Storage = ::specs::VecStorage<Self>;
 }
 
-impl Deleter {
+impl DeletTimer {
     pub fn new(timer: f32) -> Self {
-        Deleter { timer }
+        DeletTimer(timer)
+    }
+}
+
+pub struct DeletBool(pub bool);
+
+impl ::specs::Component for DeletBool {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl DeletBool {
+    pub fn new() -> Self {
+        DeletBool(true)
     }
 }
 
@@ -509,4 +519,34 @@ pub struct Generator {
 
 impl ::specs::Component for Generator {
     type Storage = ::specs::VecStorage<Self>;
+}
+
+pub struct Anchor {
+    pub entity: ::specs::Entity,
+    pub local_pos: ::na::Point3<f32>,
+    pub pos: ::na::Vector3<f32>,
+}
+
+pub struct Hook {
+    pub launch: bool,
+    pub force: f32,
+    pub anchor: Option<Anchor>,
+}
+
+impl ::specs::Component for Hook {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl Hook {
+    pub fn new(force: f32) -> Self {
+        Hook {
+            launch: false,
+            force,
+            anchor: None,
+        }
+    }
+
+    pub fn set_launch(&mut self, launch: bool) {
+        self.launch = launch;
+    }
 }

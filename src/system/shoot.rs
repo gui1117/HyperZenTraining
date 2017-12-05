@@ -16,7 +16,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
      ::specs::ReadStorage<'a, ::component::WeaponAnimation>,
      ::specs::WriteStorage<'a, ::component::Shooter>,
      ::specs::WriteStorage<'a, ::component::Life>,
-     ::specs::WriteStorage<'a, ::component::Deleter>,
+     ::specs::WriteStorage<'a, ::component::DeletTimer>,
      ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
      ::specs::WriteStorage<'a, ::component::DynamicDraw>,
      ::specs::WriteStorage<'a, ::component::DynamicHud>,
@@ -26,7 +26,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
 
     fn run(
         &mut self,
-        (bodies, aims, animations, mut shooters, mut lifes, mut deleters, mut dynamic_assets, mut dynamic_draws, mut dynamic_huds, physic_world, config, entities): Self::SystemData,
+        (bodies, aims, animations, mut shooters, mut lifes, mut delet_timers, mut dynamic_assets, mut dynamic_draws, mut dynamic_huds, physic_world, config, entities): Self::SystemData,
 ){
         for (aim, animation, body, shooter, entity) in
             (&aims, &animations, &bodies, &mut shooters, &*entities).join()
@@ -103,7 +103,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     ray_draw_origin,
                     ray_draw_end,
                     animation.light_ray_radius,
-                    &mut deleters,
+                    &mut delet_timers,
                     &mut dynamic_draws,
                     &mut dynamic_huds,
                     &mut dynamic_assets,

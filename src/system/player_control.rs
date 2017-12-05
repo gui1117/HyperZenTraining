@@ -8,17 +8,19 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
      ::specs::WriteStorage<'a, ::component::Aim>,
      ::specs::WriteStorage<'a, ::component::Shooter>,
+     ::specs::WriteStorage<'a, ::component::Hook>,
      ::specs::WriteStorage<'a, ::component::Momentum>,
      ::specs::Fetch<'a, ::resource::GameEvents>,
+     ::specs::Fetch<'a, ::resource::Maze>,
      ::specs::Fetch<'a, ::resource::Config>,
      ::specs::FetchMut<'a, ::resource::PlayerControl>);
 
     fn run(
         &mut self,
-        (players, mut aims, mut shooters, mut momentums, events, config, mut player_control): Self::SystemData,
+        (players, mut aims, mut shooters, mut hooks, mut momentums, events, maze, config, mut player_control): Self::SystemData,
     ) {
-        let (_, player_aim, player_shooter, player_momentum) =
-            (&players, &mut aims, &mut shooters, &mut momentums)
+        let (_, player_aim, player_shooter, player_hook, player_momentum) =
+            (&players, &mut aims, &mut shooters, &mut hooks, &mut momentums)
                 .join()
                 .next()
                 .unwrap();
@@ -35,6 +37,21 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                     match state {
                         ElementState::Pressed => player_shooter.set_shoot(true),
                         ElementState::Released => player_shooter.set_shoot(false),
+                    }
+                }
+                Event::WindowEvent {
+                    event: WindowEvent::MouseInput {
+                        button: MouseButton::Right,
+                        state,
+                        ..
+                    },
+                    ..
+                } => {
+                    if maze.is_3d() {
+                        match state {
+                            ElementState::Pressed => player_hook.set_launch(true),
+                            ElementState::Released => player_hook.set_launch(false),
+                        }
                     }
                 }
                 Event::DeviceEvent {

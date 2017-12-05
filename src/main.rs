@@ -108,6 +108,7 @@ fn main() {
     world.register::<::component::Teleport>();
     world.register::<::component::Generator>();
     world.register::<::component::Shooter>();
+    world.register::<::component::Hook>();
     world.register::<::component::WeaponAnimation>();
     world.register::<::component::WeaponAnchor>();
     world.register::<::component::Aim>();
@@ -116,7 +117,8 @@ fn main() {
     world.register::<::component::DynamicEraser>();
     world.register::<::component::DynamicHud>();
     world.register::<::component::DynamicGraphicsAssets>();
-    world.register::<::component::Deleter>();
+    world.register::<::component::DeletBool>();
+    world.register::<::component::DeletTimer>();
     world.register::<::component::PhysicBody>();
     world.register::<::component::Momentum>();
     world.register::<::component::AirMomentum>();
@@ -150,6 +152,7 @@ fn main() {
         .add(::system::TurretControlSystem::new(), "turret_control", &[])
         .add(::system::GeneratorSystem, "generator", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
+        .add(::system::HookSystem::new(), "hook", &[])
         // .add(::system::MazeMasterSystem, "maze_master", &[])
         .add(::system::PhysicSystem, "physic", &[])
         .add(::system::DeleterSystem, "deleter", &[])

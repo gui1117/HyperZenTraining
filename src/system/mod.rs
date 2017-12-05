@@ -13,6 +13,7 @@ mod deleter;
 mod game;
 mod generator;
 mod teleport;
+mod hook;
 
 pub use self::teleport::TeleportSystem;
 pub use self::menu_control::MenuControlSystem;
@@ -29,3 +30,4 @@ pub use self::shoot::ShootSystem;
 pub use self::game::GameSystem;
 pub use self::deleter::DeleterSystem;
 pub use self::generator::GeneratorSystem;
+pub use self::hook::HookSystem;

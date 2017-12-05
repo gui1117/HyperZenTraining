@@ -9,6 +9,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
     type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
      ::specs::ReadStorage<'a, ::component::Momentum>,
      ::specs::ReadStorage<'a, ::component::AirMomentum>,
+     ::specs::ReadStorage<'a, ::component::Hook>,
      ::specs::WriteStorage<'a, ::component::PhysicBody>,
      ::specs::WriteStorage<'a, ::component::Contactor>,
      ::specs::WriteStorage<'a, ::component::Proximitor>,
@@ -18,7 +19,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
 
     fn run(
         &mut self,
-        (players, momentums, air_momentums, mut bodies, mut contactors, mut proximitors, config, mut physic_world, entities): Self::SystemData,
+        (players, momentums, air_momentums, hooks, mut bodies, mut contactors, mut proximitors, config, mut physic_world, entities): Self::SystemData,
     ) {
         // TODO: use integrator to modify rigidbody
         for (momentum, body, entity) in (&momentums, &mut bodies, &*entities).join() {
@@ -38,6 +39,12 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
                     }
                 },
                 _ => body.append_lin_force(-momentum.damping * lin_vel),
+            }
+            if let Some(ref hook) = hooks.get(entity) {
+                if let Some(ref anchor) = hook.anchor {
+                    let dir = (anchor.pos - body.position().translation.vector).normalize();
+                    body.append_lin_force(hook.force * dir);
+                }
             }
             let direction_force = momentum.force * momentum.direction;
             if let Some(pnt_to_com) = momentum.pnt_to_com {

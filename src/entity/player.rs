@@ -15,6 +15,7 @@ pub fn create_player_w(
         &mut world.write(),
         &mut world.write(),
         &mut world.write(),
+        &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
         &world.read_resource(),
@@ -29,6 +30,7 @@ pub fn create_player<'a>(
     air_momentums: &mut ::specs::WriteStorage<'a, ::component::AirMomentum>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
+    hooks: &mut ::specs::WriteStorage<'a, ::component::Hook>,
     weapon_animations: &mut ::specs::WriteStorage<'a, ::component::WeaponAnimation>,
     weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
     dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
@@ -54,6 +56,7 @@ pub fn create_player<'a>(
     players.insert(entity, ::component::Player);
     aims.insert(entity, ::component::Aim::new());
     contactors.insert(entity, ::component::Contactor::new());
+    hooks.insert(entity, ::component::Hook::new(config.player_hook_force));
     momentums.insert(
         entity,
         ::component::Momentum::new(mass, config.player_velocity, config.player_time_to_reach_vmax, None, config.player_ang_damping, None),

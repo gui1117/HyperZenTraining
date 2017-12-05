@@ -5,7 +5,7 @@ pub fn create_light_ray<'a>(
     from: ::na::Vector3<f32>,
     to: ::na::Vector3<f32>,
     radius: f32,
-    deleters: &mut ::specs::WriteStorage<'a, ::component::Deleter>,
+    delet_timers: &mut ::specs::WriteStorage<'a, ::component::DeletTimer>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
     dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
@@ -35,7 +35,7 @@ pub fn create_light_ray<'a>(
             primitive_trans,
         ),
     );
-    deleters.insert(entity, ::component::Deleter::new(0.03));
+    delet_timers.insert(entity, ::component::DeletTimer::new(0.03));
 }
 
 pub fn create_weapon<'a>(
