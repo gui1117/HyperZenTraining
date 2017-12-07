@@ -383,6 +383,28 @@ where
 
     pub fn find_path(
         &self,
+        pos: ::na::Vector3<f32>,
+        goal: ::na::Vector3<f32>,
+    ) -> Option<Vec<::na::Vector3<f32>>> {
+        self.inner_find_path(self.to_inner(&pos), self.to_inner(&goal)).map(|path| path.iter().map(|cell| self.to_world(cell)).collect())
+    }
+
+    #[inline]
+    pub fn to_inner(&self, coords: &::na::Vector3<f32>) -> ::na::VectorN<isize, D> {
+        ::na::VectorN::<isize, D>::from_iterator(coords.iter().map(|&c| c as isize))
+    }
+
+    #[inline]
+    pub fn to_world(&self, coords: &::na::VectorN<isize, D>) -> ::na::Vector3<f32> {
+        let mut outer = ::na::Vector3::new(1.0, 1.0, 1.0) * 0.5;
+        for i in 0..D::dim() {
+            outer[i] += coords[i] as f32;
+        }
+        outer
+    }
+
+    fn inner_find_path(
+        &self,
         pos: ::na::VectorN<isize, D>,
         goal: ::na::VectorN<isize, D>,
     ) -> Option<Vec<::na::VectorN<isize, D>>> {

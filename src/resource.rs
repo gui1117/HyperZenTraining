@@ -1,5 +1,4 @@
 use vulkano::command_buffer::AutoCommandBuffer;
-use util::ConvCoord;
 
 pub use graphics::Data as Graphics;
 pub use imgui::ImGui;
@@ -58,14 +57,8 @@ pub enum Maze {
 impl Maze {
     pub fn find_path(&self, pos: ::na::Vector3<f32>, goal: ::na::Vector3<f32>) -> Option<Vec<::na::Vector3<f32>>> {
         match *self {
-            Maze::Maze2D(ref maze) => {
-                let path = maze.find_path(pos.conv_2isize(), goal.conv_2isize());
-                path.map(|p| p.iter().map(|c| c.conv_3f32()).collect::<Vec<_>>())
-            }
-            Maze::Maze3D(ref maze) => {
-                let path = maze.find_path(pos.conv_3isize(), goal.conv_3isize());
-                path.map(|p| p.iter().map(|c| c.conv_3f32()).collect::<Vec<_>>())
-            }
+            Maze::Maze2D(ref maze) => maze.find_path(pos, goal),
+            Maze::Maze3D(ref maze) => maze.find_path(pos, goal),
         }
     }
 

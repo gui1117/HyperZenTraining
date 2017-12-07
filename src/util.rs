@@ -54,45 +54,16 @@ impl<T: Eq + Hash + Clone> Pop for HashSet<T> {
 }
 
 pub trait ConvCoord {
-    #[inline]
-    fn conv_3f32(&self) -> ::na::Vector3<f32>;
-    #[inline]
-    fn conv_3isize(&self) -> ::na::Vector3<isize>;
-    #[inline]
-    fn conv_2isize(&self) -> ::na::Vector2<isize> {
-        let s = self.conv_3isize();
-        ::na::Vector2::new(s[0], s[1])
-    }
     fn axis_angle_z(&self) -> ::na::Vector3<f32>;
 }
 
 impl ConvCoord for ::na::Vector2<isize> {
-    fn conv_3f32(&self) -> ::na::Vector3<f32> {
-        ::na::Vector3::new(self[0] as f32 + 0.5, self[1] as f32 + 0.5, 0.5)
-    }
-
-    fn conv_3isize(&self) -> ::na::Vector3<isize> {
-        ::na::Vector3::new(self[0], self[1], 0)
-    }
-
     fn axis_angle_z(&self) -> ::na::Vector3<f32> {
-        self.conv_3isize().axis_angle_z()
+        ::na::Vector3::new(self[0], self[1], 0).axis_angle_z()
     }
 }
 
 impl ConvCoord for ::na::Vector3<isize> {
-    fn conv_3f32(&self) -> ::na::Vector3<f32> {
-        ::na::Vector3::new(
-            self[0] as f32 + 0.5,
-            self[1] as f32 + 0.5,
-            self[2] as f32 + 0.5,
-        )
-    }
-
-    fn conv_3isize(&self) -> ::na::Vector3<isize> {
-        self.clone()
-    }
-
     fn axis_angle_z(&self) -> ::na::Vector3<f32> {
         if *self == ::na::Vector3::new(-1, 0, 0) {
             ::na::Vector3::new(0.0, -FRAC_PI_2, 0.0)
@@ -109,23 +80,5 @@ impl ConvCoord for ::na::Vector3<isize> {
         } else {
             panic!("invalid direction");
         }
-    }
-}
-
-impl ConvCoord for ::na::Vector3<f32> {
-    fn conv_3f32(&self) -> ::na::Vector3<f32> {
-        self.clone()
-    }
-
-    fn conv_3isize(&self) -> ::na::Vector3<isize> {
-        ::na::Vector3::new(
-            self[0] as isize,
-            self[1] as isize,
-            self[2] as isize,
-        )
-    }
-
-    fn axis_angle_z(&self) -> ::na::Vector3<f32> {
-        unimplemented!();
     }
 }

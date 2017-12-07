@@ -64,18 +64,17 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     maze_colors.insert(teleport_start_cell.0, ::graphics::Color::Red);
 
     ::entity::create_2d_maze_walls_w(&maze_colors, &maze, world);
-    world.add_resource(::resource::Maze::Maze2D(maze));
 
     ::entity::create_teleport_w(
         ::na::Isometry3::new(
-            teleport_end_cell.0.conv_3f32(),
+            maze.to_world(&teleport_end_cell.0),
             (teleport_end_cell.1 - teleport_end_cell.0).axis_angle_z(),
         ),
         world,
     );
 
     let dir = teleport_start_cell.1 - teleport_start_cell.0;
-    let player_pos = teleport_start_cell.0.conv_3f32() - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
+    let player_pos = maze.to_world(&teleport_start_cell.0) - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
     world.write_resource::<::resource::PlayerControl>().pointer = [
         (-dir[1] as f32).atan2(dir[0] as f32),
         0.0,
@@ -86,19 +85,21 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
         let index = Range::new(0, rooms_cells[i].len()).ind_sample(&mut rng);
         let cell = rooms_cells[i].iter().skip(index).next().unwrap().clone();
         rooms_cells[i].remove(&cell);
-        let pos = cell.conv_3f32();
+        let pos = maze.to_world(&cell);
         ::entity::create_turret_w(pos, world);
     }
 
     let mut rooms_cells = rooms_cells.drain(..).flat_map(|r| r.into_iter()).collect::<Vec<_>>();
     for eraser in (0..conf.avoiders).map(|_| false).chain((0..conf.eraser_avoiders).map(|_| true)) {
         let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
-        let pos = rooms_cells.swap_remove(index).conv_3f32();
+        let pos = maze.to_world(&rooms_cells.swap_remove(index));
         ::entity::create_avoider_w(pos, eraser, world);
     }
     for eraser in (0..conf.bouncers).map(|_| false).chain((0..conf.eraser_bouncers).map(|_| true)) {
         let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
-        let pos = rooms_cells.swap_remove(index).conv_3f32();
+        let pos = maze.to_world(&rooms_cells.swap_remove(index));
         ::entity::create_bouncer_w(pos, eraser, world);
     }
+
+    world.add_resource(::resource::Maze::Maze2D(maze));
 }

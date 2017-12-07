@@ -81,18 +81,17 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     }
 
     ::entity::create_3d_maze_walls_w(&maze_colors, &maze, world);
-    world.add_resource(::resource::Maze::Maze3D(maze));
 
     ::entity::create_teleport_w(
         ::na::Isometry3::new(
-            teleport_end_cell.0.conv_3f32(),
+            maze.to_world(&teleport_end_cell.0),
             (teleport_end_cell.1 - teleport_end_cell.0).axis_angle_z(),
         ),
         world,
     );
 
     let dir = teleport_start_cell.1 - teleport_start_cell.0;
-    let player_pos = teleport_start_cell.0.conv_3f32() - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, dir[2] as f32);
+    let player_pos = maze.to_world(&teleport_start_cell.0) - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, dir[2] as f32);
     world.write_resource::<::resource::PlayerControl>().pointer = [
         (-dir[1] as f32).atan2(dir[0] as f32),
         0.0,
@@ -103,11 +102,13 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
         let index = Range::new(0, rooms_cells[i].len()).ind_sample(&mut rng);
         let cell = rooms_cells[i].iter().skip(index).next().unwrap().clone();
         rooms_cells[i].remove(&cell);
-        let pos = cell.conv_3f32();
+        let pos = maze.to_world(&cell);
         ::entity::create_turret_w(pos, world);
     }
 
     avoider_generator_cells.iter().map(|c| (c, ::component::GeneratedEntity::Avoider, conf.avoider_salvo, conf.avoider_time_between_salvo, conf.avoider_eraser_proba))
         .chain(bouncer_generator_cells.iter().map(|c| (c, ::component::GeneratedEntity::Bouncer, conf.bouncer_salvo, conf.bouncer_time_between_salvo, conf.bouncer_eraser_proba)))
-        .for_each(|t| ::entity::create_generator(t.0.conv_3f32(), t.1, t.2, t.3, t.4, &mut world.write(), &world.read_resource()));
+        .for_each(|t| ::entity::create_generator(maze.to_world(&t.0), t.1, t.2, t.3, t.4, &mut world.write(), &world.read_resource()));
+
+    world.add_resource(::resource::Maze::Maze3D(maze));
 }
