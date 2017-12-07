@@ -23,6 +23,7 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     let to_rooms_cells = conf.turrets + conf.avoiders + conf.eraser_avoiders + conf.bouncers + conf.eraser_bouncers;
     let mut rooms_cells;
     loop {
+        println!("try create a maze");
         maze = ::maze::Maze::kruskal(::na::Vector2::new(conf.size.0 as isize, conf.size.1 as isize), conf.percent as f64, ::na::Vector2::new(conf.bug.0, conf.bug.1));
         maze.reduce(1);
         maze.circle();
@@ -32,19 +33,23 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
         maze.circle();
         let dead_rooms = maze.compute_dead_room_and_corridor_zones();
         let dead_rooms_cells: HashSet<_> = dead_rooms.iter().flat_map(|r| r.iter()).collect();
+        println!("maze: {}", maze);
 
         cells_digged = maze.dig_cells(to_dig, |cell| !dead_rooms_cells.contains(cell));
         if cells_digged.len() != to_dig {
+            println!("failed to dig enough");
             continue;
         }
 
+        println!("cell digged maze: {}", maze);
         rooms_cells = maze.compute_room_zones();
         rooms_cells.sort_unstable_by(|r1, r2| r2.len().cmp(&r1.len()));
         for room in &mut rooms_cells {
             room.retain(|cell| !maze.is_neighbouring_corridor(cell));
         }
         rooms_cells.retain(|r| !r.is_empty());
-        if rooms_cells.len() < to_rooms_cells {
+        if rooms_cells.iter().flat_map(|r| r.iter()).count() < to_rooms_cells {
+            println!("failed to have enough rooms cell");
             continue;
         }
         break;

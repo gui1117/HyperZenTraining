@@ -4,7 +4,6 @@ extern crate vulkano_win;
 extern crate vulkano;
 #[macro_use]
 extern crate vulkano_shader_derive;
-extern crate fps_clock;
 extern crate alga;
 extern crate specs;
 extern crate nalgebra as na;
@@ -23,6 +22,7 @@ extern crate ron;
 extern crate wavefront_obj;
 extern crate typenum;
 extern crate generic_array;
+extern crate fps_counter;
 
 mod util;
 mod graphics;
@@ -45,6 +45,9 @@ use vulkano::instance::Instance;
 use winit::{WindowEvent, Event, ElementState, VirtualKeyCode, KeyboardInput, DeviceEvent};
 
 use std::sync::Arc;
+use std::time::Duration;
+use std::time::Instant;
+use std::thread;
 
 pub use testing::TS;
 
@@ -57,6 +60,7 @@ fn main() {
 
     let mut events_loop = winit::EventsLoop::new();
     let window = winit::WindowBuilder::new()
+        // .with_fullscreen(winit::get_primary_monitor())
         .build_vk_surface(&events_loop, instance.clone())
         .unwrap();
 
@@ -169,7 +173,9 @@ fn main() {
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
-    let mut fps = fps_clock::FpsClock::new(world.read_resource::<::resource::Config>().fps.clone());
+    let frame_duration = Duration::new(0, (1000000000.0/world.read_resource::<::resource::Config>().fps as f32) as u32);
+    let mut last_frame_instant = Instant::now();
+    let mut fps_counter = fps_counter::FPSCounter::new();
 
     loop {
         previous_frame_end.cleanup_finished();
@@ -287,6 +293,11 @@ fn main() {
         previous_frame_end = Box::new(future) as Box<_>;
 
         // Sleep
-        fps.tick();
+        let elapsed = last_frame_instant.elapsed();
+        if let Some(to_sleep) = frame_duration.checked_sub(elapsed) {
+            thread::sleep(to_sleep);
+        }
+        last_frame_instant = Instant::now();
+        world.write_resource::<::resource::Config>().debug_fps_counter = fps_counter.tick();
     }
 }

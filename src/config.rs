@@ -10,6 +10,8 @@ pub struct Config {
     pub style: ImGuiStyleSave,
     pub mouse_sensibility: f32,
     pub fps: u32,
+    /// Not loaded
+    pub debug_fps_counter: usize,
     pub eraser_time: f32,
 
     pub accumulated_impulse_solver_step: f32,

@@ -462,6 +462,116 @@ pub fn instance_primitives(
         ],
     ]);
 
+    // Link
+    let radius = 0.2;
+    let width = 0.4;
+    primitives_buffers_def.push(vec![
+        // Floor
+        vec![
+            Vertex { position: [- width - radius, -1.0, -radius] },
+            Vertex { position: [width + radius, -1.0, -radius] },
+            Vertex { position: [width + radius, -1.0 + radius*2.0, -radius] },
+
+            Vertex { position: [- width - radius, -1.0, -radius] },
+            Vertex { position: [- width - radius, -1.0 + radius*2.0, -radius] },
+            Vertex { position: [width + radius, -1.0 + radius*2.0, -radius] },
+
+            Vertex { position: [- width - radius, 1.0, -radius] },
+            Vertex { position: [width + radius, 1.0, -radius] },
+            Vertex { position: [width + radius, 1.0 - radius*2.0, -radius] },
+
+            Vertex { position: [- width - radius, 1.0, -radius] },
+            Vertex { position: [- width - radius, 1.0 - radius*2.0, -radius] },
+            Vertex { position: [width + radius, 1.0 - radius*2.0, -radius] },
+
+            Vertex { position: [- width - radius, -1.0 + radius*2.0, -radius] },
+            Vertex { position: [- width + radius, -1.0 + radius*2.0, -radius] },
+            Vertex { position: [- width + radius, 1.0 - radius*2.0, -radius] },
+
+            Vertex { position: [- width - radius, -1.0 + radius*2.0, -radius] },
+            Vertex { position: [- width + radius, 1.0 - radius*2.0, -radius] },
+            Vertex { position: [- width - radius, 1.0 - radius*2.0, -radius] },
+
+            Vertex { position: [width - radius, -1.0 + radius*2.0, -radius] },
+            Vertex { position: [width + radius, -1.0 + radius*2.0, -radius] },
+            Vertex { position: [width + radius, 1.0 - radius*2.0, -radius] },
+
+            Vertex { position: [width - radius, -1.0 + radius*2.0, -radius] },
+            Vertex { position: [width + radius, 1.0 - radius*2.0, -radius] },
+            Vertex { position: [width - radius, 1.0 - radius*2.0, -radius] },
+        ],
+        // Ceil
+        vec![
+            Vertex { position: [- width - radius, -1.0, radius] },
+            Vertex { position: [width + radius, -1.0, radius] },
+            Vertex { position: [width + radius, -1.0 + radius*2.0, radius] },
+
+            Vertex { position: [- width - radius, -1.0, radius] },
+            Vertex { position: [- width - radius, -1.0 + radius*2.0, radius] },
+            Vertex { position: [width + radius, -1.0 + radius*2.0, radius] },
+
+            Vertex { position: [- width - radius, 1.0, radius] },
+            Vertex { position: [width + radius, 1.0, radius] },
+            Vertex { position: [width + radius, 1.0 - radius*2.0, radius] },
+
+            Vertex { position: [- width - radius, 1.0, radius] },
+            Vertex { position: [- width - radius, 1.0 - radius*2.0, radius] },
+            Vertex { position: [width + radius, 1.0 - radius*2.0, radius] },
+
+            Vertex { position: [- width - radius, -1.0 + radius*2.0, radius] },
+            Vertex { position: [- width + radius, -1.0 + radius*2.0, radius] },
+            Vertex { position: [- width + radius, 1.0 - radius*2.0, radius] },
+
+            Vertex { position: [- width - radius, -1.0 + radius*2.0, radius] },
+            Vertex { position: [- width + radius, 1.0 - radius*2.0, radius] },
+            Vertex { position: [- width - radius, 1.0 - radius*2.0, radius] },
+
+            Vertex { position: [width - radius, -1.0 + radius*2.0, radius] },
+            Vertex { position: [width + radius, -1.0 + radius*2.0, radius] },
+            Vertex { position: [width + radius, 1.0 - radius*2.0, radius] },
+
+            Vertex { position: [width - radius, -1.0 + radius*2.0, radius] },
+            Vertex { position: [width + radius, 1.0 - radius*2.0, radius] },
+            Vertex { position: [width - radius, 1.0 - radius*2.0, radius] },
+        ],
+        vec![
+            Vertex { position: [-width - radius, -1.0, -radius] },
+            Vertex { position: [width + radius, -1.0, -radius] },
+            Vertex { position: [width + radius, -1.0, radius] },
+
+            Vertex { position: [-width - radius, -1.0, -radius] },
+            Vertex { position: [-width - radius, -1.0, radius] },
+            Vertex { position: [width + radius, -1.0, radius] },
+        ],
+        vec![
+            Vertex { position: [-width - radius, 1.0, -radius] },
+            Vertex { position: [width + radius, 1.0, -radius] },
+            Vertex { position: [width + radius, 1.0, radius] },
+
+            Vertex { position: [-width - radius, 1.0, -radius] },
+            Vertex { position: [-width - radius, 1.0, radius] },
+            Vertex { position: [width + radius, 1.0, radius] },
+        ],
+        vec![
+            Vertex { position: [-width - radius, 1.0, -radius] },
+            Vertex { position: [-width - radius, -1.0, -radius] },
+            Vertex { position: [-width - radius, -1.0, radius] },
+
+            Vertex { position: [-width - radius, 1.0, -radius] },
+            Vertex { position: [-width - radius, 1.0, radius] },
+            Vertex { position: [-width - radius, -1.0, radius] },
+        ],
+        vec![
+            Vertex { position: [width + radius, 1.0, -radius] },
+            Vertex { position: [width + radius, -1.0, -radius] },
+            Vertex { position: [width + radius, -1.0, radius] },
+
+            Vertex { position: [width + radius, 1.0, -radius] },
+            Vertex { position: [width + radius, 1.0, radius] },
+            Vertex { position: [width + radius, -1.0, radius] },
+        ],
+    ]);
+
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];
     for primitive_buffers_def in primitives_buffers_def {
@@ -494,6 +604,7 @@ pub mod primitive {
         Cube,
         Cylinder,
         PitCube,
+        Link,
     }
 
     impl Primitive {
@@ -507,6 +618,7 @@ pub mod primitive {
                 Primitive::Cube => 5,
                 Primitive::Cylinder => 6,
                 Primitive::PitCube => 7,
+                Primitive::Link => 8,
             }
         }
 
@@ -520,6 +632,7 @@ pub mod primitive {
                 Primitive::Cube => 6,
                 Primitive::Cylinder => 1,
                 Primitive::PitCube => 11,
+                Primitive::Link => 6,
             }
         }
 

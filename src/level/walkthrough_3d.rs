@@ -29,6 +29,7 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     let to_rooms_cells = conf.turrets;
     let mut rooms_cells;
     loop {
+        println!("try create a maze");
         maze = ::maze::Maze::kruskal(::na::Vector3::new(conf.size.0 as isize, conf.size.1 as isize, conf.size.2 as isize), conf.percent as f64, ::na::Vector3::new(conf.bug.0, conf.bug.1, conf.bug.2));
         maze.reduce(1);
         maze.circle();
@@ -41,6 +42,7 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
 
         cells_digged = maze.dig_cells(to_dig, |cell| !dead_rooms_cells.contains(cell));
         if cells_digged.len() != to_dig {
+            println!("failed to dig enough");
             continue;
         }
 
@@ -50,7 +52,8 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
             room.retain(|cell| !maze.is_neighbouring_corridor(cell));
         }
         rooms_cells.retain(|r| !r.is_empty());
-        if rooms_cells.len() < to_rooms_cells {
+        if rooms_cells.iter().flat_map(|r| r.iter()).count() < to_rooms_cells {
+            println!("failed to have enough rooms cell");
             continue;
         }
         break;

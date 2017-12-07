@@ -346,15 +346,12 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
             rendering.size_pixels.take().unwrap(),
             config.dt().clone(),
         );
-        if false {
-            ui.window(im_str!("Hello world"))
-                .size((300.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
-                .build(|| {
-                    ui.text(im_str!("Hello world!"));
-                    ui.separator();
-                    ui.text(im_str!("This...is...imgui-rs!"));
-                });
-        }
+        ui.window(im_str!("Debug"))
+            .size((300.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
+            .build(|| {
+                ui.text(format!("fps: {}", config.debug_fps_counter));
+                ui.separator();
+            });
 
         // TODO: change imgui so that it use an iterator instead of a callback
         let ref_cell_cmd_builder = RefCell::new(Some(second_command_buffer_builder));
