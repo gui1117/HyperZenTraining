@@ -27,6 +27,7 @@ where
     pub size: ::na::VectorN<isize, D>,
     pub openings: Vec<Opening<D>>,
     pub neighbours: Vec<::na::VectorN<isize, D>>,
+    pub scale: f32,
 }
 
 #[allow(unused)]
@@ -55,8 +56,9 @@ where
                 .count() <= 2
     }
 
-    pub fn new_empty() -> Self {
+    pub fn new_empty(scale: f32) -> Self {
         Maze {
+            scale,
             walls: HashSet::new(),
             size: ::na::zero(),
             openings: Self::openings(),
@@ -391,14 +393,14 @@ where
 
     #[inline]
     pub fn to_inner(&self, coords: &::na::Vector3<f32>) -> ::na::VectorN<isize, D> {
-        ::na::VectorN::<isize, D>::from_iterator(coords.iter().map(|&c| c as isize))
+        ::na::VectorN::<isize, D>::from_iterator(coords.iter().map(|&c| (c/self.scale) as isize))
     }
 
     #[inline]
     pub fn to_world(&self, coords: &::na::VectorN<isize, D>) -> ::na::Vector3<f32> {
-        let mut outer = ::na::Vector3::new(1.0, 1.0, 1.0) * 0.5;
+        let mut outer = ::na::Vector3::new(self.scale, self.scale, self.scale) * 0.5;
         for i in 0..D::dim() {
-            outer[i] += coords[i] as f32;
+            outer[i] += (coords[i] as f32) * self.scale;
         }
         outer
     }
@@ -439,6 +441,7 @@ where
         size: ::na::VectorN<isize, D>,
         percent: f64,
         bug: ::na::VectorN<isize, D>,
+        scale: f32,
     ) -> Self {
         struct GridCell {
             wall: bool,
@@ -578,6 +581,7 @@ where
             walls,
             neighbours: Self::neighbours(),
             openings: Self::openings(),
+            scale,
         }
     }
 

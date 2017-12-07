@@ -8,6 +8,7 @@ pub struct Conf {
     pub size: (usize, usize),
     pub percent: f32,
     pub bug: (isize, isize),
+    pub scale: f32,
     pub turrets: usize,
 
     pub avoider_generators: usize,
@@ -29,7 +30,7 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     let to_rooms_cells = conf.turrets;
     let mut rooms_cells;
     loop {
-        maze = ::maze::Maze::kruskal(::na::Vector2::new(conf.size.0 as isize, conf.size.1 as isize), conf.percent as f64, ::na::Vector2::new(conf.bug.0, conf.bug.1));
+        maze = ::maze::Maze::kruskal(::na::Vector2::new(conf.size.0 as isize, conf.size.1 as isize), conf.percent as f64, ::na::Vector2::new(conf.bug.0, conf.bug.1), conf.scale);
         maze.reduce(1);
         maze.circle();
         maze.fill_smallests();
