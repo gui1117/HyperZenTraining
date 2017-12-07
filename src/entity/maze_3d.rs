@@ -39,7 +39,7 @@ pub fn create_3d_maze_walls<'a>(
     let groups = ::graphics::Primitive::Plane.reserve(maze.size.iter().max().unwrap().clone() as usize * 3 + 3);
 
     for cell in &maze.walls {
-        ::entity::create_wall_cube_physic(maze.to_world(cell), 0.5, bodies, physic_world, entities);
+        ::entity::create_wall_cube_physic(maze.to_world(cell), maze.scale/2.0, bodies, physic_world, entities);
         for dl in &maze.neighbours {
             let neighbour = cell + dl;
             if maze.walls.contains(&neighbour) {
@@ -53,10 +53,10 @@ pub fn create_3d_maze_walls<'a>(
             } else {
                 groups[index(cell[0], cell[1], cell[2], orientation)].clone()
             };
-            let dl_f32 = ::na::Vector3::new(dl[0] as f32, dl[1] as f32, dl[2] as f32);
-            let pos = ::na::Isometry3::new(maze.to_world(cell) + dl_f32/2.0, dl.axis_angle_z());
+            let dl_f32 = ::na::Vector3::new(dl[0] as f32, dl[1] as f32, dl[2] as f32) * maze.scale/2.;
+            let pos = ::na::Isometry3::new(maze.to_world(cell) + dl_f32, dl.axis_angle_z());
 
-            ::entity::create_wall_side_draw(pos, 0.5, color, groups, static_draws, graphics, config, entities);
+            ::entity::create_wall_side_draw(pos, maze.scale/2., color, groups, static_draws, graphics, config, entities);
         }
     }
 }

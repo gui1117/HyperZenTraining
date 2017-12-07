@@ -1,9 +1,11 @@
 pub fn create_teleport_w(
     pos: ::na::Isometry3<f32>,
+    scale: f32,
     world: &::specs::World,
 ) {
     create_teleport(
         pos,
+        scale,
         &mut world.write(),
         &mut world.write(),
         &mut world.write(),
@@ -14,6 +16,7 @@ pub fn create_teleport_w(
 }
 pub fn create_teleport<'a>(
     pos: ::na::Isometry3<f32>,
+    scale: f32,
     teleports: &mut ::specs::WriteStorage<'a, ::component::Teleport>,
     proximitors: &mut ::specs::WriteStorage<'a, ::component::Proximitor>,
     sensors: &mut ::specs::WriteStorage<'a, ::component::PhysicSensor>,
@@ -21,7 +24,7 @@ pub fn create_teleport<'a>(
     config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
-    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(0.4, 0.4, 0.0));
+    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(0.45*scale, 0.45*scale, 0.0));
     let pos = pos * ::na::Translation3::from_vector(::na::Vector3::new(0.0, 0.0, config.teleport_dl));
 
     let mut group = ::nphysics::object::SensorCollisionGroups::new();

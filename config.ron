@@ -114,7 +114,7 @@ Config(
             size: (7, 7, 7),
             percent: 20.0,
             bug: (0, 0, 0),
-            scale: 1.0,
+            scale: 10.0,
             turrets: 0,
 
             avoider_generators: 1,

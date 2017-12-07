@@ -71,6 +71,7 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
             maze.to_world(&teleport_end_cell.0),
             (teleport_end_cell.1 - teleport_end_cell.0).axis_angle_z(),
         ),
+        maze.scale,
         world,
     );
 

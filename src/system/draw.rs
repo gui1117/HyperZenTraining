@@ -347,7 +347,7 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
             config.dt().clone(),
         );
         ui.window(im_str!("Debug"))
-            .size((300.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
+            .size((10.0, 10.0), ::imgui::ImGuiCond::FirstUseEver)
             .build(|| {
                 ui.text(format!("fps: {}", config.debug_fps_counter));
                 ui.separator();
