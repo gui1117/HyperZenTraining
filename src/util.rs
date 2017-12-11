@@ -82,3 +82,69 @@ impl ConvCoord for ::na::Vector3<isize> {
         }
     }
 }
+
+const BENCHMARKER_VECDEQUE_SIZE: usize = 60;
+
+pub struct Benchmark {
+    name: String,
+    min: Duration,
+    max: Duration,
+    mean: Duration,
+}
+
+impl fmt::Display for Benchmark {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let min = self.min.as_secs() as f64 + self.min.subsec_nanos() as f64 * 1e-9;
+        let max = self.max.as_secs() as f64 + self.max.subsec_nanos() as f64 * 1e-9;
+        let mean = self.mean.as_secs() as f64 + self.mean.subsec_nanos() as f64 * 1e-9;
+        write!(f, "benchmark: {}\n\tmin: {}\n\tmax: {}\n\tmean: {}", self.name, min, max, mean)
+    }
+}
+
+pub struct Benchmarker {
+    instant: HashMap<String, Instant>,
+    durations: HashMap<String, VecDeque<Duration>>,
+}
+
+impl Benchmarker {
+    pub fn new() -> Self {
+        Benchmarker {
+            instant: HashMap::new(),
+            durations: HashMap::new(),
+        }
+    }
+
+    pub fn start(&mut self, name: &'static str) {
+        assert_eq!(self.instant.insert(String::from(name), Instant::now()), None);
+    }
+
+    pub fn end(&mut self, name: &'static str) {
+        if let Some(instant) = self.instant.remove(&String::from(name)) {
+            let vecdeque = self.durations.entry(String::from(name)).or_insert_with(|| VecDeque::new());
+            vecdeque.push_front(instant.elapsed());
+            vecdeque.truncate(BENCHMARKER_VECDEQUE_SIZE);
+        }
+    }
+
+    pub fn get_all(&self) -> Vec<Benchmark> {
+        let mut res = Vec::new();
+        for (name, durations) in &self.durations {
+            let mut min = Duration::new(1000u64, 0);
+            let mut max = Duration::new(0, 0);
+            let mut sum = Duration::new(0, 0);
+            for duration in durations {
+                sum += *duration;
+                min = min.min(*duration);
+                max = max.max(*duration);
+            }
+
+            res.push(Benchmark {
+                name: name.clone(),
+                min,
+                max,
+                mean: sum/BENCHMARKER_VECDEQUE_SIZE as u32,
+            });
+        }
+        res
+    }
+}

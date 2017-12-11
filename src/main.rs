@@ -176,10 +176,14 @@ fn main() {
     let frame_duration = Duration::new(0, (1000000000.0/world.read_resource::<::resource::Config>().fps as f32) as u32);
     let mut last_frame_instant = Instant::now();
     let mut fps_counter = fps_counter::FPSCounter::new();
+    let mut benchmarker = util::Benchmarker::new();
 
     loop {
+        benchmarker.start("cleanup");
         previous_frame_end.cleanup_finished();
+        benchmarker.end("cleanup");
 
+        benchmarker.start("poll_event");
         // Poll events
         {
             let mut menu_events = world.write_resource::<::resource::MenuEvents>();
@@ -196,18 +200,6 @@ fn main() {
                     Event::WindowEvent { event: WindowEvent::Closed, .. } => {
                         done = true;
                         false
-                    }
-                    Event::WindowEvent { event: WindowEvent::MouseMoved { .. }, .. } => {
-                        if !debug_mode.0 {
-                            window
-                                .window()
-                                .set_cursor_position(
-                                    graphics.data.dim[0] as i32 / 2,
-                                    graphics.data.dim[1] as i32 / 2,
-                                )
-                                .unwrap();
-                        }
-                        true
                     }
                     Event::WindowEvent {
                         event: WindowEvent::KeyboardInput {
