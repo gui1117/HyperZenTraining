@@ -16,8 +16,8 @@ layout(set = 1, binding = 1) buffer Erased {
     float data[];
 } erased;
 
-int thickness = 3;
-float percent_divider = 15.0;
+int thickness = 2;
+float percent_divider = 23.0;
 
 void main() {
     uvec2 group = texture(tmp_image, gl_FragCoord.xy).rg;
