@@ -29,31 +29,31 @@ pub fn instance_primitives(
     primitives_buffers_def.push(vec![
         vec![
             Vertex { position: [-1.0, -1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, -1.0] },
             Vertex { position: [-1.0, 1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
 
             Vertex { position: [1.0, 1.0, -1.0] },
             Vertex { position: [1.0, -1.0, -1.0] },
             Vertex { position: [-1.0, 1.0, -1.0] },
         ],
         vec![
+            Vertex { position: [-1.0, 1.0, -1.0] },
             Vertex { position: [-1.0, -1.0, -1.0] },
-            Vertex { position: [-1.0, 1.0, -1.0] },
-            Vertex { position: [0.0, 0.0, 1.0] },
-        ],
-        vec![
-            Vertex { position: [-1.0, 1.0, -1.0] },
-            Vertex { position: [1.0, 1.0, -1.0] },
             Vertex { position: [0.0, 0.0, 1.0] },
         ],
         vec![
             Vertex { position: [1.0, 1.0, -1.0] },
-            Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
             Vertex { position: [0.0, 0.0, 1.0] },
         ],
         vec![
             Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [0.0, 0.0, 1.0] },
+        ],
+        vec![
             Vertex { position: [-1.0, -1.0, -1.0] },
+            Vertex { position: [1.0, -1.0, -1.0] },
             Vertex { position: [0.0, 0.0, 1.0] },
         ],
     ]);
@@ -147,8 +147,8 @@ pub fn instance_primitives(
         let p0 = [a0.cos(), a0.sin()];
         let p1 = [a1.cos(), a1.sin()];
 
-        six_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0] });
         six_buffers_def[0].push(Vertex { position: [p1[0], p1[1], -1.0] });
+        six_buffers_def[0].push(Vertex { position: [p0[0], p0[1], -1.0] });
         six_buffers_def[0].push(Vertex { position: [0.0, 0.0, -1.0] });
 
         six_buffers_def[1].push(Vertex { position: [p0[0], p0[1], 1.0] });
@@ -156,8 +156,8 @@ pub fn instance_primitives(
         six_buffers_def[1].push(Vertex { position: [0.0, 0.0, 1.0] });
 
         six_buffers_def.push(vec![
-            Vertex { position: [p0[0], p0[1], -1.0] },
             Vertex { position: [p0[0], p0[1], 1.0] },
+            Vertex { position: [p0[0], p0[1], -1.0] },
             Vertex { position: [p1[0], p1[1], 1.0] },
 
             Vertex { position: [p0[0], p0[1], -1.0] },
@@ -171,8 +171,8 @@ pub fn instance_primitives(
     primitives_buffers_def.push(vec![
         // Floor
         vec![
-            Vertex { position: [-1.0, -1.0, -1.0] },
             Vertex { position: [1.0, -1.0, -1.0] },
+            Vertex { position: [-1.0, -1.0, -1.0] },
             Vertex { position: [-1.0, 1.0, -1.0] },
 
             Vertex { position: [1.0, 1.0, -1.0] },
@@ -185,8 +185,8 @@ pub fn instance_primitives(
             Vertex { position: [1.0, -1.0, 1.0] },
             Vertex { position: [-1.0, 1.0, 1.0] },
 
-            Vertex { position: [1.0, 1.0, 1.0] },
             Vertex { position: [1.0, -1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, 1.0] },
             Vertex { position: [-1.0, 1.0, 1.0] },
         ],
         // Left
@@ -195,8 +195,8 @@ pub fn instance_primitives(
             Vertex { position: [-1.0, -1.0, 1.0] },
             Vertex { position: [-1.0, 1.0, -1.0] },
 
-            Vertex { position: [-1.0, 1.0, 1.0] },
             Vertex { position: [-1.0, -1.0, 1.0] },
+            Vertex { position: [-1.0, 1.0, 1.0] },
             Vertex { position: [-1.0, 1.0, -1.0] },
         ],
         // Right
@@ -221,12 +221,12 @@ pub fn instance_primitives(
         ],
         // Front
         vec![
-            Vertex { position: [-1.0, 1.0, -1.0] },
             Vertex { position: [1.0, 1.0, -1.0] },
+            Vertex { position: [-1.0, 1.0, -1.0] },
             Vertex { position: [-1.0, 1.0, 1.0] },
 
-            Vertex { position: [1.0, 1.0, 1.0] },
             Vertex { position: [-1.0, 1.0, 1.0] },
+            Vertex { position: [1.0, 1.0, 1.0] },
             Vertex { position: [1.0, 1.0, -1.0] },
         ],
     ]);

@@ -376,11 +376,11 @@ impl<'a> Graphics<'a> {
             ImmutableBuffer::from_iter(
                 [
                     SecondVertex { position: [-1.0f32, -1.0] },
-                    SecondVertex { position: [1.0, -1.0] },
                     SecondVertex { position: [-1.0, 1.0] },
+                    SecondVertex { position: [1.0, -1.0] },
                     SecondVertex { position: [1.0, 1.0] },
-                    SecondVertex { position: [-1.0, 1.0] },
                     SecondVertex { position: [1.0, -1.0] },
+                    SecondVertex { position: [-1.0, 1.0] },
                 ].iter()
                     .cloned(),
                 BufferUsage::vertex_buffer(),
@@ -391,11 +391,11 @@ impl<'a> Graphics<'a> {
             ImmutableBuffer::from_iter(
                 [
                     SecondVertex { position: [-0.5f32, -0.5] },
-                    SecondVertex { position: [0.5, -0.5] },
                     SecondVertex { position: [-0.5, 0.5] },
+                    SecondVertex { position: [0.5, -0.5] },
                     SecondVertex { position: [0.5, 0.5] },
-                    SecondVertex { position: [-0.5, 0.5] },
                     SecondVertex { position: [0.5, -0.5] },
+                    SecondVertex { position: [-0.5, 0.5] },
                 ].iter()
                     .cloned(),
                 BufferUsage::vertex_buffer(),
@@ -493,6 +493,7 @@ impl<'a> Graphics<'a> {
                 .fragment_shader(draw1_fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
                 .sample_shading_enabled(1.0)
+                .cull_mode_back()
                 .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
                 .build(device.clone())
                 .unwrap(),
@@ -506,6 +507,7 @@ impl<'a> Graphics<'a> {
                 .fragment_shader(draw1_eraser_fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
                 .sample_shading_enabled(1.0)
+                .cull_mode_back()
                 .render_pass(Subpass::from(render_pass.clone(), 1).unwrap())
                 .build(device.clone())
                 .unwrap(),
@@ -519,6 +521,7 @@ impl<'a> Graphics<'a> {
                 .fragment_shader(draw1_fs.main_entry_point(), ())
                 .depth_stencil_simple_depth()
                 .sample_shading_enabled(1.0)
+                .cull_mode_back()
                 .render_pass(Subpass::from(render_pass.clone(), 2).unwrap())
                 .build(device.clone())
                 .unwrap(),
@@ -538,6 +541,7 @@ impl<'a> Graphics<'a> {
                 .vertex_input_single_buffer::<SecondVertex>()
                 .vertex_shader(draw2_vs.main_entry_point(), ())
                 .triangle_list()
+                .cull_mode_back()
                 .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(draw2_fs.main_entry_point(), ())
                 .render_pass(Subpass::from(second_render_pass.clone(), 0).unwrap())
@@ -550,6 +554,7 @@ impl<'a> Graphics<'a> {
                 .vertex_input_single_buffer::<SecondVertex>()
                 .vertex_shader(cursor_vs.main_entry_point(), ())
                 .triangle_list()
+                .cull_mode_back()
                 .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(cursor_fs.main_entry_point(), ())
                 .blend_alpha_blending()
@@ -563,6 +568,7 @@ impl<'a> Graphics<'a> {
                 .vertex_input_single_buffer::<SecondVertexImgui>()
                 .vertex_shader(imgui_vs.main_entry_point(), ())
                 .triangle_list()
+                .cull_mode_front()
                 .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(imgui_fs.main_entry_point(), ())
                 .blend_alpha_blending()
@@ -576,6 +582,7 @@ impl<'a> Graphics<'a> {
                 .vertex_input_single_buffer::<DebugVertex>()
                 .vertex_shader(debug_vs.main_entry_point(), ())
                 .triangle_list()
+                .cull_mode_back()
                 .viewports_dynamic_scissors_irrelevant(1)
                 .fragment_shader(debug_fs.main_entry_point(), ())
                 .blend_alpha_blending()
