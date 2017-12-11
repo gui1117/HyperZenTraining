@@ -141,6 +141,7 @@ fn main() {
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::DebugMode(false));
     world.add_resource(::resource::PlayerControl::new());
+    world.add_resource(::resource::Benchmarks::new());
     world.maintain();
 
     let mut game_system = ::system::GameSystem::new();
@@ -236,13 +237,16 @@ fn main() {
                 }
             });
             if done {
-                return;
+                break;
             }
         }
+        benchmarker.end("poll_event");
 
+        benchmarker.start("update");
         update_dispatcher.dispatch(&mut world.res);
         world.maintain();
         game_system.run(&mut world);
+        benchmarker.end("update");
 
         // Render world
         let mut next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), None);
@@ -259,7 +263,9 @@ fn main() {
         world.write_resource::<::resource::Rendering>().size_pixels =
             window.window().get_inner_size_pixels();
 
+        benchmarker.start("draw dispatch");
         draw_dispatcher.dispatch(&mut world.res);
+        benchmarker.end("draw dispatch");
 
         let (command_buffer, second_command_buffer) = {
             let mut rendering = world.write_resource::<::resource::Rendering>();
@@ -283,13 +289,17 @@ fn main() {
             .then_signal_fence_and_flush()
             .unwrap();
         previous_frame_end = Box::new(future) as Box<_>;
+        benchmarker.end("execute draw futures");
 
         // Sleep
+        benchmarker.start("sleep");
         let elapsed = last_frame_instant.elapsed();
         if let Some(to_sleep) = frame_duration.checked_sub(elapsed) {
             thread::sleep(to_sleep);
         }
         last_frame_instant = Instant::now();
         world.write_resource::<::resource::Config>().debug_fps_counter = fps_counter.tick();
+        benchmarker.end("sleep");
+        *world.write_resource::<::resource::Benchmarks>() = benchmarker.get_all();
     }
 }

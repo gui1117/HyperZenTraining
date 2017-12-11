@@ -3,10 +3,13 @@ use vulkano::command_buffer::AutoCommandBuffer;
 pub use graphics::Data as Graphics;
 pub use imgui::ImGui;
 pub use config::Config;
+pub use std::time::Duration;
+pub use std::collections::HashMap;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub struct MenuEvents(pub Vec<::winit::Event>);
 pub struct GameEvents(pub Vec<::winit::Event>);
+pub type Benchmarks = Vec<::util::Benchmark>;
 
 pub struct Rendering {
     pub image_num: Option<usize>,

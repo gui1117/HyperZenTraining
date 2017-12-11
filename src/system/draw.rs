@@ -27,7 +27,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
      ::specs::Fetch<'a, ::resource::Benchmarks>,
      ::specs::Fetch<'a, ::resource::PhysicWorld>);
 
-fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, dynamic_graphics_assets, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, depth_coef, physic_world): Self::SystemData){
+fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, dynamic_graphics_assets, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, depth_coef, benchmarks, physic_world): Self::SystemData){
         let mut future = Vec::new();
 
         // Compute view uniform
