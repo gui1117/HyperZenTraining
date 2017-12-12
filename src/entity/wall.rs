@@ -1,3 +1,4 @@
+use ::std::f32::consts::PI;
 use alga::general::SubsetOf;
 
 pub fn create_wall_side_draw<'a>(
@@ -105,15 +106,19 @@ pub fn create_floor_ceil<'a>(
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
     group.set_membership(&[super::FLOOR_CEIL_GROUP, super::WALL_GROUP]);
 
-    let pos = ::na::Isometry3::new(::na::Vector3::z() * z, ::na::zero());
+    let rot = if floor {
+        ::na::zero()
+    } else {
+        PI * ::na::Vector3::y()
+    };
+    let pos = ::na::Isometry3::new(::na::Vector3::z() * z, rot);
     let world_trans = {
         let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 200.0)
             .to_superset();
         ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
     };
 
-    let orientation = if floor { 1f32 } else { -1f32 };
-    let shape = ::ncollide::shape::Plane::new(orientation * ::na::Vector3::z());
+    let shape = ::ncollide::shape::Plane::new(::na::Vector3::z());
     let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
     body.set_collision_groups(group);
     body.set_transformation(pos);

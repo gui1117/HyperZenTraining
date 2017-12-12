@@ -99,7 +99,7 @@ pub fn create_2d_maze_walls<'a>(
         let y_radius = (y_max - y_min + 1) as f32 / 2.0;
         let pos = ::na::Isometry3::new(
             ::na::Vector3::new(x as f32 + 0.5, y_min as f32 + y_radius, 0.5) + dx,
-            ::na::Vector3::y() * FRAC_PI_2,
+            ::na::Vector3::y() * dx[0].signum() * FRAC_PI_2,
         );
         create_wall_side_closure(pos, x_radius, y_radius, None);
     }
@@ -122,7 +122,7 @@ pub fn create_2d_maze_walls<'a>(
         let x_radius = (x_max - x_min + 1) as f32 / 2.0;
         let pos = ::na::Isometry3::new(
             ::na::Vector3::new(x_min as f32 + x_radius, y as f32 + 0.5, 0.5) + dy,
-            ::na::Vector3::x() * FRAC_PI_2,
+            ::na::Vector3::x() * -dy[1].signum() * FRAC_PI_2,
         );
         create_wall_side_closure(pos, x_radius, y_radius, None);
     }
@@ -138,14 +138,14 @@ pub fn create_2d_maze_walls<'a>(
         if maze.walls.contains(&(pos + ::na::Vector2::new(1, 0))) {
             let i = ::na::Isometry3::new(
                 ::na::Vector3::new(pos[0] as f32 + 1.0, pos[1] as f32 + 0.5, 0.5),
-                ::na::Vector3::y() * FRAC_PI_2,
+                ::na::Vector3::y() * -FRAC_PI_2,
             );
             create_wall_side_closure(i, 0.5, 0.5, Some(color));
         }
         if maze.walls.contains(&(pos + ::na::Vector2::new(0, -1))) {
             let i = ::na::Isometry3::new(
                 ::na::Vector3::new(pos[0] as f32 + 0.5, pos[1] as f32, 0.5),
-                ::na::Vector3::x() * FRAC_PI_2,
+                ::na::Vector3::x() * -FRAC_PI_2,
             );
             create_wall_side_closure(i, 0.5, 0.5, Some(color));
         }
