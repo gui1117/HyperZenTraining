@@ -468,8 +468,8 @@ pub fn instance_primitives(
     primitives_buffers_def.push(vec![
         // Floor
         vec![
-            Vertex { position: [- width - radius, -1.0, -radius] },
             Vertex { position: [width + radius, -1.0, -radius] },
+            Vertex { position: [- width - radius, -1.0, -radius] },
             Vertex { position: [width + radius, -1.0 + radius*2.0, -radius] },
 
             Vertex { position: [- width - radius, -1.0, -radius] },
@@ -480,24 +480,24 @@ pub fn instance_primitives(
             Vertex { position: [width + radius, 1.0, -radius] },
             Vertex { position: [width + radius, 1.0 - radius*2.0, -radius] },
 
+            Vertex { position: [- width - radius, 1.0 - radius*2.0, -radius] },
             Vertex { position: [- width - radius, 1.0, -radius] },
-            Vertex { position: [- width - radius, 1.0 - radius*2.0, -radius] },
             Vertex { position: [width + radius, 1.0 - radius*2.0, -radius] },
 
-            Vertex { position: [- width - radius, -1.0 + radius*2.0, -radius] },
             Vertex { position: [- width + radius, -1.0 + radius*2.0, -radius] },
-            Vertex { position: [- width + radius, 1.0 - radius*2.0, -radius] },
-
             Vertex { position: [- width - radius, -1.0 + radius*2.0, -radius] },
             Vertex { position: [- width + radius, 1.0 - radius*2.0, -radius] },
+
+            Vertex { position: [- width + radius, 1.0 - radius*2.0, -radius] },
+            Vertex { position: [- width - radius, -1.0 + radius*2.0, -radius] },
             Vertex { position: [- width - radius, 1.0 - radius*2.0, -radius] },
 
-            Vertex { position: [width - radius, -1.0 + radius*2.0, -radius] },
             Vertex { position: [width + radius, -1.0 + radius*2.0, -radius] },
+            Vertex { position: [width - radius, -1.0 + radius*2.0, -radius] },
             Vertex { position: [width + radius, 1.0 - radius*2.0, -radius] },
 
-            Vertex { position: [width - radius, -1.0 + radius*2.0, -radius] },
             Vertex { position: [width + radius, 1.0 - radius*2.0, -radius] },
+            Vertex { position: [width - radius, -1.0 + radius*2.0, -radius] },
             Vertex { position: [width - radius, 1.0 - radius*2.0, -radius] },
         ],
         // Ceil
@@ -506,12 +506,12 @@ pub fn instance_primitives(
             Vertex { position: [width + radius, -1.0, radius] },
             Vertex { position: [width + radius, -1.0 + radius*2.0, radius] },
 
-            Vertex { position: [- width - radius, -1.0, radius] },
             Vertex { position: [- width - radius, -1.0 + radius*2.0, radius] },
+            Vertex { position: [- width - radius, -1.0, radius] },
             Vertex { position: [width + radius, -1.0 + radius*2.0, radius] },
 
-            Vertex { position: [- width - radius, 1.0, radius] },
             Vertex { position: [width + radius, 1.0, radius] },
+            Vertex { position: [- width - radius, 1.0, radius] },
             Vertex { position: [width + radius, 1.0 - radius*2.0, radius] },
 
             Vertex { position: [- width - radius, 1.0, radius] },
@@ -539,13 +539,13 @@ pub fn instance_primitives(
             Vertex { position: [width + radius, -1.0, -radius] },
             Vertex { position: [width + radius, -1.0, radius] },
 
-            Vertex { position: [-width - radius, -1.0, -radius] },
             Vertex { position: [-width - radius, -1.0, radius] },
+            Vertex { position: [-width - radius, -1.0, -radius] },
             Vertex { position: [width + radius, -1.0, radius] },
         ],
         vec![
-            Vertex { position: [-width - radius, 1.0, -radius] },
             Vertex { position: [width + radius, 1.0, -radius] },
+            Vertex { position: [-width - radius, 1.0, -radius] },
             Vertex { position: [width + radius, 1.0, radius] },
 
             Vertex { position: [-width - radius, 1.0, -radius] },
@@ -557,18 +557,54 @@ pub fn instance_primitives(
             Vertex { position: [-width - radius, -1.0, -radius] },
             Vertex { position: [-width - radius, -1.0, radius] },
 
-            Vertex { position: [-width - radius, 1.0, -radius] },
             Vertex { position: [-width - radius, 1.0, radius] },
+            Vertex { position: [-width - radius, 1.0, -radius] },
             Vertex { position: [-width - radius, -1.0, radius] },
         ],
         vec![
-            Vertex { position: [width + radius, 1.0, -radius] },
             Vertex { position: [width + radius, -1.0, -radius] },
+            Vertex { position: [width + radius, 1.0, -radius] },
             Vertex { position: [width + radius, -1.0, radius] },
 
             Vertex { position: [width + radius, 1.0, -radius] },
             Vertex { position: [width + radius, 1.0, radius] },
             Vertex { position: [width + radius, -1.0, radius] },
+        ],
+        vec![
+            Vertex { position: [width - radius, -1.0+radius*2.0, -radius] },
+            Vertex { position: [-width + radius, -1.0+radius*2.0, -radius] },
+            Vertex { position: [width - radius, -1.0+radius*2.0, radius] },
+
+            Vertex { position: [-width + radius, -1.0+radius*2.0, -radius] },
+            Vertex { position: [-width + radius, -1.0+radius*2.0, radius] },
+            Vertex { position: [width - radius, -1.0+radius*2.0, radius] },
+        ],
+        vec![
+            Vertex { position: [-width + radius, 1.0-radius*2.0, -radius] },
+            Vertex { position: [width - radius, 1.0-radius*2.0, -radius] },
+            Vertex { position: [width - radius, 1.0-radius*2.0, radius] },
+
+            Vertex { position: [-width + radius, 1.0-radius*2.0, radius] },
+            Vertex { position: [-width + radius, 1.0-radius*2.0, -radius] },
+            Vertex { position: [width - radius, 1.0-radius*2.0, radius] },
+        ],
+        vec![
+            Vertex { position: [-width + radius, -1.0+radius*2.0, -radius] },
+            Vertex { position: [-width + radius, 1.0-radius*2.0, -radius] },
+            Vertex { position: [-width + radius, -1.0+radius*2.0, radius] },
+
+            Vertex { position: [-width + radius, 1.0-radius*2.0, -radius] },
+            Vertex { position: [-width + radius, 1.0-radius*2.0, radius] },
+            Vertex { position: [-width + radius, -1.0+radius*2.0, radius] },
+        ],
+        vec![
+            Vertex { position: [width - radius, 1.0-radius*2.0, -radius] },
+            Vertex { position: [width - radius, -1.0+radius*2.0, -radius] },
+            Vertex { position: [width - radius, -1.0+radius*2.0, radius] },
+
+            Vertex { position: [width - radius, 1.0-radius*2.0, radius] },
+            Vertex { position: [width - radius, 1.0-radius*2.0, -radius] },
+            Vertex { position: [width - radius, -1.0+radius*2.0, radius] },
         ],
     ]);
 
@@ -632,7 +668,7 @@ pub mod primitive {
                 Primitive::Cube => 6,
                 Primitive::Cylinder => 1,
                 Primitive::PitCube => 11,
-                Primitive::Link => 6,
+                Primitive::Link => 10,
             }
         }
 
