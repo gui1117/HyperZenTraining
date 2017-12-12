@@ -36,8 +36,9 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             };
 
             if recompute_goal {
-                // TODO: it crash sometimes here because it doesn't find path
-                avoider.goal = maze.find_path(avoider_pos.translation.vector, player_pos.translation.vector).unwrap().get(1).cloned();
+                if let Some(path) = maze.find_path(avoider_pos.translation.vector, player_pos.translation.vector) {
+                    avoider.goal = path.get(1).cloned();
+                }
             }
 
             let goal_coef = 1f32;
