@@ -16,7 +16,6 @@ layout(set = 1, binding = 1) buffer Erased {
     float data[];
 } erased;
 
-int thickness = 2;
 float percent_divider = 23.0;
 
 void main() {
@@ -30,16 +29,41 @@ void main() {
 
     uint percent = 0;
 
-    for (int i = -thickness; i <= thickness; i++) {
-        for (int j = -thickness; j < thickness; j++) {
-            float x = gl_FragCoord.x + float(i);
-            float y = gl_FragCoord.y + float(j);
-            uvec2 other_group = texture(tmp_image, vec2(x, y)).rg;
-            if (group != other_group) {
-                percent += 1;
-            }
-        }
+    // Boundaries
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -2.0, gl_FragCoord.y -2.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -2.0, gl_FragCoord.y +2.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +2.0, gl_FragCoord.y +2.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +2.0, gl_FragCoord.y -2.0)).rg);
+
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +0.0, gl_FragCoord.y -2.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +0.0, gl_FragCoord.y +2.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -2.0, gl_FragCoord.y +0.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +2.0, gl_FragCoord.y +0.0)).rg);
+
+    if (percent == 0) {
+        out_color = out_color * erased.data[group_index];
+        return;
     }
+
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -1.0, gl_FragCoord.y -2.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -1.0, gl_FragCoord.y +2.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +1.0, gl_FragCoord.y -2.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +1.0, gl_FragCoord.y +2.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -2.0, gl_FragCoord.y -1.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +2.0, gl_FragCoord.y -1.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -2.0, gl_FragCoord.y +1.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +2.0, gl_FragCoord.y +1.0)).rg);
+
+    // Inner square
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -1.0, gl_FragCoord.y -1.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -1.0, gl_FragCoord.y +1.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +1.0, gl_FragCoord.y +1.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +1.0, gl_FragCoord.y -1.0)).rg);
+
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +0.0, gl_FragCoord.y -1.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +0.0, gl_FragCoord.y +1.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -1.0, gl_FragCoord.y +0.0)).rg);
+    percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +1.0, gl_FragCoord.y +0.0)).rg);
 
     out_color = out_color * (1.0 - (float(percent) / percent_divider)) * erased.data[group_index];
 
