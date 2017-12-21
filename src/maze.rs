@@ -40,18 +40,19 @@ where
     pub fn is_neighbouring_corridor(&self, cell: &::na::VectorN<isize, D>) -> bool {
         self.neighbours
             .iter()
-            .map(|n| n+cell)
+            .map(|n| n + cell)
             .any(|n| self.is_corridor(&n))
     }
 
     pub fn is_corridor(&self, cell: &::na::VectorN<isize, D>) -> bool {
-        !self.walls.contains(cell) &&
-            self.openings
+        !self.walls.contains(cell)
+            && self.openings
                 .iter()
                 .filter(|opening| {
-                    opening.requires.iter().all(|o| {
-                        !self.walls.contains(&(cell.clone() + o))
-                    })
+                    opening
+                        .requires
+                        .iter()
+                        .all(|o| !self.walls.contains(&(cell.clone() + o)))
                 })
                 .count() <= 2
     }
@@ -120,22 +121,18 @@ where
         let mut res = vec![];
 
         match D::dim() {
-            2 => {
-                for x in 0..size[0] {
-                    for y in 0..size[1] {
-                        res.push(Self::new_vec2(x, y));
+            2 => for x in 0..size[0] {
+                for y in 0..size[1] {
+                    res.push(Self::new_vec2(x, y));
+                }
+            },
+            3 => for x in 0..size[0] {
+                for y in 0..size[1] {
+                    for z in 0..size[2] {
+                        res.push(Self::new_vec3(x, y, z));
                     }
                 }
-            }
-            3 => {
-                for x in 0..size[0] {
-                    for y in 0..size[1] {
-                        for z in 0..size[2] {
-                            res.push(Self::new_vec3(x, y, z));
-                        }
-                    }
-                }
-            }
+            },
             _ => unimplemented!(),
         }
         res
@@ -193,13 +190,14 @@ where
 
     pub fn compute_room_zones(&self) -> Vec<HashSet<::na::VectorN<isize, D>>> {
         self.compute_zones(|maze, cell| {
-            !maze.walls.contains(cell) &&
-                maze.openings
+            !maze.walls.contains(cell)
+                && maze.openings
                     .iter()
                     .filter(|opening| {
-                        opening.requires.iter().all(|o| {
-                            !self.walls.contains(&(cell.clone() + o))
-                        })
+                        opening
+                            .requires
+                            .iter()
+                            .all(|o| !self.walls.contains(&(cell.clone() + o)))
                     })
                     .count() > 2
         })
@@ -213,7 +211,9 @@ where
                     .iter()
                     .map(|n| n + cell)
                     .filter(|n| !self.walls.contains(n))
-                    .for_each(|n| { acc.insert(n); });
+                    .for_each(|n| {
+                        acc.insert(n);
+                    });
                 acc
             });
             superset.difference(room).count() == 1
@@ -236,7 +236,9 @@ where
                         .iter()
                         .map(|n| n + cell)
                         .filter(|n| !self.walls.contains(n))
-                        .for_each(|n| { acc.insert(n); });
+                        .for_each(|n| {
+                            acc.insert(n);
+                        });
                     acc
                 });
                 superset.difference(&room).next().unwrap().clone()
@@ -388,12 +390,13 @@ where
         pos: ::na::Vector3<f32>,
         goal: ::na::Vector3<f32>,
     ) -> Option<Vec<::na::Vector3<f32>>> {
-        self.inner_find_path(self.to_inner(&pos), self.to_inner(&goal)).map(|path| path.iter().map(|cell| self.to_world(cell)).collect())
+        self.inner_find_path(self.to_inner(&pos), self.to_inner(&goal))
+            .map(|path| path.iter().map(|cell| self.to_world(cell)).collect())
     }
 
     #[inline]
     pub fn to_inner(&self, coords: &::na::Vector3<f32>) -> ::na::VectorN<isize, D> {
-        ::na::VectorN::<isize, D>::from_iterator(coords.iter().map(|&c| (c/self.scale) as isize))
+        ::na::VectorN::<isize, D>::from_iterator(coords.iter().map(|&c| (c / self.scale) as isize))
     }
 
     #[inline]
@@ -415,9 +418,10 @@ where
             |cell| {
                 let mut res = vec![];
                 for opening in self.openings.iter() {
-                    if opening.requires.iter().all(|o| {
-                        !self.walls.contains(&(o + cell.clone()))
-                    })
+                    if opening
+                        .requires
+                        .iter()
+                        .all(|o| !self.walls.contains(&(o + cell.clone())))
                     {
                         res.push((opening.cell.clone() + cell, opening.cost));
                     }
@@ -516,7 +520,9 @@ where
                                 walls.push(
                                     x_wall
                                         .iter()
-                                        .map(|c| c + Self::new_vec3(x * 2 - 1 + bug[0], y * 2, z * 2))
+                                        .map(|c| {
+                                            c + Self::new_vec3(x * 2 - 1 + bug[0], y * 2, z * 2)
+                                        })
                                         .collect(),
                                 );
                             }
@@ -524,7 +530,9 @@ where
                                 walls.push(
                                     y_wall
                                         .iter()
-                                        .map(|c| c + Self::new_vec3(x * 2, y * 2 - 1 + bug[1], z * 2))
+                                        .map(|c| {
+                                            c + Self::new_vec3(x * 2, y * 2 - 1 + bug[1], z * 2)
+                                        })
                                         .collect(),
                                 );
                             }
@@ -532,7 +540,9 @@ where
                                 walls.push(
                                     z_wall
                                         .iter()
-                                        .map(|c| c + Self::new_vec3(x * 2, y * 2, z * 2 - 1 + bug[2]))
+                                        .map(|c| {
+                                            c + Self::new_vec3(x * 2, y * 2, z * 2 - 1 + bug[2])
+                                        })
                                         .collect(),
                                 );
                             }
@@ -675,340 +685,328 @@ where
 
     fn neighbours() -> Vec<::na::VectorN<isize, D>> {
         match D::dim() {
-            2 => {
-                vec![
-                    Self::new_vec2(-1, 0),
-                    Self::new_vec2(1, 0),
-                    Self::new_vec2(0, -1),
-                    Self::new_vec2(0, 1),
-                ]
-            }
-            3 => {
-                vec![
-                    Self::new_vec3(-1, 0, 0),
-                    Self::new_vec3(1, 0, 0),
-                    Self::new_vec3(0, -1, 0),
-                    Self::new_vec3(0, 1, 0),
-                    Self::new_vec3(0, 0, -1),
-                    Self::new_vec3(0, 0, 1),
-                ]
-            }
+            2 => vec![
+                Self::new_vec2(-1, 0),
+                Self::new_vec2(1, 0),
+                Self::new_vec2(0, -1),
+                Self::new_vec2(0, 1),
+            ],
+            3 => vec![
+                Self::new_vec3(-1, 0, 0),
+                Self::new_vec3(1, 0, 0),
+                Self::new_vec3(0, -1, 0),
+                Self::new_vec3(0, 1, 0),
+                Self::new_vec3(0, 0, -1),
+                Self::new_vec3(0, 0, 1),
+            ],
             _ => unimplemented!(),
         }
     }
 
     fn openings() -> Vec<Opening<D>> {
         match D::dim() {
-            2 => {
-                vec![
-                    Opening {
-                        cell: Self::new_vec2(-1, 0),
-                        cost: 10,
-                        requires: vec![Self::new_vec2(-1, 0)],
-                    },
-                    Opening {
-                        cell: Self::new_vec2(1, 0),
-                        cost: 10,
-                        requires: vec![Self::new_vec2(1, 0)],
-                    },
-                    Opening {
-                        cell: Self::new_vec2(0, -1),
-                        cost: 10,
-                        requires: vec![Self::new_vec2(0, -1)],
-                    },
-                    Opening {
-                        cell: Self::new_vec2(0, 1),
-                        cost: 10,
-                        requires: vec![Self::new_vec2(0, 1)],
-                    },
-                    Opening {
-                        cell: Self::new_vec2(-1, -1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec2(-1, 0),
-                            Self::new_vec2(0, -1),
-                            Self::new_vec2(-1, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec2(-1, 1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec2(-1, 0),
-                            Self::new_vec2(0, 1),
-                            Self::new_vec2(-1, 1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec2(1, -1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec2(1, 0),
-                            Self::new_vec2(0, -1),
-                            Self::new_vec2(1, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec2(1, 1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec2(1, 0),
-                            Self::new_vec2(0, 1),
-                            Self::new_vec2(1, 1),
-                        ],
-                    },
-                ]
-            }
-            3 => {
-                vec![
-                    Opening {
-                        cell: Self::new_vec3(-1, 0, 0),
-                        cost: 10,
-                        requires: vec![Self::new_vec3(-1, 0, 0)],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(1, 0, 0),
-                        cost: 10,
-                        requires: vec![Self::new_vec3(1, 0, 0)],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(0, -1, 0),
-                        cost: 10,
-                        requires: vec![Self::new_vec3(0, -1, 0)],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(0, 1, 0),
-                        cost: 10,
-                        requires: vec![Self::new_vec3(0, 1, 0)],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(0, 0, -1),
-                        cost: 10,
-                        requires: vec![Self::new_vec3(0, 0, -1)],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(0, 0, 1),
-                        cost: 10,
-                        requires: vec![Self::new_vec3(0, 0, 1)],
-                    },
-
-                    Opening {
-                        cell: Self::new_vec3(-1, -1, 0),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(-1, 0, 0),
-                            Self::new_vec3(0, -1, 0),
-                            Self::new_vec3(-1, -1, 0),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(-1, 1, 0),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(-1, 0, 0),
-                            Self::new_vec3(0, 1, 0),
-                            Self::new_vec3(-1, 1, 0),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(1, -1, 0),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(1, 0, 0),
-                            Self::new_vec3(0, -1, 0),
-                            Self::new_vec3(1, -1, 0),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(1, 1, 0),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(1, 0, 0),
-                            Self::new_vec3(0, 1, 0),
-                            Self::new_vec3(1, 1, 0),
-                        ],
-                    },
-
-                    Opening {
-                        cell: Self::new_vec3(0, -1, -1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(0, -1, 0),
-                            Self::new_vec3(0, 0, -1),
-                            Self::new_vec3(0, -1, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(0, -1, 1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(0, -1, 0),
-                            Self::new_vec3(0, 0, 1),
-                            Self::new_vec3(0, -1, 1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(0, 1, -1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(0, 1, 0),
-                            Self::new_vec3(0, 0, -1),
-                            Self::new_vec3(0, 1, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(0, 1, 1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(0, 1, 0),
-                            Self::new_vec3(0, 0, 1),
-                            Self::new_vec3(0, 1, 1),
-                        ],
-                    },
-
-                    Opening {
-                        cell: Self::new_vec3(-1, 0, -1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(-1, 0, 0),
-                            Self::new_vec3(0, 0, -1),
-                            Self::new_vec3(-1, 0, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(-1, 0, 1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(-1, 0, 0),
-                            Self::new_vec3(0, 0, 1),
-                            Self::new_vec3(-1, 0, 1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(1, 0, -1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(1, 0, 0),
-                            Self::new_vec3(0, 0, -1),
-                            Self::new_vec3(1, 0, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(1, 0, 1),
-                        cost: 15,
-                        requires: vec![
-                            Self::new_vec3(1, 0, 0),
-                            Self::new_vec3(0, 0, 1),
-                            Self::new_vec3(1, 0, 1),
-                        ],
-                    },
-
-                    Opening {
-                        cell: Self::new_vec3(-1, -1, -1),
-                        cost: 17,
-                        requires: vec![
-                            Self::new_vec3(-1, 0, 0),
-                            Self::new_vec3(0, -1, 0),
-                            Self::new_vec3(-1, -1, 0),
-                            Self::new_vec3(-1, 0, -1),
-                            Self::new_vec3(0, -1, -1),
-                            Self::new_vec3(-1, -1, -1),
-                            Self::new_vec3(-1, -1, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(1, 1, 1),
-                        cost: 17,
-                        requires: vec![
-                            Self::new_vec3(1, 0, 0),
-                            Self::new_vec3(0, 1, 0),
-                            Self::new_vec3(1, 1, 0),
-                            Self::new_vec3(1, 0, 1),
-                            Self::new_vec3(0, 1, 1),
-                            Self::new_vec3(1, 1, 1),
-                            Self::new_vec3(1, 1, 1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(-1, -1, 1),
-                        cost: 17,
-                        requires: vec![
-                            Self::new_vec3(-1, 0, 0),
-                            Self::new_vec3(0, -1, 0),
-                            Self::new_vec3(-1, -1, 0),
-                            Self::new_vec3(-1, 0, 1),
-                            Self::new_vec3(0, -1, 1),
-                            Self::new_vec3(-1, -1, 1),
-                            Self::new_vec3(-1, -1, 1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(-1, 1, -1),
-                        cost: 17,
-                        requires: vec![
-                            Self::new_vec3(-1, 0, 0),
-                            Self::new_vec3(0, 1, 0),
-                            Self::new_vec3(-1, 1, 0),
-                            Self::new_vec3(-1, 0, -1),
-                            Self::new_vec3(0, 1, -1),
-                            Self::new_vec3(-1, 1, -1),
-                            Self::new_vec3(-1, 1, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(1, -1, -1),
-                        cost: 17,
-                        requires: vec![
-                            Self::new_vec3(1, 0, 0),
-                            Self::new_vec3(0, -1, 0),
-                            Self::new_vec3(1, -1, 0),
-                            Self::new_vec3(1, 0, -1),
-                            Self::new_vec3(0, -1, -1),
-                            Self::new_vec3(1, -1, -1),
-                            Self::new_vec3(1, -1, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(-1, 1, 1),
-                        cost: 17,
-                        requires: vec![
-                            Self::new_vec3(-1, 0, 0),
-                            Self::new_vec3(0, 1, 0),
-                            Self::new_vec3(-1, 1, 0),
-                            Self::new_vec3(-1, 0, 1),
-                            Self::new_vec3(0, 1, 1),
-                            Self::new_vec3(-1, 1, 1),
-                            Self::new_vec3(-1, 1, 1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(1, 1, -1),
-                        cost: 17,
-                        requires: vec![
-                            Self::new_vec3(1, 0, 0),
-                            Self::new_vec3(0, 1, 0),
-                            Self::new_vec3(1, 1, 0),
-                            Self::new_vec3(1, 0, -1),
-                            Self::new_vec3(0, 1, -1),
-                            Self::new_vec3(1, 1, -1),
-                            Self::new_vec3(1, 1, -1),
-                        ],
-                    },
-                    Opening {
-                        cell: Self::new_vec3(1, -1, 1),
-                        cost: 17,
-                        requires: vec![
-                            Self::new_vec3(1, 0, 0),
-                            Self::new_vec3(0, -1, 0),
-                            Self::new_vec3(1, -1, 0),
-                            Self::new_vec3(1, 0, 1),
-                            Self::new_vec3(0, -1, 1),
-                            Self::new_vec3(1, -1, 1),
-                            Self::new_vec3(1, -1, 1),
-                        ],
-                    },
-                ]
-            }
+            2 => vec![
+                Opening {
+                    cell: Self::new_vec2(-1, 0),
+                    cost: 10,
+                    requires: vec![Self::new_vec2(-1, 0)],
+                },
+                Opening {
+                    cell: Self::new_vec2(1, 0),
+                    cost: 10,
+                    requires: vec![Self::new_vec2(1, 0)],
+                },
+                Opening {
+                    cell: Self::new_vec2(0, -1),
+                    cost: 10,
+                    requires: vec![Self::new_vec2(0, -1)],
+                },
+                Opening {
+                    cell: Self::new_vec2(0, 1),
+                    cost: 10,
+                    requires: vec![Self::new_vec2(0, 1)],
+                },
+                Opening {
+                    cell: Self::new_vec2(-1, -1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec2(-1, 0),
+                        Self::new_vec2(0, -1),
+                        Self::new_vec2(-1, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec2(-1, 1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec2(-1, 0),
+                        Self::new_vec2(0, 1),
+                        Self::new_vec2(-1, 1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec2(1, -1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec2(1, 0),
+                        Self::new_vec2(0, -1),
+                        Self::new_vec2(1, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec2(1, 1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec2(1, 0),
+                        Self::new_vec2(0, 1),
+                        Self::new_vec2(1, 1),
+                    ],
+                },
+            ],
+            3 => vec![
+                Opening {
+                    cell: Self::new_vec3(-1, 0, 0),
+                    cost: 10,
+                    requires: vec![Self::new_vec3(-1, 0, 0)],
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 0, 0),
+                    cost: 10,
+                    requires: vec![Self::new_vec3(1, 0, 0)],
+                },
+                Opening {
+                    cell: Self::new_vec3(0, -1, 0),
+                    cost: 10,
+                    requires: vec![Self::new_vec3(0, -1, 0)],
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 1, 0),
+                    cost: 10,
+                    requires: vec![Self::new_vec3(0, 1, 0)],
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 0, -1),
+                    cost: 10,
+                    requires: vec![Self::new_vec3(0, 0, -1)],
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 0, 1),
+                    cost: 10,
+                    requires: vec![Self::new_vec3(0, 0, 1)],
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, -1, 0),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(-1, 0, 0),
+                        Self::new_vec3(0, -1, 0),
+                        Self::new_vec3(-1, -1, 0),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, 1, 0),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(-1, 0, 0),
+                        Self::new_vec3(0, 1, 0),
+                        Self::new_vec3(-1, 1, 0),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(1, -1, 0),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(1, 0, 0),
+                        Self::new_vec3(0, -1, 0),
+                        Self::new_vec3(1, -1, 0),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 1, 0),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(1, 0, 0),
+                        Self::new_vec3(0, 1, 0),
+                        Self::new_vec3(1, 1, 0),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(0, -1, -1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(0, -1, 0),
+                        Self::new_vec3(0, 0, -1),
+                        Self::new_vec3(0, -1, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(0, -1, 1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(0, -1, 0),
+                        Self::new_vec3(0, 0, 1),
+                        Self::new_vec3(0, -1, 1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 1, -1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(0, 1, 0),
+                        Self::new_vec3(0, 0, -1),
+                        Self::new_vec3(0, 1, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(0, 1, 1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(0, 1, 0),
+                        Self::new_vec3(0, 0, 1),
+                        Self::new_vec3(0, 1, 1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, 0, -1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(-1, 0, 0),
+                        Self::new_vec3(0, 0, -1),
+                        Self::new_vec3(-1, 0, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, 0, 1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(-1, 0, 0),
+                        Self::new_vec3(0, 0, 1),
+                        Self::new_vec3(-1, 0, 1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 0, -1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(1, 0, 0),
+                        Self::new_vec3(0, 0, -1),
+                        Self::new_vec3(1, 0, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 0, 1),
+                    cost: 15,
+                    requires: vec![
+                        Self::new_vec3(1, 0, 0),
+                        Self::new_vec3(0, 0, 1),
+                        Self::new_vec3(1, 0, 1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, -1, -1),
+                    cost: 17,
+                    requires: vec![
+                        Self::new_vec3(-1, 0, 0),
+                        Self::new_vec3(0, -1, 0),
+                        Self::new_vec3(-1, -1, 0),
+                        Self::new_vec3(-1, 0, -1),
+                        Self::new_vec3(0, -1, -1),
+                        Self::new_vec3(-1, -1, -1),
+                        Self::new_vec3(-1, -1, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 1, 1),
+                    cost: 17,
+                    requires: vec![
+                        Self::new_vec3(1, 0, 0),
+                        Self::new_vec3(0, 1, 0),
+                        Self::new_vec3(1, 1, 0),
+                        Self::new_vec3(1, 0, 1),
+                        Self::new_vec3(0, 1, 1),
+                        Self::new_vec3(1, 1, 1),
+                        Self::new_vec3(1, 1, 1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, -1, 1),
+                    cost: 17,
+                    requires: vec![
+                        Self::new_vec3(-1, 0, 0),
+                        Self::new_vec3(0, -1, 0),
+                        Self::new_vec3(-1, -1, 0),
+                        Self::new_vec3(-1, 0, 1),
+                        Self::new_vec3(0, -1, 1),
+                        Self::new_vec3(-1, -1, 1),
+                        Self::new_vec3(-1, -1, 1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, 1, -1),
+                    cost: 17,
+                    requires: vec![
+                        Self::new_vec3(-1, 0, 0),
+                        Self::new_vec3(0, 1, 0),
+                        Self::new_vec3(-1, 1, 0),
+                        Self::new_vec3(-1, 0, -1),
+                        Self::new_vec3(0, 1, -1),
+                        Self::new_vec3(-1, 1, -1),
+                        Self::new_vec3(-1, 1, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(1, -1, -1),
+                    cost: 17,
+                    requires: vec![
+                        Self::new_vec3(1, 0, 0),
+                        Self::new_vec3(0, -1, 0),
+                        Self::new_vec3(1, -1, 0),
+                        Self::new_vec3(1, 0, -1),
+                        Self::new_vec3(0, -1, -1),
+                        Self::new_vec3(1, -1, -1),
+                        Self::new_vec3(1, -1, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(-1, 1, 1),
+                    cost: 17,
+                    requires: vec![
+                        Self::new_vec3(-1, 0, 0),
+                        Self::new_vec3(0, 1, 0),
+                        Self::new_vec3(-1, 1, 0),
+                        Self::new_vec3(-1, 0, 1),
+                        Self::new_vec3(0, 1, 1),
+                        Self::new_vec3(-1, 1, 1),
+                        Self::new_vec3(-1, 1, 1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(1, 1, -1),
+                    cost: 17,
+                    requires: vec![
+                        Self::new_vec3(1, 0, 0),
+                        Self::new_vec3(0, 1, 0),
+                        Self::new_vec3(1, 1, 0),
+                        Self::new_vec3(1, 0, -1),
+                        Self::new_vec3(0, 1, -1),
+                        Self::new_vec3(1, 1, -1),
+                        Self::new_vec3(1, 1, -1),
+                    ],
+                },
+                Opening {
+                    cell: Self::new_vec3(1, -1, 1),
+                    cost: 17,
+                    requires: vec![
+                        Self::new_vec3(1, 0, 0),
+                        Self::new_vec3(0, -1, 0),
+                        Self::new_vec3(1, -1, 0),
+                        Self::new_vec3(1, 0, 1),
+                        Self::new_vec3(0, -1, 1),
+                        Self::new_vec3(1, -1, 1),
+                        Self::new_vec3(1, -1, 1),
+                    ],
+                },
+            ],
             _ => unimplemented!(),
         }
     }

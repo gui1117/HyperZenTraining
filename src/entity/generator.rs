@@ -8,12 +8,15 @@ pub fn create_generator<'a>(
     entities: &::specs::Entities,
 ) {
     let entity = entities.create();
-    generators.insert(entity, ::component::Generator {
-        pos,
-        entity: generated_entity,
-        salvo,
-        timer: 0.0,
-        time_between_salvo,
-        eraser_probability,
-    });
+    generators.insert(
+        entity,
+        ::component::Generator {
+            pos,
+            entity: generated_entity,
+            salvo,
+            timer: 0.0,
+            time_between_salvo,
+            eraser_probability,
+        },
+    );
 }

@@ -1,8 +1,4 @@
-pub fn create_bouncer_w(
-    pos: ::na::Vector3<f32>,
-    eraser: bool,
-    world: &::specs::World,
-) {
+pub fn create_bouncer_w(pos: ::na::Vector3<f32>, eraser: bool, world: &::specs::World) {
     create_bouncer(
         pos,
         eraser,
@@ -16,7 +12,7 @@ pub fn create_bouncer_w(
         &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
-        &world.read_resource()
+        &world.read_resource(),
     );
 }
 
@@ -35,7 +31,11 @@ pub fn create_bouncer<'a>(
     config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
-    let primitive_trans = ::graphics::resizer(config.bouncer_size, config.bouncer_size, config.bouncer_size);
+    let primitive_trans = ::graphics::resizer(
+        config.bouncer_size,
+        config.bouncer_size,
+        config.bouncer_size,
+    );
 
     let shape = ::ncollide::shape::Ball3::new(config.bouncer_size);
     let pos = ::na::Isometry3::new(pos, ::na::zero());
@@ -54,8 +54,14 @@ pub fn create_bouncer<'a>(
     let entity = entities.create();
     bouncers.insert(entity, ::component::Bouncer);
     momentums.insert(entity, {
-        let mut momentum =
-            ::component::Momentum::new(mass, config.bouncer_velocity, config.bouncer_time_to_reach_vmax, None, config.bouncer_ang_damping, None);
+        let mut momentum = ::component::Momentum::new(
+            mass,
+            config.bouncer_velocity,
+            config.bouncer_time_to_reach_vmax,
+            None,
+            config.bouncer_ang_damping,
+            None,
+        );
         momentum.direction = ::na::Vector3::new_random().normalize();
         momentum
     });

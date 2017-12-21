@@ -5,7 +5,7 @@ use vulkano::memory::pool::StdMemoryPool;
 use vulkano::pipeline::GraphicsPipeline;
 use vulkano::pipeline::vertex::SingleBufferDefinition;
 use vulkano::framebuffer::RenderPass;
-use graphics::{shader, Vertex, render_pass};
+use graphics::{render_pass, shader, Vertex};
 use nphysics::detection::joint;
 
 use std::sync::Arc;
@@ -88,7 +88,9 @@ pub struct Aim {
 
 impl Aim {
     pub fn new() -> Self {
-        Aim { rotation: ::na::Unit::new_normalize(::na::Quaternion::from_vector(::na::zero())) }
+        Aim {
+            rotation: ::na::Unit::new_normalize(::na::Quaternion::from_vector(::na::zero())),
+        }
     }
 }
 
@@ -240,7 +242,9 @@ impl DynamicGraphicsAssets {
             groups,
             primitive_trans,
             color,
-            world_trans: shader::draw1_vs::ty::World { world: primitive_trans.unwrap().into() },
+            world_trans: shader::draw1_vs::ty::World {
+                world: primitive_trans.unwrap().into(),
+            },
         }
     }
 }
@@ -286,7 +290,6 @@ impl Drop for PhysicBody {
 
 impl PhysicBody {
     pub fn entity(body: &::nphysics::object::RigidBody<f32>) -> ::specs::Entity {
-
         let entity = body.user_data().unwrap();
         let entity = unsafe { ::std::mem::transmute::<&Box<_>, &Box<Any>>(entity) };
         entity.downcast_ref::<::specs::Entity>().unwrap().clone()
@@ -317,10 +320,7 @@ impl PhysicBody {
     ) {
         physic_world.add_ball_in_socket(joint::BallInSocket::new(
             joint::Anchor::new(None, position),
-            joint::Anchor::new(
-                Some(self.handle),
-                ::na::Point3::new(0.0, 0.0, 0.0),
-            ),
+            joint::Anchor::new(Some(self.handle), ::na::Point3::new(0.0, 0.0, 0.0)),
         ));
     }
 
@@ -370,7 +370,6 @@ impl Drop for PhysicSensor {
 #[allow(unused)]
 impl PhysicSensor {
     pub fn entity(body: &::nphysics::object::Sensor<f32>) -> ::specs::Entity {
-
         let entity = body.user_data().unwrap();
         let entity = unsafe { ::std::mem::transmute::<&Box<_>, &Box<Any>>(entity) };
         entity.downcast_ref::<::specs::Entity>().unwrap().clone()
@@ -444,7 +443,9 @@ impl ::specs::Component for Proximitor {
 
 impl Proximitor {
     pub fn new() -> Self {
-        Proximitor { intersections: vec![] }
+        Proximitor {
+            intersections: vec![],
+        }
     }
 }
 
@@ -483,7 +484,7 @@ impl ::specs::Component for Turret {
 
 #[derive(Default)]
 pub struct FollowPlayer {
-    pub amortization: f32
+    pub amortization: f32,
 }
 
 impl ::specs::Component for FollowPlayer {

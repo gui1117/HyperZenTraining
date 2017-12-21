@@ -6,20 +6,33 @@ use specs::Join;
 pub struct PhysicSystem;
 
 impl<'a> ::specs::System<'a> for PhysicSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
-     ::specs::ReadStorage<'a, ::component::Momentum>,
-     ::specs::ReadStorage<'a, ::component::AirMomentum>,
-     ::specs::ReadStorage<'a, ::component::Hook>,
-     ::specs::WriteStorage<'a, ::component::PhysicBody>,
-     ::specs::WriteStorage<'a, ::component::Contactor>,
-     ::specs::WriteStorage<'a, ::component::Proximitor>,
-     ::specs::Fetch<'a, ::resource::Config>,
-     ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-     ::specs::Entities<'a>);
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::Player>,
+        ::specs::ReadStorage<'a, ::component::Momentum>,
+        ::specs::ReadStorage<'a, ::component::AirMomentum>,
+        ::specs::ReadStorage<'a, ::component::Hook>,
+        ::specs::WriteStorage<'a, ::component::PhysicBody>,
+        ::specs::WriteStorage<'a, ::component::Contactor>,
+        ::specs::WriteStorage<'a, ::component::Proximitor>,
+        ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+        ::specs::Entities<'a>,
+    );
 
     fn run(
         &mut self,
-        (players, momentums, air_momentums, hooks, mut bodies, mut contactors, mut proximitors, config, mut physic_world, entities): Self::SystemData,
+        (
+            players,
+            momentums,
+            air_momentums,
+            hooks,
+            mut bodies,
+            mut contactors,
+            mut proximitors,
+            config,
+            mut physic_world,
+            entities,
+        ): Self::SystemData,
     ) {
         // TODO: use integrator to modify rigidbody
         for (momentum, body, entity) in (&momentums, &mut bodies, &*entities).join() {
@@ -31,13 +44,19 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
 
             match (contactors.get(entity), air_momentums.get(entity)) {
                 (Some(contactor), Some(air_momentum)) => {
-                    if contactor.contacts.iter().any(|&(_, ref c)| c.normal[2] < -0.8) {
+                    if contactor
+                        .contacts
+                        .iter()
+                        .any(|&(_, ref c)| c.normal[2] < -0.8)
+                    {
                         body.append_lin_force(-momentum.damping * lin_vel);
                     } else {
-                        body.append_lin_force(air_momentum.gravity_force * ::na::Vector3::new(0.0, 0.0, -1.0));
+                        body.append_lin_force(
+                            air_momentum.gravity_force * ::na::Vector3::new(0.0, 0.0, -1.0),
+                        );
                         body.append_lin_force(-air_momentum.damping * lin_vel);
                     }
-                },
+                }
                 _ => body.append_lin_force(-momentum.damping * lin_vel),
             }
             if let Some(ref hook) = hooks.get(entity) {
@@ -65,7 +84,6 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             proximitor.intersections.clear();
         }
         for _ in 0..2 {
-
             physic_world.step(config.dt().clone() / 2.);
 
             for (co1, co2, mut contact) in physic_world.collision_world().contacts() {

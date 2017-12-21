@@ -3,11 +3,13 @@ use specs::Join;
 pub struct FollowPlayerSystem;
 
 impl<'a> ::specs::System<'a> for FollowPlayerSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::FollowPlayer>,
-     ::specs::ReadStorage<'a, ::component::Player>,
-     ::specs::ReadStorage<'a, ::component::PhysicBody>,
-     ::specs::WriteStorage<'a, ::component::Momentum>,
-     ::specs::Fetch<'a, ::resource::PhysicWorld>);
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::FollowPlayer>,
+        ::specs::ReadStorage<'a, ::component::Player>,
+        ::specs::ReadStorage<'a, ::component::PhysicBody>,
+        ::specs::WriteStorage<'a, ::component::Momentum>,
+        ::specs::Fetch<'a, ::resource::PhysicWorld>,
+    );
 
     fn run(&mut self, (followers, players, bodies, mut momentums, physic_world): Self::SystemData) {
         let player_pos = (&players, &bodies)
@@ -25,7 +27,7 @@ impl<'a> ::specs::System<'a> for FollowPlayerSystem {
             let vec = player_pos - pos;
 
             momentum.direction = if vec.norm() < follower.amortization {
-                vec/follower.amortization
+                vec / follower.amortization
             } else {
                 vec.normalize()
             };

@@ -14,8 +14,8 @@ pub fn create_light_ray<'a>(
     let (primitive, groups) = ::graphics::Primitive::Cylinder.instantiate();
     let color = ::graphics::Color::Yellow;
     let primitive_trans = {
-        let i = ::na::Translation::from_vector((from + to) / 2.0) *
-            ::na::Rotation3::rotation_between(&::na::Vector3::new(1.0, 0.0, 0.0), &(to - from))
+        let i = ::na::Translation::from_vector((from + to) / 2.0)
+            * ::na::Rotation3::rotation_between(&::na::Vector3::new(1.0, 0.0, 0.0), &(to - from))
                 .unwrap();
 
         let r = ::na::Rotation3::new(::na::Vector3::new(0.0, -FRAC_PI_2, 0.0));
@@ -28,12 +28,7 @@ pub fn create_light_ray<'a>(
     dynamic_draws.insert(entity, ::component::DynamicDraw);
     dynamic_graphics_assets.insert(
         entity,
-        ::component::DynamicGraphicsAssets::new(
-            primitive,
-            groups,
-            color,
-            primitive_trans,
-        ),
+        ::component::DynamicGraphicsAssets::new(primitive, groups, color, primitive_trans),
     );
     delet_timers.insert(entity, ::component::DeletTimer::new(0.03));
 }
@@ -73,8 +68,8 @@ pub fn create_weapon<'a>(
 
     // Six
     let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
-    let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0)) *
-        ::graphics::resizer(six_radius, six_radius, six_length);
+    let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0))
+        * ::graphics::resizer(six_radius, six_radius, six_length);
 
     let entity = entities.create();
     weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
@@ -95,8 +90,8 @@ pub fn create_weapon<'a>(
         let primitive_trans = ::na::Isometry3::new(
             ::na::Vector3::new(bullet_x + bullet_dx * i as f32, 0.0, 0.0),
             ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
-        ) *
-            ::graphics::resizer(bullet_radius, bullet_radius, bullet_length);
+        )
+            * ::graphics::resizer(bullet_radius, bullet_radius, bullet_length);
 
         let entity = entities.create();
         bullets.push(entity);
@@ -124,8 +119,8 @@ pub fn create_weapon<'a>(
                 (center_radius + bar_y_radius) * angle.sin(),
             ),
             ::na::Vector3::new(angle, 0.0, 0.0),
-        ) *
-            ::graphics::resizer(bar_x_radius, bar_y_radius, bar_z_radius);
+        )
+            * ::graphics::resizer(bar_x_radius, bar_y_radius, bar_z_radius);
 
         let entity = entities.create();
         weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
@@ -150,5 +145,8 @@ pub fn create_weapon<'a>(
             bullets,
         },
     );
-    shooters.insert(anchor, ::component::Shooter::new(config.weapon_reload_time, bullet_nbr));
+    shooters.insert(
+        anchor,
+        ::component::Shooter::new(config.weapon_reload_time, bullet_nbr),
+    );
 }

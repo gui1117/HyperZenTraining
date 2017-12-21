@@ -1,28 +1,28 @@
-extern crate winit;
-extern crate vulkano_win;
+extern crate alga;
+extern crate fps_counter;
+extern crate generic_array;
+#[macro_use]
+extern crate imgui;
+#[macro_use]
+extern crate lazy_static;
+extern crate nalgebra as na;
+extern crate ncollide;
+extern crate nphysics3d as nphysics;
+extern crate pathfinding;
+extern crate png;
+extern crate rand;
+extern crate ron;
+#[macro_use]
+extern crate serde_derive;
+extern crate specs;
+extern crate typenum;
 #[macro_use]
 extern crate vulkano;
 #[macro_use]
 extern crate vulkano_shader_derive;
-extern crate alga;
-extern crate specs;
-extern crate nalgebra as na;
-extern crate ncollide;
-extern crate rand;
-extern crate nphysics3d as nphysics;
-#[macro_use]
-extern crate lazy_static;
-extern crate pathfinding;
-extern crate png;
-#[macro_use]
-extern crate imgui;
-#[macro_use]
-extern crate serde_derive;
-extern crate ron;
+extern crate vulkano_win;
 extern crate wavefront_obj;
-extern crate typenum;
-extern crate generic_array;
-extern crate fps_counter;
+extern crate winit;
 
 mod util;
 mod graphics;
@@ -42,7 +42,7 @@ use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 use vulkano::instance::Instance;
 
-use winit::{WindowEvent, Event, ElementState, VirtualKeyCode, KeyboardInput, DeviceEvent};
+use winit::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -174,7 +174,10 @@ fn main() {
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
-    let frame_duration = Duration::new(0, (1000000000.0/world.read_resource::<::resource::Config>().fps as f32) as u32);
+    let frame_duration = Duration::new(
+        0,
+        (1000000000.0 / world.read_resource::<::resource::Config>().fps as f32) as u32,
+    );
     let mut last_frame_instant = Instant::now();
     let mut fps_counter = fps_counter::FPSCounter::new();
     let mut benchmarker = util::Benchmarker::new();
@@ -198,19 +201,24 @@ fn main() {
 
             events_loop.poll_events(|ev| {
                 let retain = match ev {
-                    Event::WindowEvent { event: WindowEvent::Closed, .. } => {
+                    Event::WindowEvent {
+                        event: WindowEvent::Closed,
+                        ..
+                    } => {
                         done = true;
                         false
                     }
                     Event::WindowEvent {
-                        event: WindowEvent::KeyboardInput {
-                            input: KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::P),
+                        event:
+                            WindowEvent::KeyboardInput {
+                                input:
+                                    KeyboardInput {
+                                        state: ElementState::Pressed,
+                                        virtual_keycode: Some(VirtualKeyCode::P),
+                                        ..
+                                    },
                                 ..
                             },
-                            ..
-                        },
                         ..
                     } => {
                         debug_mode.0 = !debug_mode.0;
@@ -298,7 +306,9 @@ fn main() {
             thread::sleep(to_sleep);
         }
         last_frame_instant = Instant::now();
-        world.write_resource::<::resource::Config>().debug_fps_counter = fps_counter.tick();
+        world
+            .write_resource::<::resource::Config>()
+            .debug_fps_counter = fps_counter.tick();
         benchmarker.end("sleep");
         *world.write_resource::<::resource::Benchmarks>() = benchmarker.get_all();
     }

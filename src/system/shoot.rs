@@ -11,23 +11,38 @@ impl ShootSystem {
 }
 
 impl<'a> ::specs::System<'a> for ShootSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::PhysicBody>,
-     ::specs::ReadStorage<'a, ::component::Aim>,
-     ::specs::ReadStorage<'a, ::component::WeaponAnimation>,
-     ::specs::WriteStorage<'a, ::component::Shooter>,
-     ::specs::WriteStorage<'a, ::component::Life>,
-     ::specs::WriteStorage<'a, ::component::DeletTimer>,
-     ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
-     ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-     ::specs::WriteStorage<'a, ::component::DynamicHud>,
-     ::specs::Fetch<'a, ::resource::PhysicWorld>,
-     ::specs::Fetch<'a, ::resource::Config>,
-     ::specs::Entities<'a>);
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::PhysicBody>,
+        ::specs::ReadStorage<'a, ::component::Aim>,
+        ::specs::ReadStorage<'a, ::component::WeaponAnimation>,
+        ::specs::WriteStorage<'a, ::component::Shooter>,
+        ::specs::WriteStorage<'a, ::component::Life>,
+        ::specs::WriteStorage<'a, ::component::DeletTimer>,
+        ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
+        ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+        ::specs::WriteStorage<'a, ::component::DynamicHud>,
+        ::specs::Fetch<'a, ::resource::PhysicWorld>,
+        ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::Entities<'a>,
+    );
 
     fn run(
         &mut self,
-        (bodies, aims, animations, mut shooters, mut lifes, mut delet_timers, mut dynamic_assets, mut dynamic_draws, mut dynamic_huds, physic_world, config, entities): Self::SystemData,
-){
+        (
+            bodies,
+            aims,
+            animations,
+            mut shooters,
+            mut lifes,
+            mut delet_timers,
+            mut dynamic_assets,
+            mut dynamic_draws,
+            mut dynamic_huds,
+            physic_world,
+            config,
+            entities,
+        ): Self::SystemData,
+    ) {
         for (aim, animation, body, shooter, entity) in
             (&aims, &animations, &bodies, &mut shooters, &*entities).join()
         {
@@ -65,14 +80,11 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                 group.set_whitelist(&[::entity::MONSTER_GROUP, ::entity::WALL_GROUP]);
 
                 self.collided.clear();
-                for (other_body, collision) in
-                    physic_world.collision_world().interferences_with_ray(
-                        &ray,
-                        &group.as_collision_groups(),
-                    )
+                for (other_body, collision) in physic_world
+                    .collision_world()
+                    .interferences_with_ray(&ray, &group.as_collision_groups())
                 {
-                    if let ::nphysics::object::WorldObject::RigidBody(other_body) =
-                        other_body.data
+                    if let ::nphysics::object::WorldObject::RigidBody(other_body) = other_body.data
                     {
                         let other_entity =
                             ::component::PhysicBody::entity(physic_world.rigid_body(other_body));
@@ -81,9 +93,8 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                         }
                     }
                 }
-                self.collided.sort_by(
-                    |a, b| (a.1).partial_cmp(&b.1).unwrap(),
-                );
+                self.collided
+                    .sort_by(|a, b| (a.1).partial_cmp(&b.1).unwrap());
                 let mut size = 1000.0; // infinite
                 for collided in &self.collided {
                     if let Some(ref mut life) = lifes.get_mut(collided.0) {
@@ -94,8 +105,8 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     }
                 }
 
-                let ray_draw_origin = (body_pos.translation * aim.rotation * animation.weapon_trans *
-                                           animation.shoot_pos)
+                let ray_draw_origin = (body_pos.translation * aim.rotation * animation.weapon_trans
+                    * animation.shoot_pos)
                     .coords;
                 let ray_draw_end = (ray.origin + size * ray.dir).coords;
 

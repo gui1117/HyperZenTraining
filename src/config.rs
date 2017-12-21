@@ -1,4 +1,4 @@
-use imgui::{ImVec2, ImVec4, ImGuiStyle};
+use imgui::{ImGuiStyle, ImVec2, ImVec4};
 
 use std::fs::File;
 use std::io::Write;

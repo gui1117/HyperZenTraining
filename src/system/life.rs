@@ -3,12 +3,14 @@ use specs::Join;
 pub struct LifeSystem;
 
 impl<'a> ::specs::System<'a> for LifeSystem {
-    type SystemData = (::specs::WriteStorage<'a, ::component::PhysicBody>,
-     ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-     ::specs::WriteStorage<'a, ::component::DynamicEraser>,
-     ::specs::WriteStorage<'a, ::component::Life>,
-     ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-     ::specs::Entities<'a>);
+    type SystemData = (
+        ::specs::WriteStorage<'a, ::component::PhysicBody>,
+        ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+        ::specs::WriteStorage<'a, ::component::DynamicEraser>,
+        ::specs::WriteStorage<'a, ::component::Life>,
+        ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+        ::specs::Entities<'a>,
+    );
 
     fn run(
         &mut self,

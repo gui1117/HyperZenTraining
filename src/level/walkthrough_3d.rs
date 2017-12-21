@@ -31,7 +31,16 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     let mut rooms_cells;
     loop {
         println!("try create a maze");
-        maze = ::maze::Maze::kruskal(::na::Vector3::new(conf.size.0 as isize, conf.size.1 as isize, conf.size.2 as isize), conf.percent as f64, ::na::Vector3::new(conf.bug.0, conf.bug.1, conf.bug.2), conf.scale);
+        maze = ::maze::Maze::kruskal(
+            ::na::Vector3::new(
+                conf.size.0 as isize,
+                conf.size.1 as isize,
+                conf.size.2 as isize,
+            ),
+            conf.percent as f64,
+            ::na::Vector3::new(conf.bug.0, conf.bug.1, conf.bug.2),
+            conf.scale,
+        );
         maze.reduce(1);
         maze.circle();
         maze.fill_smallests();
@@ -93,11 +102,10 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     );
 
     let dir = teleport_start_cell.1 - teleport_start_cell.0;
-    let player_pos = maze.to_world(&teleport_start_cell.0) - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, dir[2] as f32);
-    world.write_resource::<::resource::PlayerControl>().pointer = [
-        (-dir[1] as f32).atan2(dir[0] as f32),
-        0.0,
-    ];
+    let player_pos = maze.to_world(&teleport_start_cell.0)
+        - 0.2 * ::na::Vector3::new(dir[0] as f32, dir[1] as f32, dir[2] as f32);
+    world.write_resource::<::resource::PlayerControl>().pointer =
+        [(-dir[1] as f32).atan2(dir[0] as f32), 0.0];
     ::entity::create_player_w(player_pos, world);
 
     for i in 0..conf.turrets {
@@ -108,9 +116,37 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
         ::entity::create_turret_w(pos, world);
     }
 
-    avoider_generator_cells.iter().map(|c| (c, ::component::GeneratedEntity::Avoider, conf.avoider_salvo, conf.avoider_time_between_salvo, conf.avoider_eraser_proba))
-        .chain(bouncer_generator_cells.iter().map(|c| (c, ::component::GeneratedEntity::Bouncer, conf.bouncer_salvo, conf.bouncer_time_between_salvo, conf.bouncer_eraser_proba)))
-        .for_each(|t| ::entity::create_generator(maze.to_world(&t.0), t.1, t.2, t.3, t.4, &mut world.write(), &world.read_resource()));
+    avoider_generator_cells
+        .iter()
+        .map(|c| {
+            (
+                c,
+                ::component::GeneratedEntity::Avoider,
+                conf.avoider_salvo,
+                conf.avoider_time_between_salvo,
+                conf.avoider_eraser_proba,
+            )
+        })
+        .chain(bouncer_generator_cells.iter().map(|c| {
+            (
+                c,
+                ::component::GeneratedEntity::Bouncer,
+                conf.bouncer_salvo,
+                conf.bouncer_time_between_salvo,
+                conf.bouncer_eraser_proba,
+            )
+        }))
+        .for_each(|t| {
+            ::entity::create_generator(
+                maze.to_world(&t.0),
+                t.1,
+                t.2,
+                t.3,
+                t.4,
+                &mut world.write(),
+                &world.read_resource(),
+            )
+        });
 
     world.add_resource(::resource::Maze::Maze3D(maze));
 }

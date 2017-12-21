@@ -1,5 +1,5 @@
 use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
-use vulkano::buffer::{ImmutableBuffer, BufferUsage};
+use vulkano::buffer::{BufferUsage, ImmutableBuffer};
 use vulkano::pipeline::viewport::Viewport;
 use vulkano::descriptor::descriptor_set::PersistentDescriptorSet;
 use specs::Join;
@@ -11,23 +11,44 @@ use std::cell::RefCell;
 pub struct DrawSystem;
 
 impl<'a> ::specs::System<'a> for DrawSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::StaticDraw>,
-     ::specs::ReadStorage<'a, ::component::DynamicDraw>,
-     ::specs::ReadStorage<'a, ::component::DynamicEraser>,
-     ::specs::ReadStorage<'a, ::component::DynamicHud>,
-     ::specs::ReadStorage<'a, ::component::DynamicGraphicsAssets>,
-     ::specs::ReadStorage<'a, ::component::PhysicBody>,
-     ::specs::ReadStorage<'a, ::component::Player>,
-     ::specs::ReadStorage<'a, ::component::Aim>,
-     ::specs::FetchMut<'a, ::resource::Rendering>,
-     ::specs::FetchMut<'a, ::resource::ImGui>,
-     ::specs::FetchMut<'a, ::resource::Graphics>,
-     ::specs::Fetch<'a, ::resource::Config>,
-     ::specs::Fetch<'a, ::resource::DepthCoef>,
-     ::specs::Fetch<'a, ::resource::Benchmarks>,
-     ::specs::Fetch<'a, ::resource::PhysicWorld>);
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::StaticDraw>,
+        ::specs::ReadStorage<'a, ::component::DynamicDraw>,
+        ::specs::ReadStorage<'a, ::component::DynamicEraser>,
+        ::specs::ReadStorage<'a, ::component::DynamicHud>,
+        ::specs::ReadStorage<'a, ::component::DynamicGraphicsAssets>,
+        ::specs::ReadStorage<'a, ::component::PhysicBody>,
+        ::specs::ReadStorage<'a, ::component::Player>,
+        ::specs::ReadStorage<'a, ::component::Aim>,
+        ::specs::FetchMut<'a, ::resource::Rendering>,
+        ::specs::FetchMut<'a, ::resource::ImGui>,
+        ::specs::FetchMut<'a, ::resource::Graphics>,
+        ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::Fetch<'a, ::resource::DepthCoef>,
+        ::specs::Fetch<'a, ::resource::Benchmarks>,
+        ::specs::Fetch<'a, ::resource::PhysicWorld>,
+    );
 
-fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, dynamic_graphics_assets, bodies, players, aims, mut rendering, mut imgui, mut graphics, config, depth_coef, benchmarks, physic_world): Self::SystemData){
+    fn run(
+        &mut self,
+        (
+            static_draws,
+            dynamic_draws,
+            dynamic_erasers,
+            dynamic_huds,
+            dynamic_graphics_assets,
+            bodies,
+            players,
+            aims,
+            mut rendering,
+            mut imgui,
+            mut graphics,
+            config,
+            depth_coef,
+            benchmarks,
+            physic_world,
+        ): Self::SystemData,
+    ) {
         let mut future = Vec::new();
 
         // Compute view uniform
@@ -40,16 +61,19 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
             let camera_top = player_aim.rotation * ::na::Vector3::z();
 
             let view_matrix = {
-                let i: ::na::Transform3<f32> =
-                    ::na::Similarity3::look_at_rh(
-                        &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector)),
-                        &::na::Point3::from_coordinates(::na::Vector3::from(player_pos.translation.vector) + player_aim_dir),
-                        &camera_top.into(),
-                        // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + ::na::Vector3::new(0.0, 0.0, -10.0)),
-                        // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
-                        // &[-1.0, 0.0, 0.0].into(),
-                        1.0,
-                        ).to_superset();
+                let i: ::na::Transform3<f32> = ::na::Similarity3::look_at_rh(
+                    &::na::Point3::from_coordinates(::na::Vector3::from(
+                        player_pos.translation.vector,
+                    )),
+                    &::na::Point3::from_coordinates(
+                        ::na::Vector3::from(player_pos.translation.vector) + player_aim_dir,
+                    ),
+                    &camera_top.into(),
+                    // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector) + ::na::Vector3::new(0.0, 0.0, -10.0)),
+                    // &::na::Point3::from_coordinates(::na::Vector3::from(pos.translation.vector)),
+                    // &[-1.0, 0.0, 0.0].into(),
+                    1.0,
+                ).to_superset();
                 i.unwrap()
             };
 
@@ -270,44 +294,69 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
             .unwrap()
             .fill_buffer(graphics.tmp_erased_buffer.clone(), 0u32)
             .unwrap()
-            .dispatch([graphics.dim[0]/64, graphics.dim[1]/64, 1], graphics.eraser1_pipeline.clone(), (graphics.eraser1_descriptor_set_0.clone(), graphics.eraser1_descriptor_set_1.clone()), ())
+            .dispatch(
+                [graphics.dim[0] / 64, graphics.dim[1] / 64, 1],
+                graphics.eraser1_pipeline.clone(),
+                (
+                    graphics.eraser1_descriptor_set_0.clone(),
+                    graphics.eraser1_descriptor_set_1.clone(),
+                ),
+                (),
+            )
             .unwrap()
-            .dispatch([(::graphics::GROUP_COUNTER_SIZE/64) as u32, 1, 1], graphics.eraser2_pipeline.clone(), graphics.eraser2_descriptor_set.clone(), config.dt()/config.eraser_time)
+            .dispatch(
+                [(::graphics::GROUP_COUNTER_SIZE / 64) as u32, 1, 1],
+                graphics.eraser2_pipeline.clone(),
+                graphics.eraser2_descriptor_set.clone(),
+                config.dt() / config.eraser_time,
+            )
             .unwrap();
 
         rendering.command_buffer = Some(command_buffer_builder.build().unwrap());
 
         // Compute second command
-        let mut second_command_buffer_builder = AutoCommandBufferBuilder::primary_one_time_submit(graphics.device.clone(), graphics.queue.family()).unwrap()
-            .begin_render_pass(graphics.second_framebuffers[rendering.image_num.take().unwrap()].clone(), false, vec!())
+        let mut second_command_buffer_builder = AutoCommandBufferBuilder::primary_one_time_submit(
+            graphics.device.clone(),
+            graphics.queue.family(),
+        ).unwrap()
+            .begin_render_pass(
+                graphics.second_framebuffers[rendering.image_num.take().unwrap()].clone(),
+                false,
+                vec![],
+            )
             .unwrap()
             .draw(
                 graphics.draw2_pipeline.clone(),
                 screen_dynamic_state.clone(),
                 graphics.fullscreen_vertex_buffer.clone(),
-                (graphics.draw2_descriptor_set_0.clone(), graphics.draw2_descriptor_set_1.clone()),
-                ()
+                (
+                    graphics.draw2_descriptor_set_0.clone(),
+                    graphics.draw2_descriptor_set_1.clone(),
+                ),
+                (),
             )
             .unwrap()
             .draw(
                 graphics.cursor_pipeline.clone(),
                 DynamicState {
-                    viewports: Some(vec![Viewport {
-                    origin: [
-                        (graphics.dim[0] - graphics.cursor_tex_dim[0] * 2) as f32 / 2.0,
-                        (graphics.dim[1] - graphics.cursor_tex_dim[1] * 2) as f32 / 2.0,
-                    ],
-                    depth_range: 0.0..1.0,
-                    dimensions: [
-                        (graphics.cursor_tex_dim[0] * 2) as f32,
-                        (graphics.cursor_tex_dim[1] * 2) as f32,
-                    ],
-                    }]),
+                    viewports: Some(vec![
+                        Viewport {
+                            origin: [
+                                (graphics.dim[0] - graphics.cursor_tex_dim[0] * 2) as f32 / 2.0,
+                                (graphics.dim[1] - graphics.cursor_tex_dim[1] * 2) as f32 / 2.0,
+                            ],
+                            depth_range: 0.0..1.0,
+                            dimensions: [
+                                (graphics.cursor_tex_dim[0] * 2) as f32,
+                                (graphics.cursor_tex_dim[1] * 2) as f32,
+                            ],
+                        },
+                    ]),
                     ..DynamicState::none()
                 },
                 graphics.cursor_vertex_buffer.clone(),
                 graphics.cursor_descriptor_set.clone(),
-                ()
+                (),
             )
             .unwrap();
 
@@ -320,14 +369,13 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
                     .unwrap();
 
                 // This is not optimised.
-                let debug_arrow_set =
-                    Arc::new(
-                        PersistentDescriptorSet::start(graphics.debug_pipeline.clone(), 0)
-                            .add_buffer(world_trans_subbuffer)
-                            .unwrap()
-                            .build()
-                            .unwrap(),
-                    );
+                let debug_arrow_set = Arc::new(
+                    PersistentDescriptorSet::start(graphics.debug_pipeline.clone(), 0)
+                        .add_buffer(world_trans_subbuffer)
+                        .unwrap()
+                        .build()
+                        .unwrap(),
+                );
 
                 second_command_buffer_builder = second_command_buffer_builder
                     .draw(
@@ -363,9 +411,10 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
             let mut cmd_builder = ref_cell_cmd_builder.borrow_mut().take().unwrap();
             // TODO: impl vertex for imgui in imgui
             let (vertex_buffer, vertex_buf_future) = ImmutableBuffer::from_iter(
-                drawlist.vtx_buffer.iter().map(|vtx| {
-                    ::graphics::SecondVertexImgui::from(vtx.clone())
-                }),
+                drawlist
+                    .vtx_buffer
+                    .iter()
+                    .map(|vtx| ::graphics::SecondVertexImgui::from(vtx.clone())),
                 BufferUsage::vertex_buffer(),
                 graphics.queue.clone(),
             ).unwrap();
@@ -422,9 +471,10 @@ fn run(&mut self, (static_draws, dynamic_draws, dynamic_erasers, dynamic_huds, d
                     .draw_indexed(
                         graphics.imgui_pipeline.clone(),
                         screen_dynamic_state.clone(),
-                        vertex_buffer.clone(), index_buffer.clone(),
+                        vertex_buffer.clone(),
+                        index_buffer.clone(),
                         (matrix_set.clone(), graphics.imgui_descriptor_set.clone()),
-                        ()
+                        (),
                     )
                     .unwrap();
             }

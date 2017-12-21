@@ -28,18 +28,23 @@ pub fn create_3d_maze_walls<'a>(
     config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
-    let index = |x, y, z, o| {
-        match o {
-            0 => x as usize * 3,
-            1 => y as usize * 3 + o,
-            2 => z as usize * 3 + o,
-            _ => unreachable!(),
-        }
+    let index = |x, y, z, o| match o {
+        0 => x as usize * 3,
+        1 => y as usize * 3 + o,
+        2 => z as usize * 3 + o,
+        _ => unreachable!(),
     };
-    let groups = ::graphics::Primitive::Plane.reserve(maze.size.iter().max().unwrap().clone() as usize * 3 + 3);
+    let groups = ::graphics::Primitive::Plane
+        .reserve(maze.size.iter().max().unwrap().clone() as usize * 3 + 3);
 
     for cell in &maze.walls {
-        ::entity::create_wall_cube_physic(maze.to_world(cell), maze.scale/2.0, bodies, physic_world, entities);
+        ::entity::create_wall_cube_physic(
+            maze.to_world(cell),
+            maze.scale / 2.0,
+            bodies,
+            physic_world,
+            entities,
+        );
         for dl in &maze.neighbours {
             let neighbour = cell + dl;
             if maze.walls.contains(&neighbour) {
@@ -47,16 +52,30 @@ pub fn create_3d_maze_walls<'a>(
             }
 
             let color = colors.get(&neighbour).cloned();
-            let orientation = dl.iter().enumerate().find(|&(_, &n)| n != 0).map(|(i, _)| i).unwrap();
+            let orientation = dl.iter()
+                .enumerate()
+                .find(|&(_, &n)| n != 0)
+                .map(|(i, _)| i)
+                .unwrap();
             let groups = if color.is_some() {
                 ::graphics::Primitive::Plane.reserve(1).pop().unwrap()
             } else {
                 groups[index(cell[0], cell[1], cell[2], orientation)].clone()
             };
-            let dl_f32 = ::na::Vector3::new(dl[0] as f32, dl[1] as f32, dl[2] as f32) * maze.scale/2.;
+            let dl_f32 =
+                ::na::Vector3::new(dl[0] as f32, dl[1] as f32, dl[2] as f32) * maze.scale / 2.;
             let pos = ::na::Isometry3::new(maze.to_world(cell) + dl_f32, dl.axis_angle_z());
 
-            ::entity::create_wall_side_draw(pos, maze.scale/2., color, groups, static_draws, graphics, config, entities);
+            ::entity::create_wall_side_draw(
+                pos,
+                maze.scale / 2.,
+                color,
+                groups,
+                static_draws,
+                graphics,
+                config,
+                entities,
+            );
         }
     }
 }

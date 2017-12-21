@@ -1,8 +1,4 @@
-pub fn create_teleport_w(
-    pos: ::na::Isometry3<f32>,
-    scale: f32,
-    world: &::specs::World,
-) {
+pub fn create_teleport_w(pos: ::na::Isometry3<f32>, scale: f32, world: &::specs::World) {
     create_teleport(
         pos,
         scale,
@@ -24,8 +20,9 @@ pub fn create_teleport<'a>(
     config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
-    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(0.45*scale, 0.45*scale, 0.0));
-    let pos = pos * ::na::Translation3::from_vector(::na::Vector3::new(0.0, 0.0, config.teleport_dl));
+    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(0.45 * scale, 0.45 * scale, 0.0));
+    let pos =
+        pos * ::na::Translation3::from_vector(::na::Vector3::new(0.0, 0.0, config.teleport_dl));
 
     let mut group = ::nphysics::object::SensorCollisionGroups::new();
     group.set_whitelist(&[super::PLAYER_GROUP]);

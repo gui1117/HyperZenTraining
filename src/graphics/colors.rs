@@ -29,20 +29,20 @@ pub fn colors() -> Vec<[f32; 4]> {
 
 #[derive(Serialize, Deserialize, Clone, Copy)]
 pub enum Color {
-    Black,        //000000
-    PaleBrown,   //efc573
-    Brown,        //9c663a
-    PaleRed,     //e5585e
-    Red,          //cb1d05
-    PaleBlue,    //83d0e0
-    Blue,         //558ccc
-    PaleYellow,  //fcce79
-    Yellow,       //ffff44
-    PaleGreen,   //addf42
-    Green,        //75ce38
-    PalePink,    //f6c6d2
-    Pink,         //c75f7a
-    PalePurple,  //e2c5c9
-    Purple,       //975db2
+    Black,      //000000
+    PaleBrown,  //efc573
+    Brown,      //9c663a
+    PaleRed,    //e5585e
+    Red,        //cb1d05
+    PaleBlue,   //83d0e0
+    Blue,       //558ccc
+    PaleYellow, //fcce79
+    Yellow,     //ffff44
+    PaleGreen,  //addf42
+    Green,      //75ce38
+    PalePink,   //f6c6d2
+    Pink,       //c75f7a
+    PalePurple, //e2c5c9
+    Purple,     //975db2
     DarkBlue,
 }

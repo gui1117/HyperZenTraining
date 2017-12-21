@@ -1,9 +1,6 @@
 use std::f32::consts::FRAC_PI_2;
 
-pub fn create_turret_w(
-    pos: ::na::Vector3<f32>,
-    world: &::specs::World,
-) {
+pub fn create_turret_w(pos: ::na::Vector3<f32>, world: &::specs::World) {
     create_turret(
         pos,
         &mut world.write(),
@@ -49,7 +46,10 @@ pub fn create_turret<'a>(
     let laser_mass = 1.0 / laser_body.inv_mass();
 
     let laser_physic_entity = entities.create();
-    followers.insert(laser_physic_entity, ::component::FollowPlayer::new(config.laser_amortization));
+    followers.insert(
+        laser_physic_entity,
+        ::component::FollowPlayer::new(config.laser_amortization),
+    );
     momentums.insert(
         laser_physic_entity,
         ::component::Momentum::new(
@@ -77,9 +77,14 @@ pub fn create_turret<'a>(
     dynamic_draws.insert(laser_draw_entity, ::component::DynamicDraw);
 
     // Create turret
-    let primitive_trans = ::graphics::resizer(config.turret_size, config.turret_size, config.turret_size);
+    let primitive_trans =
+        ::graphics::resizer(config.turret_size, config.turret_size, config.turret_size);
 
-    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(config.turret_size, config.turret_size, config.turret_size));
+    let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(
+        config.turret_size,
+        config.turret_size,
+        config.turret_size,
+    ));
     let trans = ::na::Isometry3::new(pos, ::na::Vector3::new(0.0, FRAC_PI_2, 0.0));
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
@@ -126,8 +131,8 @@ pub fn create_turret<'a>(
     dynamic_draws.insert(entity, ::component::DynamicDraw);
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
-    bodies.get_mut(entity).unwrap().ball_in_socket(
-        physic_world,
-        ::na::Point3::from_coordinates(pos),
-    );
+    bodies
+        .get_mut(entity)
+        .unwrap()
+        .ball_in_socket(physic_world, ::na::Point3::from_coordinates(pos));
 }

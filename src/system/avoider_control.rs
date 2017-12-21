@@ -3,14 +3,16 @@ use specs::Join;
 pub struct AvoiderControlSystem;
 
 impl<'a> ::specs::System<'a> for AvoiderControlSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::Player>,
-     ::specs::ReadStorage<'a, ::component::Aim>,
-     ::specs::ReadStorage<'a, ::component::PhysicBody>,
-     ::specs::WriteStorage<'a, ::component::Avoider>,
-     ::specs::WriteStorage<'a, ::component::Momentum>,
-     ::specs::Fetch<'a, ::resource::PhysicWorld>,
-     ::specs::Fetch<'a, ::resource::Config>,
-     ::specs::Fetch<'a, ::resource::Maze>);
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::Player>,
+        ::specs::ReadStorage<'a, ::component::Aim>,
+        ::specs::ReadStorage<'a, ::component::PhysicBody>,
+        ::specs::WriteStorage<'a, ::component::Avoider>,
+        ::specs::WriteStorage<'a, ::component::Momentum>,
+        ::specs::Fetch<'a, ::resource::PhysicWorld>,
+        ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::Fetch<'a, ::resource::Maze>,
+    );
 
     fn run(
         &mut self,
@@ -36,19 +38,24 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
             };
 
             if recompute_goal {
-                if let Some(path) = maze.find_path(avoider_pos.translation.vector, player_pos.translation.vector) {
+                if let Some(path) = maze.find_path(
+                    avoider_pos.translation.vector,
+                    player_pos.translation.vector,
+                ) {
                     avoider.goal = path.get(1).cloned();
                 }
             }
 
             let goal_coef = 1f32;
-            let goal_direction = (avoider.goal.unwrap_or(player_pos.translation.vector) - avoider_pos.translation.vector).normalize();
+            let goal_direction = (avoider.goal.unwrap_or(player_pos.translation.vector)
+                - avoider_pos.translation.vector)
+                .normalize();
 
             let (avoid_direction, avoid_coef) = {
-                let avoider_pos_rel_player = avoider_pos.translation.vector -
-                    player_pos.translation.vector;
-                let avoid_vector = avoider_pos_rel_player -
-                    avoider_pos_rel_player.dot(&player_aim_dir) * player_aim_dir;
+                let avoider_pos_rel_player =
+                    avoider_pos.translation.vector - player_pos.translation.vector;
+                let avoid_vector = avoider_pos_rel_player
+                    - avoider_pos_rel_player.dot(&player_aim_dir) * player_aim_dir;
                 if avoid_vector.norm() != 0.0 {
                     let avoid_norm = avoid_vector.norm();
                     let avoid_direction = avoid_vector.normalize();
@@ -68,8 +75,8 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                 }
             };
 
-            momentum.direction = (goal_coef * goal_direction + avoid_coef * avoid_direction)
-                .normalize();
+            momentum.direction =
+                (goal_coef * goal_direction + avoid_coef * avoid_direction).normalize();
         }
     }
 }

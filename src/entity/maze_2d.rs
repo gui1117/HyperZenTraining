@@ -84,17 +84,17 @@ pub fn create_2d_maze_walls<'a>(
     for (dx, x_side) in minus_x_sides
         .iter()
         .map(|side| (::na::Vector3::new(-0.5, 0.0, 0.0), side))
-        .chain(plus_x_sides.iter().map(|side| {
-            (::na::Vector3::new(0.5, 0.0, 0.0), side)
-        }))
-    {
+        .chain(
+            plus_x_sides
+                .iter()
+                .map(|side| (::na::Vector3::new(0.5, 0.0, 0.0), side)),
+        ) {
         let x = x_side.iter().next().unwrap()[0];
-        let (y_min, y_max) = x_side.iter().fold(
-            (isize::max_value(), isize::min_value()),
-            |acc, cell| {
+        let (y_min, y_max) = x_side
+            .iter()
+            .fold((isize::max_value(), isize::min_value()), |acc, cell| {
                 (acc.0.min(cell[1]), acc.1.max(cell[1]))
-            },
-        );
+            });
         let x_radius = 0.5;
         let y_radius = (y_max - y_min + 1) as f32 / 2.0;
         let pos = ::na::Isometry3::new(
@@ -107,17 +107,17 @@ pub fn create_2d_maze_walls<'a>(
     for (dy, y_side) in minus_y_sides
         .iter()
         .map(|side| (::na::Vector3::new(0.0, -0.5, 0.0), side))
-        .chain(plus_y_sides.iter().map(|side| {
-            (::na::Vector3::new(0.0, 0.5, 0.0), side)
-        }))
-    {
+        .chain(
+            plus_y_sides
+                .iter()
+                .map(|side| (::na::Vector3::new(0.0, 0.5, 0.0), side)),
+        ) {
         let y = y_side.iter().next().unwrap()[1];
-        let (x_min, x_max) = y_side.iter().fold(
-            (isize::max_value(), isize::min_value()),
-            |acc, cell| {
+        let (x_min, x_max) = y_side
+            .iter()
+            .fold((isize::max_value(), isize::min_value()), |acc, cell| {
                 (acc.0.min(cell[0]), acc.1.max(cell[0]))
-            },
-        );
+            });
         let y_radius = 0.5;
         let x_radius = (x_max - x_min + 1) as f32 / 2.0;
         let pos = ::na::Isometry3::new(

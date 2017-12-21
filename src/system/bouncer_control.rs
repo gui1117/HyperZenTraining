@@ -3,9 +3,11 @@ use specs::Join;
 pub struct BouncerControlSystem;
 
 impl<'a> ::specs::System<'a> for BouncerControlSystem {
-    type SystemData = (::specs::ReadStorage<'a, ::component::Contactor>,
-     ::specs::ReadStorage<'a, ::component::Bouncer>,
-     ::specs::WriteStorage<'a, ::component::Momentum>);
+    type SystemData = (
+        ::specs::ReadStorage<'a, ::component::Contactor>,
+        ::specs::ReadStorage<'a, ::component::Bouncer>,
+        ::specs::WriteStorage<'a, ::component::Momentum>,
+    );
 
     fn run(&mut self, (contactors, bouncers, mut momentums): Self::SystemData) {
         for (_, momentum, contactor) in (&bouncers, &mut momentums, &contactors).join() {

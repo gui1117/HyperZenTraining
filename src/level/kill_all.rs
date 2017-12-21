@@ -21,11 +21,17 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     let mut maze;
     let to_dig = 2;
     let mut cells_digged;
-    let to_rooms_cells = conf.turrets + conf.avoiders + conf.eraser_avoiders + conf.bouncers + conf.eraser_bouncers;
+    let to_rooms_cells =
+        conf.turrets + conf.avoiders + conf.eraser_avoiders + conf.bouncers + conf.eraser_bouncers;
     let mut rooms_cells;
     loop {
         println!("try create a maze");
-        maze = ::maze::Maze::kruskal(::na::Vector2::new(conf.size.0 as isize, conf.size.1 as isize), conf.percent as f64, ::na::Vector2::new(conf.bug.0, conf.bug.1), conf.scale);
+        maze = ::maze::Maze::kruskal(
+            ::na::Vector2::new(conf.size.0 as isize, conf.size.1 as isize),
+            conf.percent as f64,
+            ::na::Vector2::new(conf.bug.0, conf.bug.1),
+            conf.scale,
+        );
         maze.reduce(1);
         maze.circle();
         maze.fill_smallests();
@@ -76,11 +82,10 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
     );
 
     let dir = teleport_start_cell.1 - teleport_start_cell.0;
-    let player_pos = maze.to_world(&teleport_start_cell.0) - 0.2*::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
-    world.write_resource::<::resource::PlayerControl>().pointer = [
-        (-dir[1] as f32).atan2(dir[0] as f32),
-        0.0,
-    ];
+    let player_pos = maze.to_world(&teleport_start_cell.0)
+        - 0.2 * ::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
+    world.write_resource::<::resource::PlayerControl>().pointer =
+        [(-dir[1] as f32).atan2(dir[0] as f32), 0.0];
     ::entity::create_player_w(player_pos, world);
 
     for i in 0..conf.turrets {
@@ -91,13 +96,22 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
         ::entity::create_turret_w(pos, world);
     }
 
-    let mut rooms_cells = rooms_cells.drain(..).flat_map(|r| r.into_iter()).collect::<Vec<_>>();
-    for eraser in (0..conf.avoiders).map(|_| false).chain((0..conf.eraser_avoiders).map(|_| true)) {
+    let mut rooms_cells = rooms_cells
+        .drain(..)
+        .flat_map(|r| r.into_iter())
+        .collect::<Vec<_>>();
+    for eraser in (0..conf.avoiders)
+        .map(|_| false)
+        .chain((0..conf.eraser_avoiders).map(|_| true))
+    {
         let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
         let pos = maze.to_world(&rooms_cells.swap_remove(index));
         ::entity::create_avoider_w(pos, eraser, world);
     }
-    for eraser in (0..conf.bouncers).map(|_| false).chain((0..conf.eraser_bouncers).map(|_| true)) {
+    for eraser in (0..conf.bouncers)
+        .map(|_| false)
+        .chain((0..conf.eraser_bouncers).map(|_| true))
+    {
         let index = Range::new(0, rooms_cells.len()).ind_sample(&mut rng);
         let pos = maze.to_world(&rooms_cells.swap_remove(index));
         ::entity::create_bouncer_w(pos, eraser, world);

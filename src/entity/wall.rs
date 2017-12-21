@@ -1,4 +1,4 @@
-use ::std::f32::consts::PI;
+use std::f32::consts::PI;
 use alga::general::SubsetOf;
 
 pub fn create_wall_side_draw<'a>(
@@ -12,11 +12,11 @@ pub fn create_wall_side_draw<'a>(
     entities: &::specs::Entities,
 ) {
     let world_trans = {
-        let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(
-            pos,
-            radius)
-            .to_superset();
-        ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
+        let trans: ::na::Transform3<f32> =
+            ::na::Similarity3::from_isometry(pos, radius).to_superset();
+        ::graphics::shader::draw1_vs::ty::World {
+            world: trans.unwrap().into(),
+        }
     };
 
     let entity = entities.create();
@@ -68,10 +68,12 @@ pub fn create_wall_side<'a>(
     group.set_membership(&[super::WALL_GROUP]);
 
     let world_trans = {
-        let pos_trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 1.0)
-            .to_superset();
+        let pos_trans: ::na::Transform3<f32> =
+            ::na::Similarity3::from_isometry(pos, 1.0).to_superset();
         let trans = pos_trans * ::graphics::resizer(x_radius, y_radius, 1.0);
-        ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
+        ::graphics::shader::draw1_vs::ty::World {
+            world: trans.unwrap().into(),
+        }
     };
 
     let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(x_radius, y_radius, 0.0));
@@ -113,9 +115,11 @@ pub fn create_floor_ceil<'a>(
     };
     let pos = ::na::Isometry3::new(::na::Vector3::z() * z, rot);
     let world_trans = {
-        let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, 200.0)
-            .to_superset();
-        ::graphics::shader::draw1_vs::ty::World { world: trans.unwrap().into() }
+        let trans: ::na::Transform3<f32> =
+            ::na::Similarity3::from_isometry(pos, 200.0).to_superset();
+        ::graphics::shader::draw1_vs::ty::World {
+            world: trans.unwrap().into(),
+        }
     };
 
     let shape = ::ncollide::shape::Plane::new(::na::Vector3::z());

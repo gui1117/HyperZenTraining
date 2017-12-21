@@ -1,19 +1,19 @@
-use vulkano::device::{Device, Queue, DeviceExtensions};
+use vulkano::device::{Device, DeviceExtensions, Queue};
 use vulkano::swapchain::{self, Swapchain};
-use vulkano::sampler::{Sampler, Filter, SamplerAddressMode, MipmapMode,
+use vulkano::sampler::{Filter, MipmapMode, Sampler, SamplerAddressMode,
                        UnnormalizedSamplerAddressMode};
-use vulkano::image::{SwapchainImage, AttachmentImage, ImmutableImage, ImageUsage, Dimensions};
+use vulkano::image::{AttachmentImage, Dimensions, ImageUsage, ImmutableImage, SwapchainImage};
 // TODO: replace CpuAccessible by something else ?
-use vulkano::buffer::{CpuAccessibleBuffer, ImmutableBuffer, CpuBufferPool, BufferUsage,
-                      DeviceLocalBuffer};
-use vulkano::framebuffer::{RenderPassDesc, RenderPass, Framebuffer, Subpass};
-use vulkano::pipeline::{GraphicsPipeline, ComputePipeline};
+use vulkano::buffer::{BufferUsage, CpuAccessibleBuffer, CpuBufferPool, DeviceLocalBuffer,
+                      ImmutableBuffer};
+use vulkano::framebuffer::{Framebuffer, RenderPass, RenderPassDesc, Subpass};
+use vulkano::pipeline::{ComputePipeline, GraphicsPipeline};
 use vulkano::pipeline::vertex::SingleBufferDefinition;
 use vulkano::descriptor::PipelineLayoutAbstract;
 use vulkano::descriptor::pipeline_layout::PipelineLayout;
-use vulkano::descriptor::descriptor_set::{PersistentDescriptorSet, PersistentDescriptorSetImg,
-                                          PersistentDescriptorSetSampler,
-                                          PersistentDescriptorSetBuf, FixedSizeDescriptorSetsPool};
+use vulkano::descriptor::descriptor_set::{FixedSizeDescriptorSetsPool, PersistentDescriptorSet,
+                                          PersistentDescriptorSetBuf, PersistentDescriptorSetImg,
+                                          PersistentDescriptorSetSampler};
 use vulkano::instance::PhysicalDevice;
 use vulkano::format;
 use vulkano::sync::{now, GpuFuture};
@@ -52,18 +52,18 @@ pub struct DebugArrows {
 
 impl DebugArrows {
     fn new() -> Self {
-        DebugArrows { trans: Mutex::new(Vec::new()) }
+        DebugArrows {
+            trans: Mutex::new(Vec::new()),
+        }
     }
 
     #[allow(dead_code)]
     pub fn add(&self, color: [f32; 3], pos: na::Vector3<f32>, vec: na::Vector3<f32>) {
-        let transform: na::Transform3<f32> =
-            na::Similarity3::from_parts(
-                na::Translation::from_vector(pos),
-                na::UnitQuaternion::rotation_between(&na::Vector3::new(0.0, 0.0, 1.0), &vec)
-                    .unwrap(),
-                vec.norm() * 0.1,
-            ).to_superset();
+        let transform: na::Transform3<f32> = na::Similarity3::from_parts(
+            na::Translation::from_vector(pos),
+            na::UnitQuaternion::rotation_between(&na::Vector3::new(0.0, 0.0, 1.0), &vec).unwrap(),
+            vec.norm() * 0.1,
+        ).to_superset();
 
         self.trans.lock().unwrap().push((
             color,
@@ -317,8 +317,8 @@ impl<'a> Graphics<'a> {
         let queue_family = physical
             .queue_families()
             .find(|&q| {
-                q.supports_graphics() && q.supports_compute() &&
-                    window.surface().is_supported(q).unwrap_or(false)
+                q.supports_graphics() && q.supports_compute()
+                    && window.surface().is_supported(q).unwrap_or(false)
             })
             .expect("couldn't find a graphical queue family");
 
@@ -339,9 +339,10 @@ impl<'a> Graphics<'a> {
         let queue = queues.next().unwrap();
 
         let (swapchain, images) = {
-            let caps = window.surface().capabilities(physical).expect(
-                "failed to get surface capabilities",
-            );
+            let caps = window
+                .surface()
+                .capabilities(physical)
+                .expect("failed to get surface capabilities");
 
             let dimensions = caps.current_extent.unwrap_or([1280, 1024]);
             let image_usage = ImageUsage {
@@ -444,24 +445,20 @@ impl<'a> Graphics<'a> {
         let draw1_eraser_fs = shader::draw1_eraser_fs::Shader::load(device.clone())
             .expect("failed to create shader module");
 
-        let eraser1_cs = shader::eraser1_cs::Shader::load(device.clone()).expect(
-            "failed to create shader module",
-        );
-        let eraser2_cs = shader::eraser2_cs::Shader::load(device.clone()).expect(
-            "failed to create shader module",
-        );
+        let eraser1_cs = shader::eraser1_cs::Shader::load(device.clone())
+            .expect("failed to create shader module");
+        let eraser2_cs = shader::eraser2_cs::Shader::load(device.clone())
+            .expect("failed to create shader module");
 
         let draw2_vs =
             shader::draw2_vs::Shader::load(device.clone()).expect("failed to create shader module");
         let draw2_fs =
             shader::draw2_fs::Shader::load(device.clone()).expect("failed to create shader module");
 
-        let cursor_vs = shader::cursor_vs::Shader::load(device.clone()).expect(
-            "failed to create shader module",
-        );
-        let cursor_fs = shader::cursor_fs::Shader::load(device.clone()).expect(
-            "failed to create shader module",
-        );
+        let cursor_vs = shader::cursor_vs::Shader::load(device.clone())
+            .expect("failed to create shader module");
+        let cursor_fs = shader::cursor_fs::Shader::load(device.clone())
+            .expect("failed to create shader module");
 
         let imgui_vs =
             shader::imgui_vs::Shader::load(device.clone()).expect("failed to create shader module");
@@ -527,14 +524,12 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let eraser1_pipeline =
-            Arc::new(
-                ComputePipeline::new(device.clone(), &eraser1_cs.main_entry_point(), &()).unwrap(),
-            );
-        let eraser2_pipeline =
-            Arc::new(
-                ComputePipeline::new(device.clone(), &eraser2_cs.main_entry_point(), &()).unwrap(),
-            );
+        let eraser1_pipeline = Arc::new(
+            ComputePipeline::new(device.clone(), &eraser1_cs.main_entry_point(), &()).unwrap(),
+        );
+        let eraser2_pipeline = Arc::new(
+            ComputePipeline::new(device.clone(), &eraser2_cs.main_entry_point(), &()).unwrap(),
+        );
 
         let draw2_pipeline = Arc::new(
             GraphicsPipeline::start()
@@ -617,11 +612,9 @@ impl<'a> Graphics<'a> {
             BufferUsage::uniform_buffer(),
         );
 
-        let debug_arrow_world_uniform_buffer =
-            CpuBufferPool::<::graphics::shader::debug_vs::ty::World>::new(
-                device.clone(),
-                BufferUsage::uniform_buffer(),
-            );
+        let debug_arrow_world_uniform_buffer = CpuBufferPool::<
+            ::graphics::shader::debug_vs::ty::World,
+        >::new(device.clone(), BufferUsage::uniform_buffer());
 
         let (colors_buffer, colors_buf_future) = {
             let colors = colors::colors();
@@ -692,8 +685,8 @@ impl<'a> Graphics<'a> {
                         imgui_texture,
                         Sampler::new(
                             device.clone(),
-                            Filter::Nearest, // TODO: linear or nearest
-                            Filter::Linear, // TODO: linear or nearest
+                            Filter::Nearest,    // TODO: linear or nearest
+                            Filter::Linear,     // TODO: linear or nearest
                             MipmapMode::Linear, // TODO: linear or nearest
                             SamplerAddressMode::MirroredRepeat,
                             SamplerAddressMode::MirroredRepeat,

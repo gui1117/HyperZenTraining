@@ -58,7 +58,11 @@ pub enum Maze {
 }
 
 impl Maze {
-    pub fn find_path(&self, pos: ::na::Vector3<f32>, goal: ::na::Vector3<f32>) -> Option<Vec<::na::Vector3<f32>>> {
+    pub fn find_path(
+        &self,
+        pos: ::na::Vector3<f32>,
+        goal: ::na::Vector3<f32>,
+    ) -> Option<Vec<::na::Vector3<f32>>> {
         match *self {
             Maze::Maze2D(ref maze) => maze.find_path(pos, goal),
             Maze::Maze3D(ref maze) => maze.find_path(pos, goal),

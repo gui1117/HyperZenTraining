@@ -1,7 +1,4 @@
-pub fn create_player_w(
-    pos: ::na::Vector3<f32>,
-    world: &::specs::World,
-) {
+pub fn create_player_w(pos: ::na::Vector3<f32>, world: &::specs::World) {
     create_player(
         pos,
         &mut world.write(),
@@ -59,7 +56,14 @@ pub fn create_player<'a>(
     hooks.insert(entity, ::component::Hook::new(config.player_hook_force));
     momentums.insert(
         entity,
-        ::component::Momentum::new(mass, config.player_velocity, config.player_time_to_reach_vmax, None, config.player_ang_damping, None),
+        ::component::Momentum::new(
+            mass,
+            config.player_velocity,
+            config.player_time_to_reach_vmax,
+            None,
+            config.player_ang_damping,
+            None,
+        ),
     );
     air_momentums.insert(
         entity,

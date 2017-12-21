@@ -1,6 +1,6 @@
 use vulkano::device::Queue;
-use vulkano::buffer::{ImmutableBuffer, BufferUsage};
-use vulkano::sync::{GpuFuture, now};
+use vulkano::buffer::{BufferUsage, ImmutableBuffer};
+use vulkano::sync::{now, GpuFuture};
 use std::sync::Arc;
 use super::Vertex;
 use super::DebugVertex;
@@ -78,7 +78,9 @@ pub fn instance_primitives(
             Vertex {
                 position: [0.0, 0.86602540378443864676, -1.0],
             },
-            Vertex { position: [0.0, 0.0, 1.0] },
+            Vertex {
+                position: [0.0, 0.0, 1.0],
+            },
         ],
         vec![
             Vertex {
@@ -87,7 +89,9 @@ pub fn instance_primitives(
             Vertex {
                 position: [1.0, -0.86602540378443864676, -1.0],
             },
-            Vertex { position: [0.0, 0.0, 1.0] },
+            Vertex {
+                position: [0.0, 0.0, 1.0],
+            },
         ],
         vec![
             Vertex {
@@ -96,7 +100,9 @@ pub fn instance_primitives(
             Vertex {
                 position: [1.0, -0.86602540378443864676, -1.0],
             },
-            Vertex { position: [0.0, 0.0, 1.0] },
+            Vertex {
+                position: [0.0, 0.0, 1.0],
+            },
         ],
     ]);
 
@@ -696,14 +702,14 @@ pub mod primitive {
 
     impl GroupCounter {
         fn new() -> Self {
-            GroupCounter { counter: ::std::sync::atomic::AtomicUsize::new(1) }
+            GroupCounter {
+                counter: ::std::sync::atomic::AtomicUsize::new(1),
+            }
         }
 
         fn next(&self) -> u16 {
-            self.counter.fetch_add(
-                1,
-                ::std::sync::atomic::Ordering::Relaxed,
-            ) as u16
+            self.counter
+                .fetch_add(1, ::std::sync::atomic::Ordering::Relaxed) as u16
         }
 
         fn instantiate(&self, n: usize) -> Vec<u16> {
@@ -722,13 +728,11 @@ pub fn load_debug_arrow(
         assert!(object.geometry.len() == 1);
         for shape in &object.geometry[0].shapes {
             let indexes = match shape.primitive {
-                obj::Primitive::Triangle(a, b, c) => {
-                    [
-                        (a.0, a.2.unwrap()),
-                        (b.0, b.2.unwrap()),
-                        (c.0, c.2.unwrap()),
-                    ]
-                }
+                obj::Primitive::Triangle(a, b, c) => [
+                    (a.0, a.2.unwrap()),
+                    (b.0, b.2.unwrap()),
+                    (c.0, c.2.unwrap()),
+                ],
                 _ => panic!("arrow obj not handled"),
             };
             for &(v, n) in &indexes {

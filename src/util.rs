@@ -1,7 +1,7 @@
-use std::collections::{HashSet, HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::Hash;
 use std::f32::consts::{FRAC_PI_2, PI};
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 use std::fmt;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -18,10 +18,10 @@ impl Direction {
     fn orthogonal(self, other: Self) -> bool {
         use self::Direction::*;
         match (self, other) {
-            (Forward, Forward) |
-            (Forward, Backward) |
-            (Backward, Forward) |
-            (Backward, Backward) => false,
+            (Forward, Forward)
+            | (Forward, Backward)
+            | (Backward, Forward)
+            | (Backward, Backward) => false,
             _ => true,
         }
     }
@@ -49,9 +49,10 @@ pub trait Pop {
 impl<T: Eq + Hash + Clone> Pop for HashSet<T> {
     type Item = T;
     fn pop(&mut self) -> Option<Self::Item> {
-        self.iter().next().map(|cell| cell.clone()).map(|cell| {
-            self.take(&cell).unwrap()
-        })
+        self.iter()
+            .next()
+            .map(|cell| cell.clone())
+            .map(|cell| self.take(&cell).unwrap())
     }
 }
 
@@ -99,7 +100,11 @@ impl fmt::Display for Benchmark {
         let min = self.min.as_secs() as f64 + self.min.subsec_nanos() as f64 * 1e-9;
         let max = self.max.as_secs() as f64 + self.max.subsec_nanos() as f64 * 1e-9;
         let mean = self.mean.as_secs() as f64 + self.mean.subsec_nanos() as f64 * 1e-9;
-        write!(f, "benchmark: {}\n\tmin: {}\n\tmax: {}\n\tmean: {}", self.name, min, max, mean)
+        write!(
+            f,
+            "benchmark: {}\n\tmin: {}\n\tmax: {}\n\tmean: {}",
+            self.name, min, max, mean
+        )
     }
 }
 
@@ -117,12 +122,17 @@ impl Benchmarker {
     }
 
     pub fn start(&mut self, name: &'static str) {
-        assert_eq!(self.instant.insert(String::from(name), Instant::now()), None);
+        assert_eq!(
+            self.instant.insert(String::from(name), Instant::now()),
+            None
+        );
     }
 
     pub fn end(&mut self, name: &'static str) {
         if let Some(instant) = self.instant.remove(&String::from(name)) {
-            let vecdeque = self.durations.entry(String::from(name)).or_insert_with(|| VecDeque::new());
+            let vecdeque = self.durations
+                .entry(String::from(name))
+                .or_insert_with(|| VecDeque::new());
             vecdeque.push_front(instant.elapsed());
             vecdeque.truncate(BENCHMARKER_VECDEQUE_SIZE);
         }
@@ -144,7 +154,7 @@ impl Benchmarker {
                 name: name.clone(),
                 min,
                 max,
-                mean: sum/BENCHMARKER_VECDEQUE_SIZE as u32,
+                mean: sum / BENCHMARKER_VECDEQUE_SIZE as u32,
             });
         }
         res

@@ -1,8 +1,8 @@
-use vulkano::framebuffer::{LoadOp, StoreOp, LayoutAttachmentDescription, LayoutPassDescription,
-                           LayoutPassDependencyDescription, RenderPassDesc,
-                           RenderPassDescClearValues};
+use vulkano::framebuffer::{LayoutAttachmentDescription, LayoutPassDependencyDescription,
+                           LayoutPassDescription, LoadOp, RenderPassDesc,
+                           RenderPassDescClearValues, StoreOp};
 use vulkano::image::ImageLayout;
-use vulkano::format::{Format, ClearValue};
+use vulkano::format::{ClearValue, Format};
 use vulkano::sync::{AccessFlagBits, PipelineStages};
 pub struct CustomRenderPassDesc;
 

@@ -1,4 +1,4 @@
-use nphysics::resolution::{CorrectionMode, AccumulatedImpulseSolver};
+use nphysics::resolution::{AccumulatedImpulseSolver, CorrectionMode};
 
 pub struct GameSystem {
     current_level: Option<usize>,
@@ -33,7 +33,11 @@ impl GameSystem {
                 let mut physic_world = ::resource::PhysicWorld::new();
                 *physic_world.constraints_solver() = AccumulatedImpulseSolver::new(
                     config.accumulated_impulse_solver_step,
-                    CorrectionMode::VelocityAndPosition(config.correction_mode_a, config.correction_mode_b, config.correction_mode_c),
+                    CorrectionMode::VelocityAndPosition(
+                        config.correction_mode_a,
+                        config.correction_mode_b,
+                        config.correction_mode_c,
+                    ),
                     config.accumulated_impulse_solver_joint_corr_factor,
                     config.accumulated_impulse_solver_rest_eps,
                     config.accumulated_impulse_solver_num_first_order_iter,

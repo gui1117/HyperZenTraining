@@ -1,8 +1,4 @@
-pub fn create_avoider_w(
-    pos: ::na::Vector3<f32>,
-    eraser: bool,
-    world: &::specs::World
-) {
+pub fn create_avoider_w(pos: ::na::Vector3<f32>, eraser: bool, world: &::specs::World) {
     create_avoider(
         pos,
         eraser,
@@ -15,7 +11,7 @@ pub fn create_avoider_w(
         &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
-        &world.read_resource()
+        &world.read_resource(),
     )
 }
 
@@ -34,7 +30,11 @@ pub fn create_avoider<'a>(
     config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
-    let primitive_trans = ::graphics::resizer(config.avoider_size, config.avoider_size, config.avoider_size);
+    let primitive_trans = ::graphics::resizer(
+        config.avoider_size,
+        config.avoider_size,
+        config.avoider_size,
+    );
 
     let shape = {
         let mut points = vec![
