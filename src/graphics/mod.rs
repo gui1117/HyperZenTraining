@@ -376,14 +376,14 @@ impl<'a> Graphics<'a> {
         let (fullscreen_vertex_buffer, fullscreen_vertex_buffer_future) =
             ImmutableBuffer::from_iter(
                 [
-                    SecondVertex { position: [-1.0f32, -1.0] },
-                    SecondVertex { position: [-1.0, 1.0] },
-                    SecondVertex { position: [1.0, -1.0] },
-                    SecondVertex { position: [1.0, 1.0] },
-                    SecondVertex { position: [1.0, -1.0] },
-                    SecondVertex { position: [-1.0, 1.0] },
+                    [-1.0f32, -1.0],
+                    [-1.0, 1.0],
+                    [1.0, -1.0],
+                    [1.0, 1.0],
+                    [1.0, -1.0],
+                    [-1.0, 1.0],
                 ].iter()
-                    .cloned(),
+                    .cloned().map(|position| SecondVertex { position }),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
             ).expect("failed to create buffer");
@@ -391,14 +391,14 @@ impl<'a> Graphics<'a> {
         let (cursor_vertex_buffer, cursor_vertex_buffer_future) =
             ImmutableBuffer::from_iter(
                 [
-                    SecondVertex { position: [-0.5f32, -0.5] },
-                    SecondVertex { position: [-0.5, 0.5] },
-                    SecondVertex { position: [0.5, -0.5] },
-                    SecondVertex { position: [0.5, 0.5] },
-                    SecondVertex { position: [0.5, -0.5] },
-                    SecondVertex { position: [-0.5, 0.5] },
+                    [-0.5f32, -0.5],
+                    [-0.5, 0.5],
+                    [0.5, -0.5],
+                    [0.5, 0.5],
+                    [0.5, -0.5],
+                    [-0.5, 0.5],
                 ].iter()
-                    .cloned(),
+                    .cloned().map(|position| SecondVertex { position }),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
             ).expect("failed to create buffer");

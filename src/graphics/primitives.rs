@@ -31,7 +31,7 @@ pub fn instance_primitives(
             [-1.0, -1.0, -1.0],
             [-1.0, 1.0, -1.0],
             [1.0, -1.0, -1.0],
-
+            //
             [1.0, 1.0, -1.0],
             [1.0, -1.0, -1.0],
             [-1.0, 1.0, -1.0],
@@ -150,7 +150,7 @@ pub fn instance_primitives(
             [1.0, -1.0, -1.0],
             [-1.0, -1.0, -1.0],
             [-1.0, 1.0, -1.0],
-
+            //
             [1.0, 1.0, -1.0],
             [1.0, -1.0, -1.0],
             [-1.0, 1.0, -1.0],
@@ -160,7 +160,7 @@ pub fn instance_primitives(
             [-1.0, -1.0, 1.0],
             [1.0, -1.0, 1.0],
             [-1.0, 1.0, 1.0],
-
+            //
             [1.0, -1.0, 1.0],
             [1.0, 1.0, 1.0],
             [-1.0, 1.0, 1.0],
@@ -170,7 +170,7 @@ pub fn instance_primitives(
             [-1.0, -1.0, -1.0],
             [-1.0, -1.0, 1.0],
             [-1.0, 1.0, -1.0],
-
+            //
             [-1.0, -1.0, 1.0],
             [-1.0, 1.0, 1.0],
             [-1.0, 1.0, -1.0],
@@ -180,7 +180,7 @@ pub fn instance_primitives(
             [1.0, -1.0, -1.0],
             [1.0, -1.0, 1.0],
             [1.0, 1.0, -1.0],
-
+            //
             [1.0, 1.0, 1.0],
             [1.0, -1.0, 1.0],
             [1.0, 1.0, -1.0],
@@ -190,7 +190,7 @@ pub fn instance_primitives(
             [-1.0, -1.0, -1.0],
             [1.0, -1.0, -1.0],
             [-1.0, -1.0, 1.0],
-
+            //
             [1.0, -1.0, 1.0],
             [-1.0, -1.0, 1.0],
             [1.0, -1.0, -1.0],
@@ -200,7 +200,7 @@ pub fn instance_primitives(
             [1.0, 1.0, -1.0],
             [-1.0, 1.0, -1.0],
             [-1.0, 1.0, 1.0],
-
+            //
             [-1.0, 1.0, 1.0],
             [1.0, 1.0, 1.0],
             [1.0, 1.0, -1.0],
@@ -243,7 +243,7 @@ pub fn instance_primitives(
             [-1.0, -1.0, -1.0],
             [1.0, -1.0, -1.0],
             [-1.0, 1.0, -1.0],
-
+            //
             [1.0, 1.0, -1.0],
             [1.0, -1.0, -1.0],
             [-1.0, 1.0, -1.0],
@@ -253,7 +253,7 @@ pub fn instance_primitives(
             [-pit_radius, -pit_radius, 1.0 - pit_radius],
             [pit_radius, -pit_radius, 1.0 - pit_radius],
             [-pit_radius, pit_radius, 1.0 - pit_radius],
-
+            //
             [pit_radius, pit_radius, 1.0 - pit_radius],
             [pit_radius, -pit_radius, 1.0 - pit_radius],
             [-pit_radius, pit_radius, 1.0 - pit_radius],
@@ -263,7 +263,7 @@ pub fn instance_primitives(
             [-1.0, -1.0, -1.0],
             [-1.0, -1.0, 1.0],
             [-1.0, 1.0, -1.0],
-
+            //
             [-1.0, 1.0, 1.0],
             [-1.0, -1.0, 1.0],
             [-1.0, 1.0, -1.0],
@@ -273,7 +273,7 @@ pub fn instance_primitives(
             [-pit_radius, -pit_radius, 1.0 - pit_radius],
             [-pit_radius, -pit_radius, 1.0 + pit_radius],
             [-pit_radius, pit_radius, 1.0 - pit_radius],
-
+            //
             [-pit_radius, pit_radius, 1.0 + pit_radius],
             [-pit_radius, -pit_radius, 1.0 + pit_radius],
             [-pit_radius, pit_radius, 1.0 - pit_radius],
@@ -283,7 +283,7 @@ pub fn instance_primitives(
             [1.0, -1.0, -1.0],
             [1.0, -1.0, 1.0],
             [1.0, 1.0, -1.0],
-
+            //
             [1.0, 1.0, 1.0],
             [1.0, -1.0, 1.0],
             [1.0, 1.0, -1.0],
@@ -293,7 +293,7 @@ pub fn instance_primitives(
             [pit_radius, -pit_radius, 1.0 - pit_radius],
             [pit_radius, -pit_radius, 1.0 + pit_radius],
             [pit_radius, pit_radius, 1.0 - pit_radius],
-
+            //
             [pit_radius, pit_radius, 1.0 + pit_radius],
             [pit_radius, -pit_radius, 1.0 + pit_radius],
             [pit_radius, pit_radius, 1.0 - pit_radius],
@@ -303,7 +303,7 @@ pub fn instance_primitives(
             [-1.0, -1.0, -1.0],
             [1.0, -1.0, -1.0],
             [-1.0, -1.0, 1.0],
-
+            //
             [1.0, -1.0, 1.0],
             [-1.0, -1.0, 1.0],
             [1.0, -1.0, -1.0],
@@ -313,7 +313,7 @@ pub fn instance_primitives(
             [-pit_radius, -pit_radius, 1.0 - pit_radius],
             [pit_radius, -pit_radius, 1.0 - pit_radius],
             [-pit_radius, -pit_radius, 1.0 + pit_radius],
-
+            //
             [pit_radius, -pit_radius, 1.0 + pit_radius],
             [-pit_radius, -pit_radius, 1.0 + pit_radius],
             [pit_radius, -pit_radius, 1.0 - pit_radius],
@@ -323,7 +323,7 @@ pub fn instance_primitives(
             [-1.0, 1.0, -1.0],
             [1.0, 1.0, -1.0],
             [-1.0, 1.0, 1.0],
-
+            //
             [1.0, 1.0, 1.0],
             [-1.0, 1.0, 1.0],
             [1.0, 1.0, -1.0],
@@ -333,7 +333,7 @@ pub fn instance_primitives(
             [-pit_radius, pit_radius, 1.0 - pit_radius],
             [pit_radius, pit_radius, 1.0 - pit_radius],
             [-pit_radius, pit_radius, 1.0 + pit_radius],
-
+            //
             [pit_radius, pit_radius, 1.0 + pit_radius],
             [-pit_radius, pit_radius, 1.0 + pit_radius],
             [pit_radius, pit_radius, 1.0 - pit_radius],
@@ -344,7 +344,7 @@ pub fn instance_primitives(
             [-1.0, -1.0, 1.0],
             [-pit_radius, -1.0, 1.0],
             [-1.0, 1.0, 1.0],
-
+            //
             [-pit_radius, 1.0, 1.0],
             [-pit_radius, -1.0, 1.0],
             [-1.0, 1.0, 1.0],
@@ -353,7 +353,7 @@ pub fn instance_primitives(
             [1.0, 1.0, 1.0],
             [pit_radius, 1.0, 1.0],
             [1.0, -1.0, 1.0],
-
+            //
             [pit_radius, -1.0, 1.0],
             [pit_radius, 1.0, 1.0],
             [1.0, -1.0, 1.0],
@@ -362,7 +362,7 @@ pub fn instance_primitives(
             [-pit_radius, -1.0, 1.0],
             [pit_radius, -1.0, 1.0],
             [-pit_radius, -pit_radius, 1.0],
-
+            //
             [pit_radius, -pit_radius, 1.0],
             [pit_radius, -1.0, 1.0],
             [-pit_radius, -pit_radius, 1.0],
@@ -371,7 +371,7 @@ pub fn instance_primitives(
             [pit_radius, 1.0, 1.0],
             [-pit_radius, 1.0, 1.0],
             [pit_radius, pit_radius, 1.0],
-
+            //
             [-pit_radius, pit_radius, 1.0],
             [-pit_radius, 1.0, 1.0],
             [pit_radius, pit_radius, 1.0],
@@ -387,31 +387,31 @@ pub fn instance_primitives(
             [width + radius, -1.0, -radius],
             [- width - radius, -1.0, -radius],
             [width + radius, -1.0 + radius*2.0, -radius],
-
+            //
             [- width - radius, -1.0, -radius],
             [- width - radius, -1.0 + radius*2.0, -radius],
             [width + radius, -1.0 + radius*2.0, -radius],
-
+            //
             [- width - radius, 1.0, -radius],
             [width + radius, 1.0, -radius],
             [width + radius, 1.0 - radius*2.0, -radius],
-
+            //
             [- width - radius, 1.0 - radius*2.0, -radius],
             [- width - radius, 1.0, -radius],
             [width + radius, 1.0 - radius*2.0, -radius],
-
+            //
             [- width + radius, -1.0 + radius*2.0, -radius],
             [- width - radius, -1.0 + radius*2.0, -radius],
             [- width + radius, 1.0 - radius*2.0, -radius],
-
+            //
             [- width + radius, 1.0 - radius*2.0, -radius],
             [- width - radius, -1.0 + radius*2.0, -radius],
             [- width - radius, 1.0 - radius*2.0, -radius],
-
+            //
             [width + radius, -1.0 + radius*2.0, -radius],
             [width - radius, -1.0 + radius*2.0, -radius],
             [width + radius, 1.0 - radius*2.0, -radius],
-
+            //
             [width + radius, 1.0 - radius*2.0, -radius],
             [width - radius, -1.0 + radius*2.0, -radius],
             [width - radius, 1.0 - radius*2.0, -radius],
@@ -421,31 +421,31 @@ pub fn instance_primitives(
             [- width - radius, -1.0, radius],
             [width + radius, -1.0, radius],
             [width + radius, -1.0 + radius*2.0, radius],
-
+            //
             [- width - radius, -1.0 + radius*2.0, radius],
             [- width - radius, -1.0, radius],
             [width + radius, -1.0 + radius*2.0, radius],
-
+            //
             [width + radius, 1.0, radius],
             [- width - radius, 1.0, radius],
             [width + radius, 1.0 - radius*2.0, radius],
-
+            //
             [- width - radius, 1.0, radius],
             [- width - radius, 1.0 - radius*2.0, radius],
             [width + radius, 1.0 - radius*2.0, radius],
-
+            //
             [- width - radius, -1.0 + radius*2.0, radius],
             [- width + radius, -1.0 + radius*2.0, radius],
             [- width + radius, 1.0 - radius*2.0, radius],
-
+            //
             [- width - radius, -1.0 + radius*2.0, radius],
             [- width + radius, 1.0 - radius*2.0, radius],
             [- width - radius, 1.0 - radius*2.0, radius],
-
+            //
             [width - radius, -1.0 + radius*2.0, radius],
             [width + radius, -1.0 + radius*2.0, radius],
             [width + radius, 1.0 - radius*2.0, radius],
-
+            //
             [width - radius, -1.0 + radius*2.0, radius],
             [width + radius, 1.0 - radius*2.0, radius],
             [width - radius, 1.0 - radius*2.0, radius],
@@ -454,7 +454,7 @@ pub fn instance_primitives(
             [-width - radius, -1.0, -radius],
             [width + radius, -1.0, -radius],
             [width + radius, -1.0, radius],
-
+            //
             [-width - radius, -1.0, radius],
             [-width - radius, -1.0, -radius],
             [width + radius, -1.0, radius],
@@ -463,7 +463,7 @@ pub fn instance_primitives(
             [width + radius, 1.0, -radius],
             [-width - radius, 1.0, -radius],
             [width + radius, 1.0, radius],
-
+            //
             [-width - radius, 1.0, -radius],
             [-width - radius, 1.0, radius],
             [width + radius, 1.0, radius],
@@ -472,7 +472,7 @@ pub fn instance_primitives(
             [-width - radius, 1.0, -radius],
             [-width - radius, -1.0, -radius],
             [-width - radius, -1.0, radius],
-
+            //
             [-width - radius, 1.0, radius],
             [-width - radius, 1.0, -radius],
             [-width - radius, -1.0, radius],
@@ -481,7 +481,7 @@ pub fn instance_primitives(
             [width + radius, -1.0, -radius],
             [width + radius, 1.0, -radius],
             [width + radius, -1.0, radius],
-
+            //
             [width + radius, 1.0, -radius],
             [width + radius, 1.0, radius],
             [width + radius, -1.0, radius],
@@ -490,7 +490,7 @@ pub fn instance_primitives(
             [width - radius, -1.0+radius*2.0, -radius],
             [-width + radius, -1.0+radius*2.0, -radius],
             [width - radius, -1.0+radius*2.0, radius],
-
+            //
             [-width + radius, -1.0+radius*2.0, -radius],
             [-width + radius, -1.0+radius*2.0, radius],
             [width - radius, -1.0+radius*2.0, radius],
@@ -499,7 +499,7 @@ pub fn instance_primitives(
             [-width + radius, 1.0-radius*2.0, -radius],
             [width - radius, 1.0-radius*2.0, -radius],
             [width - radius, 1.0-radius*2.0, radius],
-
+            //
             [-width + radius, 1.0-radius*2.0, radius],
             [-width + radius, 1.0-radius*2.0, -radius],
             [width - radius, 1.0-radius*2.0, radius],
@@ -508,7 +508,7 @@ pub fn instance_primitives(
             [-width + radius, -1.0+radius*2.0, -radius],
             [-width + radius, 1.0-radius*2.0, -radius],
             [-width + radius, -1.0+radius*2.0, radius],
-
+            //
             [-width + radius, 1.0-radius*2.0, -radius],
             [-width + radius, 1.0-radius*2.0, radius],
             [-width + radius, -1.0+radius*2.0, radius],
@@ -517,7 +517,7 @@ pub fn instance_primitives(
             [width - radius, 1.0-radius*2.0, -radius],
             [width - radius, -1.0+radius*2.0, -radius],
             [width - radius, -1.0+radius*2.0, radius],
-
+            //
             [width - radius, 1.0-radius*2.0, radius],
             [width - radius, 1.0-radius*2.0, -radius],
             [width - radius, -1.0+radius*2.0, radius],
