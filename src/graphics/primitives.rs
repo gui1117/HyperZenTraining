@@ -36,26 +36,10 @@ pub fn instance_primitives(
             [1.0, -1.0, -1.0],
             [-1.0, 1.0, -1.0],
         ],
-        vec![
-            [-1.0, 1.0, -1.0],
-            [-1.0, -1.0, -1.0],
-            [0.0, 0.0, 1.0],
-        ],
-        vec![
-            [1.0, 1.0, -1.0],
-            [-1.0, 1.0, -1.0],
-            [0.0, 0.0, 1.0],
-        ],
-        vec![
-            [1.0, -1.0, -1.0],
-            [1.0, 1.0, -1.0],
-            [0.0, 0.0, 1.0],
-        ],
-        vec![
-            [-1.0, -1.0, -1.0],
-            [1.0, -1.0, -1.0],
-            [0.0, 0.0, 1.0],
-        ],
+        vec![[-1.0, 1.0, -1.0], [-1.0, -1.0, -1.0], [0.0, 0.0, 1.0]],
+        vec![[1.0, 1.0, -1.0], [-1.0, 1.0, -1.0], [0.0, 0.0, 1.0]],
+        vec![[1.0, -1.0, -1.0], [1.0, 1.0, -1.0], [0.0, 0.0, 1.0]],
+        vec![[-1.0, -1.0, -1.0], [1.0, -1.0, -1.0], [0.0, 0.0, 1.0]],
     ]);
 
     // Triangle pyramid
@@ -135,7 +119,6 @@ pub fn instance_primitives(
             [p0[0], p0[1], 1.0],
             [p0[0], p0[1], -1.0],
             [p1[0], p1[1], 1.0],
-
             [p0[0], p0[1], -1.0],
             [p1[0], p1[1], -1.0],
             [p1[0], p1[1], 1.0],
@@ -348,7 +331,6 @@ pub fn instance_primitives(
             [-pit_radius, 1.0, 1.0],
             [-pit_radius, -1.0, 1.0],
             [-1.0, 1.0, 1.0],
-
             // Major rectangle
             [1.0, 1.0, 1.0],
             [pit_radius, 1.0, 1.0],
@@ -357,7 +339,6 @@ pub fn instance_primitives(
             [pit_radius, -1.0, 1.0],
             [pit_radius, 1.0, 1.0],
             [1.0, -1.0, 1.0],
-
             // Minor square
             [-pit_radius, -1.0, 1.0],
             [pit_radius, -1.0, 1.0],
@@ -366,7 +347,6 @@ pub fn instance_primitives(
             [pit_radius, -pit_radius, 1.0],
             [pit_radius, -1.0, 1.0],
             [-pit_radius, -pit_radius, 1.0],
-
             // Minor square
             [pit_radius, 1.0, 1.0],
             [-pit_radius, 1.0, 1.0],
@@ -385,70 +365,70 @@ pub fn instance_primitives(
         // Floor
         vec![
             [width + radius, -1.0, -radius],
-            [- width - radius, -1.0, -radius],
-            [width + radius, -1.0 + radius*2.0, -radius],
+            [-width - radius, -1.0, -radius],
+            [width + radius, -1.0 + radius * 2.0, -radius],
             //
-            [- width - radius, -1.0, -radius],
-            [- width - radius, -1.0 + radius*2.0, -radius],
-            [width + radius, -1.0 + radius*2.0, -radius],
+            [-width - radius, -1.0, -radius],
+            [-width - radius, -1.0 + radius * 2.0, -radius],
+            [width + radius, -1.0 + radius * 2.0, -radius],
             //
-            [- width - radius, 1.0, -radius],
+            [-width - radius, 1.0, -radius],
             [width + radius, 1.0, -radius],
-            [width + radius, 1.0 - radius*2.0, -radius],
+            [width + radius, 1.0 - radius * 2.0, -radius],
             //
-            [- width - radius, 1.0 - radius*2.0, -radius],
-            [- width - radius, 1.0, -radius],
-            [width + radius, 1.0 - radius*2.0, -radius],
+            [-width - radius, 1.0 - radius * 2.0, -radius],
+            [-width - radius, 1.0, -radius],
+            [width + radius, 1.0 - radius * 2.0, -radius],
             //
-            [- width + radius, -1.0 + radius*2.0, -radius],
-            [- width - radius, -1.0 + radius*2.0, -radius],
-            [- width + radius, 1.0 - radius*2.0, -radius],
+            [-width + radius, -1.0 + radius * 2.0, -radius],
+            [-width - radius, -1.0 + radius * 2.0, -radius],
+            [-width + radius, 1.0 - radius * 2.0, -radius],
             //
-            [- width + radius, 1.0 - radius*2.0, -radius],
-            [- width - radius, -1.0 + radius*2.0, -radius],
-            [- width - radius, 1.0 - radius*2.0, -radius],
+            [-width + radius, 1.0 - radius * 2.0, -radius],
+            [-width - radius, -1.0 + radius * 2.0, -radius],
+            [-width - radius, 1.0 - radius * 2.0, -radius],
             //
-            [width + radius, -1.0 + radius*2.0, -radius],
-            [width - radius, -1.0 + radius*2.0, -radius],
-            [width + radius, 1.0 - radius*2.0, -radius],
+            [width + radius, -1.0 + radius * 2.0, -radius],
+            [width - radius, -1.0 + radius * 2.0, -radius],
+            [width + radius, 1.0 - radius * 2.0, -radius],
             //
-            [width + radius, 1.0 - radius*2.0, -radius],
-            [width - radius, -1.0 + radius*2.0, -radius],
-            [width - radius, 1.0 - radius*2.0, -radius],
+            [width + radius, 1.0 - radius * 2.0, -radius],
+            [width - radius, -1.0 + radius * 2.0, -radius],
+            [width - radius, 1.0 - radius * 2.0, -radius],
         ],
         // Ceil
         vec![
-            [- width - radius, -1.0, radius],
+            [-width - radius, -1.0, radius],
             [width + radius, -1.0, radius],
-            [width + radius, -1.0 + radius*2.0, radius],
+            [width + radius, -1.0 + radius * 2.0, radius],
             //
-            [- width - radius, -1.0 + radius*2.0, radius],
-            [- width - radius, -1.0, radius],
-            [width + radius, -1.0 + radius*2.0, radius],
+            [-width - radius, -1.0 + radius * 2.0, radius],
+            [-width - radius, -1.0, radius],
+            [width + radius, -1.0 + radius * 2.0, radius],
             //
             [width + radius, 1.0, radius],
-            [- width - radius, 1.0, radius],
-            [width + radius, 1.0 - radius*2.0, radius],
+            [-width - radius, 1.0, radius],
+            [width + radius, 1.0 - radius * 2.0, radius],
             //
-            [- width - radius, 1.0, radius],
-            [- width - radius, 1.0 - radius*2.0, radius],
-            [width + radius, 1.0 - radius*2.0, radius],
+            [-width - radius, 1.0, radius],
+            [-width - radius, 1.0 - radius * 2.0, radius],
+            [width + radius, 1.0 - radius * 2.0, radius],
             //
-            [- width - radius, -1.0 + radius*2.0, radius],
-            [- width + radius, -1.0 + radius*2.0, radius],
-            [- width + radius, 1.0 - radius*2.0, radius],
+            [-width - radius, -1.0 + radius * 2.0, radius],
+            [-width + radius, -1.0 + radius * 2.0, radius],
+            [-width + radius, 1.0 - radius * 2.0, radius],
             //
-            [- width - radius, -1.0 + radius*2.0, radius],
-            [- width + radius, 1.0 - radius*2.0, radius],
-            [- width - radius, 1.0 - radius*2.0, radius],
+            [-width - radius, -1.0 + radius * 2.0, radius],
+            [-width + radius, 1.0 - radius * 2.0, radius],
+            [-width - radius, 1.0 - radius * 2.0, radius],
             //
-            [width - radius, -1.0 + radius*2.0, radius],
-            [width + radius, -1.0 + radius*2.0, radius],
-            [width + radius, 1.0 - radius*2.0, radius],
+            [width - radius, -1.0 + radius * 2.0, radius],
+            [width + radius, -1.0 + radius * 2.0, radius],
+            [width + radius, 1.0 - radius * 2.0, radius],
             //
-            [width - radius, -1.0 + radius*2.0, radius],
-            [width + radius, 1.0 - radius*2.0, radius],
-            [width - radius, 1.0 - radius*2.0, radius],
+            [width - radius, -1.0 + radius * 2.0, radius],
+            [width + radius, 1.0 - radius * 2.0, radius],
+            [width - radius, 1.0 - radius * 2.0, radius],
         ],
         vec![
             [-width - radius, -1.0, -radius],
@@ -487,40 +467,40 @@ pub fn instance_primitives(
             [width + radius, -1.0, radius],
         ],
         vec![
-            [width - radius, -1.0+radius*2.0, -radius],
-            [-width + radius, -1.0+radius*2.0, -radius],
-            [width - radius, -1.0+radius*2.0, radius],
+            [width - radius, -1.0 + radius * 2.0, -radius],
+            [-width + radius, -1.0 + radius * 2.0, -radius],
+            [width - radius, -1.0 + radius * 2.0, radius],
             //
-            [-width + radius, -1.0+radius*2.0, -radius],
-            [-width + radius, -1.0+radius*2.0, radius],
-            [width - radius, -1.0+radius*2.0, radius],
+            [-width + radius, -1.0 + radius * 2.0, -radius],
+            [-width + radius, -1.0 + radius * 2.0, radius],
+            [width - radius, -1.0 + radius * 2.0, radius],
         ],
         vec![
-            [-width + radius, 1.0-radius*2.0, -radius],
-            [width - radius, 1.0-radius*2.0, -radius],
-            [width - radius, 1.0-radius*2.0, radius],
+            [-width + radius, 1.0 - radius * 2.0, -radius],
+            [width - radius, 1.0 - radius * 2.0, -radius],
+            [width - radius, 1.0 - radius * 2.0, radius],
             //
-            [-width + radius, 1.0-radius*2.0, radius],
-            [-width + radius, 1.0-radius*2.0, -radius],
-            [width - radius, 1.0-radius*2.0, radius],
+            [-width + radius, 1.0 - radius * 2.0, radius],
+            [-width + radius, 1.0 - radius * 2.0, -radius],
+            [width - radius, 1.0 - radius * 2.0, radius],
         ],
         vec![
-            [-width + radius, -1.0+radius*2.0, -radius],
-            [-width + radius, 1.0-radius*2.0, -radius],
-            [-width + radius, -1.0+radius*2.0, radius],
+            [-width + radius, -1.0 + radius * 2.0, -radius],
+            [-width + radius, 1.0 - radius * 2.0, -radius],
+            [-width + radius, -1.0 + radius * 2.0, radius],
             //
-            [-width + radius, 1.0-radius*2.0, -radius],
-            [-width + radius, 1.0-radius*2.0, radius],
-            [-width + radius, -1.0+radius*2.0, radius],
+            [-width + radius, 1.0 - radius * 2.0, -radius],
+            [-width + radius, 1.0 - radius * 2.0, radius],
+            [-width + radius, -1.0 + radius * 2.0, radius],
         ],
         vec![
-            [width - radius, 1.0-radius*2.0, -radius],
-            [width - radius, -1.0+radius*2.0, -radius],
-            [width - radius, -1.0+radius*2.0, radius],
+            [width - radius, 1.0 - radius * 2.0, -radius],
+            [width - radius, -1.0 + radius * 2.0, -radius],
+            [width - radius, -1.0 + radius * 2.0, radius],
             //
-            [width - radius, 1.0-radius*2.0, radius],
-            [width - radius, 1.0-radius*2.0, -radius],
-            [width - radius, -1.0+radius*2.0, radius],
+            [width - radius, 1.0 - radius * 2.0, radius],
+            [width - radius, 1.0 - radius * 2.0, -radius],
+            [width - radius, -1.0 + radius * 2.0, radius],
         ],
     ]);
 
@@ -530,7 +510,10 @@ pub fn instance_primitives(
         let mut primitive_buffers = vec![];
         for buffer_def in primitive_buffers_def {
             let (buffer, future) = ImmutableBuffer::from_iter(
-                buffer_def.iter().cloned().map(|position| Vertex { position }),
+                buffer_def
+                    .iter()
+                    .cloned()
+                    .map(|position| Vertex { position }),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
             ).expect("failed to create buffer");

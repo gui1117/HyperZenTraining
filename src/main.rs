@@ -227,12 +227,30 @@ fn main() {
                             .set_mouse_draw_cursor(debug_mode.0);
                         true
                     }
-                    Event::WindowEvent { event: WindowEvent::MouseInput { .. }, .. } |
-                    Event::WindowEvent { event: WindowEvent::ReceivedCharacter(..), .. } |
-                    Event::WindowEvent { event: WindowEvent::MouseWheel { .. }, .. } |
-                    Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, .. } |
-                    Event::DeviceEvent { event: DeviceEvent::Motion { .. }, .. } |
-                    Event::WindowEvent { event: WindowEvent::AxisMotion { .. }, .. } => true,
+                    Event::WindowEvent {
+                        event: WindowEvent::MouseInput { .. },
+                        ..
+                    }
+                    | Event::WindowEvent {
+                        event: WindowEvent::ReceivedCharacter(..),
+                        ..
+                    }
+                    | Event::WindowEvent {
+                        event: WindowEvent::MouseWheel { .. },
+                        ..
+                    }
+                    | Event::WindowEvent {
+                        event: WindowEvent::KeyboardInput { .. },
+                        ..
+                    }
+                    | Event::DeviceEvent {
+                        event: DeviceEvent::Motion { .. },
+                        ..
+                    }
+                    | Event::WindowEvent {
+                        event: WindowEvent::AxisMotion { .. },
+                        ..
+                    } => true,
                     _ => false,
                 };
 

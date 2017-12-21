@@ -383,7 +383,8 @@ impl<'a> Graphics<'a> {
                     [1.0, -1.0],
                     [-1.0, 1.0],
                 ].iter()
-                    .cloned().map(|position| SecondVertex { position }),
+                    .cloned()
+                    .map(|position| SecondVertex { position }),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
             ).expect("failed to create buffer");
@@ -398,7 +399,8 @@ impl<'a> Graphics<'a> {
                     [0.5, -0.5],
                     [-0.5, 0.5],
                 ].iter()
-                    .cloned().map(|position| SecondVertex { position }),
+                    .cloned()
+                    .map(|position| SecondVertex { position }),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
             ).expect("failed to create buffer");
