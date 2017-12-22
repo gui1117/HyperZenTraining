@@ -13,7 +13,7 @@ ncollide = { git = "https://github.com/thiolliere/ncollide/", branch = "send_syn
 nphysics3d = { git = "https://github.com/thiolliere/nphysics/", branch = "send_sync_master" }
 specs = "0.10"
 alga = "0.5"
-rand = "0.3"
+rand = "0.4"
 lazy_static = "1"
 pathfinding = "0.6"
 png = "0.11"
