@@ -275,12 +275,22 @@ fn main() {
         benchmarker.end("update");
 
         // Render world
-        let mut next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), None);
-        while let Err(vulkano::swapchain::AcquireError::OutOfDate) = next_image {
-            graphics.recreate(&window);
-            *world.write_resource() = graphics.data.clone();
-            next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), None);
+
+        // On X with Xmonad and intel HD graphics the acquire stay somtimes forever
+        let timeout = Duration::from_secs(2);
+        let mut next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), Some(timeout));
+        loop {
+            match next_image {
+                Err(vulkano::swapchain::AcquireError::OutOfDate)
+                | Err(vulkano::swapchain::AcquireError::Timeout) => {
+                    graphics.recreate(&window);
+                    *world.write_resource() = graphics.data.clone();
+                    next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), None);
+                }
+                _ => break
+            }
         }
+
         let (image_num, acquire_future) = next_image.unwrap();
 
         world.write_resource::<::resource::Rendering>().image_num = Some(image_num);
