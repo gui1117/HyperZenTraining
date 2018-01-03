@@ -76,6 +76,8 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
                 body.append_ang_force(ang_force);
             }
             body.set_ang_vel_internal(momentum.ang_damping * ang_vel);
+
+            // TODO: assert everything is different from none before step
         }
         for contactor in (&mut contactors).join() {
             contactor.contacts.clear();

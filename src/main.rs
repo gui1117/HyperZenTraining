@@ -285,7 +285,7 @@ fn main() {
                 | Err(vulkano::swapchain::AcquireError::Timeout) => {
                     graphics.recreate(&window);
                     *world.write_resource() = graphics.data.clone();
-                    next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), None);
+                    next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), Some(timeout));
                 }
                 _ => break
             }
