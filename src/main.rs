@@ -250,6 +250,10 @@ fn main() {
                     | Event::WindowEvent {
                         event: WindowEvent::AxisMotion { .. },
                         ..
+                    }
+                    | Event::WindowEvent {
+                        event: WindowEvent::MouseMoved { .. },
+                        ..
                     } => true,
                     _ => false,
                 };

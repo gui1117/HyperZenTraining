@@ -20,7 +20,6 @@ impl<'a> ::specs::System<'a> for ShootSystem {
         ::specs::WriteStorage<'a, ::component::DeletTimer>,
         ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
         ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-        ::specs::WriteStorage<'a, ::component::DynamicHud>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
         ::specs::Fetch<'a, ::resource::Config>,
         ::specs::Entities<'a>,
@@ -37,7 +36,6 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             mut delet_timers,
             mut dynamic_assets,
             mut dynamic_draws,
-            mut dynamic_huds,
             physic_world,
             config,
             entities,
@@ -116,7 +114,6 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     animation.light_ray_radius,
                     &mut delet_timers,
                     &mut dynamic_draws,
-                    &mut dynamic_huds,
                     &mut dynamic_assets,
                     &entities,
                 );

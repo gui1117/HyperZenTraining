@@ -7,7 +7,6 @@ pub fn create_light_ray<'a>(
     radius: f32,
     delet_timers: &mut ::specs::WriteStorage<'a, ::component::DeletTimer>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-    dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     entities: &::specs::Entities,
 ) {
@@ -24,7 +23,6 @@ pub fn create_light_ray<'a>(
     };
 
     let entity = entities.create();
-    dynamic_huds.insert(entity, ::component::DynamicHud);
     dynamic_draws.insert(entity, ::component::DynamicDraw);
     dynamic_graphics_assets.insert(
         entity,
@@ -66,9 +64,12 @@ pub fn create_weapon<'a>(
     let bullet_nbr = config.weapon_bullet_nbr;
     let mut bullets = vec![];
 
+    let weapon_trans = ::na::Translation3::new(0.0, weapon_pos_y, weapon_pos_z);
+
     // Six
     let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
-    let primitive_trans = ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0))
+    let primitive_trans = weapon_trans
+        * ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0))
         * ::graphics::resizer(six_radius, six_radius, six_length);
 
     let entity = entities.create();
@@ -87,10 +88,11 @@ pub fn create_weapon<'a>(
     // Bullet
     for i in 0..bullet_nbr {
         let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
-        let primitive_trans = ::na::Isometry3::new(
-            ::na::Vector3::new(bullet_x + bullet_dx * i as f32, 0.0, 0.0),
-            ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
-        )
+        let primitive_trans = weapon_trans
+            * ::na::Isometry3::new(
+                ::na::Vector3::new(bullet_x + bullet_dx * i as f32, 0.0, 0.0),
+                ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
+            )
             * ::graphics::resizer(bullet_radius, bullet_radius, bullet_length);
 
         let entity = entities.create();
@@ -112,14 +114,15 @@ pub fn create_weapon<'a>(
     for angle in (0..3usize).map(|i| i as f32 * 2.0 * FRAC_PI_3) {
         // Bar
         let (primitive, groups) = ::graphics::Primitive::Cube.instantiate();
-        let primitive_trans = ::na::Isometry3::new(
-            ::na::Vector3::new(
-                bar_x_pos,
-                (center_radius + bar_y_radius) * angle.cos(),
-                (center_radius + bar_y_radius) * angle.sin(),
-            ),
-            ::na::Vector3::new(angle, 0.0, 0.0),
-        )
+        let primitive_trans = weapon_trans
+            * ::na::Isometry3::new(
+                ::na::Vector3::new(
+                    bar_x_pos,
+                    (center_radius + bar_y_radius) * angle.cos(),
+                    (center_radius + bar_y_radius) * angle.sin(),
+                ),
+                ::na::Vector3::new(angle, 0.0, 0.0),
+            )
             * ::graphics::resizer(bar_x_radius, bar_y_radius, bar_z_radius);
 
         let entity = entities.create();
@@ -139,7 +142,7 @@ pub fn create_weapon<'a>(
     weapon_animations.insert(
         anchor,
         ::component::WeaponAnimation {
-            weapon_trans: ::na::Translation3::new(0.0, weapon_pos_y, weapon_pos_z).to_superset(),
+            weapon_trans: weapon_trans.to_superset(),
             shoot_pos: ::na::Point3::new(shoot_pos_x, 0.0, 0.0),
             light_ray_radius,
             bullets,

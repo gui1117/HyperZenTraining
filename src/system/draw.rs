@@ -90,6 +90,16 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 proj: proj_matrix.into(),
             };
 
+            let hud_view_matrix = {
+                let i: ::na::Transform3<f32> = ::na::Similarity3::look_at_rh(
+                    &::na::Point3::new(0.0, 0.0, 0.0),
+                    &::na::Point3::new(1.0, 0.0, 0.0),
+                    &[0.0, 0.0, 1.0].into(),
+                    1.0,
+                ).to_superset();
+                i.unwrap()
+            };
+
             let hud_proj_matrix = ::na::Perspective3::new(
                 graphics.dim[0] as f32 / graphics.dim[1] as f32,
                 ::std::f32::consts::FRAC_PI_3,
@@ -99,7 +109,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             ).unwrap();
 
             let hud_view_uniform = ::graphics::shader::draw1_vs::ty::View {
-                view: view_matrix.into(),
+                view: hud_view_matrix.into(),
                 proj: hud_proj_matrix.into(),
             };
 
@@ -396,7 +406,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             config.dt().clone(),
         );
         ui.window(im_str!("Debug"))
-            .size((10.0, 10.0), ::imgui::ImGuiCond::FirstUseEver)
+            .size((600.0, 600.0), ::imgui::ImGuiCond::FirstUseEver)
             .build(|| {
                 ui.text(format!("fps: {}", config.debug_fps_counter));
                 ui.separator();
