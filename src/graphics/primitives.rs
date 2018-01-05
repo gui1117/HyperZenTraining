@@ -8,6 +8,8 @@ use wavefront_obj::obj;
 
 use std::f32::consts::PI;
 
+const HOOK_LINKS: usize = 50;
+
 pub fn instance_primitives(
     queue: Arc<Queue>,
 ) -> (Vec<Vec<Arc<ImmutableBuffer<[Vertex]>>>>, Box<GpuFuture>) {
@@ -358,10 +360,10 @@ pub fn instance_primitives(
         ],
     ]);
 
-    // Link
-    let radius = 0.2;
-    let width = 0.4;
-    primitives_buffers_def.push(vec![
+    // Link oriented along axis y
+    let radius = 0.02;
+    let width = 0.04;
+    let link = vec![
         // Floor
         vec![
             [width + radius, -1.0, -radius],
@@ -502,7 +504,29 @@ pub fn instance_primitives(
             [width - radius, 1.0 - radius * 2.0, -radius],
             [width - radius, -1.0 + radius * 2.0, radius],
         ],
-    ]);
+    ];
+
+    let mut hook = vec![];
+    for i in 0..HOOK_LINKS {
+        let mut link = link.clone();
+        if i % 2 == 1 {
+            link.iter_mut().for_each(|v| {
+                v.iter_mut().for_each(|p| {
+                    let tmp = p[0];
+                    p[0] = p[2];
+                    p[2] = tmp;
+                });
+                v.reverse();
+            });
+        }
+        link.iter_mut().for_each(|v| {
+            v.iter_mut().for_each(|p| {
+                p[1] += (2.0 - 4.0*radius)*i as f32 + 1.0;
+            });
+        });
+        hook.append(&mut link);
+    }
+    primitives_buffers_def.push(hook);
 
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];
@@ -539,7 +563,7 @@ pub mod primitive {
         Cube,
         Cylinder,
         PitCube,
-        Link,
+        Hook,
     }
 
     impl Primitive {
@@ -553,7 +577,7 @@ pub mod primitive {
                 Primitive::Cube => 5,
                 Primitive::Cylinder => 6,
                 Primitive::PitCube => 7,
-                Primitive::Link => 8,
+                Primitive::Hook => 8,
             }
         }
 
@@ -567,7 +591,7 @@ pub mod primitive {
                 Primitive::Cube => 6,
                 Primitive::Cylinder => 1,
                 Primitive::PitCube => 11,
-                Primitive::Link => 10,
+                Primitive::Hook => 10*super::HOOK_LINKS,
             }
         }
 

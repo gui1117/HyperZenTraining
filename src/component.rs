@@ -525,6 +525,7 @@ impl ::specs::Component for Generator {
 pub struct Anchor {
     pub entity: ::specs::Entity,
     pub local_pos: ::na::Point3<f32>,
+    /// computed each frame from local_pos and entity
     pub pos: ::na::Vector3<f32>,
 }
 
@@ -532,6 +533,7 @@ pub struct Hook {
     pub launch: bool,
     pub force: f32,
     pub anchor: Option<Anchor>,
+    pub draw: ::specs::Entity,
 }
 
 impl ::specs::Component for Hook {
@@ -539,11 +541,12 @@ impl ::specs::Component for Hook {
 }
 
 impl Hook {
-    pub fn new(force: f32) -> Self {
+    pub fn new(force: f32, draw: ::specs::Entity) -> Self {
         Hook {
             launch: false,
             force,
             anchor: None,
+            draw,
         }
     }
 

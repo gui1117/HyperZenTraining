@@ -165,12 +165,15 @@ fn main() {
         .add(::system::LifeSystem, "life", &[])
         .build();
 
-    let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
+    let mut prepare_draw_dispatcher = ::specs::DispatcherBuilder::new()
         .add(
             ::system::UpdateDynamicDrawEraserSystem,
             "update_dynamic_draw",
             &[],
         )
+        .build();
+
+    let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
@@ -276,6 +279,8 @@ fn main() {
         update_dispatcher.dispatch(&mut world.res);
         world.maintain();
         game_system.run(&mut world);
+        prepare_draw_dispatcher.dispatch(&mut world.res);
+        world.maintain();
         benchmarker.end("update");
 
         // Render world

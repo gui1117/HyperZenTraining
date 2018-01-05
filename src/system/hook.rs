@@ -79,7 +79,7 @@ impl<'a> ::specs::System<'a> for HookSystem {
                 }
             }
 
-            // compute position
+            // compute position and draw
             if let Some(ref mut anchor) = hook.anchor {
                 anchor.pos = (bodies
                     .get(anchor.entity)

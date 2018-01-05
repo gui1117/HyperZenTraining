@@ -406,7 +406,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             config.dt().clone(),
         );
         ui.window(im_str!("Debug"))
-            .size((600.0, 600.0), ::imgui::ImGuiCond::FirstUseEver)
+            .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
             .build(|| {
                 ui.text(format!("fps: {}", config.debug_fps_counter));
                 ui.separator();

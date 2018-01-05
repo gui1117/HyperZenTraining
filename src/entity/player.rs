@@ -53,7 +53,23 @@ pub fn create_player<'a>(
     players.insert(entity, ::component::Player);
     aims.insert(entity, ::component::Aim::new());
     contactors.insert(entity, ::component::Contactor::new());
-    hooks.insert(entity, ::component::Hook::new(config.player_hook_force));
+
+    let (hook_primitive, hook_groups) = ::graphics::Primitive::Hook.instantiate();
+    let hook_primitive_trans = ::graphics::resizer(
+        config.player_hook_size,
+        config.player_hook_size,
+        config.player_hook_size,
+    );
+    let hook_draw_entity = entities.create();
+    dynamic_graphics_assets.insert(hook_draw_entity,
+        ::component::DynamicGraphicsAssets::new(
+                hook_primitive,
+                hook_groups,
+                config.player_hook_color,
+                hook_primitive_trans,
+        ));
+    hooks.insert(entity, ::component::Hook::new(config.player_hook_force, hook_draw_entity));
+
     momentums.insert(
         entity,
         ::component::Momentum::new(
