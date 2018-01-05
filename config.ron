@@ -37,7 +37,7 @@ Config(
     player_gravity: 1.0,
     player_hook_force: 2.0,
     player_hook_color: Blue,
-    player_hook_size: 0.8,
+    player_hook_size: 1.0,
 
     teleport_dl: -0.4,
 
@@ -54,7 +54,7 @@ Config(
     turret_ang_damping: 0.8,
     turret_color: Purple,
 
-    wall_color: PaleRed,
+    wall_color: [PaleRed, PaleBlue],
     floor_ceil_color: PaleBrown,
 
     weapon_reload_time: 0.5,

@@ -36,6 +36,7 @@ pub fn create_3d_maze_walls<'a>(
     };
     let groups = ::graphics::Primitive::Plane
         .reserve(maze.size.iter().max().unwrap().clone() as usize * 3 + 3);
+    let groups_color = groups.iter().map(|_| config.random_wall_color()).collect::<Vec<_>>();
 
     for cell in &maze.walls {
         ::entity::create_wall_cube_physic(
@@ -51,16 +52,22 @@ pub fn create_3d_maze_walls<'a>(
                 continue;
             }
 
-            let color = colors.get(&neighbour).cloned();
             let orientation = dl.iter()
                 .enumerate()
                 .find(|&(_, &n)| n != 0)
                 .map(|(i, _)| i)
                 .unwrap();
-            let groups = if color.is_some() {
-                ::graphics::Primitive::Plane.reserve(1).pop().unwrap()
+            let (color, groups) = if let Some(color) = colors.get(&neighbour) {
+                (
+                    color.clone(),
+                    ::graphics::Primitive::Plane.reserve(1).pop().unwrap(),
+                )
             } else {
-                groups[index(cell[0], cell[1], cell[2], orientation)].clone()
+                let i = index(cell[0], cell[1], cell[2], orientation);
+                (
+                    groups_color[i],
+                    groups[i].clone(),
+                )
             };
             let dl_f32 =
                 ::na::Vector3::new(dl[0] as f32, dl[1] as f32, dl[2] as f32) * maze.scale / 2.;
@@ -73,7 +80,6 @@ pub fn create_3d_maze_walls<'a>(
                 groups,
                 static_draws,
                 graphics,
-                config,
                 entities,
             );
         }

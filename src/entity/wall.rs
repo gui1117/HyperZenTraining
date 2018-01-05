@@ -4,11 +4,10 @@ use alga::general::SubsetOf;
 pub fn create_wall_side_draw<'a>(
     pos: ::na::Isometry3<f32>,
     radius: f32,
-    color: Option<::graphics::Color>,
+    color: ::graphics::Color,
     groups: Vec<u16>,
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let world_trans = {
@@ -25,7 +24,7 @@ pub fn create_wall_side_draw<'a>(
         entity,
         primitive,
         groups,
-        color.unwrap_or(config.wall_color),
+        color,
         world_trans,
         static_draws,
         graphics,
@@ -56,12 +55,11 @@ pub fn create_wall_side<'a>(
     pos: ::na::Isometry3<f32>,
     x_radius: f32,
     y_radius: f32,
-    color: Option<::graphics::Color>,
+    color: ::graphics::Color,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
@@ -88,7 +86,7 @@ pub fn create_wall_side<'a>(
         entity,
         primitive,
         groups,
-        color.unwrap_or(config.wall_color),
+        color,
         world_trans,
         static_draws,
         graphics,

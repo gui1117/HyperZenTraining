@@ -1,4 +1,6 @@
 use imgui::{ImGuiStyle, ImVec2, ImVec4};
+use rand::distributions::{IndependentSample, Range};
+use rand;
 
 use std::fs::File;
 use std::io::Write;
@@ -69,7 +71,7 @@ pub struct Config {
     pub turret_ang_damping: f32,
     pub turret_color: ::graphics::Color,
 
-    pub wall_color: ::graphics::Color,
+    pub wall_color: Vec<::graphics::Color>,
     pub floor_ceil_color: ::graphics::Color,
 
     pub weapon_reload_time: f32,
@@ -100,6 +102,12 @@ impl Config {
         let string = ::ron::ser::to_string(&self).unwrap();
         let mut file = File::open(SAVE_FILENAME).unwrap();
         file.write_all(string.as_bytes()).unwrap();
+    }
+
+    pub fn random_wall_color(&self) -> ::graphics::Color {
+        let mut rng = rand::thread_rng();
+        let between = Range::new(0, self.wall_color.len());
+        self.wall_color[between.ind_sample(&mut rng)]
     }
 }
 
