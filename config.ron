@@ -37,7 +37,7 @@ Config(
     player_gravity: 1.0,
     player_hook_force: 2.0,
     player_hook_color: Blue,
-    player_hook_size: 1.0,
+    player_hook_size: 0.8,
 
     teleport_dl: -0.4,
 

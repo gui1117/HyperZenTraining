@@ -32,15 +32,18 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
 
         for (hook, body, aim) in (&hooks, &bodies, &aims).join() {
             if let Some(ref anchor) = hook.anchor {
-                // TODO: insert only when seing it
+                // Note: it doesn't seem to be needed to draw only when visible the
+                // end of the hook is ever seen.
                 dynamic_draws.insert(hook.draw, ::component::DynamicDraw);
+                let body_hook_local_pos = ::na::Vector3::new(0.0, 0.3, -0.3);
+                let hook_body_pos = body.get(&physic_world).position().translation.vector + aim.rotation*body_hook_local_pos;
+                let aimto = hook_body_pos - anchor.pos;
+
                 let assets = dynamic_graphics_assets.get_mut(hook.draw).unwrap();
 
-                // remove or add draw depending of aim
-                let trans = ::na::Isometry3::new(
-                    anchor.pos,
-                    // TODO: angle with body + "aim" + translation
-                    ::na::zero(),
+                let trans = ::na::Isometry3::from_parts(
+                    ::na::Translation::from_vector(anchor.pos),
+                    ::na::UnitQuaternion::rotation_between(&::na::Vector3::new(0.0, 1.0, 0.0), &aimto).unwrap(),
                 )
                     * assets.primitive_trans;
 
