@@ -1,4 +1,5 @@
 Config(
+    hook_links: 25,
     accumulated_impulse_solver_step: 0.01,
     correction_mode_a: 0.2,
     correction_mode_b: 0.2,
@@ -64,6 +65,7 @@ Config(
     weapon_bullet_x: 0.035,
     weapon_bullet_dx: 0.003,
     weapon_bullet_color: PaleBlue,
+    weapon_bullet_empty_color: DarkBlue,
     weapon_six_color: Red,
     weapon_angle_color: PalePurple,
 

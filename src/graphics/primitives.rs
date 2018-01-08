@@ -8,9 +8,6 @@ use wavefront_obj::obj;
 
 use std::f32::consts::PI;
 
-// TODO: set this value
-const HOOK_LINKS: usize = 30;
-
 pub fn instance_primitives(
     queue: Arc<Queue>,
 ) -> (Vec<Vec<Arc<ImmutableBuffer<[Vertex]>>>>, Box<GpuFuture>) {
@@ -508,7 +505,7 @@ pub fn instance_primitives(
     ];
 
     let mut hook = vec![];
-    for i in 0..HOOK_LINKS {
+    for i in 0..::CONFIG.hook_links {
         let mut link = link.clone();
         if i % 2 == 1 {
             link.iter_mut().for_each(|v| {
@@ -592,7 +589,7 @@ pub mod primitive {
                 Primitive::Cube => 6,
                 Primitive::Cylinder => 1,
                 Primitive::PitCube => 11,
-                Primitive::Hook => 10*super::HOOK_LINKS,
+                Primitive::Hook => 10*::CONFIG.hook_links,
             }
         }
 

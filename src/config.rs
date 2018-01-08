@@ -15,6 +15,7 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    pub hook_links: usize,
     pub style: ImGuiStyleSave,
     pub mouse_sensibility: f32,
     pub fps: u32,
@@ -85,6 +86,7 @@ pub struct Config {
     pub weapon_bullet_x: f32,
     pub weapon_bullet_dx: f32,
     pub weapon_bullet_color: ::graphics::Color,
+    pub weapon_bullet_empty_color: ::graphics::Color,
     pub weapon_six_color: ::graphics::Color,
     pub weapon_angle_color: ::graphics::Color,
 
