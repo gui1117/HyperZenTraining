@@ -11,7 +11,6 @@ pub fn create_avoider_w(pos: ::na::Vector3<f32>, eraser: bool, world: &::specs::
         &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
-        &world.read_resource(),
     )
 }
 
@@ -27,13 +26,12 @@ pub fn create_avoider<'a>(
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let primitive_trans = ::graphics::resizer(
-        config.avoider_size,
-        config.avoider_size,
-        config.avoider_size,
+        ::CONFIG.avoider_size,
+        ::CONFIG.avoider_size,
+        ::CONFIG.avoider_size,
     );
 
     let shape = {
@@ -45,7 +43,7 @@ pub fn create_avoider<'a>(
             ::na::Point3::new(0.0, 0.0, 1.0),
         ];
         for p in &mut points {
-            *p = *p * config.avoider_size
+            *p = *p * ::CONFIG.avoider_size
         }
         ::ncollide::shape::ConvexHull::new(points)
     };
@@ -57,7 +55,7 @@ pub fn create_avoider<'a>(
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();
-    let pnt_to_com = ::na::Vector3::z() * config.avoider_size - body.center_of_mass().coords;
+    let pnt_to_com = ::na::Vector3::z() * ::CONFIG.avoider_size - body.center_of_mass().coords;
 
     body.set_transformation(pos);
     body.set_collision_groups(group);
@@ -70,10 +68,10 @@ pub fn create_avoider<'a>(
         entity,
         ::component::Momentum::new(
             mass,
-            config.avoider_velocity,
-            config.avoider_time_to_reach_vmax,
+            ::CONFIG.avoider_velocity,
+            ::CONFIG.avoider_time_to_reach_vmax,
             None,
-            config.avoider_ang_damping,
+            ::CONFIG.avoider_ang_damping,
             Some(pnt_to_com),
         ),
     );
@@ -82,7 +80,7 @@ pub fn create_avoider<'a>(
         ::component::DynamicGraphicsAssets::new(
             primitive,
             groups,
-            config.avoider_color,
+            ::CONFIG.avoider_color,
             primitive_trans,
         ),
     );

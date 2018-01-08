@@ -2,7 +2,6 @@ use vulkano::command_buffer::AutoCommandBuffer;
 
 pub use graphics::Data as Graphics;
 pub use imgui::ImGui;
-pub use config::Config;
 pub use std::time::Duration;
 pub use std::collections::HashMap;
 
@@ -10,6 +9,32 @@ pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub struct MenuEvents(pub Vec<::winit::Event>);
 pub struct GameEvents(pub Vec<::winit::Event>);
 pub type Benchmarks = Vec<::util::Benchmark>;
+
+pub struct FpsCounter(pub usize);
+
+pub struct Save {
+    pub mouse_sensibility: f32,
+}
+
+impl Save {
+    pub fn new() -> Self {
+        // TODO: write save if none and load from save
+        Save {
+            mouse_sensibility: ::CONFIG.mouse_sensibility,
+        }
+    }
+
+    // pub fn load() -> Self {
+    //     let file = File::open(SAVE_FILENAME).unwrap();
+    //     ::ron::de::from_reader(file).unwrap()
+    // }
+
+    // pub fn save(&self) {
+    //     let string = ::ron::ser::to_string(&self).unwrap();
+    //     let mut file = File::open(SAVE_FILENAME).unwrap();
+    //     file.write_all(string.as_bytes()).unwrap();
+    // }
+}
 
 pub struct UpdateTime(pub f32);
 

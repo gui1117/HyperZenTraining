@@ -35,6 +35,8 @@ mod config;
 mod testing;
 mod level;
 
+pub use config::CONFIG;
+
 use vulkano_win::VkSurfaceBuild;
 
 use vulkano::swapchain;
@@ -75,8 +77,6 @@ fn main() {
         }
     }
 
-    let config = ::resource::Config::load();
-
     let mut imgui = ::imgui::ImGui::init();
     imgui.set_ini_filename(None);
     imgui.set_log_filename(None);
@@ -101,7 +101,7 @@ fn main() {
     imgui.set_imgui_key(::imgui::ImGuiKey::Y, 17);
     imgui.set_imgui_key(::imgui::ImGuiKey::Z, 18);
 
-    config.style.set_style(imgui.style_mut());
+    CONFIG.style.set_style(imgui.style_mut());
 
     let mut graphics = graphics::Graphics::new(&window, &mut imgui);
 
@@ -136,10 +136,11 @@ fn main() {
     world.register::<::component::PhysicSensor>();
     world.add_resource(graphics.data.clone());
     world.add_resource(imgui);
-    world.add_resource(config);
     world.add_resource(::resource::MenuEvents(vec![]));
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::DebugMode(false));
+    world.add_resource(::resource::Save::new());
+    world.add_resource(::resource::FpsCounter(0));
     world.add_resource(::resource::PlayerControl::new());
     world.add_resource(::resource::Benchmarks::new());
     world.add_resource(::resource::UpdateTime(0.0));
@@ -180,7 +181,7 @@ fn main() {
 
     let frame_duration = Duration::new(
         0,
-        (1_000_000_000.0 / world.read_resource::<::resource::Config>().fps as f32) as u32,
+        (1_000_000_000.0 / ::CONFIG.fps as f32) as u32,
     );
     let mut last_frame_instant = Instant::now();
     let mut fps_counter = fps_counter::FPSCounter::new();
@@ -351,8 +352,8 @@ fn main() {
         }
         last_frame_instant = Instant::now();
         world
-            .write_resource::<::resource::Config>()
-            .debug_fps_counter = fps_counter.tick();
+            .write_resource::<::resource::FpsCounter>()
+            .0 = fps_counter.tick();
         benchmarker.end("sleep");
         *world.write_resource::<::resource::Benchmarks>() = benchmarker.get_all();
     }

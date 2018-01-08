@@ -12,7 +12,6 @@ pub fn create_bouncer_w(pos: ::na::Vector3<f32>, eraser: bool, world: &::specs::
         &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
-        &world.read_resource(),
     );
 }
 
@@ -28,16 +27,15 @@ pub fn create_bouncer<'a>(
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
     contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let primitive_trans = ::graphics::resizer(
-        config.bouncer_size,
-        config.bouncer_size,
-        config.bouncer_size,
+        ::CONFIG.bouncer_size,
+        ::CONFIG.bouncer_size,
+        ::CONFIG.bouncer_size,
     );
 
-    let shape = ::ncollide::shape::Ball3::new(config.bouncer_size);
+    let shape = ::ncollide::shape::Ball3::new(::CONFIG.bouncer_size);
     let pos = ::na::Isometry3::new(pos, ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
@@ -56,10 +54,10 @@ pub fn create_bouncer<'a>(
     momentums.insert(entity, {
         let mut momentum = ::component::Momentum::new(
             mass,
-            config.bouncer_velocity,
-            config.bouncer_time_to_reach_vmax,
+            ::CONFIG.bouncer_velocity,
+            ::CONFIG.bouncer_time_to_reach_vmax,
             None,
-            config.bouncer_ang_damping,
+            ::CONFIG.bouncer_ang_damping,
             None,
         );
         momentum.direction = ::na::Vector3::new_random().normalize();
@@ -71,7 +69,7 @@ pub fn create_bouncer<'a>(
         ::component::DynamicGraphicsAssets::new(
             primitive,
             groups,
-            config.bouncer_color,
+            ::CONFIG.bouncer_color,
             primitive_trans,
         ),
     );

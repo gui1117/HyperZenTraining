@@ -13,7 +13,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
         ::specs::WriteStorage<'a, ::component::Momentum>,
         ::specs::Fetch<'a, ::resource::GameEvents>,
         ::specs::Fetch<'a, ::resource::Maze>,
-        ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::Fetch<'a, ::resource::Save>,
         ::specs::FetchMut<'a, ::resource::PlayerControl>,
     );
 
@@ -27,7 +27,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
             mut momentums,
             events,
             maze,
-            config,
+            save,
             mut player_control,
         ): Self::SystemData,
     ) {
@@ -74,13 +74,13 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                     event: DeviceEvent::Motion { axis: 0, value: dx },
                     ..
                 } => {
-                    player_control.pointer[0] += dx as f32 * config.mouse_sensibility;
+                    player_control.pointer[0] += dx as f32 * save.mouse_sensibility;
                 }
                 Event::DeviceEvent {
                     event: DeviceEvent::Motion { axis: 1, value: dy },
                     ..
                 } => {
-                    player_control.pointer[1] += dy as f32 * config.mouse_sensibility;
+                    player_control.pointer[1] += dy as f32 * save.mouse_sensibility;
                     player_control.pointer[1] = player_control.pointer[1]
                         .min(::std::f32::consts::FRAC_PI_2)
                         .max(-::std::f32::consts::FRAC_PI_2);

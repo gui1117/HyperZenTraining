@@ -100,7 +100,6 @@ pub fn create_floor_ceil<'a>(
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
@@ -133,7 +132,7 @@ pub fn create_floor_ceil<'a>(
         entity,
         primitive,
         groups,
-        config.floor_ceil_color,
+        ::CONFIG.floor_ceil_color,
         world_trans,
         static_draws,
         graphics,

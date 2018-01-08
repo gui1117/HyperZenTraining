@@ -17,7 +17,6 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
         ::specs::WriteStorage<'a, ::component::Life>,
         ::specs::WriteStorage<'a, ::component::Contactor>,
         ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-        ::specs::Fetch<'a, ::resource::Config>,
         ::specs::Fetch<'a, ::resource::UpdateTime>,
         ::specs::Entities<'a>,
     );
@@ -36,7 +35,6 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
             mut lives,
             mut contactors,
             mut physic_world,
-            config,
             update_time,
             entities,
         ): Self::SystemData,
@@ -61,7 +59,6 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
                             &mut lives,
                             &mut contactors,
                             &mut physic_world,
-                            &config,
                             &entities,
                         ),
                         GeneratedEntity::Avoider => ::entity::create_avoider(
@@ -75,7 +72,6 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
                             &mut dynamic_graphics_assets,
                             &mut lives,
                             &mut physic_world,
-                            &config,
                             &entities,
                         ),
                     }

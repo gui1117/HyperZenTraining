@@ -3,17 +3,21 @@ use rand::distributions::{IndependentSample, Range};
 use rand;
 
 use std::fs::File;
-use std::io::Write;
 
-const SAVE_FILENAME: &str = "config.ron";
+const FILENAME: &str = "config.ron";
+
+lazy_static! {
+    pub static ref CONFIG: Config = {
+        let file = File::open(FILENAME).unwrap();
+        ::ron::de::from_reader(file).unwrap()
+    };
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
     pub style: ImGuiStyleSave,
     pub mouse_sensibility: f32,
     pub fps: u32,
-    /// Not loaded
-    pub debug_fps_counter: usize,
     pub eraser_time: f32,
 
     pub accumulated_impulse_solver_step: f32,
@@ -91,17 +95,6 @@ impl Config {
     #[inline]
     pub fn dt(&self) -> f32 {
         1.0 / self.fps as f32
-    }
-
-    pub fn load() -> Self {
-        let file = File::open(SAVE_FILENAME).unwrap();
-        ::ron::de::from_reader(file).unwrap()
-    }
-
-    pub fn save(&self) {
-        let string = ::ron::ser::to_string(&self).unwrap();
-        let mut file = File::open(SAVE_FILENAME).unwrap();
-        file.write_all(string.as_bytes()).unwrap();
     }
 
     pub fn random_wall_color(&self) -> ::graphics::Color {

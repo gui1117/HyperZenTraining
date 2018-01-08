@@ -14,7 +14,6 @@ pub fn create_2d_maze_walls_w(
         &mut world.write_resource(),
         &world.read_resource(),
         &world.read_resource(),
-        &world.read_resource(),
     );
 }
 
@@ -25,7 +24,6 @@ pub fn create_2d_maze_walls<'a>(
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     super::create_floor_ceil(
@@ -35,7 +33,6 @@ pub fn create_2d_maze_walls<'a>(
         static_draws,
         physic_world,
         graphics,
-        config,
         entities,
     );
     super::create_floor_ceil(
@@ -45,7 +42,6 @@ pub fn create_2d_maze_walls<'a>(
         static_draws,
         physic_world,
         graphics,
-        config,
         entities,
     );
 
@@ -100,7 +96,7 @@ pub fn create_2d_maze_walls<'a>(
             ::na::Vector3::new(x as f32 + 0.5, y_min as f32 + y_radius, 0.5) + dx,
             ::na::Vector3::y() * dx[0].signum() * FRAC_PI_2,
         );
-        create_wall_side_closure(pos, x_radius, y_radius, config.random_wall_color());
+        create_wall_side_closure(pos, x_radius, y_radius, ::CONFIG.random_wall_color());
     }
 
     for (dy, y_side) in minus_y_sides
@@ -123,7 +119,7 @@ pub fn create_2d_maze_walls<'a>(
             ::na::Vector3::new(x_min as f32 + x_radius, y as f32 + 0.5, 0.5) + dy,
             ::na::Vector3::x() * -dy[1].signum() * FRAC_PI_2,
         );
-        create_wall_side_closure(pos, x_radius, y_radius, config.random_wall_color());
+        create_wall_side_closure(pos, x_radius, y_radius, ::CONFIG.random_wall_color());
     }
 
     for (pos, &color) in colors {

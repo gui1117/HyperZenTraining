@@ -12,7 +12,6 @@ pub fn create_turret_w(pos: ::na::Vector3<f32>, world: &::specs::World) {
         &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
-        &world.read_resource(),
     );
 }
 
@@ -26,7 +25,6 @@ pub fn create_turret<'a>(
     lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
     followers: &mut ::specs::WriteStorage<'a, ::component::FollowPlayer>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     // Create laser
@@ -48,16 +46,16 @@ pub fn create_turret<'a>(
     let laser_physic_entity = entities.create();
     followers.insert(
         laser_physic_entity,
-        ::component::FollowPlayer::new(config.laser_amortization),
+        ::component::FollowPlayer::new(::CONFIG.laser_amortization),
     );
     momentums.insert(
         laser_physic_entity,
         ::component::Momentum::new(
             laser_mass,
-            config.laser_velocity,
-            config.laser_time_to_reach_vmax,
+            ::CONFIG.laser_velocity,
+            ::CONFIG.laser_time_to_reach_vmax,
             None,
-            config.laser_ang_damping,
+            ::CONFIG.laser_ang_damping,
             None,
         ),
     );
@@ -70,7 +68,7 @@ pub fn create_turret<'a>(
         ::component::DynamicGraphicsAssets::new(
             laser_primitive,
             laser_groups,
-            config.laser_color,
+            ::CONFIG.laser_color,
             ::na::one(),
         ),
     );
@@ -78,12 +76,12 @@ pub fn create_turret<'a>(
 
     // Create turret
     let primitive_trans =
-        ::graphics::resizer(config.turret_size, config.turret_size, config.turret_size);
+        ::graphics::resizer(::CONFIG.turret_size, ::CONFIG.turret_size, ::CONFIG.turret_size);
 
     let shape = ::ncollide::shape::Cuboid::new(::na::Vector3::new(
-        config.turret_size,
-        config.turret_size,
-        config.turret_size,
+        ::CONFIG.turret_size,
+        ::CONFIG.turret_size,
+        ::CONFIG.turret_size,
     ));
     let trans = ::na::Isometry3::new(pos, ::na::Vector3::new(0.0, FRAC_PI_2, 0.0));
 
@@ -110,10 +108,10 @@ pub fn create_turret<'a>(
         entity,
         ::component::Momentum::new(
             mass,
-            config.turret_velocity,
-            config.turret_time_to_reach_vmax,
+            ::CONFIG.turret_velocity,
+            ::CONFIG.turret_time_to_reach_vmax,
             None,
-            config.turret_ang_damping,
+            ::CONFIG.turret_ang_damping,
             None,
         ),
     );
@@ -123,7 +121,7 @@ pub fn create_turret<'a>(
         ::component::DynamicGraphicsAssets::new(
             primitive,
             groups,
-            config.turret_color,
+            ::CONFIG.turret_color,
             primitive_trans,
         ),
     );

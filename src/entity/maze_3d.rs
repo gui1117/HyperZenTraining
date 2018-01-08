@@ -14,7 +14,6 @@ pub fn create_3d_maze_walls_w(
         &mut world.write_resource(),
         &world.read_resource(),
         &world.read_resource(),
-        &world.read_resource(),
     );
 }
 
@@ -25,7 +24,6 @@ pub fn create_3d_maze_walls<'a>(
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let index = |x, y, z, o| match o {
@@ -36,7 +34,7 @@ pub fn create_3d_maze_walls<'a>(
     };
     let groups = ::graphics::Primitive::Plane
         .reserve(maze.size.iter().max().unwrap().clone() as usize * 3 + 3);
-    let groups_color = groups.iter().map(|_| config.random_wall_color()).collect::<Vec<_>>();
+    let groups_color = groups.iter().map(|_| ::CONFIG.random_wall_color()).collect::<Vec<_>>();
 
     for cell in &maze.walls {
         ::entity::create_wall_cube_physic(

@@ -38,7 +38,6 @@ pub fn create_weapon<'a>(
     weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
     dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
     let coef = 3.0;
@@ -57,11 +56,11 @@ pub fn create_weapon<'a>(
     let bar_y_radius = 0.0022 * coef;
     let bar_z_radius = 0.0014 * coef;
 
-    let bullet_radius = config.weapon_bullet_radius * coef;
-    let bullet_length = config.weapon_bullet_length * coef;
-    let bullet_x = config.weapon_bullet_x * coef;
-    let bullet_dx = config.weapon_bullet_dx * coef;
-    let bullet_nbr = config.weapon_bullet_nbr;
+    let bullet_radius = ::CONFIG.weapon_bullet_radius * coef;
+    let bullet_length = ::CONFIG.weapon_bullet_length * coef;
+    let bullet_x = ::CONFIG.weapon_bullet_x * coef;
+    let bullet_dx = ::CONFIG.weapon_bullet_dx * coef;
+    let bullet_nbr = ::CONFIG.weapon_bullet_nbr;
     let mut bullets = vec![];
 
     let weapon_trans = ::na::Translation3::new(0.0, weapon_pos_y, weapon_pos_z);
@@ -80,7 +79,7 @@ pub fn create_weapon<'a>(
         ::component::DynamicGraphicsAssets::new(
             primitive,
             groups,
-            config.weapon_six_color,
+            ::CONFIG.weapon_six_color,
             primitive_trans,
         ),
     );
@@ -104,7 +103,7 @@ pub fn create_weapon<'a>(
             ::component::DynamicGraphicsAssets::new(
                 primitive,
                 groups,
-                config.weapon_bullet_color,
+                ::CONFIG.weapon_bullet_color,
                 primitive_trans,
             ),
         );
@@ -133,7 +132,7 @@ pub fn create_weapon<'a>(
             ::component::DynamicGraphicsAssets::new(
                 primitive,
                 groups,
-                config.weapon_angle_color,
+                ::CONFIG.weapon_angle_color,
                 primitive_trans,
             ),
         );
@@ -150,6 +149,6 @@ pub fn create_weapon<'a>(
     );
     shooters.insert(
         anchor,
-        ::component::Shooter::new(config.weapon_reload_time, bullet_nbr),
+        ::component::Shooter::new(::CONFIG.weapon_reload_time, bullet_nbr),
     );
 }

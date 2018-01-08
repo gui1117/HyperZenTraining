@@ -15,7 +15,6 @@ pub fn create_player_w(pos: ::na::Vector3<f32>, world: &::specs::World) {
         &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
-        &world.read_resource(),
     );
 }
 
@@ -34,10 +33,9 @@ pub fn create_player<'a>(
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
-    config: &::specs::Fetch<'a, ::resource::Config>,
     entities: &::specs::Entities,
 ) {
-    let shape = ::ncollide::shape::Cylinder::new(config.player_height, config.player_radius);
+    let shape = ::ncollide::shape::Cylinder::new(::CONFIG.player_height, ::CONFIG.player_radius);
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
     group.set_membership(&[super::ALIVE_GROUP, super::PLAYER_GROUP]);
@@ -56,36 +54,36 @@ pub fn create_player<'a>(
 
     let (hook_primitive, hook_groups) = ::graphics::Primitive::Hook.instantiate();
     let hook_primitive_trans = ::graphics::resizer(
-        config.player_hook_size,
-        config.player_hook_size,
-        config.player_hook_size,
+        ::CONFIG.player_hook_size,
+        ::CONFIG.player_hook_size,
+        ::CONFIG.player_hook_size,
     );
     let hook_draw_entity = entities.create();
     dynamic_graphics_assets.insert(hook_draw_entity,
         ::component::DynamicGraphicsAssets::new(
                 hook_primitive,
                 hook_groups,
-                config.player_hook_color,
+                ::CONFIG.player_hook_color,
                 hook_primitive_trans,
         ));
-    hooks.insert(entity, ::component::Hook::new(config.player_hook_force, hook_draw_entity));
+    hooks.insert(entity, ::component::Hook::new(::CONFIG.player_hook_force, hook_draw_entity));
 
     momentums.insert(
         entity,
         ::component::Momentum::new(
             mass,
-            config.player_velocity,
-            config.player_time_to_reach_vmax,
+            ::CONFIG.player_velocity,
+            ::CONFIG.player_time_to_reach_vmax,
             None,
-            config.player_ang_damping,
+            ::CONFIG.player_ang_damping,
             None,
         ),
     );
     air_momentums.insert(
         entity,
         ::component::AirMomentum {
-            gravity_force: config.player_gravity,
-            damping: config.player_air_damping,
+            gravity_force: ::CONFIG.player_gravity,
+            damping: ::CONFIG.player_air_damping,
         },
     );
     super::create_weapon(
@@ -95,7 +93,6 @@ pub fn create_player<'a>(
         weapon_anchors,
         dynamic_huds,
         dynamic_graphics_assets,
-        config,
         entities,
     );
 

@@ -10,13 +10,12 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
         ::specs::WriteStorage<'a, ::component::Avoider>,
         ::specs::WriteStorage<'a, ::component::Momentum>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
-        ::specs::Fetch<'a, ::resource::Config>,
         ::specs::Fetch<'a, ::resource::Maze>,
     );
 
     fn run(
         &mut self,
-        (players, aims, bodies, mut avoiders, mut momentums, physic_world, config, maze): Self::SystemData,
+        (players, aims, bodies, mut avoiders, mut momentums, physic_world, maze): Self::SystemData,
     ) {
         let (_, player_aim, player_body) = (&players, &aims, &bodies).join().next().unwrap();
         let player_aim_dir = player_aim.rotation * ::na::Vector3::x();
@@ -59,7 +58,7 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                 if avoid_vector.norm() != 0.0 {
                     let avoid_norm = avoid_vector.norm();
                     let avoid_direction = avoid_vector.normalize();
-                    if avoid_norm > config.avoider_avoid_norm {
+                    if avoid_norm > ::CONFIG.avoider_avoid_norm {
                         (avoid_direction, 0f32)
                     } else {
                         // TODO: coefficent

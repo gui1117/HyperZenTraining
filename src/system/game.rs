@@ -29,19 +29,18 @@ impl GameSystem {
             let current_level = self.current_level.unwrap();
 
             let physic_world = {
-                let config = world.read_resource::<::resource::Config>();
                 let mut physic_world = ::resource::PhysicWorld::new();
                 *physic_world.constraints_solver() = AccumulatedImpulseSolver::new(
-                    config.accumulated_impulse_solver_step,
+                    ::CONFIG.accumulated_impulse_solver_step,
                     CorrectionMode::VelocityAndPosition(
-                        config.correction_mode_a,
-                        config.correction_mode_b,
-                        config.correction_mode_c,
+                        ::CONFIG.correction_mode_a,
+                        ::CONFIG.correction_mode_b,
+                        ::CONFIG.correction_mode_c,
                     ),
-                    config.accumulated_impulse_solver_joint_corr_factor,
-                    config.accumulated_impulse_solver_rest_eps,
-                    config.accumulated_impulse_solver_num_first_order_iter,
-                    config.accumulated_impulse_solver_num_second_order_iter,
+                    ::CONFIG.accumulated_impulse_solver_joint_corr_factor,
+                    ::CONFIG.accumulated_impulse_solver_rest_eps,
+                    ::CONFIG.accumulated_impulse_solver_num_first_order_iter,
+                    ::CONFIG.accumulated_impulse_solver_num_second_order_iter,
                 );
                 physic_world
             };
@@ -52,7 +51,7 @@ impl GameSystem {
             world.add_resource(::resource::EndLevel(false));
             world.add_resource(physic_world);
 
-            let level = world.read_resource::<::resource::Config>().levels[current_level].clone();
+            let level = ::CONFIG.levels[current_level].clone();
             level.create(world);
 
             world.maintain();
