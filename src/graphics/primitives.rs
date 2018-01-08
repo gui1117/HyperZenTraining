@@ -8,7 +8,8 @@ use wavefront_obj::obj;
 
 use std::f32::consts::PI;
 
-const HOOK_LINKS: usize = 50;
+// TODO: set this value
+const HOOK_LINKS: usize = 30;
 
 pub fn instance_primitives(
     queue: Arc<Queue>,

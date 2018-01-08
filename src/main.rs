@@ -186,11 +186,9 @@ fn main() {
     let mut benchmarker = util::Benchmarker::new();
 
     loop {
-        benchmarker.start("cleanup");
+        benchmarker.start("pre_update");
         previous_frame_end.cleanup_finished();
-        benchmarker.end("cleanup");
 
-        benchmarker.start("poll_event");
         // Poll events
         {
             let mut menu_events = world.write_resource::<::resource::MenuEvents>();
@@ -273,7 +271,7 @@ fn main() {
                 break;
             }
         }
-        benchmarker.end("poll_event");
+        benchmarker.end("pre_update");
 
         benchmarker.start("update");
         update_dispatcher.dispatch(&mut world.res);
@@ -284,6 +282,7 @@ fn main() {
         benchmarker.end("update");
 
         // Render world
+        benchmarker.start("draw");
 
         // On X with Xmonad and intel HD graphics the acquire stay somtimes forever
         let timeout = Duration::from_secs(2);
@@ -308,9 +307,7 @@ fn main() {
         world.write_resource::<::resource::Rendering>().size_pixels =
             window.window().get_inner_size_pixels();
 
-        benchmarker.start("draw dispatch");
         draw_dispatcher.dispatch(&mut world.res);
-        benchmarker.end("draw dispatch");
 
         let (command_buffer, second_command_buffer) = {
             let mut rendering = world.write_resource::<::resource::Rendering>();
@@ -334,7 +331,7 @@ fn main() {
             .then_signal_fence_and_flush()
             .unwrap();
         previous_frame_end = Box::new(future) as Box<_>;
-        benchmarker.end("execute draw futures");
+        benchmarker.end("draw");
 
         // Sleep
         benchmarker.start("sleep");

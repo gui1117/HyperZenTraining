@@ -54,7 +54,7 @@ Config(
     turret_ang_damping: 0.8,
     turret_color: Purple,
 
-    wall_color: [PaleRed, PaleBlue],
+    wall_color: [PaleRed],
     floor_ceil_color: PaleBrown,
 
     weapon_reload_time: 0.5,
