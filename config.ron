@@ -1,5 +1,5 @@
 Config(
-    hook_links: 25,
+    hook_links: 60,
     accumulated_impulse_solver_step: 0.01,
     correction_mode_a: 0.2,
     correction_mode_b: 0.2,
@@ -115,8 +115,8 @@ Config(
         //     eraser_bouncers: 0
         // )),
         Walkthrough3D(Conf(
-            size: (7, 7, 7),
-            percent: 20.0,
+            size: (11, 11, 11),
+            percent: 0.0,
             bug: (0, 0, 0),
             scale: 10.0,
             turrets: 0,
@@ -133,7 +133,7 @@ Config(
         )),
         KillAll(Conf(
             size: (21, 21),
-            percent: 40.0,
+            percent: 20.0,
             bug: (0, 0),
             scale: 1.0,
             turrets: 0,

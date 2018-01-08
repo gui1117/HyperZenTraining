@@ -84,7 +84,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 ::std::f32::consts::FRAC_PI_3,
                 // IDEA: change to 0.0001 it's funny
                 0.05 * depth_coef.0,
-                70.0,
+                150.0,
             ).unwrap();
 
             let view_uniform = ::graphics::shader::draw1_vs::ty::View {
