@@ -142,6 +142,7 @@ fn main() {
     world.add_resource(::resource::DebugMode(false));
     world.add_resource(::resource::PlayerControl::new());
     world.add_resource(::resource::Benchmarks::new());
+    world.add_resource(::resource::UpdateTime(0.0));
     world.maintain();
 
     let mut game_system = ::system::GameSystem::new();
@@ -179,11 +180,12 @@ fn main() {
 
     let frame_duration = Duration::new(
         0,
-        (1000000000.0 / world.read_resource::<::resource::Config>().fps as f32) as u32,
+        (1_000_000_000.0 / world.read_resource::<::resource::Config>().fps as f32) as u32,
     );
     let mut last_frame_instant = Instant::now();
     let mut fps_counter = fps_counter::FPSCounter::new();
     let mut benchmarker = util::Benchmarker::new();
+    let mut last_update_instant = Instant::now();
 
     loop {
         benchmarker.start("pre_update");
@@ -273,7 +275,15 @@ fn main() {
         }
         benchmarker.end("pre_update");
 
+        // Update world
         benchmarker.start("update");
+        let delta_time = last_update_instant.elapsed();
+        last_update_instant = Instant::now();
+        world.write_resource::<::resource::UpdateTime>().0 = delta_time
+            .as_secs()
+            .saturating_mul(1_000_000_000)
+            .saturating_add(delta_time.subsec_nanos() as u64)
+            as f32 / 1_000_000_000.0;
         update_dispatcher.dispatch(&mut world.res);
         world.maintain();
         game_system.run(&mut world);

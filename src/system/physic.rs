@@ -14,7 +14,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
         ::specs::WriteStorage<'a, ::component::PhysicBody>,
         ::specs::WriteStorage<'a, ::component::Contactor>,
         ::specs::WriteStorage<'a, ::component::Proximitor>,
-        ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::Fetch<'a, ::resource::UpdateTime>,
         ::specs::FetchMut<'a, ::resource::PhysicWorld>,
         ::specs::Entities<'a>,
     );
@@ -29,7 +29,7 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             mut bodies,
             mut contactors,
             mut proximitors,
-            config,
+            update_time,
             mut physic_world,
             entities,
         ): Self::SystemData,
@@ -85,8 +85,10 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
         for proximitor in (&mut proximitors).join() {
             proximitor.intersections.clear();
         }
+
+        // TODO: Divide update_time better
         for _ in 0..2 {
-            physic_world.step(config.dt().clone() / 2.);
+            physic_world.step(update_time.0 / 2.);
 
             for (co1, co2, mut contact) in physic_world.collision_world().contacts() {
                 let (entity_1, entity_2) = match (&co1.data, &co2.data) {

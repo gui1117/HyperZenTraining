@@ -21,7 +21,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
         ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
         ::specs::WriteStorage<'a, ::component::DynamicDraw>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
-        ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::Fetch<'a, ::resource::UpdateTime>,
         ::specs::Entities<'a>,
     );
 
@@ -37,7 +37,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             mut dynamic_assets,
             mut dynamic_draws,
             physic_world,
-            config,
+            update_time,
             entities,
         ): Self::SystemData,
     ) {
@@ -46,7 +46,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
         {
             // Reload
             if shooter.bullets != shooter.max_bullets {
-                shooter.timer += config.dt();
+                shooter.timer += update_time.0;
                 if shooter.timer >= shooter.reload_time {
                     shooter.bullets += 1;
                     shooter.timer = 0.0;

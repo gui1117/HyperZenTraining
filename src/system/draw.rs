@@ -24,6 +24,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         ::specs::FetchMut<'a, ::resource::ImGui>,
         ::specs::FetchMut<'a, ::resource::Graphics>,
         ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::Fetch<'a, ::resource::UpdateTime>,
         ::specs::Fetch<'a, ::resource::DepthCoef>,
         ::specs::Fetch<'a, ::resource::Benchmarks>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
@@ -44,6 +45,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             mut imgui,
             mut graphics,
             config,
+            update_time,
             depth_coef,
             benchmarks,
             physic_world,
@@ -318,7 +320,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 [(::graphics::GROUP_COUNTER_SIZE / 64) as u32, 1, 1],
                 graphics.eraser2_pipeline.clone(),
                 graphics.eraser2_descriptor_set.clone(),
-                config.dt() / config.eraser_time,
+                update_time.0 / config.eraser_time,
             )
             .unwrap();
 
@@ -403,7 +405,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         let ui = imgui.frame(
             rendering.size_points.take().unwrap(),
             rendering.size_pixels.take().unwrap(),
-            config.dt().clone(),
+            config.dt(),
         );
         ui.window(im_str!("Debug"))
             .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)

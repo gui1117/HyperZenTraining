@@ -11,6 +11,8 @@ pub struct MenuEvents(pub Vec<::winit::Event>);
 pub struct GameEvents(pub Vec<::winit::Event>);
 pub type Benchmarks = Vec<::util::Benchmark>;
 
+pub struct UpdateTime(pub f32);
+
 pub struct Rendering {
     pub image_num: Option<usize>,
     pub command_buffer: Option<AutoCommandBuffer>,

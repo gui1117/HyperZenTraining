@@ -18,6 +18,7 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
         ::specs::WriteStorage<'a, ::component::Contactor>,
         ::specs::FetchMut<'a, ::resource::PhysicWorld>,
         ::specs::Fetch<'a, ::resource::Config>,
+        ::specs::Fetch<'a, ::resource::UpdateTime>,
         ::specs::Entities<'a>,
     );
 
@@ -36,13 +37,14 @@ impl<'a> ::specs::System<'a> for GeneratorSystem {
             mut contactors,
             mut physic_world,
             config,
+            update_time,
             entities,
         ): Self::SystemData,
     ) {
         let mut rng = ::rand::thread_rng();
 
         for mut generator in (&mut generators).join() {
-            generator.timer -= config.dt();
+            generator.timer -= update_time.0;
             if generator.timer <= 0.0 {
                 generator.timer = generator.time_between_salvo;
                 for _ in 0..generator.salvo {
