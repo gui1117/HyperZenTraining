@@ -106,7 +106,7 @@ pub fn create(world: &mut ::specs::World, conf: &Conf) {
         - 0.2 * ::na::Vector3::new(dir[0] as f32, dir[1] as f32, dir[2] as f32);
     world.write_resource::<::resource::PlayerControl>().pointer =
         [(-dir[1] as f32).atan2(dir[0] as f32), 0.0];
-    ::entity::create_player_w(player_pos, world);
+    ::entity::create_player_w(player_pos, true, world);
 
     for i in 0..conf.turrets {
         let index = Range::new(0, rooms_cells[i].len()).ind_sample(&mut rng);

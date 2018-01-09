@@ -34,9 +34,10 @@ Config(
     player_velocity: 5.0,
     player_time_to_reach_vmax: 0.1,
     player_ang_damping: 0.0,
-    player_air_damping: 0.1,
-    player_gravity: 1.0,
-    player_hook_force: 2.0,
+    player_gravity: 0.3,
+    player_hook_velocity: 50.0,
+    player_hook_time_to_reach_vmax: 8.0,
+    player_hook_force: 0.8,
     player_hook_color: Blue,
     player_hook_size: 1.0,
 
@@ -116,7 +117,7 @@ Config(
         // )),
         Walkthrough3D(Conf(
             size: (11, 11, 11),
-            percent: 0.0,
+            percent: 4.0,
             bug: (0, 0, 0),
             scale: 10.0,
             turrets: 0,

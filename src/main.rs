@@ -125,7 +125,6 @@ fn main() {
     world.register::<::component::DeletTimer>();
     world.register::<::component::PhysicBody>();
     world.register::<::component::Momentum>();
-    world.register::<::component::AirMomentum>();
     world.register::<::component::Avoider>();
     world.register::<::component::Bouncer>();
     world.register::<::component::Turret>();

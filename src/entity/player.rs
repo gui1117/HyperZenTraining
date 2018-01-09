@@ -1,8 +1,7 @@
-pub fn create_player_w(pos: ::na::Vector3<f32>, world: &::specs::World) {
+pub fn create_player_w(pos: ::na::Vector3<f32>, hook: bool, world: &::specs::World) {
     create_player(
         pos,
-        &mut world.write(),
-        &mut world.write(),
+        hook,
         &mut world.write(),
         &mut world.write(),
         &mut world.write(),
@@ -20,10 +19,10 @@ pub fn create_player_w(pos: ::na::Vector3<f32>, world: &::specs::World) {
 
 pub fn create_player<'a>(
     pos: ::na::Vector3<f32>,
+    hook: bool,
     players: &mut ::specs::WriteStorage<'a, ::component::Player>,
     aims: &mut ::specs::WriteStorage<'a, ::component::Aim>,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
-    air_momentums: &mut ::specs::WriteStorage<'a, ::component::AirMomentum>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
     hooks: &mut ::specs::WriteStorage<'a, ::component::Hook>,
@@ -31,7 +30,6 @@ pub fn create_player<'a>(
     weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
     dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
-    contactors: &mut ::specs::WriteStorage<'a, ::component::Contactor>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     entities: &::specs::Entities,
 ) {
@@ -50,41 +48,37 @@ pub fn create_player<'a>(
     let entity = entities.create();
     players.insert(entity, ::component::Player);
     aims.insert(entity, ::component::Aim::new());
-    contactors.insert(entity, ::component::Contactor::new());
 
-    let (hook_primitive, hook_groups) = ::graphics::Primitive::Hook.instantiate();
-    let hook_primitive_trans = ::graphics::resizer(
-        ::CONFIG.player_hook_size,
-        ::CONFIG.player_hook_size,
-        ::CONFIG.player_hook_size,
-    );
-    let hook_draw_entity = entities.create();
-    dynamic_graphics_assets.insert(hook_draw_entity,
-        ::component::DynamicGraphicsAssets::new(
-                hook_primitive,
-                hook_groups,
-                ::CONFIG.player_hook_color,
-                hook_primitive_trans,
-        ));
-    hooks.insert(entity, ::component::Hook::new(::CONFIG.player_hook_force, hook_draw_entity));
+    if hook {
+        let (hook_primitive, hook_groups) = ::graphics::Primitive::Hook.instantiate();
+        let hook_primitive_trans = ::graphics::resizer(
+            ::CONFIG.player_hook_size,
+            ::CONFIG.player_hook_size,
+            ::CONFIG.player_hook_size,
+        );
+        let hook_draw_entity = entities.create();
+        dynamic_graphics_assets.insert(hook_draw_entity,
+            ::component::DynamicGraphicsAssets::new(
+                    hook_primitive,
+                    hook_groups,
+                    ::CONFIG.player_hook_color,
+                    hook_primitive_trans,
+            ));
+        hooks.insert(entity, ::component::Hook::new(::CONFIG.player_hook_force, hook_draw_entity));
+    }
+    let velocity = if hook { ::CONFIG.player_hook_velocity } else { ::CONFIG.player_velocity };
+    let time_to_reach_vmax = if hook { ::CONFIG.player_hook_time_to_reach_vmax } else { ::CONFIG.player_time_to_reach_vmax };
 
     momentums.insert(
         entity,
         ::component::Momentum::new(
             mass,
-            ::CONFIG.player_velocity,
-            ::CONFIG.player_time_to_reach_vmax,
+            velocity,
+            time_to_reach_vmax,
             None,
             ::CONFIG.player_ang_damping,
             None,
         ),
-    );
-    air_momentums.insert(
-        entity,
-        ::component::AirMomentum {
-            gravity_force: ::CONFIG.player_gravity,
-            damping: ::CONFIG.player_air_damping,
-        },
     );
     super::create_weapon(
         entity,

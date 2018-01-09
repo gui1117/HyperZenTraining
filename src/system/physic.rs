@@ -9,7 +9,6 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
     type SystemData = (
         ::specs::ReadStorage<'a, ::component::Player>,
         ::specs::ReadStorage<'a, ::component::Momentum>,
-        ::specs::ReadStorage<'a, ::component::AirMomentum>,
         ::specs::ReadStorage<'a, ::component::Hook>,
         ::specs::WriteStorage<'a, ::component::PhysicBody>,
         ::specs::WriteStorage<'a, ::component::Contactor>,
@@ -24,7 +23,6 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
         (
             players,
             momentums,
-            air_momentums,
             hooks,
             mut bodies,
             mut contactors,
@@ -42,29 +40,21 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
 
             body.clear_forces();
 
-            match (contactors.get(entity), air_momentums.get(entity)) {
-                (Some(contactor), Some(air_momentum)) => {
-                    if contactor
-                        .contacts
-                        .iter()
-                        .any(|&(_, ref c)| c.normal[2] < -0.8)
-                    {
-                        body.append_lin_force(-momentum.damping * lin_vel);
-                    } else {
-                        body.append_lin_force(
-                            air_momentum.gravity_force * ::na::Vector3::new(0.0, 0.0, -1.0),
-                        );
-                        body.append_lin_force(-air_momentum.damping * lin_vel);
-                    }
-                }
-                _ => body.append_lin_force(-momentum.damping * lin_vel),
+            body.append_lin_force(-momentum.damping * lin_vel);
+
+            if players.get(entity).is_some() {
+                body.append_lin_force(
+                    ::CONFIG.player_gravity * ::na::Vector3::new(0.0, 0.0, -1.0),
+                );
             }
+
             if let Some(ref hook) = hooks.get(entity) {
                 if let Some(ref anchor) = hook.anchor {
                     let dir = (anchor.pos - body.position().translation.vector).normalize();
                     body.append_lin_force(hook.force * dir);
                 }
             }
+
             let direction_force = momentum.force * momentum.direction;
             if let Some(pnt_to_com) = momentum.pnt_to_com {
                 let pnt_to_com = body.position().rotation * pnt_to_com;

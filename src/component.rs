@@ -143,15 +143,6 @@ impl Momentum {
     }
 }
 
-pub struct AirMomentum {
-    pub gravity_force: f32,
-    pub damping: f32,
-}
-
-impl ::specs::Component for AirMomentum {
-    type Storage = ::specs::VecStorage<Self>;
-}
-
 pub struct StaticDraw {
     pub color: ::graphics::Color,
     pub groups: Vec<u16>,
