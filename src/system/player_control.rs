@@ -15,6 +15,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
         ::specs::Fetch<'a, ::resource::Maze>,
         ::specs::Fetch<'a, ::resource::Save>,
         ::specs::FetchMut<'a, ::resource::PlayerControl>,
+        ::specs::Entities<'a>,
     );
 
     fn run(
@@ -29,14 +30,15 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
             maze,
             save,
             mut player_control,
+            entities,
         ): Self::SystemData,
     ) {
-        let (_, player_aim, player_shooter, player_hook, player_momentum) = (
+        let (_, player_aim, player_shooter, player_momentum, player_entity) = (
             &players,
             &mut aims,
             &mut shooters,
-            &mut hooks,
             &mut momentums,
+            &*entities,
         ).join()
             .next()
             .unwrap();
@@ -64,6 +66,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                     ..
                 } => {
                     if maze.is_3d() {
+                        let player_hook = hooks.get_mut(player_entity).unwrap();
                         match state {
                             ElementState::Pressed => player_hook.set_launch(true),
                             ElementState::Released => player_hook.set_launch(false),
