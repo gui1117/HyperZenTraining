@@ -20,6 +20,8 @@ pub struct Config {
     pub mouse_sensibility: f32,
     pub fps: u32,
     pub eraser_time: f32,
+    pub physic_max_step_time: f32,
+    pub physic_min_step_time: f32,
 
     pub accumulated_impulse_solver_step: f32,
     pub correction_mode_a: f32,

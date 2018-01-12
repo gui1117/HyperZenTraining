@@ -76,9 +76,11 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
             proximitor.intersections.clear();
         }
 
-        // TODO: Divide update_time better
-        for _ in 0..2 {
-            physic_world.step(update_time.0 / 2.);
+        let mut remaining_to_update = update_time.0;
+        while remaining_to_update > ::CONFIG.physic_min_step_time {
+            let step = remaining_to_update.min(::CONFIG.physic_max_step_time);
+            remaining_to_update -= step;
+            physic_world.step(step);
 
             for (co1, co2, mut contact) in physic_world.collision_world().contacts() {
                 let (entity_1, entity_2) = match (&co1.data, &co2.data) {
