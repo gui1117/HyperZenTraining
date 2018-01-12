@@ -91,6 +91,7 @@ pub struct Config {
     pub weapon_bullet_empty_color: ::graphics::Color,
     pub weapon_six_color: ::graphics::Color,
     pub weapon_angle_color: ::graphics::Color,
+    pub weapon_light_ray_duration: f32,
 
     pub levels: Vec<::level::Level>,
 }

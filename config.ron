@@ -81,6 +81,7 @@ Config(
     weapon_bullet_empty_color: DarkBlue,
     weapon_six_color: Red,
     weapon_angle_color: PalePurple,
+    weapon_light_ray_duration: 0.2,
 
     levels: [
         // KillAll(Conf(

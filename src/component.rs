@@ -545,3 +545,22 @@ impl Hook {
         self.launch = launch;
     }
 }
+
+/// modifies radius at each frame
+pub struct LightRay {
+    pub duration: f32,
+    pub timer: f32,
+}
+
+impl ::specs::Component for LightRay {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl LightRay {
+    pub fn new(duration: f32) -> Self {
+        LightRay {
+            duration,
+            timer: 0.0,
+        }
+    }
+}

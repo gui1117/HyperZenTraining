@@ -10,7 +10,9 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
         ::specs::ReadStorage<'a, ::component::Hook>,
         ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
         ::specs::WriteStorage<'a, ::component::DynamicDraw>,
+        ::specs::WriteStorage<'a, ::component::LightRay>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
+        ::specs::Fetch<'a, ::resource::UpdateTime>,
     );
 
     fn run(
@@ -21,7 +23,9 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
             hooks,
             mut dynamic_graphics_assets,
             mut dynamic_draws,
+            mut light_rays,
             physic_world,
+            update_time,
         ): Self::SystemData,
     ) {
         for (assets, body) in (&mut dynamic_graphics_assets, &bodies).join() {
@@ -60,6 +64,15 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
             } else {
                 dynamic_draws.remove(hook.draw);
             }
+        }
+
+        for (assets, light_ray) in (&mut dynamic_graphics_assets, &mut light_rays).join() {
+            let radius = 1.0 - (light_ray.timer/light_ray.duration);
+            let trans = assets.primitive_trans * ::graphics::resizer(radius, radius, 1.0);
+            assets.world_trans = ::graphics::shader::draw1_vs::ty::World {
+                world: trans.unwrap().into(),
+            };
+            light_ray.timer += update_time.0;
         }
     }
 }

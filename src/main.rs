@@ -123,6 +123,7 @@ fn main() {
     world.register::<::component::DynamicGraphicsAssets>();
     world.register::<::component::DeletBool>();
     world.register::<::component::DeletTimer>();
+    world.register::<::component::LightRay>();
     world.register::<::component::PhysicBody>();
     world.register::<::component::Momentum>();
     world.register::<::component::Avoider>();
