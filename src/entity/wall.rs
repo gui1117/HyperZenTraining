@@ -132,7 +132,7 @@ pub fn create_floor_ceil<'a>(
         entity,
         primitive,
         groups,
-        ::CONFIG.floor_ceil_color,
+        ::CONFIG.random_wall_color(),
         world_trans,
         static_draws,
         graphics,

@@ -1,5 +1,27 @@
+fn color_circle(x: f32) -> [f32; 3] {
+    if x*6.0 < 1.0 {
+        let t = x*6.0;
+        [1.0, t, 0.0]
+    } else if x*6.0 < 2.0 {
+        let t = x*6.0-1.0;
+        [1.0-t, 1.0, 0.0]
+    } else if x*6.0 < 3.0 {
+        let t = x*6.0-2.0;
+        [0.0, 1.0, t]
+    } else if x*6.0 < 4.0 {
+        let t = x*6.0-3.0;
+        [0.0, 1.0-t, 1.0]
+    } else if x*6.0 < 5.0 {
+        let t = x*6.0-4.0;
+        [t, 0.0, 1.0]
+    } else {
+        let t = x*6.0-5.0;
+        [1.0, 0.0, 1.0-t]
+    }
+}
+
 pub fn colors() -> Vec<[f32; 4]> {
-    vec![
+    let mut colors = vec![
         [0x00, 0x00, 0x00, 0xff],
         [0xef, 0xc5, 0x73, 0xff],
         [0x9c, 0x66, 0x3a, 0xff],
@@ -24,10 +46,25 @@ pub fn colors() -> Vec<[f32; 4]> {
             }
             out_color
         })
-        .collect()
+        .collect::<Vec<_>>();
+
+    assert!(colors.len() == Color::Wall0 as usize);
+    for i in 0..::CONFIG.wall_color_division {
+        let color = color_circle(i as f32 / ::CONFIG.wall_color_division as f32);
+        let blank = ::CONFIG.wall_color_blank;
+        colors.push([
+            color[0]*(1.0-blank)+blank,
+            color[1]*(1.0-blank)+blank,
+            color[2]*(1.0-blank)+blank,
+            1.0
+        ]);
+    }
+
+    colors
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy)]
+#[repr(C)]
 pub enum Color {
     Black,      //000000
     PaleBrown,  //efc573
@@ -44,5 +81,35 @@ pub enum Color {
     Pink,       //c75f7a
     PalePurple, //e2c5c9
     Purple,     //975db2
-    DarkBlue,
+    DarkBlue,   //416070
+    Wall0,
+    Wall1,
+    Wall2,
+    Wall3,
+    Wall4,
+    Wall5,
+    Wall6,
+    Wall7,
+    Wall8,
+    Wall9,
+    Wall10,
+    Wall11,
+    Wall12,
+    Wall13,
+    Wall14,
+    Wall15,
+    Wall16,
+    Wall17,
+    Wall18,
+    Wall19,
+    Wall20,
+    Wall21,
+    Wall22,
+    Wall23,
+    Wall24,
+    Wall25,
+    Wall26,
+    Wall27,
+    Wall28,
+    Wall29,
 }

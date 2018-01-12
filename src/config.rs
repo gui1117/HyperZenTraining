@@ -78,7 +78,8 @@ pub struct Config {
     pub turret_color: ::graphics::Color,
 
     pub wall_color: Vec<::graphics::Color>,
-    pub floor_ceil_color: ::graphics::Color,
+    pub wall_color_division: usize,
+    pub wall_color_blank: f32,
 
     pub weapon_reload_time: f32,
     pub weapon_bullet_nbr: usize,
