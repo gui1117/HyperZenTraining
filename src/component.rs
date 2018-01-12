@@ -546,21 +546,28 @@ impl Hook {
     }
 }
 
-/// modifies radius at each frame
-pub struct LightRay {
+/// reduce x, y, z size at each frame.
+/// to use without body
+pub struct Reducer {
     pub duration: f32,
     pub timer: f32,
+    pub reduce_x: bool,
+    pub reduce_y: bool,
+    pub reduce_z: bool,
 }
 
-impl ::specs::Component for LightRay {
+impl ::specs::Component for Reducer {
     type Storage = ::specs::VecStorage<Self>;
 }
 
-impl LightRay {
-    pub fn new(duration: f32) -> Self {
-        LightRay {
+impl Reducer {
+    pub fn new(duration: f32, reduce_x: bool, reduce_y: bool, reduce_z: bool) -> Self {
+        Reducer {
             duration,
             timer: 0.0,
+            reduce_x,
+            reduce_y,
+            reduce_z,
         }
     }
 }

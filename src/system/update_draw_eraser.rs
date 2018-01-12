@@ -10,9 +10,8 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
         ::specs::ReadStorage<'a, ::component::Hook>,
         ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
         ::specs::WriteStorage<'a, ::component::DynamicDraw>,
-        ::specs::WriteStorage<'a, ::component::LightRay>,
+        ::specs::WriteStorage<'a, ::component::Reducer>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
-        ::specs::Fetch<'a, ::resource::UpdateTime>,
     );
 
     fn run(
@@ -23,13 +22,12 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
             hooks,
             mut dynamic_graphics_assets,
             mut dynamic_draws,
-            mut light_rays,
+            mut reducers,
             physic_world,
-            update_time,
         ): Self::SystemData,
     ) {
         for (assets, body) in (&mut dynamic_graphics_assets, &bodies).join() {
-            let trans = body.get(&physic_world).position() * assets.primitive_trans;
+            let mut trans = body.get(&physic_world).position() * assets.primitive_trans;
             assets.world_trans = ::graphics::shader::draw1_vs::ty::World {
                 world: trans.unwrap().into(),
             }
@@ -66,13 +64,16 @@ impl<'a> ::specs::System<'a> for UpdateDynamicDrawEraserSystem {
             }
         }
 
-        for (assets, light_ray) in (&mut dynamic_graphics_assets, &mut light_rays).join() {
-            let radius = 1.0 - (light_ray.timer/light_ray.duration);
-            let trans = assets.primitive_trans * ::graphics::resizer(radius, radius, 1.0);
+        for (assets, reducer) in (&mut dynamic_graphics_assets, &mut reducers).join() {
+            let radius = 1.0 - (reducer.timer/reducer.duration);
+            let x_radius = if reducer.reduce_x { radius } else { 1.0 };
+            let y_radius = if reducer.reduce_y { radius } else { 1.0 };
+            let z_radius = if reducer.reduce_z { radius } else { 1.0 };
+
+            let trans = assets.primitive_trans * ::graphics::resizer(x_radius, y_radius, z_radius);
             assets.world_trans = ::graphics::shader::draw1_vs::ty::World {
                 world: trans.unwrap().into(),
             };
-            light_ray.timer += update_time.0;
         }
     }
 }

@@ -14,6 +14,7 @@ mod game;
 mod generator;
 mod teleport;
 mod hook;
+mod reducer;
 
 pub use self::teleport::TeleportSystem;
 pub use self::menu_control::MenuControlSystem;
@@ -31,3 +32,4 @@ pub use self::game::GameSystem;
 pub use self::deleter::DeleterSystem;
 pub use self::generator::GeneratorSystem;
 pub use self::hook::HookSystem;
+pub use self::reducer::ReducerSystem;

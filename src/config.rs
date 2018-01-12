@@ -15,6 +15,7 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    pub death_duration: f32,
     pub hook_links: usize,
     pub style: ImGuiStyleSave,
     pub mouse_sensibility: f32,
