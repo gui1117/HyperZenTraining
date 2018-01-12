@@ -49,6 +49,7 @@ pub fn colors() -> Vec<[f32; 4]> {
         .collect::<Vec<_>>();
 
     assert!(colors.len() == Color::Wall0 as usize);
+    assert!(::CONFIG.wall_color_division <= 30);
     for i in 0..::CONFIG.wall_color_division {
         let color = color_circle(i as f32 / ::CONFIG.wall_color_division as f32);
         let blank = ::CONFIG.wall_color_blank;
