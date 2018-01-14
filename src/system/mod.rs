@@ -17,7 +17,7 @@ mod hook;
 mod reducer;
 
 pub use self::teleport::TeleportSystem;
-pub use self::menu_control::MenuControlSystem;
+pub use self::menu_control::{MenuGameControlSystem, MenuPauseControlSystem};
 pub use self::player_control::PlayerControlSystem;
 pub use self::avoider_control::AvoiderControlSystem;
 pub use self::bouncer_control::BouncerControlSystem;

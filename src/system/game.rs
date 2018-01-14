@@ -46,7 +46,7 @@ impl GameSystem {
             };
 
             world.delete_all();
-            world.add_resource(::resource::GameEvents(vec![]));
+            world.add_resource(::resource::Events(vec![]));
             world.add_resource(::resource::DepthCoef(1.0));
             world.add_resource(::resource::EndLevel(false));
             world.add_resource(physic_world);

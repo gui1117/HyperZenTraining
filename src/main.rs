@@ -44,7 +44,7 @@ use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 use vulkano::instance::Instance;
 
-use winit::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::{DeviceEvent, Event, WindowEvent};
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -136,7 +136,7 @@ fn main() {
     world.register::<::component::PhysicSensor>();
     world.add_resource(graphics.data.clone());
     world.add_resource(imgui);
-    world.add_resource(::resource::MenuEvents(vec![]));
+    world.add_resource(::resource::Events(vec![]));
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::DebugMode(false));
     world.add_resource(::resource::Save::new());
@@ -144,13 +144,18 @@ fn main() {
     world.add_resource(::resource::PlayerControl::new());
     world.add_resource(::resource::Benchmarks::new());
     world.add_resource(::resource::UpdateTime(0.0));
+    world.add_resource(::resource::State::new());
     world.maintain();
 
     let mut game_system = ::system::GameSystem::new();
     game_system.run(&mut world);
 
-    let mut update_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::MenuControlSystem::new(), "menu", &[])
+    let mut pause_update_dispatcher = ::specs::DispatcherBuilder::new()
+        .add(::system::MenuPauseControlSystem::new(), "menu_pause", &[])
+        .build();
+
+    let mut game_update_dispatcher = ::specs::DispatcherBuilder::new()
+        .add(::system::MenuGameControlSystem, "menu_game", &[])
         .add(::system::PlayerControlSystem, "player_control", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
@@ -160,7 +165,6 @@ fn main() {
         .add(::system::GeneratorSystem, "generator", &[])
         .add(::system::ShootSystem::new(), "shoot", &[])
         .add(::system::HookSystem::new(), "hook", &[])
-        // .add(::system::MazeMasterSystem, "maze_master", &[])
         .add(::system::PhysicSystem, "physic", &[])
         .add(::system::DeleterSystem, "deleter", &[])
         .add(::system::ReducerSystem, "reducer", &[])
@@ -168,7 +172,7 @@ fn main() {
         .add(::system::LifeSystem, "life", &[])
         .build();
 
-    let mut prepare_draw_dispatcher = ::specs::DispatcherBuilder::new()
+    let mut prepare_game_draw_dispatcher = ::specs::DispatcherBuilder::new()
         .add(
             ::system::UpdateDynamicDrawEraserSystem,
             "update_dynamic_draw",
@@ -179,6 +183,14 @@ fn main() {
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
         .add(::system::DrawSystem, "draw_system", &[])
         .build();
+
+    {
+        assert!(world.read_resource::<::resource::UpdateTime>().0 == 0.0);
+        game_update_dispatcher.dispatch(&mut world.res);
+        world.maintain();
+        prepare_game_draw_dispatcher.dispatch(&mut world.res);
+        world.maintain();
+    }
 
     let frame_duration = Duration::new(
         0,
@@ -195,15 +207,16 @@ fn main() {
 
         // Poll events
         {
-            let mut menu_events = world.write_resource::<::resource::MenuEvents>();
-            let mut game_events = world.write_resource::<::resource::GameEvents>();
-            let mut debug_mode = world.write_resource::<::resource::DebugMode>();
+            let mut events = world.write_resource::<::resource::Events>();
 
-            menu_events.0.clear();
-            game_events.0.clear();
+            events.0.clear();
 
             let mut done = false;
 
+            // TODO: in menupauseysstem
+                        // world
+                        //     .write_resource::<::resource::ImGui>()
+                        //     .set_mouse_draw_cursor(debug_mode.0);
             events_loop.poll_events(|ev| {
                 let retain = match ev {
                     Event::WindowEvent {
@@ -212,25 +225,6 @@ fn main() {
                     } => {
                         done = true;
                         false
-                    }
-                    Event::WindowEvent {
-                        event:
-                            WindowEvent::KeyboardInput {
-                                input:
-                                    KeyboardInput {
-                                        state: ElementState::Pressed,
-                                        virtual_keycode: Some(VirtualKeyCode::P),
-                                        ..
-                                    },
-                                ..
-                            },
-                        ..
-                    } => {
-                        debug_mode.0 = !debug_mode.0;
-                        world
-                            .write_resource::<::resource::ImGui>()
-                            .set_mouse_draw_cursor(debug_mode.0);
-                        true
                     }
                     Event::WindowEvent {
                         event: WindowEvent::MouseInput { .. },
@@ -264,11 +258,7 @@ fn main() {
                 };
 
                 if retain {
-                    if debug_mode.0 {
-                        menu_events.0.push(ev);
-                    } else {
-                        game_events.0.push(ev);
-                    }
+                    events.0.push(ev);
                 }
             });
             if done {
@@ -279,18 +269,26 @@ fn main() {
 
         // Update world
         benchmarker.start("update");
+
         let delta_time = last_update_instant.elapsed();
         last_update_instant = Instant::now();
-        world.write_resource::<::resource::UpdateTime>().0 = delta_time
-            .as_secs()
-            .saturating_mul(1_000_000_000)
-            .saturating_add(delta_time.subsec_nanos() as u64)
-            as f32 / 1_000_000_000.0;
-        update_dispatcher.dispatch(&mut world.res);
-        world.maintain();
-        game_system.run(&mut world);
-        prepare_draw_dispatcher.dispatch(&mut world.res);
-        world.maintain();
+
+        if world.read_resource::<::resource::State>().pause {
+            world.write_resource::<::resource::UpdateTime>().0 = 0.0;
+            pause_update_dispatcher.dispatch(&mut world.res);
+        } else {
+            world.write_resource::<::resource::UpdateTime>().0 = delta_time
+                .as_secs()
+                .saturating_mul(1_000_000_000)
+                .saturating_add(delta_time.subsec_nanos() as u64)
+                as f32 / 1_000_000_000.0;
+            game_update_dispatcher.dispatch(&mut world.res);
+            world.maintain();
+            game_system.run(&mut world);
+            prepare_game_draw_dispatcher.dispatch(&mut world.res);
+            world.maintain();
+        }
+
         benchmarker.end("update");
 
         // Render world

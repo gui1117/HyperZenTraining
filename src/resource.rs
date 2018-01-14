@@ -6,8 +6,7 @@ pub use std::time::Duration;
 pub use std::collections::HashMap;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
-pub struct MenuEvents(pub Vec<::winit::Event>);
-pub struct GameEvents(pub Vec<::winit::Event>);
+pub struct Events(pub Vec<::winit::Event>);
 pub type Benchmarks = Vec<::util::Benchmark>;
 
 pub struct FpsCounter(pub usize);
@@ -100,6 +99,18 @@ impl Maze {
         match *self {
             Maze::Maze2D(_) => false,
             Maze::Maze3D(_) => true,
+        }
+    }
+}
+
+pub struct State {
+    pub pause: bool,
+}
+
+impl State {
+    pub fn new() -> Self {
+        State {
+            pause: true,
         }
     }
 }

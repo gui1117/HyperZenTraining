@@ -11,7 +11,7 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
         ::specs::WriteStorage<'a, ::component::Shooter>,
         ::specs::WriteStorage<'a, ::component::Hook>,
         ::specs::WriteStorage<'a, ::component::Momentum>,
-        ::specs::Fetch<'a, ::resource::GameEvents>,
+        ::specs::Fetch<'a, ::resource::Events>,
         ::specs::Fetch<'a, ::resource::Maze>,
         ::specs::Fetch<'a, ::resource::Save>,
         ::specs::FetchMut<'a, ::resource::PlayerControl>,
