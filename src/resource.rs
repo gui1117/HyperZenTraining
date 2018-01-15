@@ -1,13 +1,14 @@
 use vulkano::command_buffer::AutoCommandBuffer;
 
 pub use graphics::Data as Graphics;
-pub use imgui::ImGui;
 pub use std::time::Duration;
 pub use std::collections::HashMap;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub struct Events(pub Vec<::winit::Event>);
 pub type Benchmarks = Vec<::util::Benchmark>;
+
+pub type ImGuiOption = Option<::imgui::ImGui>;
 
 pub struct FpsCounter(pub usize);
 
@@ -105,12 +106,55 @@ impl Maze {
 
 pub struct State {
     pub pause: bool,
+    pub mouse_sensibility: f32,
+    pub play_button: bool,
+    pub reset_button: bool,
+    pub quit_button: bool,
 }
 
 impl State {
     pub fn new() -> Self {
         State {
             pause: true,
+            mouse_sensibility: 0.001,
+            play_button: false,
+            reset_button: false,
+            quit_button: false,
+        }
+    }
+
+    pub fn build_ui(&mut self, ui: &::imgui::Ui) {
+        let (width, height) = ui.imgui().display_size();
+        if self.pause {
+            ui.window(im_str!("Menu"))
+                .collapsible(false)
+                .position((width/4.0, height/4.0), ::imgui::ImGuiCond::FirstUseEver)
+                .size((width/2.0, height/2.0), ::imgui::ImGuiCond::FirstUseEver)
+                .resizable(true)
+                .movable(true)
+                .build(|| {
+                    self.play_button = ui.small_button(im_str!("Play"));
+                    ui.tree_node(im_str!("Levels"))
+                        .build(|| {
+                            for _ in 0..30 {
+                                ui.small_button(im_str!("Level 1"));
+                                ui.same_line(width/8.0);
+                                ui.text(im_str!("TOTOTO"));
+                            }
+                        });
+                    ui.tree_node(im_str!("Settings"))
+                        .build(|| {
+                            ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility)
+                                .build();
+                            self.reset_button = ui.small_button(im_str!("Reset"));
+                        });
+                    ui.tree_node(im_str!("Credits"))
+                        .build(|| {
+                            ui.text_wrapped(im_str!("Guillaume Thiolliere
+TODO: others"));
+                        });
+                    self.quit_button = ui.small_button(im_str!("Quit"));
+                });
         }
     }
 }

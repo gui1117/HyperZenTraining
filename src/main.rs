@@ -53,6 +53,35 @@ use std::thread;
 
 pub use testing::TS;
 
+fn init_imgui() -> ::imgui::ImGui {
+    let mut imgui = ::imgui::ImGui::init();
+    imgui.set_ini_filename(None);
+    imgui.set_log_filename(None);
+    imgui.set_font_global_scale(::CONFIG.font_global_scale);
+    imgui.set_mouse_draw_cursor(false);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Tab, 0);
+    imgui.set_imgui_key(::imgui::ImGuiKey::LeftArrow, 1);
+    imgui.set_imgui_key(::imgui::ImGuiKey::RightArrow, 2);
+    imgui.set_imgui_key(::imgui::ImGuiKey::UpArrow, 3);
+    imgui.set_imgui_key(::imgui::ImGuiKey::DownArrow, 4);
+    imgui.set_imgui_key(::imgui::ImGuiKey::PageUp, 5);
+    imgui.set_imgui_key(::imgui::ImGuiKey::PageDown, 6);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Home, 7);
+    imgui.set_imgui_key(::imgui::ImGuiKey::End, 8);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Delete, 9);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Backspace, 10);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Enter, 11);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Escape, 12);
+    imgui.set_imgui_key(::imgui::ImGuiKey::A, 13);
+    imgui.set_imgui_key(::imgui::ImGuiKey::C, 14);
+    imgui.set_imgui_key(::imgui::ImGuiKey::V, 15);
+    imgui.set_imgui_key(::imgui::ImGuiKey::X, 16);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Y, 17);
+    imgui.set_imgui_key(::imgui::ImGuiKey::Z, 18);
+    CONFIG.style.set_style(imgui.style_mut());
+    imgui
+}
+
 fn main() {
     let instance = {
         let extensions = vulkano_win::required_extensions();
@@ -77,32 +106,7 @@ fn main() {
         }
     }
 
-    let mut imgui = ::imgui::ImGui::init();
-    imgui.set_ini_filename(None);
-    imgui.set_log_filename(None);
-    imgui.set_mouse_draw_cursor(false);
-    imgui.set_imgui_key(::imgui::ImGuiKey::Tab, 0);
-    imgui.set_imgui_key(::imgui::ImGuiKey::LeftArrow, 1);
-    imgui.set_imgui_key(::imgui::ImGuiKey::RightArrow, 2);
-    imgui.set_imgui_key(::imgui::ImGuiKey::UpArrow, 3);
-    imgui.set_imgui_key(::imgui::ImGuiKey::DownArrow, 4);
-    imgui.set_imgui_key(::imgui::ImGuiKey::PageUp, 5);
-    imgui.set_imgui_key(::imgui::ImGuiKey::PageDown, 6);
-    imgui.set_imgui_key(::imgui::ImGuiKey::Home, 7);
-    imgui.set_imgui_key(::imgui::ImGuiKey::End, 8);
-    imgui.set_imgui_key(::imgui::ImGuiKey::Delete, 9);
-    imgui.set_imgui_key(::imgui::ImGuiKey::Backspace, 10);
-    imgui.set_imgui_key(::imgui::ImGuiKey::Enter, 11);
-    imgui.set_imgui_key(::imgui::ImGuiKey::Escape, 12);
-    imgui.set_imgui_key(::imgui::ImGuiKey::A, 13);
-    imgui.set_imgui_key(::imgui::ImGuiKey::C, 14);
-    imgui.set_imgui_key(::imgui::ImGuiKey::V, 15);
-    imgui.set_imgui_key(::imgui::ImGuiKey::X, 16);
-    imgui.set_imgui_key(::imgui::ImGuiKey::Y, 17);
-    imgui.set_imgui_key(::imgui::ImGuiKey::Z, 18);
-
-    CONFIG.style.set_style(imgui.style_mut());
-
+    let mut imgui = init_imgui();
     let mut graphics = graphics::Graphics::new(&window, &mut imgui);
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
@@ -135,7 +139,7 @@ fn main() {
     world.register::<::component::FollowPlayer>();
     world.register::<::component::PhysicSensor>();
     world.add_resource(graphics.data.clone());
-    world.add_resource(imgui);
+    world.add_resource(Some(imgui));
     world.add_resource(::resource::Events(vec![]));
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::DebugMode(false));
@@ -213,10 +217,6 @@ fn main() {
 
             let mut done = false;
 
-            // TODO: in menupauseysstem
-                        // world
-                        //     .write_resource::<::resource::ImGui>()
-                        //     .set_mouse_draw_cursor(debug_mode.0);
             events_loop.poll_events(|ev| {
                 let retain = match ev {
                     Event::WindowEvent {
@@ -274,9 +274,11 @@ fn main() {
         last_update_instant = Instant::now();
 
         if world.read_resource::<::resource::State>().pause {
+            world.write_resource::<::resource::ImGuiOption>().as_mut().unwrap().set_mouse_draw_cursor(true);
             world.write_resource::<::resource::UpdateTime>().0 = 0.0;
             pause_update_dispatcher.dispatch(&mut world.res);
         } else {
+            world.write_resource::<::resource::ImGuiOption>().as_mut().unwrap().set_mouse_draw_cursor(false);
             world.write_resource::<::resource::UpdateTime>().0 = delta_time
                 .as_secs()
                 .saturating_mul(1_000_000_000)
@@ -294,14 +296,19 @@ fn main() {
         // Render world
         benchmarker.start("draw");
 
-        // On X with Xmonad and intel HD graphics the acquire stay somtimes forever
+        // On X with Xmonad and intel HD graphics the acquire stay sometimes forever
         let timeout = Duration::from_secs(2);
         let mut next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), Some(timeout));
         loop {
             match next_image {
                 Err(vulkano::swapchain::AcquireError::OutOfDate)
                 | Err(vulkano::swapchain::AcquireError::Timeout) => {
-                    graphics.recreate(&window);
+                    // Drop ImGui
+                    *world.write_resource::<::resource::ImGuiOption>() = None;
+
+                    let mut imgui = init_imgui();
+                    graphics.recreate(&window, &mut imgui);
+                    *world.write_resource::<::resource::ImGuiOption>() = Some(imgui);
                     *world.write_resource() = graphics.data.clone();
                     next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), Some(timeout));
                 }

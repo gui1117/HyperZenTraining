@@ -21,8 +21,9 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         ::specs::ReadStorage<'a, ::component::Player>,
         ::specs::ReadStorage<'a, ::component::Aim>,
         ::specs::FetchMut<'a, ::resource::Rendering>,
-        ::specs::FetchMut<'a, ::resource::ImGui>,
+        ::specs::FetchMut<'a, ::resource::ImGuiOption>,
         ::specs::FetchMut<'a, ::resource::Graphics>,
+        ::specs::FetchMut<'a, ::resource::State>,
         ::specs::Fetch<'a, ::resource::FpsCounter>,
         ::specs::Fetch<'a, ::resource::UpdateTime>,
         ::specs::Fetch<'a, ::resource::DepthCoef>,
@@ -44,6 +45,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             mut rendering,
             mut imgui,
             mut graphics,
+            mut state,
             fps_counter,
             update_time,
             depth_coef,
@@ -402,20 +404,23 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         }
 
         // Build imgui
-        let ui = imgui.frame(
+        let ui = imgui.as_mut().unwrap().frame(
             rendering.size_points.take().unwrap(),
             rendering.size_pixels.take().unwrap(),
             ::CONFIG.dt(),
         );
-        ui.window(im_str!("Debug"))
-            .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
-            .build(|| {
-                ui.text(format!("fps: {}", fps_counter.0));
-                ui.separator();
-                for benchmark in &*benchmarks {
-                    ui.text(format!("{}", benchmark));
-                }
-            });
+        state.build_ui(&ui);
+        if false {
+            ui.window(im_str!("Debug"))
+                .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
+                .build(|| {
+                    ui.text(format!("fps: {}", fps_counter.0));
+                    ui.separator();
+                    for benchmark in &*benchmarks {
+                        ui.text(format!("{}", benchmark));
+                    }
+                });
+        }
 
         // TODO: change imgui so that it use an iterator instead of a callback
         let ref_cell_cmd_builder = RefCell::new(Some(second_command_buffer_builder));

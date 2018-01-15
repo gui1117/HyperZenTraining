@@ -181,17 +181,60 @@ pub struct Graphics<'a> {
 impl<'a> Graphics<'a> {
     pub fn framebuffers_and_descriptors(
         device: Arc<Device>,
+        queue: Arc<Queue>,
         images: &Vec<Arc<SwapchainImage>>,
         render_pass: &Arc<RenderPass<render_pass::CustomRenderPassDesc>>,
         second_render_pass: &Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>,
         eraser1_pipeline: &Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>,
         draw2_pipeline: &Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
+        imgui_pipeline: &Arc<GraphicsPipeline<SingleBufferDefinition<SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>,
+        imgui: &mut ::imgui::ImGui,
     ) -> (
         Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, (((((), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
         Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage>)>>>,
         Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, (((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
         Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
+        Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
 ){
+        let imgui_texture = imgui
+            .prepare_texture(|handle| {
+                ImmutableImage::from_iter(
+                    handle.pixels.iter().cloned(),
+                    Dimensions::Dim2d {
+                        width: handle.width,
+                        height: handle.height,
+                    },
+                    format::R8G8B8A8Unorm,
+                    queue.clone(),
+                )
+            })
+            .unwrap().0;
+
+        let imgui_descriptor_set = {
+            Arc::new(
+                PersistentDescriptorSet::start(imgui_pipeline.clone(), 1)
+                    .add_sampled_image(
+                        imgui_texture,
+                        Sampler::new(
+                            device.clone(),
+                            Filter::Nearest,    // TODO: linear or nearest
+                            Filter::Linear,     // TODO: linear or nearest
+                            MipmapMode::Linear, // TODO: linear or nearest
+                            SamplerAddressMode::MirroredRepeat,
+                            SamplerAddressMode::MirroredRepeat,
+                            SamplerAddressMode::MirroredRepeat,
+                            0.0,
+                            1.0,
+                            0.0,
+                            0.0,
+                        ).unwrap(),
+                    )
+                    .unwrap()
+                    .build()
+                    .unwrap(),
+            )
+        };
+
         let depth_buffer_attachment = AttachmentImage::transient(
             device.clone(),
             images[0].dimensions(),
@@ -306,6 +349,7 @@ impl<'a> Graphics<'a> {
             second_framebuffers,
             eraser1_descriptor_set_0,
             draw2_descriptor_set_0,
+            imgui_descriptor_set,
         )
     }
     pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) -> Graphics<'a> {
@@ -588,14 +632,17 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let (framebuffer, second_framebuffers, eraser1_descriptor_set_0, draw2_descriptor_set_0) =
+        let (framebuffer, second_framebuffers, eraser1_descriptor_set_0, draw2_descriptor_set_0, imgui_descriptor_set) =
             Graphics::framebuffers_and_descriptors(
                 device.clone(),
+                queue.clone(),
                 &images,
                 &render_pass,
                 &second_render_pass,
                 &eraser1_pipeline,
                 &draw2_pipeline,
+                &imgui_pipeline,
+                imgui,
             );
 
         let view_uniform_buffer = CpuBufferPool::<::graphics::shader::draw1_vs::ty::View>::new(
@@ -627,20 +674,6 @@ impl<'a> Graphics<'a> {
                 queue.clone(),
             ).unwrap()
         };
-
-        let (imgui_texture, imgui_tex_future) = imgui
-            .prepare_texture(|handle| {
-                ImmutableImage::from_iter(
-                    handle.pixels.iter().cloned(),
-                    Dimensions::Dim2d {
-                        width: handle.width,
-                        height: handle.height,
-                    },
-                    format::R8G8B8A8Unorm,
-                    queue.clone(),
-                )
-            })
-            .unwrap();
 
         // TODO: not all buffer usage
         let tmp_erased_buffer = DeviceLocalBuffer::<[u32; GROUP_COUNTER_SIZE]>::new(
@@ -680,31 +713,6 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let imgui_descriptor_set = {
-            Arc::new(
-                PersistentDescriptorSet::start(imgui_pipeline.clone(), 1)
-                    .add_sampled_image(
-                        imgui_texture,
-                        Sampler::new(
-                            device.clone(),
-                            Filter::Nearest,    // TODO: linear or nearest
-                            Filter::Linear,     // TODO: linear or nearest
-                            MipmapMode::Linear, // TODO: linear or nearest
-                            SamplerAddressMode::MirroredRepeat,
-                            SamplerAddressMode::MirroredRepeat,
-                            SamplerAddressMode::MirroredRepeat,
-                            0.0,
-                            1.0,
-                            0.0,
-                            0.0,
-                        ).unwrap(),
-                    )
-                    .unwrap()
-                    .build()
-                    .unwrap(),
-            )
-        };
-
         // TODO: those descriptor are used by many pipeline other than
         // draw1_pipeline. Is it OK ?
         let draw1_view_descriptor_set_pool =
@@ -730,7 +738,6 @@ impl<'a> Graphics<'a> {
         now(device.clone())
             .join(cursor_tex_future)
             .join(colors_buf_future)
-            .join(imgui_tex_future)
             .join(fullscreen_vertex_buffer_future)
             .join(cursor_vertex_buffer_future)
             .join(primitives_future)
@@ -784,7 +791,7 @@ impl<'a> Graphics<'a> {
         }
     }
 
-    pub fn recreate(&mut self, window: &'a ::vulkano_win::Window) {
+    pub fn recreate(&mut self, window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) {
         let recreate;
         loop {
             // TODO: Sleep and max number of try
@@ -808,19 +815,23 @@ impl<'a> Graphics<'a> {
         self.data.images = new_images;
         self.data.swapchain = new_swapchain;
 
-        let (framebuffer, second_framebuffers, eraser1_descriptor_set_0, draw2_descriptor_set_0) =
+        let (framebuffer, second_framebuffers, eraser1_descriptor_set_0, draw2_descriptor_set_0, imgui_descriptor_set) =
             Graphics::framebuffers_and_descriptors(
                 self.data.device.clone(),
+                self.data.queue.clone(),
                 &self.data.images,
                 &self.data.render_pass,
                 &self.data.second_render_pass,
                 &self.data.eraser1_pipeline,
                 &self.data.draw2_pipeline,
+                &self.data.imgui_pipeline,
+                imgui,
             );
 
         self.data.framebuffer = framebuffer;
         self.data.second_framebuffers = second_framebuffers;
         self.data.eraser1_descriptor_set_0 = eraser1_descriptor_set_0;
         self.data.draw2_descriptor_set_0 = draw2_descriptor_set_0;
+        self.data.imgui_descriptor_set = imgui_descriptor_set;
     }
 }

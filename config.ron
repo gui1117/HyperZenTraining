@@ -183,12 +183,14 @@ Config(
     debug_fps_counter: 0,
     mouse_sensibility: 0.001,
     eraser_time: 0.3,
+
+    font_global_scale: 1.0,
     style: ImGuiStyleSave(
         alpha: 1.0,
         window_padding: ImVec2Def(x: 8, y: 8),
         window_min_size: ImVec2Def(x: 32, y: 32),
         window_rounding: 5.0,
-        window_title_align: ImVec2Def(x: 0.0, y: 0.5),
+        window_title_align: ImVec2Def(x: 0.5, y: 0.5),
         child_window_rounding: 0.0,
         frame_padding: ImVec2Def(x: 4, y: 3),
         frame_rounding: 0.0,

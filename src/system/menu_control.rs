@@ -43,11 +43,13 @@ impl MenuPauseControlSystem {
 impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
     type SystemData = (
         ::specs::Fetch<'a, ::resource::Events>,
-        ::specs::FetchMut<'a, ::resource::ImGui>,
+        ::specs::FetchMut<'a, ::resource::ImGuiOption>,
         ::specs::FetchMut<'a, ::resource::State>,
     );
 
     fn run(&mut self, (events, mut imgui, mut state): Self::SystemData) {
+        let mut imgui = imgui.as_mut().unwrap();
+        imgui.set_mouse_draw_cursor(true);
         for ev in events.0.iter() {
             match *ev {
                 Event::WindowEvent {
@@ -64,12 +66,11 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
             }
         }
 
-        // Send events to imgui
         send_events_to_imgui(&events, &mut imgui, &mut self.mouse_down);
     }
 }
 
-fn send_events_to_imgui(events: &::resource::Events, imgui: &mut ::resource::ImGui, mouse_down: &mut [bool; 5]) {
+fn send_events_to_imgui(events: &::resource::Events, imgui: &mut ::imgui::ImGui, mouse_down: &mut [bool; 5]) {
     for ev in events.0.iter() {
         match *ev {
             Event::WindowEvent {
