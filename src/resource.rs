@@ -107,9 +107,10 @@ impl Maze {
 pub struct State {
     pub pause: bool,
     pub mouse_sensibility: f32,
-    pub play_button: bool,
+    pub continue_button: bool,
     pub reset_button: bool,
     pub quit_button: bool,
+    pub levels_button: [bool; 16],
 }
 
 impl State {
@@ -117,9 +118,10 @@ impl State {
         State {
             pause: false,
             mouse_sensibility: 0.001,
-            play_button: false,
+            continue_button: false,
             reset_button: false,
             quit_button: false,
+            levels_button: [false; 16],
         }
     }
 
@@ -133,14 +135,15 @@ impl State {
                 .resizable(false)
                 .movable(false)
                 .build(|| {
-                    self.play_button = ui.button(im_str!("Continue"), button_size);
+                    self.continue_button = ui.button(im_str!("Continue"), button_size);
                     ui.separator();
                     ui.text(im_str!("Levels :"));
                     ui.separator();
                     for i in 0..4 {
                         for j in 0..4 {
-                            let string = format!("Level {:?}", i*4+j+1);
-                            ui.button(&::imgui::ImString::new(string), button_size);
+                            let n = i*4+j+1;
+                            let string = format!("Level {:?}", n);
+                            self.levels_button[n-1] = ui.button(&::imgui::ImString::new(string), button_size);
                             ui.same_line(0.0);
                         }
                         ui.new_line();

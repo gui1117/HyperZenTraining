@@ -265,6 +265,9 @@ fn main() {
                 break;
             }
         }
+        if world.write_resource::<::resource::State>().quit_button {
+            break;
+        }
         benchmarker.end("pre_update");
 
         // Update world

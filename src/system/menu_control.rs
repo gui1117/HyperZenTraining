@@ -65,6 +65,12 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                 _ => (),
             }
         }
+        if state.continue_button {
+            state.pause = false;
+        }
+        if state.reset_button {
+            state.mouse_sensibility = ::CONFIG.mouse_sensibility;
+        }
 
         send_events_to_imgui(&events, &mut imgui, &mut self.mouse_down);
     }
