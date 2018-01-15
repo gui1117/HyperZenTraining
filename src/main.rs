@@ -24,6 +24,7 @@ extern crate vulkano_win;
 extern crate wavefront_obj;
 extern crate winit;
 
+#[macro_use]
 mod util;
 mod graphics;
 mod entity;
@@ -97,14 +98,7 @@ fn main() {
 
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
 
-    let mut error_timer = 0;
-    while let Err(_) = window.window().set_cursor_state(winit::CursorState::Grab) {
-        ::std::thread::sleep(::std::time::Duration::from_millis(1));
-        error_timer += 1;
-        if error_timer > 100 {
-            panic!("cursor could not be grabbed");
-        }
-    }
+    try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10).unwrap();
 
     let mut imgui = init_imgui();
     let mut graphics = graphics::Graphics::new(&window, &mut imgui);
@@ -219,6 +213,14 @@ fn main() {
 
             events_loop.poll_events(|ev| {
                 let retain = match ev {
+                    Event::WindowEvent {
+                        event: WindowEvent::Focused(true),
+                        ..
+                    } => {
+                        try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Normal), 100, 10).unwrap();
+                        try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10).unwrap();
+                        false
+                    }
                     Event::WindowEvent {
                         event: WindowEvent::Closed,
                         ..
