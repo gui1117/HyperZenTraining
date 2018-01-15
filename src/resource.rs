@@ -115,7 +115,7 @@ pub struct State {
 impl State {
     pub fn new() -> Self {
         State {
-            pause: true,
+            pause: false,
             mouse_sensibility: 0.001,
             play_button: false,
             reset_button: false,
@@ -125,36 +125,44 @@ impl State {
 
     pub fn build_ui(&mut self, ui: &::imgui::Ui) {
         let (width, height) = ui.imgui().display_size();
+        let button_size = (76.0, 30.0);
         if self.pause {
-            ui.window(im_str!("Menu"))
+            ui.window(im_str!("Pause"))
                 .collapsible(false)
-                .position((width/4.0, height/4.0), ::imgui::ImGuiCond::FirstUseEver)
-                .size((width/2.0, height/2.0), ::imgui::ImGuiCond::FirstUseEver)
-                .resizable(true)
-                .movable(true)
+                .always_auto_resize(true)
+                .resizable(false)
+                .movable(false)
                 .build(|| {
-                    self.play_button = ui.small_button(im_str!("Play"));
-                    ui.tree_node(im_str!("Levels"))
-                        .build(|| {
-                            for _ in 0..30 {
-                                ui.small_button(im_str!("Level 1"));
-                                ui.same_line(width/8.0);
-                                ui.text(im_str!("TOTOTO"));
-                            }
-                        });
-                    ui.tree_node(im_str!("Settings"))
-                        .build(|| {
-                            ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility)
-                                .build();
-                            self.reset_button = ui.small_button(im_str!("Reset"));
-                        });
-                    ui.tree_node(im_str!("Credits"))
-                        .build(|| {
-                            ui.text_wrapped(im_str!("Guillaume Thiolliere
-TODO: others"));
-                        });
-                    self.quit_button = ui.small_button(im_str!("Quit"));
+                    self.play_button = ui.button(im_str!("Continue"), button_size);
+                    ui.separator();
+                    ui.text(im_str!("Levels :"));
+                    ui.separator();
+                    for i in 0..4 {
+                        for j in 0..4 {
+                            let string = format!("Level {:?}", i*4+j+1);
+                            ui.button(&::imgui::ImString::new(string), button_size);
+                            ui.same_line(0.0);
+                        }
+                        ui.new_line();
+                    }
+                    ui.separator();
+                    ui.text(im_str!("Settings :"));
+                    ui.separator();
+                    ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility).build();
+                    self.reset_button = ui.button(im_str!("Reset"), button_size);
+                    ui.separator();
+                    self.quit_button = ui.button(im_str!("Quit"), button_size);
                 });
+        } else {
+            // TODO: tutorial
+            // ui.window(im_str!("Tutorial"))
+            //     .collapsible(false)
+            //     .always_auto_resize(true)
+            //     .resizable(false)
+            //     .movable(false)
+            //     .build(|| {
+            //         ui.text(im_str!("Press right click :-)"));
+            //     });
         }
     }
 }
