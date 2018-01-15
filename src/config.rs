@@ -15,6 +15,8 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    pub menu_width: f32,
+    pub menu_height: f32,
     pub font_global_scale: f32,
     pub death_duration: f32,
     pub hook_links: usize,

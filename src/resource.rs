@@ -131,7 +131,8 @@ impl State {
         if self.pause {
             ui.window(im_str!("Pause"))
                 .collapsible(false)
-                .always_auto_resize(true)
+                .size((::CONFIG.menu_width, ::CONFIG.menu_height), ::imgui::ImGuiCond::Always)
+                .position((width/2.0-::CONFIG.menu_width/2.0, height/2.0-::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
                 .resizable(false)
                 .movable(false)
                 .build(|| {
