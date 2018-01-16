@@ -1,8 +1,10 @@
 use vulkano::command_buffer::AutoCommandBuffer;
+use app_dirs::{AppInfo, app_root, AppDataType};
 
 pub use graphics::Data as Graphics;
-pub use std::time::Duration;
-pub use std::collections::HashMap;
+use std::io::Write;
+use std::fs::File;
+use std::path::PathBuf;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub struct Events(pub Vec<::winit::Event>);
@@ -12,28 +14,49 @@ pub type ImGuiOption = Option<::imgui::ImGui>;
 
 pub struct FpsCounter(pub usize);
 
+#[derive(Deserialize, Serialize)]
 pub struct Save {
-    pub mouse_sensibility: f32,
+    mouse_sensibility: f32,
+}
+
+const APP_INFO: AppInfo = AppInfo { name: "pepe", author: "thiolliere" };
+const FILENAME: &str = "save.ron";
+
+lazy_static! {
+    static ref SAVE_PATH: PathBuf = {
+        let mut path = app_root(AppDataType::UserConfig, &APP_INFO).unwrap();
+        path.push(FILENAME);
+        path
+    };
 }
 
 impl Save {
     pub fn new() -> Self {
-        // TODO: write save if none and load from save
-        Save {
-            mouse_sensibility: ::CONFIG.mouse_sensibility,
+        File::open(SAVE_PATH.as_path()).ok()
+            .and_then(|file| ::ron::de::from_reader(file).ok())
+            .unwrap_or(Save {
+                mouse_sensibility: ::CONFIG.mouse_sensibility,
+            })
+    }
+
+    #[inline]
+    pub fn mouse_sensibility(&self) -> f32 {
+        self.mouse_sensibility
+    }
+
+    /// Do nothing if sensibility hasn't changed
+    pub fn set_mouse_sensibility(&mut self, mouse_sensibility: f32) {
+        if self.mouse_sensibility != mouse_sensibility {
+            self.mouse_sensibility = mouse_sensibility;
+            self.save();
         }
     }
 
-    // pub fn load() -> Self {
-    //     let file = File::open(SAVE_FILENAME).unwrap();
-    //     ::ron::de::from_reader(file).unwrap()
-    // }
-
-    // pub fn save(&self) {
-    //     let string = ::ron::ser::to_string(&self).unwrap();
-    //     let mut file = File::open(SAVE_FILENAME).unwrap();
-    //     file.write_all(string.as_bytes()).unwrap();
-    // }
+    pub fn save(&self) {
+        let string = ::ron::ser::to_string(&self).unwrap();
+        let mut file = File::create(SAVE_PATH.as_path()).unwrap();
+        file.write_all(string.as_bytes()).unwrap();
+    }
 }
 
 pub struct UpdateTime(pub f32);
@@ -104,20 +127,20 @@ impl Maze {
     }
 }
 
-pub struct State {
+pub struct MenuState {
     pub pause: bool,
-    pub mouse_sensibility: f32,
+    pub mouse_sensibility_input: f32,
     pub continue_button: bool,
     pub reset_button: bool,
     pub quit_button: bool,
     pub levels_button: [bool; 16],
 }
 
-impl State {
-    pub fn new() -> Self {
-        State {
+impl MenuState {
+    pub fn new(save: &Save) -> Self {
+        MenuState {
             pause: false,
-            mouse_sensibility: 0.001,
+            mouse_sensibility_input: save.mouse_sensibility(),
             continue_button: false,
             reset_button: false,
             quit_button: false,
@@ -152,7 +175,7 @@ impl State {
                     ui.separator();
                     ui.text(im_str!("Settings :"));
                     ui.separator();
-                    ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility).build();
+                    ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility_input).build();
                     self.reset_button = ui.button(im_str!("Reset"), button_size);
                     ui.separator();
                     self.quit_button = ui.button(im_str!("Quit"), button_size);

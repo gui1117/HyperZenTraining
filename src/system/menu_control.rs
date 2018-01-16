@@ -6,10 +6,10 @@ pub struct MenuGameControlSystem;
 impl<'a> ::specs::System<'a> for MenuGameControlSystem {
     type SystemData = (
         ::specs::Fetch<'a, ::resource::Events>,
-        ::specs::FetchMut<'a, ::resource::State>,
+        ::specs::FetchMut<'a, ::resource::MenuState>,
     );
 
-    fn run(&mut self, (events, mut state): Self::SystemData) {
+    fn run(&mut self, (events, mut menu_state): Self::SystemData) {
         for ev in events.0.iter() {
             match *ev {
                 Event::WindowEvent {
@@ -20,7 +20,7 @@ impl<'a> ::specs::System<'a> for MenuGameControlSystem {
                     }, .. },
                     ..
                 } => {
-                    state.pause = true;
+                    menu_state.pause = true;
                 }
                 _ => (),
             }
@@ -44,10 +44,11 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
     type SystemData = (
         ::specs::Fetch<'a, ::resource::Events>,
         ::specs::FetchMut<'a, ::resource::ImGuiOption>,
-        ::specs::FetchMut<'a, ::resource::State>,
+        ::specs::FetchMut<'a, ::resource::MenuState>,
+        ::specs::FetchMut<'a, ::resource::Save>,
     );
 
-    fn run(&mut self, (events, mut imgui, mut state): Self::SystemData) {
+    fn run(&mut self, (events, mut imgui, mut menu_state, mut save): Self::SystemData) {
         let mut imgui = imgui.as_mut().unwrap();
         imgui.set_mouse_draw_cursor(true);
         for ev in events.0.iter() {
@@ -60,17 +61,18 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                     }, .. },
                     ..
                 } => {
-                    state.pause = false;
+                    menu_state.pause = false;
                 },
                 _ => (),
             }
         }
-        if state.continue_button {
-            state.pause = false;
+        if menu_state.continue_button {
+            menu_state.pause = false;
         }
-        if state.reset_button {
-            state.mouse_sensibility = ::CONFIG.mouse_sensibility;
+        if menu_state.reset_button {
+            menu_state.mouse_sensibility_input = ::CONFIG.mouse_sensibility;
         }
+        save.set_mouse_sensibility(menu_state.mouse_sensibility_input);
 
         send_events_to_imgui(&events, &mut imgui, &mut self.mouse_down);
     }

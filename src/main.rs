@@ -23,6 +23,7 @@ extern crate vulkano_shader_derive;
 extern crate vulkano_win;
 extern crate wavefront_obj;
 extern crate winit;
+extern crate app_dirs;
 
 #[macro_use]
 mod util;
@@ -137,12 +138,14 @@ fn main() {
     world.add_resource(::resource::Events(vec![]));
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::DebugMode(false));
-    world.add_resource(::resource::Save::new());
     world.add_resource(::resource::FpsCounter(0));
     world.add_resource(::resource::PlayerControl::new());
     world.add_resource(::resource::Benchmarks::new());
     world.add_resource(::resource::UpdateTime(0.0));
-    world.add_resource(::resource::State::new());
+    let save = ::resource::Save::new();
+    let menu_state = ::resource::MenuState::new(&save);
+    world.add_resource(save);
+    world.add_resource(menu_state);
     world.maintain();
 
     let mut game_system = ::system::GameSystem::new();
@@ -267,7 +270,7 @@ fn main() {
                 break;
             }
         }
-        if world.write_resource::<::resource::State>().quit_button {
+        if world.write_resource::<::resource::MenuState>().quit_button {
             break;
         }
         benchmarker.end("pre_update");
@@ -278,7 +281,7 @@ fn main() {
         let delta_time = last_update_instant.elapsed();
         last_update_instant = Instant::now();
 
-        if world.read_resource::<::resource::State>().pause {
+        if world.read_resource::<::resource::MenuState>().pause {
             world.write_resource::<::resource::ImGuiOption>().as_mut().unwrap().set_mouse_draw_cursor(true);
             world.write_resource::<::resource::UpdateTime>().0 = 0.0;
             pause_update_dispatcher.dispatch(&mut world.res);

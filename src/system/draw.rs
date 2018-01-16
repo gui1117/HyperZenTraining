@@ -23,7 +23,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         ::specs::FetchMut<'a, ::resource::Rendering>,
         ::specs::FetchMut<'a, ::resource::ImGuiOption>,
         ::specs::FetchMut<'a, ::resource::Graphics>,
-        ::specs::FetchMut<'a, ::resource::State>,
+        ::specs::FetchMut<'a, ::resource::MenuState>,
         ::specs::Fetch<'a, ::resource::FpsCounter>,
         ::specs::Fetch<'a, ::resource::UpdateTime>,
         ::specs::Fetch<'a, ::resource::DepthCoef>,
@@ -45,7 +45,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             mut rendering,
             mut imgui,
             mut graphics,
-            mut state,
+            mut menu_state,
             fps_counter,
             update_time,
             depth_coef,
@@ -409,7 +409,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             rendering.size_pixels.take().unwrap(),
             ::CONFIG.dt(),
         );
-        state.build_ui(&ui);
+        menu_state.build_ui(&ui);
         if false {
             ui.window(im_str!("Debug"))
                 .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
