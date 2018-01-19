@@ -1,4 +1,7 @@
 Config(
+    ear_distance: 0.1,
+    sound_dir: "sounds",
+
     pale_gen_color_division: 10,
     pale_gen_color_delta: 0.0,
     pale_gen_color_black: 0.7,
@@ -54,6 +57,7 @@ Config(
     player_hook_force: 0.8,
     player_hook_color: Blue,
     player_hook_size: 1.0,
+    player_shoot_sound: "shoot.ogg",
 
     teleport_dl: -0.4,
 

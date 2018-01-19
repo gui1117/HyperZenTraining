@@ -15,6 +15,7 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    pub ear_distance: f32,
     pub pale_gen_color_division: usize,
     pub pale_gen_color_black: f32,
     pub pale_gen_color_white: f32,
@@ -25,6 +26,7 @@ pub struct Config {
     pub gen_color_white: f32,
     pub gen_color_delta: f32,
 
+    pub sound_dir: String,
     pub menu_width: f32,
     pub menu_height: f32,
     pub font_global_scale: f32,
@@ -77,6 +79,7 @@ pub struct Config {
     pub player_hook_force: f32,
     pub player_hook_color: ::graphics::Color,
     pub player_hook_size: f32,
+    pub player_shoot_sound: String,
 
     pub teleport_dl: f32,
 

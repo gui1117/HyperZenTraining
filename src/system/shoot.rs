@@ -22,6 +22,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
         ::specs::WriteStorage<'a, ::component::DynamicDraw>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
         ::specs::Fetch<'a, ::resource::UpdateTime>,
+        ::specs::FetchMut<'a, ::resource::Audio>,
         ::specs::Entities<'a>,
     );
 
@@ -38,6 +39,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             mut dynamic_draws,
             physic_world,
             update_time,
+            mut audio,
             entities,
         ): Self::SystemData,
     ) {
@@ -117,6 +119,8 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     &mut dynamic_assets,
                     &entities,
                 );
+
+                audio.play(::audio::Sound::Shoot, ray.origin.coords.into());
             }
         }
     }

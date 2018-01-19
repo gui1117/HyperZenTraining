@@ -24,10 +24,12 @@ extern crate vulkano_win;
 extern crate wavefront_obj;
 extern crate winit;
 extern crate app_dirs;
+extern crate rodio;
 
 #[macro_use]
 mod util;
 mod graphics;
+mod audio;
 mod entity;
 mod component;
 mod system;
@@ -142,6 +144,7 @@ fn main() {
     world.add_resource(::resource::PlayerControl::new());
     world.add_resource(::resource::Benchmarks::new());
     world.add_resource(::resource::UpdateTime(0.0));
+    world.add_resource(::resource::Audio::init());
     let save = ::resource::Save::new();
     let menu_state = ::resource::MenuState::new(&save);
     world.add_resource(save);
@@ -156,6 +159,7 @@ fn main() {
         .build();
 
     let mut game_update_dispatcher = ::specs::DispatcherBuilder::new()
+        .add(::system::AudioSystem, "audio", &[])
         .add(::system::MenuGameControlSystem, "menu_game", &[])
         .add(::system::PlayerControlSystem, "player_control", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])

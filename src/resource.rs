@@ -5,6 +5,7 @@ pub use graphics::Data as Graphics;
 use std::io::Write;
 use std::fs::File;
 use std::path::PathBuf;
+pub use audio::Audio;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub struct Events(pub Vec<::winit::Event>);
