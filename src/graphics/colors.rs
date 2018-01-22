@@ -25,6 +25,7 @@ fn color_circle(x: f32) -> [f32; 3] {
 pub fn colors() -> Vec<[f32; 4]> {
     let mut colors = vec![
         [0x00, 0x00, 0x00, 0xff],
+        [0xff, 0xff, 0xff, 0xff],
         [0xef, 0xc5, 0x73, 0xff],
         [0x9c, 0x66, 0x3a, 0xff],
         [0xe5, 0x58, 0x5e, 0xff],
@@ -117,6 +118,7 @@ fn generate_colors(division: usize, delta: f32, black: f32, white: f32) -> Vec<[
 #[repr(C)]
 pub enum Color {
     Black,      //000000
+    White,      //ffffff
     PaleBrown,  //efc573
     Brown,      //9c663a
     PaleRed,    //e5585e

@@ -4,13 +4,13 @@ Config(
 
     pale_gen_color_division: 10,
     pale_gen_color_delta: 0.0,
-    pale_gen_color_black: 0.7,
-    pale_gen_color_white: 1.0,
+    pale_gen_color_black: 0.6,
+    pale_gen_color_white: 0.75,
 
     gen_color_division: 10,
-    gen_color_delta: 0.0,
-    gen_color_black: 0.7,
-    gen_color_white: 1.0,
+    gen_color_delta: 0.5,
+    gen_color_black: 0.1,
+    gen_color_white: 0.9,
 
     physic_max_step_time: 0.008,
     physic_min_step_time: 0.00001,
@@ -30,14 +30,14 @@ Config(
     avoider_velocity: 2.5,
     avoider_time_to_reach_vmax: 1.0,
     avoider_ang_damping: 0.8,
-    avoider_color: Green,
+    avoider_color: Gen2,
     avoider_avoid_norm: 1.0,
 
     bouncer_size: 0.1,
     bouncer_velocity: 1.0,
     bouncer_time_to_reach_vmax: 0.05,
     bouncer_ang_damping: 0.8,
-    bouncer_color: Blue,
+    bouncer_color: Gen5,
 
     avoider_generator_salvo: 0,
     avoider_generator_eraser_probability: 0.0,
@@ -55,7 +55,7 @@ Config(
     player_hook_velocity: 50.0,
     player_hook_time_to_reach_vmax: 8.0,
     player_hook_force: 0.8,
-    player_hook_color: Blue,
+    player_hook_color: GenPaleBlack,
     player_hook_size: 1.0,
     player_shoot_sound: "shoot.ogg",
 
@@ -93,10 +93,10 @@ Config(
     weapon_bullet_length: 0.0005,
     weapon_bullet_x: 0.035,
     weapon_bullet_dx: 0.003,
-    weapon_bullet_color: PaleBlue,
-    weapon_bullet_empty_color: DarkBlue,
-    weapon_six_color: Red,
-    weapon_angle_color: PalePurple,
+    weapon_bullet_color: Gen4,
+    weapon_bullet_empty_color: GenPale4,
+    weapon_six_color: Gen0,
+    weapon_angle_color: GenWhite,
     weapon_light_ray_duration: 0.2,
 
     levels: [
@@ -144,23 +144,23 @@ Config(
         //     eraser_avoiders: 0,
         //     eraser_bouncers: 0
         // )),
-        // Walkthrough3D(Conf(
-        //     size: (11, 11, 11),
-        //     percent: 4.0,
-        //     bug: (0, 0, 0),
-        //     scale: 10.0,
-        //     turrets: 0,
+        Walkthrough3D(Conf(
+            size: (11, 11, 11),
+            percent: 4.0,
+            bug: (0, 0, 0),
+            scale: 10.0,
+            turrets: 0,
 
-        //     avoider_generators: 1,
-        //     avoider_salvo: 3,
-        //     avoider_eraser_proba: 0.0,
-        //     avoider_time_between_salvo: 10.0,
+            avoider_generators: 1,
+            avoider_salvo: 3,
+            avoider_eraser_proba: 0.0,
+            avoider_time_between_salvo: 10.0,
 
-        //     bouncer_generators: 1,
-        //     bouncer_salvo: 1,
-        //     bouncer_eraser_proba: 0.0,
-        //     bouncer_time_between_salvo: 3.0,
-        // )),
+            bouncer_generators: 1,
+            bouncer_salvo: 1,
+            bouncer_eraser_proba: 0.0,
+            bouncer_time_between_salvo: 3.0,
+        )),
         KillAll(Conf(
             size: (21, 21),
             percent: 20.0,
