@@ -188,16 +188,6 @@ impl StaticDraw {
     }
 }
 
-// Maybe add an animation here also to add reload animation
-pub struct WeaponAnchor {
-    // The anchor must have a rigid body and a weapon animation
-    pub anchor: ::specs::Entity,
-}
-
-impl ::specs::Component for WeaponAnchor {
-    type Storage = ::specs::VecStorage<Self>;
-}
-
 pub struct WeaponAnimation {
     pub weapon_trans: ::na::Isometry3<f32>,
     pub shoot_pos: ::na::Point3<f32>,

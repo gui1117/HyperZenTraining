@@ -35,7 +35,6 @@ pub fn create_weapon<'a>(
     anchor: ::specs::Entity,
     shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
     weapon_animations: &mut ::specs::WriteStorage<'a, ::component::WeaponAnimation>,
-    weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
     dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     entities: &::specs::Entities,
@@ -72,7 +71,6 @@ pub fn create_weapon<'a>(
         * ::graphics::resizer(six_radius, six_radius, six_length);
 
     let entity = entities.create();
-    weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
     dynamic_huds.insert(entity, ::component::DynamicHud);
     dynamic_graphics_assets.insert(
         entity,
@@ -96,7 +94,6 @@ pub fn create_weapon<'a>(
 
         let entity = entities.create();
         bullets.push(entity);
-        weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
         dynamic_huds.insert(entity, ::component::DynamicHud);
         dynamic_graphics_assets.insert(
             entity,
@@ -125,7 +122,6 @@ pub fn create_weapon<'a>(
             * ::graphics::resizer(bar_x_radius, bar_y_radius, bar_z_radius);
 
         let entity = entities.create();
-        weapon_anchors.insert(entity, ::component::WeaponAnchor { anchor: anchor });
         dynamic_huds.insert(entity, ::component::DynamicHud);
         dynamic_graphics_assets.insert(
             entity,

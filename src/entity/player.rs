@@ -11,7 +11,6 @@ pub fn create_player_w(pos: ::na::Vector3<f32>, hook: bool, world: &::specs::Wor
         &mut world.write(),
         &mut world.write(),
         &mut world.write(),
-        &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
     );
@@ -27,7 +26,6 @@ pub fn create_player<'a>(
     shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
     hooks: &mut ::specs::WriteStorage<'a, ::component::Hook>,
     weapon_animations: &mut ::specs::WriteStorage<'a, ::component::WeaponAnimation>,
-    weapon_anchors: &mut ::specs::WriteStorage<'a, ::component::WeaponAnchor>,
     dynamic_huds: &mut ::specs::WriteStorage<'a, ::component::DynamicHud>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
@@ -84,7 +82,6 @@ pub fn create_player<'a>(
         entity,
         shooters,
         weapon_animations,
-        weapon_anchors,
         dynamic_huds,
         dynamic_graphics_assets,
         entities,

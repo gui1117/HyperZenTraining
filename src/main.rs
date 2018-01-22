@@ -115,7 +115,6 @@ fn main() {
     world.register::<::component::Shooter>();
     world.register::<::component::Hook>();
     world.register::<::component::WeaponAnimation>();
-    world.register::<::component::WeaponAnchor>();
     world.register::<::component::Aim>();
     world.register::<::component::StaticDraw>();
     world.register::<::component::DynamicDraw>();
