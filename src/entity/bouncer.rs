@@ -58,6 +58,7 @@ pub fn create_bouncer<'a>(
             ::CONFIG.bouncer_time_to_reach_vmax,
             None,
             ::CONFIG.bouncer_ang_damping,
+            ::na::zero(),
             None,
         );
         momentum.direction = ::na::Vector3::new_random().normalize();

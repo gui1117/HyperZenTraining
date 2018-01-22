@@ -56,6 +56,7 @@ pub fn create_turret<'a>(
             ::CONFIG.laser_time_to_reach_vmax,
             None,
             ::CONFIG.laser_ang_damping,
+            ::na::zero(),
             None,
         ),
     );
@@ -112,6 +113,7 @@ pub fn create_turret<'a>(
             ::CONFIG.turret_time_to_reach_vmax,
             None,
             ::CONFIG.turret_ang_damping,
+            ::na::zero(),
             None,
         ),
     );

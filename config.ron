@@ -100,17 +100,56 @@ Config(
     weapon_light_ray_duration: 0.2,
 
     levels: [
-        // KillAll(Conf(
-        //     size: (11, 11),
-        //     percent: 0.0,
-        //     bug: (0, 0),
-        //     scale: 1.0,
-        //     turrets: 0,
-        //     avoiders: 0,
-        //     bouncers: 0,
-        //     eraser_avoiders: 0,
-        //     eraser_bouncers: 0
-        // )),
+        KillAll(Conf(
+            size: (17, 17),
+            percent: 20.0,
+            bug: (1, 1),
+            scale: 1.0,
+            turrets: 0,
+            avoiders: 0,
+            bouncers: 0,
+            eraser_avoiders: 0,
+            eraser_bouncers: 0
+        )),
+        KillAll(Conf(
+            size: (21, 21),
+            percent: 00.0,
+            bug: (0, 0),
+            scale: 1.0,
+            turrets: 0,
+            avoiders: 1,
+            bouncers: 0,
+            eraser_avoiders: 0,
+            eraser_bouncers: 0
+        )),
+        Walkthrough(Conf(
+            size: (21, 21),
+            percent: 00.0,
+            bug: (0, 0),
+            scale: 1.0,
+            turrets: 0,
+
+            avoider_generators: 1,
+            avoider_salvo: 10,
+            avoider_eraser_proba: 0.5,
+            avoider_time_between_salvo: 1.0,
+
+            bouncer_generators: 1,
+            bouncer_salvo: 1,
+            bouncer_eraser_proba: 0.5,
+            bouncer_time_between_salvo: 0.5,
+        )),
+        KillAll(Conf(
+            size: (21, 21),
+            percent: 0.0,
+            bug: (0, 0),
+            scale: 1.0,
+            turrets: 0,
+            avoiders: 1,
+            bouncers: 0,
+            eraser_avoiders: 0,
+            eraser_bouncers: 0
+        )),
         // KillAll(Conf(
         //     size: (15, 15),
         //     percent: 20.0,

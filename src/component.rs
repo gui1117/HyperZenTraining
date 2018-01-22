@@ -127,6 +127,7 @@ impl Momentum {
         time_to_reach_v_max: f32,
         ang_force: Option<::na::Vector3<f32>>,
         ang_damping: f32,
+        direction: ::na::Vector3<f32>,
         pnt_to_com: Option<::na::Vector3<f32>>,
     ) -> Self {
         // TODO: add ang_vel, time_to_reach_ang_v_max arguments and compute ang_damping and ang_force with it
@@ -137,7 +138,7 @@ impl Momentum {
             damping,
             force,
             ang_force,
-            direction: ::na::zero(),
+            direction,
             pnt_to_com,
         }
     }

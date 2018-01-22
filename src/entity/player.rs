@@ -75,6 +75,7 @@ pub fn create_player<'a>(
             time_to_reach_vmax,
             None,
             ::CONFIG.player_ang_damping,
+            ::na::zero(),
             None,
         ),
     );

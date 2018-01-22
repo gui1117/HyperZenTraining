@@ -72,6 +72,7 @@ pub fn create_avoider<'a>(
             ::CONFIG.avoider_time_to_reach_vmax,
             None,
             ::CONFIG.avoider_ang_damping,
+            ::na::Vector3::new(0.0, 0.0, 1.0),
             Some(pnt_to_com),
         ),
     );

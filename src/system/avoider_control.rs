@@ -74,8 +74,11 @@ impl<'a> ::specs::System<'a> for AvoiderControlSystem {
                 }
             };
 
-            momentum.direction =
-                (goal_coef * goal_direction + avoid_coef * avoid_direction).normalize();
+            momentum.direction = (goal_coef * goal_direction + avoid_coef * avoid_direction).normalize();
+
+            if momentum.direction.iter().any(|c| c.is_nan()) {
+                momentum.direction = ::na::Vector3::new(0.0, 0.0, 1.0);
+            }
         }
     }
 }
