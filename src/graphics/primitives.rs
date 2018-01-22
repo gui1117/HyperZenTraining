@@ -504,6 +504,7 @@ pub fn instance_primitives(
         ],
     ];
 
+    // Hook
     let mut hook = vec![];
     for i in 0..::CONFIG.hook_links {
         let mut link = link.clone();
@@ -525,6 +526,9 @@ pub fn instance_primitives(
         hook.append(&mut link);
     }
     primitives_buffers_def.push(hook);
+
+    // Texts
+    primitives_buffers_def.push(vec![super::font::build_text("TEXT.".to_string())]);
 
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];
@@ -562,6 +566,7 @@ pub mod primitive {
         Cylinder,
         PitCube,
         Hook,
+        Text,
     }
 
     impl Primitive {
@@ -576,6 +581,7 @@ pub mod primitive {
                 Primitive::Cylinder => 6,
                 Primitive::PitCube => 7,
                 Primitive::Hook => 8,
+                Primitive::Text => 9,
             }
         }
 
@@ -590,6 +596,7 @@ pub mod primitive {
                 Primitive::Cylinder => 1,
                 Primitive::PitCube => 11,
                 Primitive::Hook => 10*::CONFIG.hook_links,
+                Primitive::Text => 1,
             }
         }
 
