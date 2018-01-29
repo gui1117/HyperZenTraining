@@ -1,4 +1,7 @@
 Config(
+    depth_coef_divider: 2.0,
+    depth_coef_velocity: 1.05,
+    depth_coef_min: 0.001,
     ear_distance: 0.1,
     sound_dir: "sounds",
 
@@ -39,6 +42,12 @@ Config(
     bouncer_ang_damping: 0.8,
     bouncer_color: Gen5,
 
+    depth_ball_size: 0.1,
+    depth_ball_velocity: 1.0,
+    depth_ball_time_to_reach_vmax: 0.05,
+    depth_ball_ang_damping: 0.8,
+    depth_ball_color: Gen5,
+
     avoider_generator_salvo: 0,
     avoider_generator_eraser_probability: 0.0,
     avoider_generator_time_between_salvo: 0.0,
@@ -69,9 +78,8 @@ Config(
     laser_color: Red,
 
     turret_size: 0.15,
-    turret_velocity: 1.0,
-    turret_time_to_reach_vmax: 0.05,
-    turret_ang_damping: 0.8,
+    turret_density: 100.0,
+    turret_reload_time: 1.0,
     turret_color: Purple,
 
     wall_color: [

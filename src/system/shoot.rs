@@ -77,6 +77,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
 
                 // TODO: resolve hack with membership nphysic #82
                 let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
+                group.set_membership(&[::entity::PLAYER_LASER_GROUP]);
                 group.set_whitelist(&[::entity::MONSTER_GROUP, ::entity::WALL_GROUP]);
 
                 self.collided.clear();

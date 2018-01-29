@@ -15,6 +15,9 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    pub depth_coef_divider: f32,
+    pub depth_coef_velocity: f32,
+    pub depth_coef_min: f32,
     pub ear_distance: f32,
     pub pale_gen_color_division: usize,
     pub pale_gen_color_black: f32,
@@ -61,6 +64,12 @@ pub struct Config {
     pub bouncer_ang_damping: f32,
     pub bouncer_color: ::graphics::Color,
 
+    pub depth_ball_size: f32,
+    pub depth_ball_velocity: f32,
+    pub depth_ball_time_to_reach_vmax: f32,
+    pub depth_ball_ang_damping: f32,
+    pub depth_ball_color: ::graphics::Color,
+
     pub avoider_generator_salvo: usize,
     pub avoider_generator_eraser_probability: f32,
     pub avoider_generator_time_between_salvo: f32,
@@ -91,10 +100,9 @@ pub struct Config {
     pub laser_color: ::graphics::Color,
 
     pub turret_size: f32,
-    pub turret_velocity: f32,
-    pub turret_time_to_reach_vmax: f32,
-    pub turret_ang_damping: f32,
     pub turret_color: ::graphics::Color,
+    pub turret_density: f32,
+    pub turret_reload_time: f32,
 
     pub wall_color: Vec<::graphics::Color>,
 

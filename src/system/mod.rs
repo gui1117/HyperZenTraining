@@ -1,4 +1,6 @@
+mod depth_ball;
 mod audio;
+mod depth_coef;
 mod menu_control;
 mod player_control;
 mod avoider_control;
@@ -35,3 +37,5 @@ pub use self::generator::GeneratorSystem;
 pub use self::hook::HookSystem;
 pub use self::reducer::ReducerSystem;
 pub use self::audio::AudioSystem;
+pub use self::depth_coef::DepthCoefSystem;
+pub use self::depth_ball::DepthBallSystem;

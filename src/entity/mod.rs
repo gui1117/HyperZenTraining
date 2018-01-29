@@ -4,7 +4,9 @@ pub const ALIVE_GROUP: usize = 3;
 pub const MONSTER_GROUP: usize = 4;
 pub const TURRET_GROUP: usize = 5;
 pub const PLAYER_GROUP: usize = 6;
+pub const PLAYER_LASER_GROUP: usize = 7;
 
+mod depth_ball;
 mod generator;
 mod teleport;
 mod weapon;
@@ -26,3 +28,4 @@ pub use self::turret::*;
 pub use self::wall::*;
 pub use self::maze_2d::*;
 pub use self::maze_3d::*;
+pub use self::depth_ball::*;

@@ -7,9 +7,6 @@ pub fn create_turret_w(pos: ::na::Vector3<f32>, world: &::specs::World) {
         &mut world.write(),
         &mut world.write(),
         &mut world.write(),
-        &mut world.write(),
-        &mut world.write(),
-        &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
     );
@@ -17,65 +14,13 @@ pub fn create_turret_w(pos: ::na::Vector3<f32>, world: &::specs::World) {
 
 pub fn create_turret<'a>(
     pos: ::na::Vector3<f32>,
-    momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
     turrets: &mut ::specs::WriteStorage<'a, ::component::Turret>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
-    lifes: &mut ::specs::WriteStorage<'a, ::component::Life>,
-    followers: &mut ::specs::WriteStorage<'a, ::component::FollowPlayer>,
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     entities: &::specs::Entities,
 ) {
-    // Create laser
-    let laser_size = 0.01;
-    let laser_shape = ::ncollide::shape::Ball3::new(laser_size);
-
-    let mut laser_group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    laser_group.set_whitelist(&[super::TURRET_GROUP]);
-    let mut laser_body = ::nphysics::object::RigidBody::new_dynamic(laser_shape, 1.0, 0.0, 0.0);
-
-    laser_body.set_transformation(::na::Isometry3::new(
-        pos + ::na::Vector3::new(1.0, 0.0, 0.0),
-        ::na::zero(),
-    ));
-    laser_body.set_collision_groups(laser_group);
-
-    let laser_mass = 1.0 / laser_body.inv_mass();
-
-    let laser_physic_entity = entities.create();
-    followers.insert(
-        laser_physic_entity,
-        ::component::FollowPlayer::new(::CONFIG.laser_amortization),
-    );
-    momentums.insert(
-        laser_physic_entity,
-        ::component::Momentum::new(
-            laser_mass,
-            ::CONFIG.laser_velocity,
-            ::CONFIG.laser_time_to_reach_vmax,
-            None,
-            ::CONFIG.laser_ang_damping,
-            ::na::zero(),
-            None,
-        ),
-    );
-    ::component::PhysicBody::add(laser_physic_entity, laser_body, bodies, physic_world);
-
-    let (laser_primitive, laser_groups) = ::graphics::Primitive::Cylinder.instantiate();
-    let laser_draw_entity = entities.create();
-    dynamic_graphics_assets.insert(
-        laser_draw_entity,
-        ::component::DynamicGraphicsAssets::new(
-            laser_primitive,
-            laser_groups,
-            ::CONFIG.laser_color,
-            ::na::one(),
-        ),
-    );
-    dynamic_draws.insert(laser_draw_entity, ::component::DynamicDraw);
-
-    // Create turret
     let primitive_trans =
         ::graphics::resizer(::CONFIG.turret_size, ::CONFIG.turret_size, ::CONFIG.turret_size);
 
@@ -87,10 +32,9 @@ pub fn create_turret<'a>(
     let trans = ::na::Isometry3::new(pos, ::na::Vector3::new(0.0, FRAC_PI_2, 0.0));
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[super::ALIVE_GROUP, super::MONSTER_GROUP]);
+    group.set_membership(&[super::TURRET_GROUP]);
 
-    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 10.0, 0.0, 0.0);
-    let mass = 1.0 / body.inv_mass();
+    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, ::CONFIG.turret_density, 0.0, 0.0);
 
     body.set_transformation(trans);
     body.set_collision_groups(group);
@@ -100,22 +44,7 @@ pub fn create_turret<'a>(
     let entity = entities.create();
     turrets.insert(
         entity,
-        ::component::Turret {
-            laser_draw: laser_draw_entity,
-            laser_physic: laser_physic_entity,
-        },
-    );
-    momentums.insert(
-        entity,
-        ::component::Momentum::new(
-            mass,
-            ::CONFIG.turret_velocity,
-            ::CONFIG.turret_time_to_reach_vmax,
-            None,
-            ::CONFIG.turret_ang_damping,
-            ::na::zero(),
-            None,
-        ),
+        ::component::Turret::new(::CONFIG.turret_reload_time, pos)
     );
 
     dynamic_graphics_assets.insert(
@@ -127,7 +56,6 @@ pub fn create_turret<'a>(
             primitive_trans,
         ),
     );
-    lifes.insert(entity, ::component::Life::DrawAlive);
     dynamic_draws.insert(entity, ::component::DynamicDraw);
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);

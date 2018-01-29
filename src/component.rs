@@ -431,24 +431,28 @@ impl Proximitor {
     }
 }
 
+#[allow(unused)]
 pub struct DeletTimer(pub f32);
 
 impl ::specs::Component for DeletTimer {
     type Storage = ::specs::VecStorage<Self>;
 }
 
+#[allow(unused)]
 impl DeletTimer {
     pub fn new(timer: f32) -> Self {
         DeletTimer(timer)
     }
 }
 
+#[allow(unused)]
 pub struct DeletBool(pub bool);
 
 impl ::specs::Component for DeletBool {
     type Storage = ::specs::VecStorage<Self>;
 }
 
+#[allow(unused)]
 impl DeletBool {
     pub fn new() -> Self {
         DeletBool(true)
@@ -456,15 +460,34 @@ impl DeletBool {
 }
 
 pub struct Turret {
-    pub laser_draw: ::specs::Entity,
-    pub laser_physic: ::specs::Entity,
+    pub last_shoot: f32,
+    pub reload_time: f32,
+    pub position: ::na::Vector3<f32>,
 }
 
 impl ::specs::Component for Turret {
     type Storage = ::specs::VecStorage<Self>;
 }
 
+impl Turret {
+    pub fn new(reload_time: f32, position: ::na::Vector3<f32>) -> Self {
+        Turret {
+            reload_time,
+            position,
+            last_shoot: 0.0,
+        }
+    }
+}
+
+/// Die on contact and decrease depth if contact with player
 #[derive(Default)]
+pub struct DepthBall;
+
+impl ::specs::Component for DepthBall {
+    type Storage = ::specs::NullStorage<Self>;
+}
+
+#[allow(unused)]
 pub struct FollowPlayer {
     pub amortization: f32,
 }
@@ -473,6 +496,7 @@ impl ::specs::Component for FollowPlayer {
     type Storage = ::specs::VecStorage<Self>;
 }
 
+#[allow(unused)]
 impl FollowPlayer {
     pub fn new(amortization: f32) -> Self {
         FollowPlayer { amortization }

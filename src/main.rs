@@ -126,6 +126,7 @@ fn main() {
     world.register::<::component::Avoider>();
     world.register::<::component::Bouncer>();
     world.register::<::component::Turret>();
+    world.register::<::component::DepthBall>();
     world.register::<::component::Life>();
     world.register::<::component::Contactor>();
     world.register::<::component::Proximitor>();
@@ -169,6 +170,8 @@ fn main() {
         .add(::system::PhysicSystem, "physic", &[])
         .add(::system::DeleterSystem, "deleter", &[])
         .add(::system::ReducerSystem, "reducer", &[])
+        .add(::system::DepthCoefSystem, "depth_coef", &[])
+        .add(::system::DepthBallSystem, "depth_ball", &[])
         .add_barrier() // following systems will delete physic bodies
         .add(::system::LifeSystem, "life", &[])
         .build();
