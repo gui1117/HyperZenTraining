@@ -82,6 +82,10 @@ Config(
     turret_reload_time: 1.0,
     turret_color: Purple,
 
+    motionless_size: 0.15,
+    motionless_density: 100.0,
+    motionless_color: Purple,
+
     wall_color: [
         GenPale0,
         GenPale1,
@@ -108,41 +112,41 @@ Config(
     weapon_light_ray_duration: 0.2,
 
     levels: [
-        KillAll(Conf(
-            size: (17, 17),
-            percent: 00.0,
-            bug: (1, 1),
-            scale: 1.0,
-            turrets: 1,
-            avoiders: 0,
-            bouncers: 0,
-            eraser_avoiders: 0,
-            eraser_bouncers: 0
-        )),
-        KillAll(Conf(
-            size: (21, 21),
-            percent: 00.0,
-            bug: (0, 0),
-            scale: 1.0,
-            turrets: 0,
-            avoiders: 1,
-            bouncers: 0,
-            eraser_avoiders: 0,
-            eraser_bouncers: 0
-        )),
+        // KillAll(Conf(
+        //     size: (17, 17),
+        //     percent: 00.0,
+        //     bug: (1, 1),
+        //     scale: 1.0,
+        //     turrets: 1,
+        //     avoiders: 0,
+        //     bouncers: 0,
+        //     eraser_avoiders: 0,
+        //     eraser_bouncers: 0
+        // )),
+        // KillAll(Conf(
+        //     size: (21, 21),
+        //     percent: 00.0,
+        //     bug: (0, 0),
+        //     scale: 1.0,
+        //     turrets: 0,
+        //     avoiders: 1,
+        //     bouncers: 0,
+        //     eraser_avoiders: 0,
+        //     eraser_bouncers: 0
+        // )),
         Walkthrough(Conf(
             size: (21, 21),
             percent: 00.0,
             bug: (0, 0),
             scale: 1.0,
-            turrets: 0,
+            turrets: 1,
 
-            avoider_generators: 1,
+            avoider_generators: 0,
             avoider_salvo: 10,
             avoider_eraser_proba: 0.5,
             avoider_time_between_salvo: 1.0,
 
-            bouncer_generators: 1,
+            bouncer_generators: 0,
             bouncer_salvo: 1,
             bouncer_eraser_proba: 0.5,
             bouncer_time_between_salvo: 0.5,

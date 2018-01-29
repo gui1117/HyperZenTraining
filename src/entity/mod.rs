@@ -17,6 +17,7 @@ mod turret;
 mod wall;
 mod maze_2d;
 mod maze_3d;
+mod motionless;
 
 pub use self::generator::*;
 pub use self::teleport::*;
@@ -29,3 +30,4 @@ pub use self::wall::*;
 pub use self::maze_2d::*;
 pub use self::maze_3d::*;
 pub use self::depth_ball::*;
+pub use self::motionless::*;

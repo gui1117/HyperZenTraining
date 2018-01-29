@@ -64,6 +64,10 @@ pub struct Config {
     pub bouncer_ang_damping: f32,
     pub bouncer_color: ::graphics::Color,
 
+    pub motionless_size: f32,
+    pub motionless_density: f32,
+    pub motionless_color: ::graphics::Color,
+
     pub depth_ball_size: f32,
     pub depth_ball_velocity: f32,
     pub depth_ball_time_to_reach_vmax: f32,
