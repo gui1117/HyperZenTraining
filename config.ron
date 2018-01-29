@@ -1,6 +1,6 @@
 Config(
-    depth_coef_divider: 2.0,
-    depth_coef_velocity: 1.05,
+    depth_coef_divider: 100.0,
+    depth_coef_velocity: 1.02,
     depth_coef_min: 0.001,
     ear_distance: 0.1,
     sound_dir: "sounds",
