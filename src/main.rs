@@ -36,7 +36,6 @@ mod system;
 mod resource;
 mod maze;
 mod config;
-mod testing;
 mod level;
 
 pub use config::CONFIG;
@@ -54,8 +53,6 @@ use std::sync::Arc;
 use std::time::Duration;
 use std::time::Instant;
 use std::thread;
-
-pub use testing::TS;
 
 fn init_imgui() -> ::imgui::ImGui {
     let mut imgui = ::imgui::ImGui::init();
