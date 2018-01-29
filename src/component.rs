@@ -586,3 +586,19 @@ impl Reducer {
         }
     }
 }
+
+pub struct Attracted {
+    pub last_update: f32,
+}
+
+impl ::specs::Component for Attracted {
+    type Storage = ::specs::VecStorage<Self>;
+}
+
+impl Attracted {
+    pub fn new() -> Self {
+        Attracted {
+            last_update: 0.0,
+        }
+    }
+}

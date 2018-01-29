@@ -48,6 +48,13 @@ Config(
     depth_ball_ang_damping: 0.8,
     depth_ball_color: Gen5,
 
+    attracted_size: 0.1,
+    attracted_velocity: 1.0,
+    attracted_time_to_reach_vmax: 0.05,
+    attracted_ang_damping: 0.8,
+    attracted_color: Gen5,
+    attracted_update_time: 0.4,
+
     avoider_generator_salvo: 0,
     avoider_generator_eraser_probability: 0.0,
     avoider_generator_time_between_salvo: 0.0,

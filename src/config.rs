@@ -74,6 +74,13 @@ pub struct Config {
     pub depth_ball_ang_damping: f32,
     pub depth_ball_color: ::graphics::Color,
 
+    pub attracted_size: f32,
+    pub attracted_velocity: f32,
+    pub attracted_time_to_reach_vmax: f32,
+    pub attracted_ang_damping: f32,
+    pub attracted_color: ::graphics::Color,
+    pub attracted_update_time: f32,
+
     pub avoider_generator_salvo: usize,
     pub avoider_generator_eraser_probability: f32,
     pub avoider_generator_time_between_salvo: f32,

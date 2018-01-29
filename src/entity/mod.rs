@@ -5,6 +5,7 @@ pub const MONSTER_GROUP: usize = 4;
 pub const TURRET_GROUP: usize = 5;
 pub const PLAYER_GROUP: usize = 6;
 pub const PLAYER_LASER_GROUP: usize = 7;
+pub const ATTRACTED_VISION_GROUP: usize = 8;
 
 mod depth_ball;
 mod generator;
@@ -18,6 +19,7 @@ mod wall;
 mod maze_2d;
 mod maze_3d;
 mod motionless;
+mod attracted;
 
 pub use self::generator::*;
 pub use self::teleport::*;
@@ -31,3 +33,4 @@ pub use self::maze_2d::*;
 pub use self::maze_3d::*;
 pub use self::depth_ball::*;
 pub use self::motionless::*;
+pub use self::attracted::*;

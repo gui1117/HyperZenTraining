@@ -1,3 +1,4 @@
+mod attracted;
 mod depth_ball;
 mod audio;
 mod depth_coef;
@@ -39,3 +40,4 @@ pub use self::reducer::ReducerSystem;
 pub use self::audio::AudioSystem;
 pub use self::depth_coef::DepthCoefSystem;
 pub use self::depth_ball::DepthBallSystem;
+pub use self::attracted::AttractedSystem;
