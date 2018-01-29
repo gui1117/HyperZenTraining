@@ -223,8 +223,8 @@ pub fn instance_primitives(
     primitives_buffers_def.push(vec![
         // Floor
         vec![
-            [-1.0, -1.0, -1.0],
             [1.0, -1.0, -1.0],
+            [-1.0, -1.0, -1.0],
             [-1.0, 1.0, -1.0],
             //
             [1.0, 1.0, -1.0],
@@ -237,19 +237,19 @@ pub fn instance_primitives(
             [pit_radius, -pit_radius, 1.0 - pit_radius],
             [-pit_radius, pit_radius, 1.0 - pit_radius],
             //
-            [pit_radius, pit_radius, 1.0 - pit_radius],
             [pit_radius, -pit_radius, 1.0 - pit_radius],
+            [pit_radius, pit_radius, 1.0 - pit_radius],
             [-pit_radius, pit_radius, 1.0 - pit_radius],
         ],
         // Left
         vec![
-            [-1.0, -1.0, -1.0],
             [-1.0, -1.0, 1.0],
             [-1.0, 1.0, -1.0],
+            [-1.0, -1.0, -1.0],
             //
             [-1.0, 1.0, 1.0],
-            [-1.0, -1.0, 1.0],
             [-1.0, 1.0, -1.0],
+            [-1.0, -1.0, 1.0],
         ],
         // Inner left
         vec![
@@ -260,11 +260,19 @@ pub fn instance_primitives(
             [-pit_radius, pit_radius, 1.0 + pit_radius],
             [-pit_radius, -pit_radius, 1.0 + pit_radius],
             [-pit_radius, pit_radius, 1.0 - pit_radius],
+            //
+            [-pit_radius, -pit_radius, 1.0 + pit_radius],
+            [-pit_radius, -pit_radius, 1.0 - pit_radius],
+            [-pit_radius, pit_radius, 1.0 - pit_radius],
+            //
+            [-pit_radius, -pit_radius, 1.0 + pit_radius],
+            [-pit_radius, pit_radius, 1.0 + pit_radius],
+            [-pit_radius, pit_radius, 1.0 - pit_radius],
         ],
         // Right
         vec![
-            [1.0, -1.0, -1.0],
             [1.0, -1.0, 1.0],
+            [1.0, -1.0, -1.0],
             [1.0, 1.0, -1.0],
             //
             [1.0, 1.0, 1.0],
@@ -280,12 +288,20 @@ pub fn instance_primitives(
             [pit_radius, pit_radius, 1.0 + pit_radius],
             [pit_radius, -pit_radius, 1.0 + pit_radius],
             [pit_radius, pit_radius, 1.0 - pit_radius],
+            //
+            [pit_radius, -pit_radius, 1.0 + pit_radius],
+            [pit_radius, -pit_radius, 1.0 - pit_radius],
+            [pit_radius, pit_radius, 1.0 - pit_radius],
+            //
+            [pit_radius, -pit_radius, 1.0 + pit_radius],
+            [pit_radius, pit_radius, 1.0 + pit_radius],
+            [pit_radius, pit_radius, 1.0 - pit_radius],
         ],
         // Back
         vec![
-            [-1.0, -1.0, -1.0],
             [1.0, -1.0, -1.0],
             [-1.0, -1.0, 1.0],
+            [-1.0, -1.0, -1.0],
             //
             [1.0, -1.0, 1.0],
             [-1.0, -1.0, 1.0],
@@ -300,15 +316,23 @@ pub fn instance_primitives(
             [pit_radius, -pit_radius, 1.0 + pit_radius],
             [-pit_radius, -pit_radius, 1.0 + pit_radius],
             [pit_radius, -pit_radius, 1.0 - pit_radius],
+            //
+            [pit_radius, -pit_radius, 1.0 - pit_radius],
+            [-pit_radius, -pit_radius, 1.0 - pit_radius],
+            [-pit_radius, -pit_radius, 1.0 + pit_radius],
+            //
+            [-pit_radius, -pit_radius, 1.0 + pit_radius],
+            [pit_radius, -pit_radius, 1.0 + pit_radius],
+            [pit_radius, -pit_radius, 1.0 - pit_radius],
         ],
         // Front
         vec![
-            [-1.0, 1.0, -1.0],
             [1.0, 1.0, -1.0],
+            [-1.0, 1.0, -1.0],
             [-1.0, 1.0, 1.0],
             //
-            [1.0, 1.0, 1.0],
             [-1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0],
             [1.0, 1.0, -1.0],
         ],
         // Inner front
@@ -320,6 +344,14 @@ pub fn instance_primitives(
             [pit_radius, pit_radius, 1.0 + pit_radius],
             [-pit_radius, pit_radius, 1.0 + pit_radius],
             [pit_radius, pit_radius, 1.0 - pit_radius],
+            //
+            [pit_radius, pit_radius, 1.0 - pit_radius],
+            [-pit_radius, pit_radius, 1.0 - pit_radius],
+            [-pit_radius, pit_radius, 1.0 + pit_radius],
+            //
+            [-pit_radius, pit_radius, 1.0 + pit_radius],
+            [pit_radius, pit_radius, 1.0 + pit_radius],
+            [pit_radius, pit_radius, 1.0 - pit_radius],
         ],
         // Ceil
         vec![
@@ -328,32 +360,32 @@ pub fn instance_primitives(
             [-pit_radius, -1.0, 1.0],
             [-1.0, 1.0, 1.0],
             //
-            [-pit_radius, 1.0, 1.0],
             [-pit_radius, -1.0, 1.0],
+            [-pit_radius, 1.0, 1.0],
             [-1.0, 1.0, 1.0],
             // Major rectangle
             [1.0, 1.0, 1.0],
             [pit_radius, 1.0, 1.0],
             [1.0, -1.0, 1.0],
             //
-            [pit_radius, -1.0, 1.0],
             [pit_radius, 1.0, 1.0],
+            [pit_radius, -1.0, 1.0],
             [1.0, -1.0, 1.0],
             // Minor square
             [-pit_radius, -1.0, 1.0],
             [pit_radius, -1.0, 1.0],
             [-pit_radius, -pit_radius, 1.0],
             //
-            [pit_radius, -pit_radius, 1.0],
             [pit_radius, -1.0, 1.0],
+            [pit_radius, -pit_radius, 1.0],
             [-pit_radius, -pit_radius, 1.0],
             // Minor square
             [pit_radius, 1.0, 1.0],
             [-pit_radius, 1.0, 1.0],
             [pit_radius, pit_radius, 1.0],
             //
-            [-pit_radius, pit_radius, 1.0],
             [-pit_radius, 1.0, 1.0],
+            [-pit_radius, pit_radius, 1.0],
             [pit_radius, pit_radius, 1.0],
         ],
     ]);
