@@ -34,7 +34,7 @@ mod entity;
 mod component;
 mod system;
 mod resource;
-mod maze;
+pub mod maze;
 mod config;
 mod level;
 
