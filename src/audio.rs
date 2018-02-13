@@ -36,7 +36,7 @@ impl Audio {
         }
 
         Audio {
-            endpoint: ::rodio::get_default_endpoint().unwrap(),
+            endpoint: ::rodio::default_endpoint().unwrap(),
             spatial_sinks: vec![],
             left_ear: [::std::f32::NAN; 3],
             right_ear: [::std::f32::NAN; 3],

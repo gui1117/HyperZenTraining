@@ -6,13 +6,15 @@ use typenum;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum Level {
-    KillAllKruskal(kill_all_kruskal::Conf),
+    KillAllKruskal2D(kill_all_kruskal::Conf2D),
+    KillAllKruskal3D(kill_all_kruskal::Conf3D),
 }
 
 impl Level {
     pub fn create(&self, world: &mut ::specs::World) {
         match *self {
-            Level::KillAllKruskal(ref conf) => conf.create(world),
+            Level::KillAllKruskal2D(ref conf) => conf.create(world),
+            Level::KillAllKruskal3D(ref conf) => conf.create(world),
         }
     }
 }
@@ -21,7 +23,7 @@ pub struct KruskalDecorated<D>
 where
     D: ::na::Dim + ::na::DimName + Hash,
     D::Value: Mul<typenum::UInt<typenum::UTerm, typenum::B1>, Output = D::Value>
-        + ::generic_array::ArrayLength<isize>,
+        + ::generic_array::ArrayLength<isize> + ::generic_array::ArrayLength<f32>,
 {
     maze: ::maze::Maze<D>,
     start_cell: ::na::VectorN<isize, D>,
@@ -68,7 +70,7 @@ where
             let (end_cell, end_opening) = dig_end.remove(0);
 
             // Put turrets
-            let mut cells = maze.compute_inner_room_zones()
+            let cells = maze.compute_inner_room_zones()
                 .iter()
                 .cloned()
                 .filter_map(|mut room| {

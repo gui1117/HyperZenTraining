@@ -1,13 +1,20 @@
 # FINAL
 
 on dirait qu'on peut faire le labyrinthe avec téléporteur au centre et labyrinthe ou il faut tomber ou alors il faut monter toujours en kill all !!!!!!!!!!!
+
+pour les scores:
+faire qu'on a son historique et le meilleur score
+
+refonte du GUI: avec assignation des touches directionnelles et grappin et tirer
+
+premier niveau
+
+winit: set defaut to X11 for wayland
+
 ### programme:
 
 création de tout les type de level
 écriture de 5 niveaux par jour sur 6 jours
-refonte du GUI
-premier niveau
-faire score
 
 * la salle de départ est toujours vide dans les labyrinthe
   generation:
@@ -98,8 +105,6 @@ faire score
 
 * challenges:
   all levels
-
-* winit: set defaut to X11 for wayland
 
 # final
 

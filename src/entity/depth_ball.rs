@@ -1,3 +1,4 @@
+#[allow(unused)]
 pub fn create_depth_ball_w(pos: ::na::Vector3<f32>, dir: ::na::Vector3<f32>, world: &::specs::World) {
     create_depth_ball(
         pos,
