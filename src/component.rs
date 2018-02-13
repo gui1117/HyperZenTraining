@@ -510,6 +510,7 @@ impl ::specs::Component for Teleport {
     type Storage = ::specs::NullStorage<Self>;
 }
 
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Hash, Copy)]
 pub enum GeneratedEntity {
     Avoider,
     Bouncer,

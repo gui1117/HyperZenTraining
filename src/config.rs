@@ -15,6 +15,9 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    pub start_color: ::graphics::Color,
+    pub end_color: ::graphics::Color,
+
     pub depth_coef_divider: f32,
     pub depth_coef_velocity: f32,
     pub depth_coef_min: f32,

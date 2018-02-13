@@ -188,6 +188,15 @@ where
         zones
     }
 
+    /// room zones without neighbouring corridors
+    pub fn compute_inner_room_zones(&self) -> Vec<HashSet<::na::VectorN<isize, D>>> {
+        let mut rooms = self.compute_room_zones();
+        for room in &mut rooms {
+            room.retain(|cell| !self.is_neighbouring_corridor(cell));
+        }
+        rooms
+    }
+
     pub fn compute_room_zones(&self) -> Vec<HashSet<::na::VectorN<isize, D>>> {
         self.compute_zones(|maze, cell| {
             !maze.walls.contains(cell)
@@ -333,7 +342,6 @@ where
     pub fn fill_dead_rooms(&mut self) -> bool {
         let mut changes = false;
         let rooms = self.compute_dead_room_zones();
-        println!("delete {} rooms", rooms.len());
         for pos in rooms.iter().flat_map(|z| z) {
             changes = true;
             self.walls.insert(pos.clone());
@@ -358,7 +366,6 @@ where
                     neighbours_wall >= self.neighbours.len() - 1
                 })
             });
-            println!("delete {} corridors", corridors.len());
             if corridors.len() == 0 {
                 break;
             }
@@ -408,7 +415,7 @@ where
         outer
     }
 
-    fn inner_find_path(
+    pub fn inner_find_path(
         &self,
         pos: ::na::VectorN<isize, D>,
         goal: ::na::VectorN<isize, D>,

@@ -27,12 +27,11 @@ impl<'a> ::specs::System<'a> for AttractedSystem {
         };
 
         for (attracted, momentum, body) in (&mut attracteds, &mut momentums, &bodies).join() {
+            let pos = body.get(&physic_world).position();
             attracted.last_update += update_time.0;
 
             while attracted.last_update >= ::CONFIG.attracted_update_time {
                 attracted.last_update -= ::CONFIG.attracted_update_time;
-                let pos = body.get(&physic_world).position();
-
 
                 let ray = ::ncollide::query::Ray {
                     origin: ::na::Point3::from_coordinates(pos.translation.vector),

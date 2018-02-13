@@ -34,3 +34,54 @@ pub use self::maze_3d::*;
 pub use self::depth_ball::*;
 pub use self::motionless::*;
 pub use self::attracted::*;
+
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
+pub enum EntityConf {
+    Attracted { eraser: bool },
+    Avoider { eraser: bool },
+    Bouncer { eraser: bool },
+    MotionLess { eraser: bool },
+    Turret,
+    Generator {
+        generated_entity: ::component::GeneratedEntity,
+        salvo: usize,
+        time_between_salvo_ms: usize,
+        eraser_probability_percent: usize,
+    }
+}
+
+impl EntityConf {
+    /// Used to position differently turrets from other entities
+    pub fn is_turret_like(&self) -> bool {
+        use self::EntityConf::*;
+        match *self {
+            Turret => true,
+            _ => false,
+        }
+    }
+
+    pub fn create(&self, pos: ::na::Vector3<f32>, world: &mut ::specs::World) {
+        use self::EntityConf::*;
+        match *self {
+            Attracted { eraser } => create_attracted_w(pos, eraser, world),
+            Avoider { eraser } => create_avoider_w(pos, eraser, world),
+            Bouncer { eraser } => create_bouncer_w(pos, eraser, world),
+            Turret => create_turret_w(pos, world),
+            MotionLess { eraser } => create_motionless_w(pos, eraser, world),
+            Generator {
+                generated_entity,
+                salvo,
+                time_between_salvo_ms,
+                eraser_probability_percent,
+            } => create_generator(
+                pos,
+                generated_entity,
+                salvo,
+                time_between_salvo_ms as f32 / 1000.0,
+                eraser_probability_percent as f32 / 100.0,
+                &mut world.write_resource(),
+                &world.read_resource(),
+            ),
+        }
+    }
+}

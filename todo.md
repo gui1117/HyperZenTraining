@@ -1,4 +1,20 @@
-# TODO
+# FINAL
+
+### programme:
+
+création de tout les type de level
+écriture de 5 niveaux par jour sur 6 jours
+refonte du GUI
+premier niveau
+faire score
+
+* la salle de départ est toujours vide dans les labyrinthe
+  generation:
+  on choisi la salle de départ et la salle la plus loin: c'est la salle de fin
+  début: vide.
+  fin: pas de tourelle
+  on dispose les tourelles dans les salles sauf debut et fin
+  on dispose les monstres dans les salles sauf début en tirant parmis l'ensemble des case libre sauf debut et tourelle
 
 * improves maze generation so it is easier to create some
   kind of maze:
@@ -18,23 +34,32 @@
 
   * [3] kill all in maze: some random entities are spawn at the start you have to kill all of them as they arrive and then find the escape that is blocked
     settings:
-    * number of turret they are in rooms
-    * nombre
+    * number of turret (they are not in corridor)
+    * number of bouncer set and each set size
+    * number of avoider set and each set size
+    * number of attracted set and each set size
+    * size
+    * percent
+    * decalage
+
   * [some] kill all open space same that kill all maze but entities are ordonate like:
     * in square room all in front and end in center
     * some special arragnement: (this may even not be kill all)
-      #######################
+
+    ces dispositions fix on un certain nombre d'entré a remplir par Option<Entity> pour chacun
+
+      ###XllrXlllrXlllrXllri#
       ##                   ##
+      #X                   ##
       ##                   ##
-      ##       #####       ##
-      #X       X###X       X#
-      ##       #####       ##
-      #X       X###X       X#
-      ##       #####       ##
-      #X       X###X       X#
-      ##       #####       ##
-      #X       X###X       X#
-      ##       #####       ##
+      #X                   X#
+      ##                   ##
+      #X                   X#
+      ##                   ##
+      #X                   X#
+      ##                   ##
+      #X                   X#
+      ##                   ##
       ##                   ##
       ##                   ##
       #######################
@@ -52,11 +77,14 @@
 
     idem 3D il faut tomber
 
-  * maze: there is room with keys and a room with end. there is teleport inside the maze and also static things
+  <!-- * maze: there is room with keys and a room with end. there is teleport inside the maze and also static things -->
 
 * maximum d'entité créé par générateur
 
-* le générateur créer soit des bouncer soit des avoiders
+* le générateur créer soit des bouncer soit des avoiders avec salve: nombre de eraser et nombre de normal et fréquence des salves
+  PAS DE MAX ?
+
+* faire des niveaux comme série de niveau.
 
 * musique
   juste des sons on rajoutera peut être après des nappes
@@ -96,6 +124,9 @@
   ou plutôt peut on la mettre beaucoup plus grande
 
 # niveaux et monstres
+
+* faire que les attracted prennent une position aléatoire sur leur case
+  ensuite mieux faire qu'il oscille de haut en bas
 
 * pour les monstres qui marche sur les mur les modélisé par des étoiles tels les trucs végétales qui s'accroche
 
@@ -164,8 +195,3 @@
   histoire: avec des niveau random et d'autre non
   challenge (à la manière de métal gear solid): des niveaux random d'autre pas
   pour le speed game: mode histoire, niveau par niveau, ensemble de niveau (random, 3D)
-
-# fignolage
-
-* factorisation:
-  * utiliser static pour weapon

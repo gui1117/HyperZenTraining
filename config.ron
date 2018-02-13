@@ -1,4 +1,7 @@
 Config(
+    start_color: Red,
+    end_color: Green,
+
     depth_coef_divider: 100.0,
     depth_coef_velocity: 1.02,
     depth_coef_min: 0.001,
@@ -119,20 +122,62 @@ Config(
     weapon_light_ray_duration: 0.2,
 
     levels: [
-        // KillAll(Conf(
-        //     size: (17, 17),
-        //     percent: 00.0,
-        //     bug: (1, 1),
+        KillAllKruskal(Conf(
+            size: (17, 17),
+            percent: 0.0,
+            bug: (1, 1),
+            scale: 1.0,
+            entities: {
+                Attracted(eraser: false): 10,
+            }
+            // turrets: 1,
+            // avoiders: 0,
+            // bouncers: 0,
+            // eraser_avoiders: 0,
+            // eraser_bouncers: 0
+        )),
+        // // KillAll(Conf(
+        // //     size: (17, 17),
+        // //     percent: 00.0,
+        // //     bug: (1, 1),
+        // //     scale: 1.0,
+        // //     turrets: 1,
+        // //     avoiders: 0,
+        // //     bouncers: 0,
+        // //     eraser_avoiders: 0,
+        // //     eraser_bouncers: 0
+        // // )),
+        // // KillAll(Conf(
+        // //     size: (21, 21),
+        // //     percent: 00.0,
+        // //     bug: (0, 0),
+        // //     scale: 1.0,
+        // //     turrets: 0,
+        // //     avoiders: 1,
+        // //     bouncers: 0,
+        // //     eraser_avoiders: 0,
+        // //     eraser_bouncers: 0
+        // // )),
+        // Walkthrough(Conf(
+        //     size: (21, 21),
+        //     percent: 10.0,
+        //     bug: (0, 0),
         //     scale: 1.0,
         //     turrets: 1,
-        //     avoiders: 0,
-        //     bouncers: 0,
-        //     eraser_avoiders: 0,
-        //     eraser_bouncers: 0
+
+        //     avoider_generators: 0,
+        //     avoider_salvo: 10,
+        //     avoider_eraser_proba: 0.5,
+        //     avoider_time_between_salvo: 1.0,
+
+        //     bouncer_generators: 0,
+        //     bouncer_salvo: 1,
+        //     bouncer_eraser_proba: 0.5,
+        //     bouncer_time_between_salvo: 0.5,
         // )),
         // KillAll(Conf(
         //     size: (21, 21),
-        //     percent: 00.0,
+        //     percent: 0.0,
         //     bug: (0, 0),
         //     scale: 1.0,
         //     turrets: 0,
@@ -141,112 +186,84 @@ Config(
         //     eraser_avoiders: 0,
         //     eraser_bouncers: 0
         // )),
-        Walkthrough(Conf(
-            size: (21, 21),
-            percent: 00.0,
-            bug: (0, 0),
-            scale: 1.0,
-            turrets: 1,
-
-            avoider_generators: 0,
-            avoider_salvo: 10,
-            avoider_eraser_proba: 0.5,
-            avoider_time_between_salvo: 1.0,
-
-            bouncer_generators: 0,
-            bouncer_salvo: 1,
-            bouncer_eraser_proba: 0.5,
-            bouncer_time_between_salvo: 0.5,
-        )),
-        KillAll(Conf(
-            size: (21, 21),
-            percent: 0.0,
-            bug: (0, 0),
-            scale: 1.0,
-            turrets: 0,
-            avoiders: 1,
-            bouncers: 0,
-            eraser_avoiders: 0,
-            eraser_bouncers: 0
-        )),
-        // KillAll(Conf(
-        //     size: (15, 15),
-        //     percent: 20.0,
-        //     bug: (0, 0),
-        //     scale: 1.0,
+        // // KillAll(Conf(
+        // //     size: (15, 15),
+        // //     percent: 20.0,
+        // //     bug: (0, 0),
+        // //     scale: 1.0,
+        // //     turrets: 0,
+        // //     avoiders: 5,
+        // //     bouncers: 5,
+        // //     eraser_avoiders: 0,
+        // //     eraser_bouncers: 0
+        // // )),
+        // // KillAll(Conf(
+        // //     size: (21, 21),
+        // //     percent: 30.0,
+        // //     bug: (0, 0),
+        // //     scale: 1.0,
+        // //     turrets: 0,
+        // //     avoiders: 0,
+        // //     bouncers: 0,
+        // //     eraser_avoiders: 1,
+        // //     eraser_bouncers: 0
+        // // )),
+        // // KillAll(Conf(
+        // //     size: (25, 25),
+        // //     percent: 20.0,
+        // //     bug: (0, 0),
+        // //     scale: 1.0,
+        // //     turrets: 0,
+        // //     avoiders: 10,
+        // //     bouncers: 10,
+        // //     eraser_avoiders: 0,
+        // //     eraser_bouncers: 0
+        // // )),
+        // Walkthrough3D(Conf(
+        //     size: (11, 11, 11),
+        //     percent: 4.0,
+        //     bug: (0, 0, 0),
+        //     scale: 10.0,
         //     turrets: 0,
-        //     avoiders: 5,
-        //     bouncers: 5,
-        //     eraser_avoiders: 0,
-        //     eraser_bouncers: 0
+
+        //     avoider_generators: 1,
+        //     avoider_salvo: 3,
+        //     avoider_eraser_proba: 0.0,
+        //     avoider_time_between_salvo: 10.0,
+
+        //     bouncer_generators: 1,
+        //     bouncer_salvo: 1,
+        //     bouncer_eraser_proba: 0.0,
+        //     bouncer_time_between_salvo: 3.0,
         // )),
         // KillAll(Conf(
         //     size: (21, 21),
-        //     percent: 30.0,
-        //     bug: (0, 0),
-        //     scale: 1.0,
-        //     turrets: 0,
-        //     avoiders: 0,
-        //     bouncers: 0,
-        //     eraser_avoiders: 1,
-        //     eraser_bouncers: 0
-        // )),
-        // KillAll(Conf(
-        //     size: (25, 25),
         //     percent: 20.0,
         //     bug: (0, 0),
         //     scale: 1.0,
         //     turrets: 0,
-        //     avoiders: 10,
-        //     bouncers: 10,
+        //     avoiders: 1,
+        //     bouncers: 0,
         //     eraser_avoiders: 0,
         //     eraser_bouncers: 0
         // )),
-        Walkthrough3D(Conf(
-            size: (11, 11, 11),
-            percent: 4.0,
-            bug: (0, 0, 0),
-            scale: 10.0,
-            turrets: 0,
+        // Walkthrough(Conf(
+        //     size: (21, 21),
+        //     percent: 40.0,
+        //     bug: (0, 0),
+        //     scale: 1.0,
+        //     turrets: 0,
 
-            avoider_generators: 1,
-            avoider_salvo: 3,
-            avoider_eraser_proba: 0.0,
-            avoider_time_between_salvo: 10.0,
+        //     avoider_generators: 1,
+        //     avoider_salvo: 1,
+        //     avoider_eraser_proba: 0.5,
+        //     avoider_time_between_salvo: 1.0,
 
-            bouncer_generators: 1,
-            bouncer_salvo: 1,
-            bouncer_eraser_proba: 0.0,
-            bouncer_time_between_salvo: 3.0,
-        )),
-        KillAll(Conf(
-            size: (21, 21),
-            percent: 20.0,
-            bug: (0, 0),
-            scale: 1.0,
-            turrets: 0,
-            avoiders: 1,
-            bouncers: 0,
-            eraser_avoiders: 0,
-            eraser_bouncers: 0
-        )),
-        Walkthrough(Conf(
-            size: (21, 21),
-            percent: 40.0,
-            bug: (0, 0),
-            scale: 1.0,
-            turrets: 0,
-
-            avoider_generators: 1,
-            avoider_salvo: 1,
-            avoider_eraser_proba: 0.5,
-            avoider_time_between_salvo: 1.0,
-
-            bouncer_generators: 1,
-            bouncer_salvo: 1,
-            bouncer_eraser_proba: 0.5,
-            bouncer_time_between_salvo: 0.5,
-        )),
+        //     bouncer_generators: 1,
+        //     bouncer_salvo: 1,
+        //     bouncer_eraser_proba: 0.5,
+        //     bouncer_time_between_salvo: 0.5,
+        // )),
     ],
 
     fps: 60,
