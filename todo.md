@@ -1,5 +1,6 @@
 # FINAL
 
+on dirait qu'on peut faire le labyrinthe avec téléporteur au centre et labyrinthe ou il faut tomber ou alors il faut monter toujours en kill all !!!!!!!!!!!
 ### programme:
 
 création de tout les type de level

@@ -78,6 +78,7 @@ where
                         && *cell != start_opening
                         && *cell != end_cell
                         && *cell != end_opening
+                        && maze.is_neighbouring_wall(cell)
                     });
                     if room.len() == 0 {
                         None

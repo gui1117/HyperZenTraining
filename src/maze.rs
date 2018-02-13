@@ -44,6 +44,13 @@ where
             .any(|n| self.is_corridor(&n))
     }
 
+    pub fn is_neighbouring_wall(&self, cell: &::na::VectorN<isize, D>) -> bool {
+        self.neighbours
+            .iter()
+            .map(|n| n + cell)
+            .any(|n| self.walls.contains(&n))
+    }
+
     pub fn is_corridor(&self, cell: &::na::VectorN<isize, D>) -> bool {
         !self.walls.contains(cell)
             && self.openings
