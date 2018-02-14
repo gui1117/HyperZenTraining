@@ -46,9 +46,10 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
         ::specs::FetchMut<'a, ::resource::ImGuiOption>,
         ::specs::FetchMut<'a, ::resource::MenuState>,
         ::specs::FetchMut<'a, ::resource::Save>,
+        ::specs::FetchMut<'a, ::resource::LevelActions>,
     );
 
-    fn run(&mut self, (events, mut imgui, mut menu_state, mut save): Self::SystemData) {
+    fn run(&mut self, (events, mut imgui, mut menu_state, mut save, mut level_actions): Self::SystemData) {
         let mut imgui = imgui.as_mut().unwrap();
         imgui.set_mouse_draw_cursor(true);
         for ev in events.0.iter() {
@@ -67,6 +68,10 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
             }
         }
         if menu_state.continue_button {
+            menu_state.pause = false;
+        }
+        if menu_state.return_hall_button {
+            level_actions.0.push(::resource::LevelAction::ReturnHall);
             menu_state.pause = false;
         }
         if menu_state.reset_button {

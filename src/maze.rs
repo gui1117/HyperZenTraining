@@ -74,6 +74,16 @@ where
         }
     }
 
+    pub fn new_rectangle(size: ::na::VectorN<isize, D>, scale: f32) -> Self {
+        Maze {
+            scale,
+            walls: HashSet::new(),
+            size: size,
+            openings: Self::openings(),
+            neighbours: Self::neighbours(),
+        }
+    }
+
     pub fn is_cuboid(&self) -> bool {
         for &s in self.size.iter() {
             if s != self.size[0] {

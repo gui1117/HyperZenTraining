@@ -25,8 +25,7 @@ impl GameSystem {
         };
 
         let recreate_level = match (self.current_level, action) {
-            // TODO: go to hall
-            (None, _) => Some(Level::Level(0, 0)),
+            (None, _) => Some(Level::Hall),
             (Some(Level::Hall), Some(::resource::LevelAction::Level(level))) => {
                 if ::CONFIG.levels[level].len() != 0 {
                     Some(Level::Level(level, 0))

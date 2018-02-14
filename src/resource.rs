@@ -140,6 +140,7 @@ pub struct MenuState {
     pub mouse_sensibility_input: f32,
     pub continue_button: bool,
     pub reset_button: bool,
+    pub return_hall_button: bool,
     pub quit_button: bool,
     pub levels_button: [bool; 16],
 }
@@ -151,6 +152,7 @@ impl MenuState {
             mouse_sensibility_input: save.mouse_sensibility(),
             continue_button: false,
             reset_button: false,
+            return_hall_button: false,
             quit_button: false,
             levels_button: [false; 16],
         }
@@ -171,15 +173,7 @@ impl MenuState {
                     ui.separator();
                     ui.text(im_str!("Levels :"));
                     ui.separator();
-                    for i in 0..4 {
-                        for j in 0..4 {
-                            let n = i*4+j+1;
-                            let string = format!("Level {:?}", n);
-                            self.levels_button[n-1] = ui.button(&::imgui::ImString::new(string), button_size);
-                            ui.same_line(0.0);
-                        }
-                        ui.new_line();
-                    }
+                    self.return_hall_button = ui.button(im_str!("Return to hall"), button_size);
                     ui.separator();
                     ui.text(im_str!("Settings :"));
                     ui.separator();
