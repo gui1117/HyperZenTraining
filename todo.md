@@ -1,5 +1,7 @@
 # FINAL
 
+* faire recreate swapchain on signal and fance
+
 on dirait qu'on peut faire le labyrinthe avec téléporteur au centre et labyrinthe ou il faut tomber ou alors il faut monter toujours en kill all !!!!!!!!!!!
 
 pour les scores:

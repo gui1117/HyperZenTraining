@@ -503,11 +503,12 @@ impl FollowPlayer {
     }
 }
 
-#[derive(Default)]
-pub struct Teleport;
+pub struct Teleport {
+    pub action: ::resource::LevelAction,
+}
 
 impl ::specs::Component for Teleport {
-    type Storage = ::specs::NullStorage<Self>;
+    type Storage = ::specs::VecStorage<Self>;
 }
 
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Hash, Copy)]

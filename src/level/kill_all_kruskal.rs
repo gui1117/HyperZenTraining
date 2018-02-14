@@ -54,6 +54,7 @@ impl Conf2D {
                 (maze.end_opening - maze.end_cell).axis_angle_z(),
             ),
             maze.maze.scale,
+            ::resource::LevelAction::Next,
             world,
         );
 
@@ -134,6 +135,7 @@ impl Conf3D {
                 (maze.end_opening - maze.end_cell).axis_angle_z(),
             ),
             maze.maze.scale,
+            ::resource::LevelAction::Next,
             world,
         );
 

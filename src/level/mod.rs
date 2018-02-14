@@ -4,6 +4,9 @@ use std::ops::Mul;
 use std::hash::Hash;
 use typenum;
 
+mod hall;
+pub use self::hall::create_hall;
+
 #[derive(Serialize, Deserialize, Clone)]
 pub enum Level {
     KillAllKruskal2D(kill_all_kruskal::Conf2D),

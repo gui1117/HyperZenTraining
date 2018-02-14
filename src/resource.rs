@@ -100,8 +100,15 @@ impl PlayerControl {
     }
 }
 
-// TODO: change into an enum that can be Retry, Next, None
-pub struct EndLevel(pub bool);
+pub struct LevelActions(pub Vec<LevelAction>);
+
+#[derive(Clone)]
+pub enum LevelAction {
+    Next,
+    Reset,
+    ReturnHall,
+    Level(usize),
+}
 
 pub enum Maze {
     Maze2D(::maze::Maze<::na::U2>),

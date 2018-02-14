@@ -1,7 +1,13 @@
 use nphysics::resolution::{AccumulatedImpulseSolver, CorrectionMode};
 
 pub struct GameSystem {
-    current_level: Option<usize>,
+    current_level: Option<Level>,
+}
+
+#[derive(Clone, Copy)]
+enum Level {
+    Hall,
+    Level(usize, usize),
 }
 
 impl GameSystem {
@@ -11,22 +17,47 @@ impl GameSystem {
         }
     }
     pub fn run(&mut self, world: &mut ::specs::World) {
-        let recreate_level = match self.current_level {
-            Some(ref mut current_level) => {
-                let end = world.read_resource::<::resource::EndLevel>().0;
-                if end {
-                    *current_level += 1;
-                }
-                end
-            }
-            None => {
-                self.current_level = Some(0);
-                true
-            }
+        let action = {
+            let mut level_actions = world.write_resource::<::resource::LevelActions>();
+            let action = level_actions.0.first().cloned();
+            level_actions.0.clear();
+            action
         };
 
-        if recreate_level {
-            let current_level = self.current_level.unwrap();
+        let recreate_level = match (self.current_level, action) {
+            // TODO: go to hall
+            (None, _) => Some(Level::Level(0, 0)),
+            (Some(Level::Hall), Some(::resource::LevelAction::Level(level))) => {
+                if ::CONFIG.levels[level].len() != 0 {
+                    Some(Level::Level(level, 0))
+                } else {
+                    //TODO: update scores
+                    Some(Level::Hall)
+                }
+            },
+            (Some(Level::Level(level, part)), Some(::resource::LevelAction::Next)) => {
+                if ::CONFIG.levels[level].len() > part + 1 {
+                    Some(Level::Level(level, part+1))
+                } else {
+                    //TODO: update scores
+                    Some(Level::Hall)
+                }
+            },
+            (current_level, Some(::resource::LevelAction::Reset)) => current_level,
+            (_, Some(::resource::LevelAction::ReturnHall)) => Some(Level::Hall),
+            (Some(_), None) => None,
+            (Some(Level::Hall), Some(::resource::LevelAction::Next)) => {
+                println!("INTERNAL ERROR: called next in hall");
+                Some(Level::Hall)
+            },
+            (Some(Level::Level(..)), Some(::resource::LevelAction::Level(..))) => {
+                println!("INTERNAL ERROR: called go to level outside hall");
+                Some(Level::Hall)
+            },
+        };
+
+        if let Some(level) = recreate_level {
+            self.current_level = Some(level);
 
             let physic_world = {
                 let mut physic_world = ::resource::PhysicWorld::new();
@@ -48,11 +79,12 @@ impl GameSystem {
             world.delete_all();
             world.add_resource(::resource::Events(vec![]));
             world.add_resource(::resource::DepthCoef(1.0));
-            world.add_resource(::resource::EndLevel(false));
             world.add_resource(physic_world);
 
-            let level = ::CONFIG.levels[current_level].clone();
-            level.create(world);
+            match level {
+                Level::Hall => ::level::create_hall(world),
+                Level::Level(level, part) => ::CONFIG.levels[level][part].create(world),
+            }
 
             world.maintain();
         }

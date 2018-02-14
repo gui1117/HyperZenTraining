@@ -6,15 +6,14 @@ impl<'a> ::specs::System<'a> for TeleportSystem {
     type SystemData = (
         ::specs::ReadStorage<'a, ::component::Teleport>,
         ::specs::ReadStorage<'a, ::component::Proximitor>,
-        ::specs::FetchMut<'a, ::resource::EndLevel>,
+        ::specs::FetchMut<'a, ::resource::LevelActions>,
     );
 
-    fn run(&mut self, (teleports, proximitors, mut end_level): Self::SystemData) {
-        if (&teleports, &proximitors)
-            .join()
-            .any(|(_, p)| !p.intersections.is_empty())
-        {
-            end_level.0 = true;
+    fn run(&mut self, (teleports, proximitors, mut level_actions): Self::SystemData) {
+        for (teleport, proximitor) in (&teleports, &proximitors).join() {
+            if !proximitor.intersections.is_empty() {
+                level_actions.0.push(teleport.action.clone());
+            }
         }
     }
 }

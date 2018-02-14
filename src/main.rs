@@ -143,6 +143,7 @@ fn main() {
     world.add_resource(::resource::Benchmarks::new());
     world.add_resource(::resource::UpdateTime(0.0));
     world.add_resource(::resource::Audio::init());
+    world.add_resource(::resource::LevelActions(vec![]));
     let save = ::resource::Save::new();
     let menu_state = ::resource::MenuState::new(&save);
     world.add_resource(save);
@@ -358,9 +359,20 @@ fn main() {
                 graphics.data.swapchain.clone(),
                 image_num,
             )
-            .then_signal_fence_and_flush()
-            .unwrap();
-        previous_frame_end = Box::new(future) as Box<_>;
+            .then_signal_fence_and_flush();
+
+        match future {
+            Ok(future) => {
+                previous_frame_end = Box::new(future) as Box<_>;
+            }
+            Err(vulkano::sync::FlushError::OutOfDate) => {
+                previous_frame_end = Box::new(vulkano::sync::now(graphics.data.device.clone())) as Box<_>;
+            }
+            Err(e) => {
+                println!("ERROR: {:?}", e);
+                previous_frame_end = Box::new(vulkano::sync::now(graphics.data.device.clone())) as Box<_>;
+            }
+        }
         benchmarker.end("draw");
 
         // Sleep
