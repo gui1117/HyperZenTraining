@@ -11,17 +11,7 @@ refonte du GUI:
 * avec assignation des touches directionnelles et grappin et tirer
 * son
 
-premier niveau
-* écrire le numéro du niveau au dessus et un tableau des score à droite avec
-  score:
-  bests: lasts:
-  XXXX   XXXX
-  XXXX   XXXX
-  XXXX   XXXX
-  XXXX   XXXX
-  XXXX   XXXX
-
-  ou best scores et last scores
+finir scores
 
 ### programme:
 
