@@ -2,6 +2,8 @@
 
 on dirait qu'on peut faire le labyrinthe avec téléporteur au centre et labyrinthe ou il faut tomber ou alors il faut monter toujours en kill all
 
+* WHAT ABOUT 3D MAZE ??
+
 refonte du GUI:
 * avec assignation des touches directionnelles et grappin et tirer
 * son
@@ -17,8 +19,6 @@ premier niveau
   XXXX   XXXX
 
   ou best scores et last scores
-
-winit: set defaut to X11 for wayland
 
 ### programme:
 

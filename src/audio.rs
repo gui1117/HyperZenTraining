@@ -69,6 +69,7 @@ impl Audio {
 
         self.left_ear = left_ear.coords.into();
         self.right_ear = right_ear.coords.into();
+        self.spatial_sinks.retain(|s| !s.empty());
         for spatial_sink in &mut self.spatial_sinks {
             spatial_sink.set_left_ear_position(self.left_ear);
             spatial_sink.set_right_ear_position(self.right_ear);

@@ -17,7 +17,7 @@ pub fn create_hall(world: &mut ::specs::World) {
     let mut maze_colors = HashMap::new();
 
     // Build Player
-    let start_cell = ::na::Vector3::new(maze_size[0] - 3, maze_size[1]-2, 2);
+    let start_cell = ::na::Vector3::new(maze_size[0] - 3, maze_size[1] - 2, 2);
     maze_colors.insert(start_cell, ::CONFIG.start_color);
     maze.walls.remove(&start_cell);
     let dir = ::na::Vector3::new(0.0, -1.0, 0.0);
@@ -37,13 +37,20 @@ pub fn create_hall(world: &mut ::specs::World) {
         maze_colors.insert(teleport_cell, ::CONFIG.end_color);
         maze.walls.remove(&teleport_cell);
 
-        ::entity::create_static_draw_w(
+        let score_pos = if teleport_dir[1] == 0.0 {
             ::na::Isometry3::new(
-                maze.to_world(&teleport_cell),
-                teleport_dir,
-            ),
-            1.0,
-            ::graphics::Primitive::Six,
+                maze.to_world(&teleport_cell)+::na::Vector3::new(-0.7, 0.5, 0.3),
+                ::na::Vector3::new(::std::f32::consts::FRAC_PI_2, 0.0, 0.0)
+            ) * ::na::UnitQuaternion::new(::na::Vector3::new(0.0, ::std::f32::consts::PI, 0.0))
+        } else {
+            ::na::Isometry3::new(
+                maze.to_world(&teleport_cell)+::na::Vector3::new(0.5, 0.7, 0.3),
+                ::na::Vector3::new(::std::f32::consts::FRAC_PI_2, 0.0, 0.0)
+            ) * ::na::UnitQuaternion::new(::na::Vector3::new(0.0, ::std::f32::consts::FRAC_PI_2, 0.0))
+        };
+
+        ::entity::draw_score(
+            score_pos,
             world,
         );
 

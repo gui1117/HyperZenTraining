@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::f32::consts::*;
 
-const POINT_RADIUS: f32 = 0.07;
-const POINT_CENTER_DISTANCE: f32 = (1.0-2.0*POINT_RADIUS)/4.0;
-const ARC_DIVISION: usize = 16;
-const DEFAULT_CHAR: char = '▒';
+pub const POINT_RADIUS: f32 = 0.07;
+pub const POINT_CENTER_DISTANCE: f32 = (1.0-2.0*POINT_RADIUS)/4.0;
+pub const ARC_DIVISION: usize = 16;
+pub const DEFAULT_CHAR: char = '▒';
 
 pub fn build_text(text: String) -> Vec<[f32; 3]> {
     let mut offset = 0;
@@ -20,6 +20,19 @@ pub fn build_text(text: String) -> Vec<[f32; 3]> {
         }
     }
     v
+}
+
+pub fn get_size(text: String) -> usize {
+    let mut size = 0;
+    let default_glyph = GLYPHS.get(&DEFAULT_CHAR).unwrap();
+    for character in text.chars() {
+        if character == ' ' {
+            size += 1
+        } else {
+            size += GLYPHS.get(&character).unwrap_or(default_glyph).size;
+        }
+    }
+    size
 }
 
 lazy_static! {
@@ -256,12 +269,12 @@ fn letter_up_quad(points: [::na::Vector2<f32>; 4]) -> Vec<[f32; 3]> {
         points[2],
         points[3],
         points[0],
-    ].iter().map(|p| [p[0], p[1], 1.0]).collect()
+    ].iter().map(|p| [p[0], p[1], 0.1]).collect()
 }
 
 /// Points must be in trigonometric orientation for backface culling
 fn letter_up_triangle(points: [::na::Vector2<f32>; 3]) -> Vec<[f32; 3]> {
-    points.iter().map(|p| [p[0], p[1], 1.0]).collect()
+    points.iter().map(|p| [p[0], p[1], 0.1]).collect()
 }
 
 fn operations() -> HashMap<char, Vec<Operation>> {

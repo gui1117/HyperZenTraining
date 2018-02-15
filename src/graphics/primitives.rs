@@ -573,8 +573,8 @@ pub fn instance_primitives(
     primitives_buffers_def.push(vec![super::font::build_text("_".to_string())]);
     primitives_buffers_def.push(vec![super::font::build_text(":".to_string())]);
     primitives_buffers_def.push(vec![super::font::build_text("ALL".to_string())]);
-    primitives_buffers_def.push(vec![super::font::build_text("LAST SCORES :".to_string())]);
-    primitives_buffers_def.push(vec![super::font::build_text("BEST SCORES :".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("LAST SCORES".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("BEST SCORES".to_string())]);
 
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];
@@ -659,9 +659,9 @@ pub mod primitive {
                 Primitive::Text9 => 1,
                 Primitive::TextUnderScore => 1,
                 Primitive::TextColon => 1,
-                Primitive::TextALL => 3,
-                Primitive::TextLastScores => 10,
-                Primitive::TextBestScores => 10,
+                Primitive::TextALL => 1,
+                Primitive::TextLastScores => 1,
+                Primitive::TextBestScores => 1,
             }
         }
 

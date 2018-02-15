@@ -28,7 +28,7 @@ pub mod shader;
 pub mod render_pass;
 mod primitives;
 mod colors;
-mod font;
+pub mod font;
 
 pub use self::primitives::primitive::Primitive;
 pub use self::colors::Color;
