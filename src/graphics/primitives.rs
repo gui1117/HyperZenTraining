@@ -559,8 +559,22 @@ pub fn instance_primitives(
     }
     primitives_buffers_def.push(hook);
 
-    // Texts
-    primitives_buffers_def.push(vec![super::font::build_text("TEXT.".to_string())]);
+    // numbers
+    primitives_buffers_def.push(vec![super::font::build_text("0".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("1".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("2".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("3".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("4".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("5".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("6".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("7".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("8".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("9".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("_".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text(":".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("ALL".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("LAST SCORES :".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("BEST SCORES :".to_string())]);
 
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];
@@ -588,6 +602,8 @@ pub fn instance_primitives(
 #[allow(unused)]
 pub mod primitive {
     // TODO: We don't need an atomic usize
+    #[repr(C)]
+    #[derive(Copy, Clone)]
     pub enum Primitive {
         Plane,
         SquarePyramid,
@@ -598,23 +614,26 @@ pub mod primitive {
         Cylinder,
         PitCube,
         Hook,
-        Text,
+        Text0,
+        Text1,
+        Text2,
+        Text3,
+        Text4,
+        Text5,
+        Text6,
+        Text7,
+        Text8,
+        Text9,
+        TextUnderScore,
+        TextColon,
+        TextALL,
+        TextLastScores,
+        TextBestScores,
     }
 
     impl Primitive {
         pub fn index(&self) -> usize {
-            match *self {
-                Primitive::Plane => 0,
-                Primitive::SquarePyramid => 1,
-                Primitive::TrianglePyramid => 2,
-                Primitive::Sphere => 3,
-                Primitive::Six => 4,
-                Primitive::Cube => 5,
-                Primitive::Cylinder => 6,
-                Primitive::PitCube => 7,
-                Primitive::Hook => 8,
-                Primitive::Text => 9,
-            }
+            *self as usize
         }
 
         fn groups_size(&self) -> usize {
@@ -628,7 +647,21 @@ pub mod primitive {
                 Primitive::Cylinder => 1,
                 Primitive::PitCube => 11,
                 Primitive::Hook => 10*::CONFIG.hook_links,
-                Primitive::Text => 1,
+                Primitive::Text0 => 1,
+                Primitive::Text1 => 1,
+                Primitive::Text2 => 1,
+                Primitive::Text3 => 1,
+                Primitive::Text4 => 1,
+                Primitive::Text5 => 1,
+                Primitive::Text6 => 1,
+                Primitive::Text7 => 1,
+                Primitive::Text8 => 1,
+                Primitive::Text9 => 1,
+                Primitive::TextUnderScore => 1,
+                Primitive::TextColon => 1,
+                Primitive::TextALL => 3,
+                Primitive::TextLastScores => 10,
+                Primitive::TextBestScores => 10,
             }
         }
 

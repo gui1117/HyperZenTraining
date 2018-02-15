@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::f32::consts::*;
 
-const POINT_RADIUS: f32 = 0.03;
+const POINT_RADIUS: f32 = 0.07;
 const POINT_CENTER_DISTANCE: f32 = (1.0-2.0*POINT_RADIUS)/4.0;
 const ARC_DIVISION: usize = 16;
 const DEFAULT_CHAR: char = '▒';
@@ -11,9 +11,13 @@ pub fn build_text(text: String) -> Vec<[f32; 3]> {
     let mut v = vec![];
     let default_glyph = GLYPHS.get(&DEFAULT_CHAR).unwrap();
     for character in text.chars() {
-        let glyph = GLYPHS.get(&character).unwrap_or(default_glyph);
-        v.extend(glyph.vertices.iter().map(|p| [p[0] + offset as f32 * POINT_CENTER_DISTANCE, p[1], p[2]]));
-        offset += glyph.size;
+        if character == ' ' {
+            offset += 1;
+        } else {
+            let glyph = GLYPHS.get(&character).unwrap_or(default_glyph);
+            v.extend(glyph.vertices.iter().map(|p| [p[0] + offset as f32 * POINT_CENTER_DISTANCE, p[1], p[2]]));
+            offset += glyph.size;
+        }
     }
     v
 }

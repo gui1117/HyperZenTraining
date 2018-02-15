@@ -20,7 +20,9 @@ mod maze_2d;
 mod maze_3d;
 mod motionless;
 mod attracted;
+mod static_draw;
 
+pub use self::static_draw::*;
 pub use self::generator::*;
 pub use self::teleport::*;
 pub use self::weapon::*;

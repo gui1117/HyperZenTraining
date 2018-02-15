@@ -145,7 +145,7 @@ impl Conf3D {
             - 0.2 * ::na::Vector3::new(dir[0] as f32, dir[1] as f32, 0.0);
         world.write_resource::<::resource::PlayerControl>().pointer =
             [(-dir[1] as f32).atan2(dir[0] as f32), 0.0];
-        ::entity::create_player_w(player_pos, false, world);
+        ::entity::create_player_w(player_pos, true, world);
 
         // Build turrets
         self.entities.iter()

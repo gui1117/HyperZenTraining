@@ -37,6 +37,16 @@ pub fn create_hall(world: &mut ::specs::World) {
         maze_colors.insert(teleport_cell, ::CONFIG.end_color);
         maze.walls.remove(&teleport_cell);
 
+        ::entity::create_static_draw_w(
+            ::na::Isometry3::new(
+                maze.to_world(&teleport_cell),
+                teleport_dir,
+            ),
+            1.0,
+            ::graphics::Primitive::Six,
+            world,
+        );
+
         ::entity::create_teleport_w(
             ::na::Isometry3::new(
                 maze.to_world(&teleport_cell),

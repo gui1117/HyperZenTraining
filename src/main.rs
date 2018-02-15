@@ -84,6 +84,8 @@ fn init_imgui() -> ::imgui::ImGui {
 }
 
 fn main() {
+    ::std::env::set_var("WINIT_UNIX_BACKEND", "x11");
+
     let instance = {
         let extensions = vulkano_win::required_extensions();
         let info = app_info_from_cargo_toml!();

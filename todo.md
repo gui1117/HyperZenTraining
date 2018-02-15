@@ -2,16 +2,11 @@
 
 on dirait qu'on peut faire le labyrinthe avec téléporteur au centre et labyrinthe ou il faut tomber ou alors il faut monter toujours en kill all
 
-pour les scores:
-faire qu'on a son historique et le meilleur score
-
 refonte du GUI:
 * avec assignation des touches directionnelles et grappin et tirer
 * son
-* return hall au lieu des niveaux
 
 premier niveau
-* carré avec un téléporteur pour chaque niveau
 * écrire le numéro du niveau au dessus et un tableau des score à droite avec
   score:
   bests: lasts:
@@ -20,6 +15,8 @@ premier niveau
   XXXX   XXXX
   XXXX   XXXX
   XXXX   XXXX
+
+  ou best scores et last scores
 
 winit: set defaut to X11 for wayland
 

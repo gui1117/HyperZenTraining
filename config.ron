@@ -43,7 +43,8 @@ Config(
     bouncer_velocity: 1.0,
     bouncer_time_to_reach_vmax: 0.05,
     bouncer_ang_damping: 0.8,
-    bouncer_color: Gen5,
+    bouncer_color: Pink,
+    // bouncer_color: Gen5,
 
     depth_ball_size: 0.1,
     depth_ball_velocity: 1.0,
@@ -123,13 +124,15 @@ Config(
 
     levels: [
         [
-            KillAllKruskal2D((
-                size: (17, 17),
-                percent: 0.0,
-                bug: (1, 1),
+            KillAllKruskal3D((
+                size: (17, 17, 17),
+                percent: 1.0,
+                bug: (1, 1, 1),
                 scale: 1.0,
                 entities: {
-                    Attracted(eraser: false): 10,
+                    Bouncer(eraser: false): 15,
+                    // Avoider(eraser: false): 3,
+                    MotionLess(eraser: false): 30,
                 }
                 // turrets: 1,
                 // avoiders: 0,
