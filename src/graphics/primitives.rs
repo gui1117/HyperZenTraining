@@ -636,6 +636,23 @@ pub mod primitive {
             *self as usize
         }
 
+        pub fn from_char(c: char) -> Self {
+            match c {
+                '0' => Primitive::Text0,
+                '1' => Primitive::Text1,
+                '2' => Primitive::Text2,
+                '3' => Primitive::Text3,
+                '4' => Primitive::Text4,
+                '5' => Primitive::Text5,
+                '6' => Primitive::Text6,
+                '7' => Primitive::Text7,
+                '8' => Primitive::Text8,
+                '9' => Primitive::Text9,
+                ':' => Primitive::TextColon,
+                _ => Primitive::TextUnderScore,
+            }
+        }
+
         fn groups_size(&self) -> usize {
             match *self {
                 Primitive::Plane => 1,

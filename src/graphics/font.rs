@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::f32::consts::*;
 
-pub const POINT_RADIUS: f32 = 0.07;
+pub const POINT_RADIUS: f32 = 0.1;
 pub const POINT_CENTER_DISTANCE: f32 = (1.0-2.0*POINT_RADIUS)/4.0;
 pub const ARC_DIVISION: usize = 16;
 pub const DEFAULT_CHAR: char = '▒';

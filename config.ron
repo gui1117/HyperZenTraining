@@ -71,10 +71,10 @@ Config(
     player_velocity: 5.0,
     player_time_to_reach_vmax: 0.1,
     player_ang_damping: 0.0,
-    player_gravity: 0.3,
-    player_hook_velocity: 50.0,
+    player_gravity: 0.01,
+    player_hook_velocity: 15.0,
     player_hook_time_to_reach_vmax: 8.0,
-    player_hook_force: 0.8,
+    player_hook_force: 0.03,
     player_hook_color: GenPaleBlack,
     player_hook_size: 1.0,
     player_shoot_sound: "shoot.ogg",
@@ -133,6 +133,246 @@ Config(
                     Bouncer(eraser: false): 15,
                     // Avoider(eraser: false): 3,
                     MotionLess(eraser: false): 30,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
+                }
+                // turrets: 1,
+                // avoiders: 0,
+                // bouncers: 0,
+                // eraser_avoiders: 0,
+                // eraser_bouncers: 0
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 10,
                 }
                 // turrets: 1,
                 // avoiders: 0,
