@@ -144,6 +144,7 @@ fn main() {
     world.add_resource(::resource::PlayerControl::new());
     world.add_resource(::resource::Benchmarks::new());
     world.add_resource(::resource::UpdateTime(0.0));
+    world.add_resource(::resource::GameDuration(Duration::new(0, 0)));
     world.add_resource(::resource::Audio::init());
     world.add_resource(::resource::LevelActions(vec![]));
     let save = ::resource::Save::new();
@@ -294,6 +295,7 @@ fn main() {
             world.write_resource::<::resource::UpdateTime>().0 = 0.0;
             pause_update_dispatcher.dispatch(&mut world.res);
         } else {
+            world.write_resource::<::resource::GameDuration>().0 += delta_time;
             world.write_resource::<::resource::ImGuiOption>().as_mut().unwrap().set_mouse_draw_cursor(false);
             world.write_resource::<::resource::UpdateTime>().0 = delta_time
                 .as_secs()

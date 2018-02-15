@@ -1,6 +1,6 @@
 use alga::general::SubsetOf;
 
-pub fn draw_score(pos: ::na::Isometry3<f32>, world: &mut ::specs::World) {
+pub fn draw_score(pos: ::na::Isometry3<f32>, level: usize, world: &mut ::specs::World) {
     let radius = 0.05;
 
     let mut p = vec![
@@ -8,24 +8,33 @@ pub fn draw_score(pos: ::na::Isometry3<f32>, world: &mut ::specs::World) {
         (::graphics::Primitive::TextLastScores, 40, 0),
     ];
 
-    for i in 1..12 {
-        p.push((::graphics::Primitive::TextUnderScore, 0*3+4, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 1*3+4, -i*6));
-        p.push((     ::graphics::Primitive::TextColon, 2*3+4, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 3*3+4, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 4*3+4, -i*6));
-        p.push((     ::graphics::Primitive::TextColon, 5*3+4, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 6*3+4, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 7*3+4, -i*6));
+    for i in 0isize..11 {
+        let save = world.read_resource::<::resource::Save>();
+        let scores = save.score(level);
 
-        p.push((::graphics::Primitive::TextUnderScore, 0*3+44, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 1*3+44, -i*6));
-        p.push((     ::graphics::Primitive::TextColon, 2*3+44, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 3*3+44, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 4*3+44, -i*6));
-        p.push((     ::graphics::Primitive::TextColon, 5*3+44, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 6*3+44, -i*6));
-        p.push((::graphics::Primitive::TextUnderScore, 7*3+44, -i*6));
+        let best = scores.and_then(|s| s.bests.get(i as usize)).cloned();
+        let best = ::graphics::Primitive::from_duration(best);
+
+        p.push((best[0],  0*3+4, -i*6 - 6));
+        p.push((best[1],  1*3+4, -i*6 - 6));
+        p.push((best[2],  2*3+4, -i*6 - 6));
+        p.push((best[3],  3*3+4, -i*6 - 6));
+        p.push((best[4],  4*3+4, -i*6 - 6));
+        p.push((best[5],  5*3+4, -i*6 - 6));
+        p.push((best[6],  6*3+4, -i*6 - 6));
+        p.push((best[7],  7*3+4, -i*6 - 6));
+
+        let last = scores.and_then(|s| s.lasts.get(i as usize)).cloned();
+        let last = ::graphics::Primitive::from_duration(last);
+
+        p.push((last[0], 0*3+44, -i*6 - 6));
+        p.push((last[1], 1*3+44, -i*6 - 6));
+        p.push((last[2], 2*3+44, -i*6 - 6));
+        p.push((last[3], 3*3+44, -i*6 - 6));
+        p.push((last[4], 4*3+44, -i*6 - 6));
+        p.push((last[5], 5*3+44, -i*6 - 6));
+        p.push((last[6], 6*3+44, -i*6 - 6));
+        p.push((last[7], 7*3+44, -i*6 - 6));
     }
 
     let trans: ::na::Transform3<f32> = ::na::Similarity3::from_isometry(pos, radius).to_superset();

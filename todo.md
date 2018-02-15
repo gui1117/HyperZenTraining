@@ -2,16 +2,9 @@
 
 on dirait qu'on peut faire le labyrinthe avec téléporteur au centre et labyrinthe ou il faut tomber ou alors il faut monter toujours en kill all
 
-* WHAT ABOUT 3D MAZE ??
-  JUSTE PAS....
-
-* faire que les case soit dessiné avec plafond et sol pour les couleurs et mettre le plafond/sol plus loin
-
 refonte du GUI:
 * avec assignation des touches directionnelles et grappin et tirer
 * son
-
-finir scores
 
 ### programme:
 

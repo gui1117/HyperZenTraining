@@ -1,4 +1,5 @@
 use nphysics::resolution::{AccumulatedImpulseSolver, CorrectionMode};
+use std::time::Duration;
 
 pub struct GameSystem {
     current_level: Option<Level>,
@@ -30,7 +31,9 @@ impl GameSystem {
                 if ::CONFIG.levels[level].len() != 0 {
                     Some(Level::Level(level, 0))
                 } else {
-                    //TODO: update scores
+                    let mut game_duration = world.write_resource::<::resource::GameDuration>();
+                    world.write_resource::<::resource::Save>().insert_score(level, game_duration.0);
+                    game_duration.0 = Duration::new(0, 0);
                     Some(Level::Hall)
                 }
             },
@@ -38,7 +41,9 @@ impl GameSystem {
                 if ::CONFIG.levels[level].len() > part + 1 {
                     Some(Level::Level(level, part+1))
                 } else {
-                    //TODO: update scores
+                    let mut game_duration = world.write_resource::<::resource::GameDuration>();
+                    world.write_resource::<::resource::Save>().insert_score(level, game_duration.0);
+                    game_duration.0 = Duration::new(0, 0);
                     Some(Level::Hall)
                 }
             },
@@ -56,6 +61,7 @@ impl GameSystem {
         };
 
         if let Some(level) = recreate_level {
+            world.write_resource::<::resource::GameDuration>().0 = Duration::new(0, 0);
             self.current_level = Some(level);
 
             let physic_world = {

@@ -51,6 +51,7 @@ pub fn create_hall(world: &mut ::specs::World) {
 
         ::entity::draw_score(
             score_pos,
+            i,
             world,
         );
 

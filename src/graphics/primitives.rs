@@ -601,7 +601,8 @@ pub fn instance_primitives(
 
 #[allow(unused)]
 pub mod primitive {
-    // TODO: We don't need an atomic usize
+    use std::time::Duration;
+
     #[repr(C)]
     #[derive(Copy, Clone)]
     pub enum Primitive {
@@ -650,6 +651,37 @@ pub mod primitive {
                 '9' => Primitive::Text9,
                 ':' => Primitive::TextColon,
                 _ => Primitive::TextUnderScore,
+            }
+        }
+
+        pub fn from_duration(duration: Option<Duration>) -> Vec<Self> {
+            if let Some(duration) = duration {
+                let sec = duration.as_secs();
+                let minute = sec / 60;
+                let remain_sec = sec % 60;
+                let cs = duration.subsec_nanos() / 10_000_000;
+
+                vec![
+                    ::graphics::Primitive::from_char(format!("{}", (minute / 10) % 10).chars().next().unwrap()),
+                    ::graphics::Primitive::from_char(format!("{}", (minute % 10)).chars().next().unwrap()),
+                    ::graphics::Primitive::TextColon,
+                    ::graphics::Primitive::from_char(format!("{}", (remain_sec / 10) % 10).chars().next().unwrap()),
+                    ::graphics::Primitive::from_char(format!("{}", (remain_sec % 10)).chars().next().unwrap()),
+                    ::graphics::Primitive::TextColon,
+                    ::graphics::Primitive::from_char(format!("{}", (cs / 10) % 10).chars().next().unwrap()),
+                    ::graphics::Primitive::from_char(format!("{}", (cs % 10)).chars().next().unwrap()),
+                ]
+            } else {
+                vec![
+                    ::graphics::Primitive::TextUnderScore,
+                    ::graphics::Primitive::TextUnderScore,
+                    ::graphics::Primitive::TextColon,
+                    ::graphics::Primitive::TextUnderScore,
+                    ::graphics::Primitive::TextUnderScore,
+                    ::graphics::Primitive::TextColon,
+                    ::graphics::Primitive::TextUnderScore,
+                    ::graphics::Primitive::TextUnderScore,
+                ]
             }
         }
 

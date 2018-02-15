@@ -5,6 +5,8 @@ pub use graphics::Data as Graphics;
 use std::io::Write;
 use std::fs::File;
 use std::path::PathBuf;
+use std::time::Duration;
+use std::collections::HashMap;
 pub use audio::Audio;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
@@ -18,6 +20,30 @@ pub struct FpsCounter(pub usize);
 #[derive(Deserialize, Serialize)]
 pub struct Save {
     mouse_sensibility: f32,
+    scores: HashMap<usize, Score>,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Score {
+    pub bests: Vec<Duration>,
+    pub lasts: Vec<Duration>,
+}
+
+impl Score {
+    fn new() -> Self {
+        Score {
+            bests: vec![],
+            lasts: vec![],
+        }
+    }
+    fn insert(&mut self, duration: Duration) {
+        self.bests.push(duration);
+        self.bests.sort();
+        self.bests.truncate(10);
+
+        self.lasts.insert(0, duration);
+        self.lasts.truncate(10);
+    }
 }
 
 const APP_INFO: AppInfo = AppInfo { name: "pepe", author: "thiolliere" };
@@ -37,12 +63,22 @@ impl Save {
             .and_then(|file| ::ron::de::from_reader(file).ok())
             .unwrap_or(Save {
                 mouse_sensibility: ::CONFIG.mouse_sensibility,
+                scores: HashMap::new(),
             })
     }
 
     #[inline]
     pub fn mouse_sensibility(&self) -> f32 {
         self.mouse_sensibility
+    }
+
+    pub fn insert_score(&mut self, level: usize, score: Duration) {
+        self.scores.entry(level).or_insert(Score::new()).insert(score);
+        self.save();
+    }
+
+    pub fn score(&self, level: usize) -> Option<&Score> {
+        self.scores.get(&level)
     }
 
     /// Do nothing if sensibility hasn't changed
@@ -61,6 +97,8 @@ impl Save {
 }
 
 pub struct UpdateTime(pub f32);
+
+pub struct GameDuration(pub Duration);
 
 pub struct Rendering {
     pub image_num: Option<usize>,
