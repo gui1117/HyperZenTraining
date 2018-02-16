@@ -116,30 +116,33 @@ impl<'a> ::specs::System<'a> for PhysicSystem {
                     let co1 = physic_world
                         .collision_world()
                         .collision_object(co1)
-                        .unwrap();
+                        .map(|c| &c.data);
                     let co2 = physic_world
                         .collision_world()
                         .collision_object(co2)
-                        .unwrap();
-                    // we can't just get e1 and e2 and check for each if there is a proximitor
-                    // because the rigid body of eX may be involve in a proximity even if the
-                    // proximitor is associated to eX sensor
-                    match (&co1.data, &co2.data) {
-                        (&WorldObject::Sensor(w1), &WorldObject::RigidBody(w2)) => {
-                            let e1 = ::component::PhysicSensor::entity(physic_world.sensor(w1));
-                            let e2 = ::component::PhysicBody::entity(physic_world.rigid_body(w2));
-                            if let Some(proximitor) = proximitors.get_mut(e1) {
-                                proximitor.intersections.push(e2);
+                        .map(|c| &c.data);
+
+                    if let (Some(co1), Some(co2)) = (co1, co2) {
+                        // we can't just get e1 and e2 and check for each if there is a proximitor
+                        // because the rigid body of eX may be involve in a proximity even if the
+                        // proximitor is associated to eX sensor
+                        match (co1, co2) {
+                            (&WorldObject::Sensor(w1), &WorldObject::RigidBody(w2)) => {
+                                let e1 = ::component::PhysicSensor::entity(physic_world.sensor(w1));
+                                let e2 = ::component::PhysicBody::entity(physic_world.rigid_body(w2));
+                                if let Some(proximitor) = proximitors.get_mut(e1) {
+                                    proximitor.intersections.push(e2);
+                                }
                             }
-                        }
-                        (&WorldObject::RigidBody(w1), &WorldObject::Sensor(w2)) => {
-                            let e1 = ::component::PhysicBody::entity(physic_world.rigid_body(w1));
-                            let e2 = ::component::PhysicSensor::entity(physic_world.sensor(w2));
-                            if let Some(proximitor) = proximitors.get_mut(e2) {
-                                proximitor.intersections.push(e1);
+                            (&WorldObject::RigidBody(w1), &WorldObject::Sensor(w2)) => {
+                                let e1 = ::component::PhysicBody::entity(physic_world.rigid_body(w1));
+                                let e2 = ::component::PhysicSensor::entity(physic_world.sensor(w2));
+                                if let Some(proximitor) = proximitors.get_mut(e2) {
+                                    proximitor.intersections.push(e1);
+                                }
                             }
+                            _ => unreachable!(),
                         }
-                        _ => unreachable!(),
                     }
                 }
             }

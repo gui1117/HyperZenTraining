@@ -8,7 +8,7 @@ pub fn draw_score(pos: ::na::Isometry3<f32>, level: usize, world: &mut ::specs::
         (::graphics::Primitive::TextLastScores, 40, 0),
     ];
 
-    for i in 0isize..11 {
+    for i in 0isize..10 {
         let save = world.read_resource::<::resource::Save>();
         let scores = save.score(level);
 

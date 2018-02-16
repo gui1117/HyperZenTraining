@@ -1,8 +1,8 @@
 # FINAL
 
-on dirait qu'on peut faire le labyrinthe avec téléporteur au centre et labyrinthe ou il faut tomber ou alors il faut monter toujours en kill all
-
 debug on level load maybe set world update a little to desactivate ....
+
+* faire niveau un par un
 
 refonte du GUI:
 * avec assignation des touches directionnelles et tirer
