@@ -20,6 +20,7 @@ mod teleport;
 mod hook;
 mod reducer;
 mod activated;
+mod player_death;
 
 pub use self::teleport::TeleportSystem;
 pub use self::menu_control::{MenuGameControlSystem, MenuPauseControlSystem};
@@ -43,3 +44,4 @@ pub use self::depth_coef::DepthCoefSystem;
 pub use self::depth_ball::DepthBallSystem;
 pub use self::attracted::AttractedSystem;
 pub use self::activated::ActivateSystem;
+pub use self::player_death::PlayerDeathSystem;

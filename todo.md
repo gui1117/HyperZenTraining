@@ -2,15 +2,11 @@
 
 on dirait qu'on peut faire le labyrinthe avec téléporteur au centre et labyrinthe ou il faut tomber ou alors il faut monter toujours en kill all
 
-
 debug on level load maybe set world update a little to desactivate ....
 
 refonte du GUI:
 * avec assignation des touches directionnelles et tirer
 * son
-
-* faire la mort
-* faire ouverture si tous morts
 
 * faire sons:
   * tué,

@@ -27,6 +27,7 @@ pub fn create_teleport<'a>(
 
     let mut group = ::nphysics::object::SensorCollisionGroups::new();
     group.set_whitelist(&[super::PLAYER_GROUP]);
+    group.set_membership(&[super::TELEPORT_GROUP]);
 
     let mut sensor = ::nphysics::object::Sensor::new(shape, None);
     sensor.set_relative_position(pos);

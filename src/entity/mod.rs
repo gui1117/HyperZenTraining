@@ -6,6 +6,8 @@ pub const TURRET_GROUP: usize = 5;
 pub const PLAYER_GROUP: usize = 6;
 pub const PLAYER_LASER_GROUP: usize = 7;
 pub const ATTRACTED_VISION_GROUP: usize = 8;
+pub const KILLER_GROUP: usize = 9;
+pub const TELEPORT_GROUP: usize = 10;
 
 mod depth_ball;
 mod generator;

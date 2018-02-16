@@ -177,6 +177,7 @@ fn main() {
         .add(::system::HookSystem::new(), "hook", &[])
         .add(::system::PhysicSystem, "physic", &[])
         .add(::system::DeleterSystem, "deleter", &[])
+        .add(::system::PlayerDeathSystem, "death", &[])
         .add(::system::ActivateSystem, "activate", &[])
         .add(::system::ReducerSystem, "reducer", &[])
         .add(::system::DepthCoefSystem, "depth_coef", &[])

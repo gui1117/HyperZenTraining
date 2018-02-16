@@ -11,6 +11,8 @@ pub fn create_player_w(pos: ::na::Vector3<f32>, hook: bool, world: &::specs::Wor
         &mut world.write(),
         &mut world.write(),
         &mut world.write(),
+        &mut world.write(),
+        &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
     );
@@ -23,6 +25,8 @@ pub fn create_player<'a>(
     aims: &mut ::specs::WriteStorage<'a, ::component::Aim>,
     momentums: &mut ::specs::WriteStorage<'a, ::component::Momentum>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
+    sensors: &mut ::specs::WriteStorage<'a, ::component::PhysicSensor>,
+    proximitors: &mut ::specs::WriteStorage<'a, ::component::Proximitor>,
     shooters: &mut ::specs::WriteStorage<'a, ::component::Shooter>,
     hooks: &mut ::specs::WriteStorage<'a, ::component::Hook>,
     weapon_animations: &mut ::specs::WriteStorage<'a, ::component::WeaponAnimation>,
@@ -35,8 +39,9 @@ pub fn create_player<'a>(
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
     group.set_membership(&[super::ALIVE_GROUP, super::PLAYER_GROUP]);
+    group.set_blacklist(&[super::KILLER_GROUP]);
 
-    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
+    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape.clone(), 1.0, 0.0, 0.0);
     let pos = ::na::Isometry3::new(pos, ::na::zero());
     body.set_transformation(pos);
     body.set_collision_groups(group);
@@ -89,4 +94,13 @@ pub fn create_player<'a>(
     );
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
+
+    let sensor_shape = ::ncollide::shape::Cylinder::new(::CONFIG.player_height, ::CONFIG.player_radius);
+    let mut sensor_group = ::nphysics::object::SensorCollisionGroups::new();
+    sensor_group.set_whitelist(&[super::KILLER_GROUP]);
+
+    let mut sensor = ::nphysics::object::Sensor::new(sensor_shape, Some(bodies.get(entity).unwrap().handle));
+    sensor.set_collision_groups(sensor_group);
+    ::component::PhysicSensor::add(entity, sensor, sensors, physic_world);
+    proximitors.insert(entity, ::component::Proximitor::new());
 }

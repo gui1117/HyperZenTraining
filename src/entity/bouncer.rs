@@ -39,7 +39,7 @@ pub fn create_bouncer<'a>(
     let pos = ::na::Isometry3::new(pos, ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
-    group.set_membership(&[super::ALIVE_GROUP, super::MONSTER_GROUP]);
+    group.set_membership(&[super::ALIVE_GROUP, super::MONSTER_GROUP, super::KILLER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
     let mass = 1.0 / body.inv_mass();

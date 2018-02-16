@@ -254,7 +254,7 @@ impl ::specs::Component for DynamicHud {
 
 // Rigid body handle and whereas it has been deleted
 pub struct PhysicBody {
-    handle: usize,
+    pub handle: usize,
     removed: bool,
 }
 

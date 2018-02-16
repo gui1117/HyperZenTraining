@@ -35,7 +35,7 @@ pub fn create_motionless<'a>(
     let pos = ::na::Isometry3::new(pos, ::na::zero());
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
-    group.set_membership(&[super::ALIVE_GROUP, super::MONSTER_GROUP]);
+    group.set_membership(&[super::ALIVE_GROUP, super::MONSTER_GROUP, super::KILLER_GROUP]);
 
     let mut body = ::nphysics::object::RigidBody::new_static(shape, 0.0, 0.0);
 
