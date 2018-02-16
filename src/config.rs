@@ -17,6 +17,7 @@ lazy_static! {
 pub struct Config {
     pub start_color: ::graphics::Color,
     pub end_color: ::graphics::Color,
+    pub activated_color: ::graphics::Color,
 
     pub depth_coef_divider: f32,
     pub depth_coef_velocity: f32,

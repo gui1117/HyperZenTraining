@@ -9,7 +9,7 @@ pub fn create_wall_side_draw<'a>(
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     entities: &::specs::Entities,
-) {
+) -> ::specs::Entity {
     let world_trans = {
         let trans: ::na::Transform3<f32> =
             ::na::Similarity3::from_isometry(pos, radius).to_superset();
@@ -29,6 +29,7 @@ pub fn create_wall_side_draw<'a>(
         static_draws,
         graphics,
     );
+    entity
 }
 
 pub fn create_wall_cube_physic<'a>(
@@ -61,7 +62,7 @@ pub fn create_wall_side<'a>(
     physic_world: &mut ::specs::FetchMut<'a, ::resource::PhysicWorld>,
     graphics: &::specs::Fetch<'a, ::resource::Graphics>,
     entities: &::specs::Entities,
-) {
+) -> ::specs::Entity {
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_static();
     group.set_membership(&[super::WALL_GROUP]);
 
@@ -91,6 +92,7 @@ pub fn create_wall_side<'a>(
         static_draws,
         graphics,
     );
+    entity
 }
 
 pub fn create_floor_ceil<'a>(

@@ -19,6 +19,7 @@ mod generator;
 mod teleport;
 mod hook;
 mod reducer;
+mod activated;
 
 pub use self::teleport::TeleportSystem;
 pub use self::menu_control::{MenuGameControlSystem, MenuPauseControlSystem};
@@ -41,3 +42,4 @@ pub use self::audio::AudioSystem;
 pub use self::depth_coef::DepthCoefSystem;
 pub use self::depth_ball::DepthBallSystem;
 pub use self::attracted::AttractedSystem;
+pub use self::activated::ActivateSystem;

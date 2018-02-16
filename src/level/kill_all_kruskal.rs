@@ -42,8 +42,8 @@ impl Conf2D {
 
         // Build walls
         let mut maze_colors = HashMap::new();
-        maze_colors.insert(maze.start_cell, ::CONFIG.start_color);
-        maze_colors.insert(maze.end_cell, ::CONFIG.end_color);
+        maze_colors.insert(maze.start_cell, (::CONFIG.start_color, false));
+        maze_colors.insert(maze.end_cell, (::CONFIG.end_color, true));
 
         ::entity::create_2d_maze_walls_w(&maze_colors, &maze.maze, world);
 
@@ -123,8 +123,8 @@ impl Conf3D {
 
         // Build walls
         let mut maze_colors = HashMap::new();
-        maze_colors.insert(maze.start_cell, ::CONFIG.start_color);
-        maze_colors.insert(maze.end_cell, ::CONFIG.end_color);
+        maze_colors.insert(maze.start_cell, (::CONFIG.start_color, false));
+        maze_colors.insert(maze.end_cell, (::CONFIG.end_color, true));
 
         ::entity::create_3d_maze_walls_w(&maze_colors, &maze.maze, world);
 

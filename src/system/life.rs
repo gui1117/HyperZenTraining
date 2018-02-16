@@ -47,7 +47,6 @@ impl<'a> ::specs::System<'a> for LifeSystem {
 
                     body.remove(&mut physic_world);
                     entities.delete(entity).unwrap();
-
                 }
                 _ => (),
             }

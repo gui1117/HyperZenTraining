@@ -26,7 +26,7 @@ impl GameSystem {
         };
 
         let recreate_level = match (self.current_level, action) {
-            (None, _) => Some(Level::Hall),
+            (None, _) => Some(Level::Level(0,0)),
             (Some(Level::Hall), Some(::resource::LevelAction::Level(level))) => {
                 if ::CONFIG.levels[level].len() != 0 {
                     Some(Level::Level(level, 0))
@@ -62,6 +62,7 @@ impl GameSystem {
 
         if let Some(level) = recreate_level {
             world.write_resource::<::resource::GameDuration>().0 = Duration::new(0, 0);
+            world.write_resource::<::resource::Activated>().0 = false;
             self.current_level = Some(level);
 
             let physic_world = {

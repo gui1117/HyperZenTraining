@@ -22,7 +22,8 @@ pub fn build_text(text: String) -> Vec<[f32; 3]> {
     v
 }
 
-pub fn get_size(text: String) -> usize {
+// FIXME: use it in static draw that uses font
+pub fn _get_size(text: String) -> usize {
     let mut size = 0;
     let default_glyph = GLYPHS.get(&DEFAULT_CHAR).unwrap();
     for character in text.chars() {

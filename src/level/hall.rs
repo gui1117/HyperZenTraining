@@ -18,7 +18,7 @@ pub fn create_hall(world: &mut ::specs::World) {
 
     // Build Player
     let start_cell = ::na::Vector2::new(maze_size[0] - 3, maze_size[1] - 2);
-    maze_colors.insert(start_cell, ::CONFIG.start_color);
+    maze_colors.insert(start_cell, (::CONFIG.start_color, false));
     maze.walls.remove(&start_cell);
     let dir = ::na::Vector3::new(0.0, -1.0, 0.0);
     let player_pos = maze.to_world(&start_cell)
@@ -34,7 +34,7 @@ pub fn create_hall(world: &mut ::specs::World) {
             .map(|i| (::na::Vector2::new(1, i*3+3), ::na::Vector3::new(0.0, FRAC_PI_2, 0.0))));
 
     for (i, (teleport_cell, teleport_dir)) in teleport_cells.enumerate() {
-        maze_colors.insert(teleport_cell, ::CONFIG.end_color);
+        maze_colors.insert(teleport_cell, (::CONFIG.end_color, true));
         maze.walls.remove(&teleport_cell);
 
         let score_pos = if teleport_dir[1] == 0.0 {

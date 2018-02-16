@@ -13,6 +13,8 @@ pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub struct Events(pub Vec<::winit::Event>);
 pub type Benchmarks = Vec<::util::Benchmark>;
 
+pub struct Activated(pub bool);
+
 pub type ImGuiOption = Option<::imgui::ImGui>;
 
 pub struct FpsCounter(pub usize);

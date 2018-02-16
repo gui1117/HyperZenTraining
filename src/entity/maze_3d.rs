@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use util::ConvCoord;
 
 pub fn create_3d_maze_walls_w(
-    colors: &HashMap<::na::Vector3<isize>, ::graphics::Color>,
+    colors: &HashMap<::na::Vector3<isize>, (::graphics::Color, bool)>,
     maze: &::maze::Maze<::na::U3>,
     world: &::specs::World,
 ) {
@@ -18,7 +18,7 @@ pub fn create_3d_maze_walls_w(
 }
 
 pub fn create_3d_maze_walls<'a>(
-    colors: &HashMap<::na::Vector3<isize>, ::graphics::Color>,
+    colors: &HashMap<::na::Vector3<isize>, (::graphics::Color, bool)>,
     maze: &::maze::Maze<::na::U3>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     static_draws: &mut ::specs::WriteStorage<'a, ::component::StaticDraw>,
@@ -55,7 +55,8 @@ pub fn create_3d_maze_walls<'a>(
                 .find(|&(_, &n)| n != 0)
                 .map(|(i, _)| i)
                 .unwrap();
-            let (color, groups) = if let Some(color) = colors.get(&neighbour) {
+            // FIXME: activated
+            let (color, groups) = if let Some(&(color, _)) = colors.get(&neighbour) {
                 (
                     color.clone(),
                     ::graphics::Primitive::Plane.reserve(1).pop().unwrap(),

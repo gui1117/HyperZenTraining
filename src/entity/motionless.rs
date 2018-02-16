@@ -7,6 +7,7 @@ pub fn create_motionless_w(pos: ::na::Vector3<f32>, eraser: bool, world: &::spec
         &mut world.write(),
         &mut world.write(),
         &mut world.write(),
+        &mut world.write(),
         &mut world.write_resource(),
         &world.read_resource(),
     );
@@ -15,6 +16,7 @@ pub fn create_motionless_w(pos: ::na::Vector3<f32>, eraser: bool, world: &::spec
 pub fn create_motionless<'a>(
     pos: ::na::Vector3<f32>,
     eraser: bool,
+    motionlesses: &mut ::specs::WriteStorage<'a, ::component::Motionless>,
     bodies: &mut ::specs::WriteStorage<'a, ::component::PhysicBody>,
     dynamic_erasers: &mut ::specs::WriteStorage<'a, ::component::DynamicEraser>,
     dynamic_draws: &mut ::specs::WriteStorage<'a, ::component::DynamicDraw>,
@@ -59,6 +61,8 @@ pub fn create_motionless<'a>(
         lifes.insert(entity, ::component::Life::DrawAlive);
         dynamic_draws.insert(entity, ::component::DynamicDraw);
     }
+
+    motionlesses.insert(entity, ::component::Motionless);
 
     ::component::PhysicBody::add(entity, body, bodies, physic_world);
 }

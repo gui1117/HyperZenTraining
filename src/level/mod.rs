@@ -107,7 +107,8 @@ where
             // Put entities
             let mut cells = maze.iterate_maze();
             cells.retain(|cell| {
-                (start_cell.clone() - cell.clone()).iter().fold(0, |acc, c| acc + c.pow(2)) > 5_isize.pow(2)
+                !maze.walls.contains(&cell)
+                && (start_cell.clone() - cell.clone()).iter().fold(0, |acc, c| acc + c.pow(2)) > 5_isize.pow(2)
                 && *cell != start_cell
                 && *cell != start_opening
                 && *cell != end_cell

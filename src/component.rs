@@ -604,3 +604,17 @@ impl Attracted {
         }
     }
 }
+
+#[derive(Default)]
+pub struct Motionless;
+
+impl ::specs::Component for Motionless {
+    type Storage = ::specs::NullStorage<Self>;
+}
+
+#[derive(Default)]
+pub struct Activated;
+
+impl ::specs::Component for Activated {
+    type Storage = ::specs::NullStorage<Self>;
+}

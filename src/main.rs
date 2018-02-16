@@ -124,12 +124,14 @@ fn main() {
     world.register::<::component::DeletTimer>();
     world.register::<::component::Reducer>();
     world.register::<::component::PhysicBody>();
+    world.register::<::component::Activated>();
     world.register::<::component::Momentum>();
     world.register::<::component::Avoider>();
     world.register::<::component::Bouncer>();
     world.register::<::component::Turret>();
     world.register::<::component::DepthBall>();
     world.register::<::component::Attracted>();
+    world.register::<::component::Motionless>();
     world.register::<::component::Life>();
     world.register::<::component::Contactor>();
     world.register::<::component::Proximitor>();
@@ -145,6 +147,7 @@ fn main() {
     world.add_resource(::resource::Benchmarks::new());
     world.add_resource(::resource::UpdateTime(0.0));
     world.add_resource(::resource::GameDuration(Duration::new(0, 0)));
+    world.add_resource(::resource::Activated(false));
     world.add_resource(::resource::Audio::init());
     world.add_resource(::resource::LevelActions(vec![]));
     let save = ::resource::Save::new();
@@ -174,6 +177,7 @@ fn main() {
         .add(::system::HookSystem::new(), "hook", &[])
         .add(::system::PhysicSystem, "physic", &[])
         .add(::system::DeleterSystem, "deleter", &[])
+        .add(::system::ActivateSystem, "activate", &[])
         .add(::system::ReducerSystem, "reducer", &[])
         .add(::system::DepthCoefSystem, "depth_coef", &[])
         .add(::system::DepthBallSystem, "depth_ball", &[])

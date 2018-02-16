@@ -1,6 +1,7 @@
 Config(
     start_color: Red,
-    end_color: Green,
+    activated_color: Green,
+    end_color: GenPaleBlack,
 
     depth_coef_divider: 100.0,
     depth_coef_velocity: 1.02,
@@ -123,24 +124,6 @@ Config(
     weapon_light_ray_duration: 0.2,
 
     levels: [
-        [
-            KillAllKruskal3D((
-                size: (17, 17, 17),
-                percent: 1.0,
-                bug: (1, 1, 1),
-                scale: 1.0,
-                entities: {
-                    Bouncer(eraser: false): 15,
-                    // Avoider(eraser: false): 3,
-                    MotionLess(eraser: false): 30,
-                }
-                // turrets: 1,
-                // avoiders: 0,
-                // bouncers: 0,
-                // eraser_avoiders: 0,
-                // eraser_bouncers: 0
-            )),
-        ],
         [
             KillAllKruskal2D((
                 size: (17, 17),
