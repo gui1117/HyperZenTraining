@@ -1,15 +1,20 @@
 use winit::{ElementState, Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode,
             WindowEvent, KeyboardInput};
+use resource::Input;
+use util::Direction;
 
 pub struct MenuGameControlSystem;
 
 impl<'a> ::specs::System<'a> for MenuGameControlSystem {
     type SystemData = (
         ::specs::Fetch<'a, ::resource::Events>,
+        ::specs::FetchMut<'a, ::resource::ImGuiOption>,
         ::specs::FetchMut<'a, ::resource::MenuState>,
     );
 
-    fn run(&mut self, (events, mut menu_state): Self::SystemData) {
+    fn run(&mut self, (events, mut imgui, mut menu_state): Self::SystemData) {
+        let imgui = imgui.as_mut().unwrap();
+        imgui.set_mouse_draw_cursor(false);
         for ev in events.0.iter() {
             match *ev {
                 Event::WindowEvent {
@@ -20,8 +25,15 @@ impl<'a> ::specs::System<'a> for MenuGameControlSystem {
                     }, .. },
                     ..
                 } => {
-                    menu_state.pause = true;
-                }
+                    menu_state.state = ::resource::MenuStateState::Pause;
+                },
+                Event::WindowEvent {
+                    event:
+                        WindowEvent::MouseMoved {
+                            position: (x, y), ..
+                        },
+                    ..
+                } => imgui.set_mouse_pos(x as f32, y as f32),
                 _ => (),
             }
         }
@@ -52,34 +64,104 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
     fn run(&mut self, (events, mut imgui, mut menu_state, mut save, mut level_actions): Self::SystemData) {
         let mut imgui = imgui.as_mut().unwrap();
         imgui.set_mouse_draw_cursor(true);
-        for ev in events.0.iter() {
-            match *ev {
-                Event::WindowEvent {
-                    event: WindowEvent::KeyboardInput { input: KeyboardInput {
-                        virtual_keycode: Some(VirtualKeyCode::Escape),
-                        state: ElementState::Pressed,
-                        ..
-                    }, .. },
-                    ..
-                } => {
-                    menu_state.pause = false;
-                },
-                _ => (),
-            }
-        }
-        if menu_state.continue_button {
-            menu_state.pause = false;
-        }
-        if menu_state.return_hall_button {
-            level_actions.0.push(::resource::LevelAction::ReturnHall);
-            menu_state.pause = false;
-        }
-        if menu_state.reset_button {
-            menu_state.mouse_sensibility_input = ::CONFIG.mouse_sensibility;
-        }
-        save.set_mouse_sensibility(menu_state.mouse_sensibility_input);
-
         send_events_to_imgui(&events, &mut imgui, &mut self.mouse_down);
+
+        match menu_state.state {
+            ::resource::MenuStateState::Game => unreachable!(),
+            ::resource::MenuStateState::Input(input) => {
+                for ev in events.0.iter() {
+                    let received_input = match *ev {
+                        Event::WindowEvent {
+                            event: WindowEvent::KeyboardInput { input: KeyboardInput {
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                state: ElementState::Pressed,
+                                ..
+                            }, .. },
+                            ..
+                        } => {
+                            menu_state.state = ::resource::MenuStateState::Pause;
+                            break;
+                        },
+                        Event::WindowEvent {
+                            event: WindowEvent::KeyboardInput { input: KeyboardInput {
+                                virtual_keycode: Some(keycode),
+                                state: ElementState::Pressed,
+                                ..
+                            }, .. },
+                            ..
+                        } => {
+                            ::resource::PossibleInput::VirtualKeyCode(keycode)
+                        },
+                        Event::WindowEvent {
+                            event: WindowEvent::MouseInput {
+                                button,
+                                state: ElementState::Pressed,
+                                ..
+                            },
+                            ..
+                        } => {
+                            ::resource::PossibleInput::MouseButton(button)
+                        },
+                        _ => {
+                            continue;
+                        },
+                    };
+
+                    save.set_input(input, received_input);
+                    menu_state.state = ::resource::MenuStateState::Pause;
+                }
+            },
+            ::resource::MenuStateState::Pause => {
+                for ev in events.0.iter() {
+                    match *ev {
+                        Event::WindowEvent {
+                            event: WindowEvent::KeyboardInput { input: KeyboardInput {
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                state: ElementState::Pressed,
+                                ..
+                            }, .. },
+                            ..
+                        } => {
+                            menu_state.state = ::resource::MenuStateState::Game;
+                        },
+                        _ => (),
+                    }
+                }
+                if menu_state.continue_button {
+                    menu_state.state = ::resource::MenuStateState::Game;
+                }
+                if menu_state.return_hall_button {
+                    level_actions.0.push(::resource::LevelAction::ReturnHall);
+                    menu_state.state = ::resource::MenuStateState::Game;
+                }
+
+                if menu_state.set_shoot_button {
+                    menu_state.state = ::resource::MenuStateState::Input(Input::Shoot);
+                }
+
+                if menu_state.set_forward_button {
+                    menu_state.state = ::resource::MenuStateState::Input(Input::Direction(Direction::Forward));
+                }
+
+                if menu_state.set_backward_button {
+                    menu_state.state = ::resource::MenuStateState::Input(Input::Direction(Direction::Backward));
+                }
+
+                if menu_state.set_left_button {
+                    menu_state.state = ::resource::MenuStateState::Input(Input::Direction(Direction::Left));
+                }
+
+                if menu_state.set_right_button {
+                    menu_state.state = ::resource::MenuStateState::Input(Input::Direction(Direction::Right));
+                }
+
+                if menu_state.reset_button {
+                    save.reset_input_settings();
+                    menu_state.mouse_sensibility_input = ::CONFIG.mouse_sensibility;
+                }
+                save.set_mouse_sensibility_if_changed(menu_state.mouse_sensibility_input);
+            },
+        }
     }
 }
 
@@ -160,7 +242,7 @@ fn send_events_to_imgui(events: &::resource::Events, imgui: &mut ::imgui::ImGui,
                     },
                 ..
             } => {
-                // TODO: does both are send ? does it depend of computer
+                // TODO: does both are send ? does it depend on computer
                 match delta {
                     MouseScrollDelta::LineDelta(_, y) => imgui.set_mouse_wheel(y),
                     MouseScrollDelta::PixelDelta(_, y) => imgui.set_mouse_wheel(y),

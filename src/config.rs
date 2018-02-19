@@ -15,6 +15,12 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    pub shoot_sound: String,
+    pub kill_sound: String,
+    pub all_killed_sound: String,
+    pub portal_sound: String,
+    pub death_sound: String,
+
     pub start_color: ::graphics::Color,
     pub end_color: ::graphics::Color,
     pub activated_color: ::graphics::Color,
@@ -103,7 +109,6 @@ pub struct Config {
     pub player_hook_force: f32,
     pub player_hook_color: ::graphics::Color,
     pub player_hook_size: f32,
-    pub player_shoot_sound: String,
 
     pub teleport_dl: f32,
 

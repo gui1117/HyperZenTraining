@@ -11,12 +11,13 @@ impl<'a> ::specs::System<'a> for LifeSystem {
         ::specs::WriteStorage<'a, ::component::Life>,
         ::specs::WriteStorage<'a, ::component::Reducer>,
         ::specs::FetchMut<'a, ::resource::PhysicWorld>,
+        ::specs::FetchMut<'a, ::resource::Audio>,
         ::specs::Entities<'a>,
     );
 
     fn run(
         &mut self,
-        (mut bodies, mut dynamic_draws, mut dynamic_erasers, mut dynamic_graphics_assets, mut lives, mut reducers, mut physic_world, entities): Self::SystemData,
+        (mut bodies, mut dynamic_draws, mut dynamic_erasers, mut dynamic_graphics_assets, mut lives, mut reducers, mut physic_world, mut audio, entities): Self::SystemData,
     ) {
         use component::Life;
         for (life, entity) in (&mut lives, &*entities).join() {
@@ -28,6 +29,8 @@ impl<'a> ::specs::System<'a> for LifeSystem {
                 }
                 Life::DrawDead => {
                     let body = bodies.get_mut(entity).unwrap();
+
+                    audio.play(::audio::Sound::Kill, body.get(&physic_world).position().translation.vector.into());
 
                     let death_animation_assets = {
                         let assets = dynamic_graphics_assets.get(entity).unwrap();

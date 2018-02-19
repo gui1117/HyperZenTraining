@@ -1,4 +1,4 @@
-use winit::{DeviceEvent, ElementState, Event, MouseButton, WindowEvent};
+use winit::{DeviceEvent, ElementState, Event, WindowEvent};
 use util::Direction;
 use specs::Join;
 
@@ -9,13 +9,10 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
         ::specs::ReadStorage<'a, ::component::Player>,
         ::specs::WriteStorage<'a, ::component::Aim>,
         ::specs::WriteStorage<'a, ::component::Shooter>,
-        ::specs::WriteStorage<'a, ::component::Hook>,
         ::specs::WriteStorage<'a, ::component::Momentum>,
         ::specs::Fetch<'a, ::resource::Events>,
-        ::specs::Fetch<'a, ::resource::Maze>,
         ::specs::Fetch<'a, ::resource::Save>,
         ::specs::FetchMut<'a, ::resource::PlayerControl>,
-        ::specs::Entities<'a>,
     );
 
     fn run(
@@ -24,54 +21,47 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
             players,
             mut aims,
             mut shooters,
-            mut hooks,
             mut momentums,
             events,
-            maze,
             save,
             mut player_control,
-            entities,
         ): Self::SystemData,
     ) {
-        let (_, player_aim, player_shooter, player_momentum, player_entity) = (
+        let (_, player_aim, player_shooter, player_momentum) = (
             &players,
             &mut aims,
             &mut shooters,
             &mut momentums,
-            &*entities,
         ).join()
             .next()
             .unwrap();
+
+        let mut inputs = vec![];
         for ev in events.0.iter() {
             match *ev {
                 Event::WindowEvent {
                     event:
                         WindowEvent::MouseInput {
-                            button: MouseButton::Left,
-                            state,
-                            ..
-                        },
-                    ..
-                } => match state {
-                    ElementState::Pressed => player_shooter.set_shoot(true),
-                    ElementState::Released => player_shooter.set_shoot(false),
-                },
-                Event::WindowEvent {
-                    event:
-                        WindowEvent::MouseInput {
-                            button: MouseButton::Right,
+                            button,
                             state,
                             ..
                         },
                     ..
                 } => {
-                    if maze.is_3d() {
-                        let player_hook = hooks.get_mut(player_entity).unwrap();
-                        match state {
-                            ElementState::Pressed => player_hook.set_launch(true),
-                            ElementState::Released => player_hook.set_launch(false),
-                        }
-                    }
+                    inputs.extend(save.convert_mouse_button_input(button).iter().map(|b| (b.clone(), state.clone())));
+                }
+                Event::WindowEvent {
+                    event: WindowEvent::KeyboardInput {
+                        input: ::winit::KeyboardInput {
+                            state,
+                            virtual_keycode: Some(keycode),
+                            ..
+                        },
+                        ..
+                    },
+                    ..
+                } => {
+                    inputs.extend(save.convert_keycode_input(keycode).iter().map(|c| (c.clone(), state.clone())));
                 }
                 Event::DeviceEvent {
                     event: DeviceEvent::Motion { axis: 0, value: dx },
@@ -88,29 +78,22 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                         .min(::std::f32::consts::FRAC_PI_2)
                         .max(-::std::f32::consts::FRAC_PI_2);
                 }
-                Event::WindowEvent {
-                    event: WindowEvent::KeyboardInput { input, .. },
-                    ..
-                } => {
-                    let direction = match input.scancode {
-                        25 => Some(Direction::Forward),
-                        38 => Some(Direction::Left),
-                        39 => Some(Direction::Backward),
-                        40 => Some(Direction::Right),
-                        _ => None,
-                    };
-                    if let Some(direction) = direction {
-                        player_control.directions.retain(|&elt| elt != direction);
-                        if let ElementState::Pressed = input.state {
-                            player_control.directions.push(direction);
-                        }
-                    }
-                }
                 _ => (),
             }
         }
 
-        // TODO: factorise
+        for input in inputs {
+            match input {
+                (::resource::Input::Shoot, state) => player_shooter.set_shoot(state == ElementState::Released),
+                (::resource::Input::Direction(direction), state) => {
+                    player_control.directions.retain(|&elt| elt != direction);
+                    if let ElementState::Pressed = state {
+                        player_control.directions.push(direction);
+                    }
+                }
+            }
+        }
+
         player_aim.rotation = ::na::UnitQuaternion::from_rotation_matrix(
             &(::na::Rotation3::new(::na::Vector3::new(0.0, 0.0, -player_control.pointer[0]))
                 * ::na::Rotation3::new(::na::Vector3::new(0.0, player_control.pointer[1], 0.0))),

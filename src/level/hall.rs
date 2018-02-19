@@ -34,7 +34,9 @@ pub fn create_hall(world: &mut ::specs::World) {
             .map(|i| (::na::Vector2::new(1, i*3+3), ::na::Vector3::new(0.0, FRAC_PI_2, 0.0))));
 
     for (i, (teleport_cell, teleport_dir)) in teleport_cells.enumerate() {
-        maze_colors.insert(teleport_cell, (::CONFIG.end_color, true));
+        let activated = i == 0 || world.read_resource::<::resource::Save>().score(i-1).is_some();
+
+        maze_colors.insert(teleport_cell, (::CONFIG.end_color, activated));
         maze.walls.remove(&teleport_cell);
 
         let score_pos = if teleport_dir[1] == 0.0 {
@@ -73,15 +75,17 @@ pub fn create_hall(world: &mut ::specs::World) {
             world,
         );
 
-        ::entity::create_teleport_w(
-            ::na::Isometry3::new(
-                maze.to_world(&teleport_cell),
-                teleport_dir,
-            ),
-            maze.scale,
-            ::resource::LevelAction::Level(i),
-            world,
-        );
+        if activated {
+            ::entity::create_teleport_w(
+                ::na::Isometry3::new(
+                    maze.to_world(&teleport_cell),
+                    teleport_dir,
+                ),
+                maze.scale,
+                ::resource::LevelAction::Level(i),
+                world,
+            );
+        }
     }
 
     // Build Maze

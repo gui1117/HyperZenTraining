@@ -8,8 +8,10 @@ use rodio::Source;
 #[derive(Clone, Copy)]
 pub enum Sound {
     Shoot,
-    // BouncerBounce,
-    // AvoiderBounce,
+    Kill,
+    Death,
+    AllKilled,
+    Portal,
 }
 
 pub struct Audio {
@@ -23,7 +25,12 @@ pub struct Audio {
 impl Audio {
     pub fn init() -> Self {
         let sound_filenames = [
-            ::CONFIG.player_shoot_sound.clone(),
+            ::CONFIG.shoot_sound.clone(),
+            ::CONFIG.kill_sound.clone(),
+            ::CONFIG.all_killed_sound.clone(),
+            ::CONFIG.portal_sound.clone(),
+            ::CONFIG.death_sound.clone(),
+
         ];
 
         let mut sounds = vec![];
@@ -42,6 +49,22 @@ impl Audio {
             right_ear: [::std::f32::NAN; 3],
             sounds,
         }
+    }
+
+    pub fn play_unspatial(&mut self, sound: Sound) {
+        let sink = ::rodio::Sink::new(&self.endpoint);
+        sink.append(self.sounds[sound as usize].clone());
+        sink.detach();
+    }
+
+
+    pub fn play_on_emitter(&mut self, sound: Sound) {
+        let pos = [
+            (self.left_ear[0] + self.right_ear[0])/2.0,
+            (self.left_ear[1] + self.right_ear[1])/2.0,
+            (self.left_ear[2] + self.right_ear[2])/2.0,
+        ];
+        self.play(sound, pos);
     }
 
     pub fn play(&mut self, sound: Sound, pos: [f32; 3]) {

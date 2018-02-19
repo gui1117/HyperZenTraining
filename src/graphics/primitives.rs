@@ -68,7 +68,7 @@ pub fn instance_primitives(
 
     // Sphere
     let sphere_vertices = {
-        let sphere = ::ncollide::procedural::sphere(1.0, 16, 16, false);
+        let sphere = ::ncollide::procedural::sphere(1.0, 32, 32, false);
         let indices = match sphere.indices {
             ::ncollide::procedural::IndexBuffer::Unified(ref indices) => indices.clone(),
             _ => unreachable!(),

@@ -558,6 +558,7 @@ impl Hook {
         }
     }
 
+#[allow(unused)]
     pub fn set_launch(&mut self, launch: bool) {
         self.launch = launch;
     }

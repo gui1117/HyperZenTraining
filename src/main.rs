@@ -295,13 +295,11 @@ fn main() {
         let delta_time = last_update_instant.elapsed();
         last_update_instant = Instant::now();
 
-        if world.read_resource::<::resource::MenuState>().pause {
-            world.write_resource::<::resource::ImGuiOption>().as_mut().unwrap().set_mouse_draw_cursor(true);
+        if world.read_resource::<::resource::MenuState>().paused() {
             world.write_resource::<::resource::UpdateTime>().0 = 0.0;
             pause_update_dispatcher.dispatch(&mut world.res);
         } else {
             world.write_resource::<::resource::GameDuration>().0 += delta_time;
-            world.write_resource::<::resource::ImGuiOption>().as_mut().unwrap().set_mouse_draw_cursor(false);
             world.write_resource::<::resource::UpdateTime>().0 = delta_time
                 .as_secs()
                 .saturating_mul(1_000_000_000)

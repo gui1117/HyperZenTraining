@@ -25,6 +25,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         ::specs::FetchMut<'a, ::resource::Graphics>,
         ::specs::FetchMut<'a, ::resource::MenuState>,
         ::specs::Fetch<'a, ::resource::FpsCounter>,
+        ::specs::Fetch<'a, ::resource::Save>,
         ::specs::Fetch<'a, ::resource::UpdateTime>,
         ::specs::Fetch<'a, ::resource::DepthCoef>,
         ::specs::Fetch<'a, ::resource::Benchmarks>,
@@ -47,6 +48,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             mut graphics,
             mut menu_state,
             fps_counter,
+            save,
             update_time,
             depth_coef,
             benchmarks,
@@ -409,7 +411,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             rendering.size_pixels.take().unwrap(),
             ::CONFIG.dt(),
         );
-        menu_state.build_ui(&ui);
+        menu_state.build_ui(&ui, &save);
         if false {
             ui.window(im_str!("Debug"))
                 .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)

@@ -1,17 +1,13 @@
 # FINAL
 
-debug on level load maybe set world update a little to desactivate ....
-
-* faire niveau un par un
+debug on level load maybe set world update a little to desactivate walls
 
 refonte du GUI:
 * avec assignation des touches directionnelles et tirer
+  faire les boutons et récupération du input
 * son
 
-* faire sons:
-  * tué,
-  * je suis mort/reset
-  * tous tué/ouverture
+plus trouver les sons
 
 ### programme:
 

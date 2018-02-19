@@ -28,6 +28,7 @@ impl GameSystem {
         let recreate_level = match (self.current_level, action) {
             (None, _) => Some(Level::Level(0,0)),
             (Some(Level::Hall), Some(::resource::LevelAction::Level(level))) => {
+                world.write_resource::<::resource::Audio>().play_unspatial(::audio::Sound::Portal);
                 if ::CONFIG.levels[level].len() != 0 {
                     Some(Level::Level(level, 0))
                 } else {
@@ -38,6 +39,7 @@ impl GameSystem {
                 }
             },
             (Some(Level::Level(level, part)), Some(::resource::LevelAction::Next)) => {
+                world.write_resource::<::resource::Audio>().play_unspatial(::audio::Sound::Portal);
                 if ::CONFIG.levels[level].len() > part + 1 {
                     Some(Level::Level(level, part+1))
                 } else {
