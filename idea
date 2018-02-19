@@ -1,0 +1,58 @@
+monstre qui rassemble les faces vole et ellipsoide (ne reste pas au centre du couloir)
+deux mode: tour des faces visible ou tour des cubes visible
+monstre style araigné qui marche sur les mur et evite d'être sur le curseur (peut sauter ?)
+changer sens gravité
+
+trois monde:
+
+* fermé horizontal avec araigné et monstre invisible effaceur de ligne
+  les monstres évite le cursreur
+
+* ouvert avec grappin avec araigné géante peut être des tourelles laser qui impose d'être rapide ou pas et puis des boules qui se dirige vers toi et qu'il faut tuer
+  des plateforme flotte dans l'air et ya les pattes de l'araigné pour s'accrocher
+
+* moitié ouvert avec vue de seulement les contour il faut trouver comment jouer avec ça
+
+
+## vrac
+
+* plus d'araggné mais des balles rebondissante pour le premier monde
+  + ajout de mur lent (et avecdes piques ?)
+
+* peut être different labyrinthe un avec des cubes (on voit la rupture entre chaque cube,)
+  l'autre avec des faces
+
+* au lieu de mur faire des boules de feu lentes
+  les ennemies se tu entre eux selon un ordre précis (pas de rebondissement entre eux):
+  * boules de feu
+  * petit boule rebondissante
+  * triangle téléguidé qui évite les autres
+  * truc transparent qui téléguidé qui évite les autres
+
+* au fur et a mesure on voit moins de choses
+
+* space: boss: géant lance des boules il faut les redirigé sur lui en les lui lancant dessus
+
+* first maze: use no ceil and things can fall into the maze
+
+* monstre qui tourne sur lui même très vite
+
+* avoider évite le viseur
+
+* carré intuable qui avance en ligne droite jusqu'a s'arreter dans les angles on peut les entendres
+  IL faut un truc genre charger dans Left 4 dead
+
+##
+
+* les niveau de type 1 ( et 3 ? ) sont des cubes dans lequels on descend au bout desquel il y a quelque chose pour finir le jeux.
+  genre il faut trouver les clefs ...
+  une fois le cube finis il se ferme
+
+##
+
+* les petites boules font regagner des points de vie lorsque tué
+
+##
+
+* un niveau ou les couleurs font office d'id
+* pour le laser faire plein de triangles
