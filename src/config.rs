@@ -3,18 +3,24 @@ use rand::distributions::{IndependentSample, Range};
 use rand;
 
 use std::fs::File;
+use show_message::OkOrShow;
 
 const FILENAME: &str = "config.ron";
 
 lazy_static! {
     pub static ref CONFIG: Config = {
-        let file = File::open(FILENAME).unwrap();
-        ::ron::de::from_reader(file).unwrap()
+        let file = File::open(FILENAME)
+            .ok_or_show(|e| format!("Failed to open config file at {}: {}", FILENAME, e));
+        ::ron::de::from_reader(file)
+            .ok_or_show(|e| format!("Failed to parse config file {}: {}", FILENAME, e))
     };
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    pub cursor_file: String,
+    pub assets_dir: String,
+
     pub shoot_sound: String,
     pub kill_sound: String,
     pub all_killed_sound: String,

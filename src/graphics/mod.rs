@@ -18,8 +18,11 @@ use vulkano::instance::PhysicalDevice;
 use vulkano::format;
 use vulkano::sync::{now, GpuFuture};
 
+use show_message::{OkOrShow, SomeOrShow};
+
 use std::sync::Arc;
 use std::fs::File;
+use std::path::PathBuf;
 
 pub mod shader;
 pub mod render_pass;
@@ -317,7 +320,7 @@ impl<'a> Graphics<'a> {
         // TODO: in save sort from intergrated to the last one
         let physical = PhysicalDevice::enumerate(&window.surface().instance())
             .next()
-            .expect("no device available");
+            .some_or_show("Failed to enumerate Vulkan devices");
 
         let queue_family = physical
             .queue_families()
@@ -325,7 +328,7 @@ impl<'a> Graphics<'a> {
                 q.supports_graphics() && q.supports_compute()
                     && window.surface().is_supported(q).unwrap_or(false)
             })
-            .expect("couldn't find a graphical queue family");
+            .some_or_show("Failed to find a vulkan graphical queue family");
 
         let (device, mut queues) = {
             let device_ext = DeviceExtensions {
@@ -338,10 +341,11 @@ impl<'a> Graphics<'a> {
                 physical.supported_features(),
                 &device_ext,
                 [(queue_family, 0.5)].iter().cloned(),
-            ).expect("failed to create device")
+            ).ok_or_show(|e| format!("Failed to create vulkan device: {}", e))
         };
 
-        let queue = queues.next().unwrap();
+        let queue = queues.next()
+            .some_or_show("Failed to find queue with supported features");
 
         let (swapchain, images) = {
             let caps = window
@@ -411,11 +415,23 @@ impl<'a> Graphics<'a> {
             ).expect("failed to create buffer");
 
         let (cursor_texture, cursor_tex_future) = {
-            let file = File::open("assets/cursor.png").unwrap();
-            let (info, mut reader) = ::png::Decoder::new(file).read_info().unwrap();
-            assert_eq!(info.color_type, ::png::ColorType::RGBA);
+            let mut cursor_path = PathBuf::new();
+            cursor_path.push(::CONFIG.assets_dir.clone());
+            cursor_path.push(::CONFIG.cursor_file.clone());
+
+            let file = File::open(cursor_path.clone())
+                .ok_or_show(|e| format!("Failed to open cursor file {}: {}", cursor_path.to_string_lossy(), e));
+            let (info, mut reader) = ::png::Decoder::new(file).read_info()
+                .ok_or_show(|e| format!("Failed to decode cursor image {}: {}", cursor_path.to_string_lossy(), e));
+
+            if info.color_type != ::png::ColorType::RGBA {
+                ::show_message::show(format!("Failed to cursor png image {} must be RGBA", cursor_path.to_string_lossy()));
+                ::std::process::exit(1);
+            }
+
             let mut buf = vec![0; info.buffer_size()];
-            reader.next_frame(&mut buf).unwrap();
+            reader.next_frame(&mut buf)
+                .ok_or_show(|e| format!("Failed to decode cursor png image {}: {}", cursor_path.to_string_lossy(), e));
 
             ImmutableImage::from_iter(
                 buf.into_iter(),
@@ -641,6 +657,7 @@ impl<'a> Graphics<'a> {
             BufferUsage::all(),
             vec![queue.family()].into_iter(),
         ).unwrap();
+
         let erased_buffer = CpuAccessibleBuffer::from_data(
             device.clone(),
             BufferUsage::all(),
@@ -752,25 +769,30 @@ impl<'a> Graphics<'a> {
     }
 
     pub fn recreate(&mut self, window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) {
-        let recreate;
-        loop {
-            // TODO: Sleep and max number of try
+        let mut try = 0;
+        let recreate = loop {
             let dimensions = window
                 .surface()
                 .capabilities(self.physical)
                 .expect("failed to get surface capabilities")
                 .current_extent
                 .unwrap_or([1024, 768]);
-            match self.data.swapchain.recreate_with_dimension(dimensions) {
-                Err(::vulkano::swapchain::SwapchainCreationError::UnsupportedDimensions) => (),
-                r @ _ => {
-                    recreate = Some(r);
-                    break;
+
+            let res = self.data.swapchain.recreate_with_dimension(dimensions);
+
+            if let Err(::vulkano::swapchain::SwapchainCreationError::UnsupportedDimensions) = res {
+                if try < 10 {
+                    try += 1;
+                    ::std::thread::sleep(::std::time::Duration::from_millis(100));
+                    continue;
                 }
             }
-        }
+            break res;
+        };
 
-        let (new_swapchain, new_images) = recreate.unwrap().unwrap();
+        let (new_swapchain, new_images) = recreate
+            .ok_or_show(|e| format!("Failed to recreate swapchain: {}", e));
+
         self.data.dim = new_images[0].dimensions();
         self.data.images = new_images;
         self.data.swapchain = new_swapchain;

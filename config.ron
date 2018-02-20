@@ -1,4 +1,7 @@
 Config(
+    cursor_file: "cursor.png",
+    assets_dir: "assets",
+
     shoot_sound: "shoot.ogg",
     kill_sound: "kill.ogg",
     all_killed_sound: "all_killed.ogg",

@@ -2,11 +2,13 @@
 
 debug on level load maybe set world update a little to desactivate walls
 
+* unwrap pour save et config
+
 refonte du GUI:
-* fullscreen or not
 * son
 
 * faire show message on error
+* faire rattrapage d'erreur
 
 plus trouver les sons
 

@@ -25,6 +25,7 @@ extern crate wavefront_obj;
 extern crate winit;
 extern crate app_dirs;
 extern crate rodio;
+extern crate show_message;
 
 #[macro_use]
 mod util;
@@ -41,6 +42,7 @@ mod level;
 pub use config::CONFIG;
 
 use vulkano_win::VkSurfaceBuild;
+use show_message::OkOrShow;
 
 use vulkano::swapchain;
 use vulkano::sync::now;
@@ -85,22 +87,25 @@ fn init_imgui() -> ::imgui::ImGui {
 
 fn main() {
     ::std::env::set_var("WINIT_UNIX_BACKEND", "x11");
+    let save = ::resource::Save::new();
 
     let instance = {
         let extensions = vulkano_win::required_extensions();
         let info = app_info_from_cargo_toml!();
-        Instance::new(Some(&info), &extensions, None).expect("failed to create Vulkan instance")
+        Instance::new(Some(&info), &extensions, None)
+            .ok_or_show(|e| format!("Failed to create Vulkan instance.\nPlease see if you graphic cards support Vulkan and if so update your drivers\n\n{}", e))
     };
 
     let mut events_loop = winit::EventsLoop::new();
     let window = winit::WindowBuilder::new()
         .with_fullscreen(winit::get_primary_monitor())
         .build_vk_surface(&events_loop, instance.clone())
-        .unwrap();
+        .ok_or_show(|e| format!("Failed to build vulkan window: {}\n\n{:#?}", e, e));
 
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
 
-    try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10).unwrap();
+    try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10)
+        .ok_or_show(|e| format!("Failed to grab cursor: {}", e));
 
     let mut imgui = init_imgui();
     let mut graphics = graphics::Graphics::new(&window, &mut imgui);
@@ -150,7 +155,6 @@ fn main() {
     world.add_resource(::resource::Activated(false));
     world.add_resource(::resource::Audio::init());
     world.add_resource(::resource::LevelActions(vec![]));
-    let save = ::resource::Save::new();
     let menu_state = ::resource::MenuState::new(&save);
     world.add_resource(save);
     world.add_resource(menu_state);
@@ -234,8 +238,10 @@ fn main() {
                         event: WindowEvent::Focused(true),
                         ..
                     } => {
-                        try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Normal), 100, 10).unwrap();
-                        try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10).unwrap();
+                        try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Normal), 100, 10)
+                            .ok_or_show(|e| format!("Failed to reset cursor: {}", e));
+                        try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10)
+                            .ok_or_show(|e| format!("Failed to grab cursor: {}", e));
                         false
                     }
                     Event::WindowEvent {
@@ -337,7 +343,8 @@ fn main() {
             }
         }
 
-        let (image_num, acquire_future) = next_image.unwrap();
+        let (image_num, acquire_future) = next_image
+            .ok_or_show(|e| format!("Failed to acquire next image: {}", e));
 
         world.write_resource::<::resource::Rendering>().image_num = Some(image_num);
         world.write_resource::<::resource::Rendering>().size_points =

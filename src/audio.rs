@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use rodio::decoder::Decoder;
 use rodio::Source;
+use show_message::OkOrShow;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -15,7 +16,7 @@ pub enum Sound {
 }
 
 pub struct Audio {
-    endpoint: ::rodio::Endpoint,
+    endpoint: Option<::rodio::Endpoint>,
     spatial_sinks: Vec<::rodio::SpatialSink>,
     sounds: Vec<::rodio::source::Buffered<Decoder<File>>>,
     left_ear: [f32; 3],
@@ -37,13 +38,16 @@ impl Audio {
         for filename in sound_filenames.iter() {
             let mut path = PathBuf::from(::CONFIG.sound_dir.clone());
             path.push(filename);
-            let file = File::open(path).unwrap();
-            let sound = Decoder::new(file).unwrap().buffered();
+            let file = File::open(path.clone())
+                .ok_or_show(|e| format!("Failed open sound {}: {}", path.to_string_lossy(), e));
+            let sound = Decoder::new(file)
+                .ok_or_show(|e| format!("Failed to decode sound {}: {}", path.to_string_lossy(), e))
+                .buffered();
             sounds.push(sound);
         }
 
         Audio {
-            endpoint: ::rodio::default_endpoint().unwrap(),
+            endpoint: ::rodio::default_endpoint(),
             spatial_sinks: vec![],
             left_ear: [::std::f32::NAN; 3],
             right_ear: [::std::f32::NAN; 3],
@@ -52,9 +56,11 @@ impl Audio {
     }
 
     pub fn play_unspatial(&mut self, sound: Sound) {
-        let sink = ::rodio::Sink::new(&self.endpoint);
-        sink.append(self.sounds[sound as usize].clone());
-        sink.detach();
+        if let Some(ref endpoint) = self.endpoint {
+            let sink = ::rodio::Sink::new(endpoint);
+            sink.append(self.sounds[sound as usize].clone());
+            sink.detach();
+        }
     }
 
 
@@ -68,14 +74,16 @@ impl Audio {
     }
 
     pub fn play(&mut self, sound: Sound, pos: [f32; 3]) {
-        let spatial_sink = ::rodio::SpatialSink::new(
-            &self.endpoint,
-            pos,
-            self.left_ear,
-            self.right_ear,
-        );
-        spatial_sink.append(self.sounds[sound as usize].clone());
-        self.spatial_sinks.push(spatial_sink);
+        if let Some(ref endpoint) = self.endpoint {
+            let spatial_sink = ::rodio::SpatialSink::new(
+                endpoint,
+                pos,
+                self.left_ear,
+                self.right_ear,
+                );
+            spatial_sink.append(self.sounds[sound as usize].clone());
+            self.spatial_sinks.push(spatial_sink);
+        }
     }
 
     pub fn set_emitter(&mut self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>) {
