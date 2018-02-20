@@ -314,6 +314,7 @@ impl<'a> Graphics<'a> {
     }
     pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) -> Graphics<'a> {
         // TODO: read config and save device
+        // TODO: in save sort from intergrated to the last one
         let physical = PhysicalDevice::enumerate(&window.surface().instance())
             .next()
             .expect("no device available");
