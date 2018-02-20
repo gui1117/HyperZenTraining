@@ -18,10 +18,7 @@ use vulkano::instance::PhysicalDevice;
 use vulkano::format;
 use vulkano::sync::{now, GpuFuture};
 
-use na;
-use alga::general::SubsetOf;
-
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::fs::File;
 
 pub mod shader;
@@ -34,51 +31,12 @@ pub use self::primitives::primitive::Primitive;
 pub use self::colors::Color;
 pub use self::primitives::primitive::GROUP_COUNTER_SIZE;
 
-// TODO: use new_nonuniform_scaling
 pub fn resizer(x: f32, y: f32, z: f32) -> ::na::Transform3<f32> {
     let mut resizer: ::na::Transform3<f32> = ::na::one();
     resizer[(0, 0)] = x;
     resizer[(1, 1)] = y;
     resizer[(2, 2)] = z;
     resizer
-}
-
-lazy_static! {
-    pub static ref DEBUG_ARROWS: DebugArrows = DebugArrows::new();
-}
-
-pub struct DebugArrows {
-    trans: Mutex<Vec<([f32; 3], shader::debug_vs::ty::World)>>,
-}
-
-impl DebugArrows {
-    fn new() -> Self {
-        DebugArrows {
-            trans: Mutex::new(Vec::new()),
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn add(&self, color: [f32; 3], pos: na::Vector3<f32>, vec: na::Vector3<f32>) {
-        let transform: na::Transform3<f32> = na::Similarity3::from_parts(
-            na::Translation::from_vector(pos),
-            na::UnitQuaternion::rotation_between(&na::Vector3::new(0.0, 0.0, 1.0), &vec).unwrap(),
-            vec.norm() * 0.1,
-        ).to_superset();
-
-        self.trans.lock().unwrap().push((
-            color,
-            shader::debug_vs::ty::World {
-                world: transform.unwrap().into(),
-            },
-        ));
-    }
-
-    pub fn draw(&self) -> Vec<([f32; 3], shader::debug_vs::ty::World)> {
-        let mut res = vec![];
-        res.append(&mut self.trans.lock().unwrap());
-        res
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -123,6 +81,7 @@ pub struct DebugVertex {
 impl_vertex!(DebugVertex, position, normal);
 
 #[derive(Clone)]
+// FIXME: use abstract types instead
 pub struct Data {
     pub device: Arc<Device>,
     pub queue: Arc<Queue>,
@@ -218,9 +177,9 @@ impl<'a> Graphics<'a> {
                         imgui_texture,
                         Sampler::new(
                             device.clone(),
-                            Filter::Nearest,    // TODO: linear or nearest
-                            Filter::Linear,     // TODO: linear or nearest
-                            MipmapMode::Linear, // TODO: linear or nearest
+                            Filter::Nearest,
+                            Filter::Linear,
+                            MipmapMode::Linear,
                             SamplerAddressMode::MirroredRepeat,
                             SamplerAddressMode::MirroredRepeat,
                             SamplerAddressMode::MirroredRepeat,
@@ -476,7 +435,6 @@ impl<'a> Graphics<'a> {
             SamplerAddressMode::ClampToEdge,
             SamplerAddressMode::ClampToEdge,
             SamplerAddressMode::ClampToEdge,
-            // TODO: What values here
             0.0,
             1.0,
             0.0,
@@ -714,7 +672,7 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        // TODO: those descriptor are used by many pipeline other than
+        // FIXME: those descriptor are used by many pipeline other than
         // draw1_pipeline. Is it OK ?
         let draw1_view_descriptor_set_pool =
             FixedSizeDescriptorSetsPool::new(draw1_pipeline.clone(), 0);

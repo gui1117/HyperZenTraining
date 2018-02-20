@@ -3,9 +3,9 @@
 debug on level load maybe set world update a little to desactivate walls
 
 refonte du GUI:
-* avec assignation des touches directionnelles et tirer
-  faire les boutons et récupération du input
 * son
+
+* faire show message on error
 
 plus trouver les sons
 

@@ -1,7 +1,6 @@
 use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
 use vulkano::buffer::{BufferUsage, ImmutableBuffer};
 use vulkano::pipeline::viewport::Viewport;
-use vulkano::descriptor::descriptor_set::PersistentDescriptorSet;
 use specs::Join;
 use alga::general::SubsetOf;
 use util::{high_byte, low_byte};
@@ -331,7 +330,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         rendering.command_buffer = Some(command_buffer_builder.build().unwrap());
 
         // Compute second command
-        let mut second_command_buffer_builder = AutoCommandBufferBuilder::primary_one_time_submit(
+        let second_command_buffer_builder = AutoCommandBufferBuilder::primary_one_time_submit(
             graphics.device.clone(),
             graphics.queue.family(),
         ).unwrap()
@@ -375,35 +374,6 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 (),
             )
             .unwrap();
-
-        // Draw debug arrows
-        if false {
-            for arrow in ::graphics::DEBUG_ARROWS.draw() {
-                let world_trans_subbuffer = graphics
-                    .debug_arrow_world_uniform_buffer
-                    .next(arrow.1)
-                    .unwrap();
-
-                // This is not optimised.
-                let debug_arrow_set = Arc::new(
-                    PersistentDescriptorSet::start(graphics.debug_pipeline.clone(), 0)
-                        .add_buffer(world_trans_subbuffer)
-                        .unwrap()
-                        .build()
-                        .unwrap(),
-                );
-
-                second_command_buffer_builder = second_command_buffer_builder
-                    .draw(
-                        graphics.debug_pipeline.clone(),
-                        screen_dynamic_state.clone(),
-                        graphics.debug_arrow_vertex_buffer.clone(),
-                        (view_set.clone(), debug_arrow_set.clone()),
-                        arrow.0,
-                    )
-                    .unwrap();
-            }
-        }
 
         // Build imgui
         let ui = imgui.as_mut().unwrap().frame(
