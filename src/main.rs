@@ -86,8 +86,17 @@ fn init_imgui() -> ::imgui::ImGui {
 }
 
 fn main() {
+    while let ControlFlow::Restart = new_game() {}
+}
+
+enum ControlFlow {
+    Restart,
+    Quit,
+}
+
+fn new_game() -> ControlFlow {
     ::std::env::set_var("WINIT_UNIX_BACKEND", "x11");
-    let save = ::resource::Save::new();
+    let mut save = ::resource::Save::new();
 
     let instance = {
         let extensions = vulkano_win::required_extensions();
@@ -97,8 +106,13 @@ fn main() {
     };
 
     let mut events_loop = winit::EventsLoop::new();
-    let window = winit::WindowBuilder::new()
-        .with_fullscreen(winit::get_primary_monitor())
+    let mut window_builder = winit::WindowBuilder::new();
+
+    if save.fullscreen() {
+        window_builder = window_builder.with_fullscreen(winit::get_primary_monitor())
+    }
+
+    let window = window_builder
         .build_vk_surface(&events_loop, instance.clone())
         .ok_or_show(|e| format!("Failed to build vulkan window: {}\n\n{:#?}", e, e));
 
@@ -108,7 +122,7 @@ fn main() {
         .ok_or_show(|e| format!("Failed to grab cursor: {}", e));
 
     let mut imgui = init_imgui();
-    let mut graphics = graphics::Graphics::new(&window, &mut imgui);
+    let mut graphics = graphics::Graphics::new(&window, &mut imgui, &mut save);
 
     let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
 
@@ -145,6 +159,7 @@ fn main() {
     world.add_resource(graphics.data.clone());
     world.add_resource(Some(imgui));
     world.add_resource(::resource::Events(vec![]));
+    world.add_resource(instance.clone());
     world.add_resource(::resource::Rendering::new());
     world.add_resource(::resource::DebugMode(false));
     world.add_resource(::resource::FpsCounter(0));
@@ -310,11 +325,14 @@ fn main() {
                 }
             });
             if done {
-                break;
+                break ControlFlow::Quit;
             }
         }
         if world.write_resource::<::resource::MenuState>().quit_button {
-            break;
+            break ControlFlow::Quit;
+        }
+        if world.write_resource::<::resource::MenuState>().restart_now_button {
+            break ControlFlow::Restart;
         }
         benchmarker.end("pre_update");
 

@@ -68,6 +68,11 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
 
         match menu_state.state {
             ::resource::MenuStateState::Game => unreachable!(),
+            ::resource::MenuStateState::Restart => {
+                if menu_state.restart_later_button {
+                    menu_state.state = ::resource::MenuStateState::Pause;
+                }
+            }
             ::resource::MenuStateState::Input(input) => {
                 for ev in events.0.iter() {
                     let received_input = match *ev {
@@ -127,9 +132,11 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                         _ => (),
                     }
                 }
+
                 if menu_state.continue_button {
                     menu_state.state = ::resource::MenuStateState::Game;
                 }
+
                 if menu_state.return_hall_button {
                     level_actions.0.push(::resource::LevelAction::ReturnHall);
                     menu_state.state = ::resource::MenuStateState::Game;
@@ -159,7 +166,17 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                     save.reset_input_settings();
                     menu_state.mouse_sensibility_input = ::CONFIG.mouse_sensibility;
                 }
+
+                if menu_state.fullscreen_checkbox {
+                    save.toggle_fullscreen();
+                    menu_state.state = ::resource::MenuStateState::Restart;
+                }
+
                 save.set_mouse_sensibility_if_changed(menu_state.mouse_sensibility_input);
+
+                if save.set_vulkan_device_uuid_if_changed(&menu_state.vulkan_device) {
+                    menu_state.state = ::resource::MenuStateState::Restart;
+                }
             },
         }
     }

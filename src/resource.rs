@@ -1,8 +1,11 @@
 use vulkano::command_buffer::AutoCommandBuffer;
+use vulkano::instance::Instance;
+use vulkano::instance::PhysicalDevice;
 use app_dirs::{AppInfo, app_root, AppDataType};
 
 pub use graphics::Data as Graphics;
 use std::io::Write;
+use std::sync::Arc;
 use std::fs::File;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -15,6 +18,7 @@ use show_message::OkOrShow;
 pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub struct Events(pub Vec<::winit::Event>);
 pub type Benchmarks = Vec<::util::Benchmark>;
+pub type VulkanInstance = Arc<Instance>;
 
 pub struct Activated(pub bool);
 
@@ -27,6 +31,8 @@ pub struct Save {
     mouse_sensibility: f32,
     scores: HashMap<usize, Score>,
     input_settings: InputSettings,
+    fullscreen: bool,
+    vulkan_device_uuid: Option<[u8; 16]>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -139,8 +145,25 @@ impl Save {
             .unwrap_or(Save {
                 mouse_sensibility: ::CONFIG.mouse_sensibility,
                 scores: HashMap::new(),
-                input_settings: InputSettings::default()
+                input_settings: InputSettings::default(),
+                fullscreen: true,
+                vulkan_device_uuid: None,
             })
+    }
+
+    /// Return if changed
+    pub fn set_vulkan_device_uuid_if_changed(&mut self, uuid: &[u8; 16]) -> bool {
+        if self.vulkan_device_uuid.map(|saved_uuid| *uuid != saved_uuid).unwrap_or(true) {
+            self.vulkan_device_uuid = Some(uuid.clone());
+            self.save();
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn vulkan_device_uuid(&self) -> &Option<[u8; 16]> {
+        &self.vulkan_device_uuid
     }
 
     pub fn reset_input_settings(&mut self) {
@@ -208,6 +231,15 @@ impl Save {
             self.mouse_sensibility = mouse_sensibility;
             self.save();
         }
+    }
+
+    pub fn toggle_fullscreen(&mut self) {
+        self.fullscreen = !self.fullscreen;
+        self.save();
+    }
+
+    pub fn fullscreen(&self) -> bool {
+        self.fullscreen
     }
 
     pub fn save(&self) {
@@ -293,6 +325,7 @@ pub enum MenuStateState {
     Pause,
     Input(Input),
     Game,
+    Restart,
 }
 
 pub struct MenuState {
@@ -302,12 +335,16 @@ pub struct MenuState {
     pub reset_button: bool,
     pub return_hall_button: bool,
     pub set_shoot_button: bool,
+    pub fullscreen_checkbox: bool,
     pub set_forward_button: bool,
     pub set_backward_button: bool,
     pub set_left_button: bool,
+    pub restart_now_button: bool,
+    pub restart_later_button: bool,
     pub set_right_button: bool,
     pub quit_button: bool,
     pub levels_button: [bool; 16],
+    pub vulkan_device: [u8; 16],
 }
 
 impl MenuState {
@@ -315,6 +352,7 @@ impl MenuState {
         match self.state {
             MenuStateState::Input(_) => true,
             MenuStateState::Pause => true,
+            MenuStateState::Restart => true,
             MenuStateState::Game => false,
         }
     }
@@ -323,9 +361,13 @@ impl MenuState {
         MenuState {
             state: MenuStateState::Game,
             mouse_sensibility_input: save.mouse_sensibility(),
+            fullscreen_checkbox: save.fullscreen(),
+            vulkan_device: save.vulkan_device_uuid().expect("Cannot create menu without saved vulkan device"),
             continue_button: false,
             reset_button: false,
             set_shoot_button: false,
+            restart_now_button: false,
+            restart_later_button: false,
             set_forward_button: false,
             set_backward_button: false,
             set_left_button: false,
@@ -336,12 +378,12 @@ impl MenuState {
         }
     }
 
-    pub fn build_ui(&mut self, ui: &::imgui::Ui, save: &Save) {
+    pub fn build_ui(&mut self, ui: &::imgui::Ui, save: &Save, vulkan_instance: &VulkanInstance) {
         let (width, height) = ui.imgui().display_size();
         let button_size = (76.0, 30.0);
 
         match self.state {
-            MenuStateState::Pause | MenuStateState::Input(_) => {
+            MenuStateState::Pause | MenuStateState::Input(_) | MenuStateState::Restart => {
                 let inputs = if let MenuStateState::Pause = self.state {
                     true
                 } else {
@@ -362,6 +404,27 @@ impl MenuState {
                         ui.separator();
                         ui.text("Settings :");
                         ui.separator();
+
+                        self.fullscreen_checkbox = ui.checkbox(im_str!("Fullscreen"), &mut save.fullscreen());
+
+                        for device in PhysicalDevice::enumerate(vulkan_instance) {
+                            let cond = save.vulkan_device_uuid()
+                                .map(|uuid| uuid == *device.uuid())
+                                .unwrap();
+
+                            let mut name = device.name().as_bytes().to_vec();
+                            name.push(b'\0');
+
+                            let name = unsafe {
+                                ::imgui::ImStr::from_utf8_with_nul_unchecked(&name)
+                            };
+
+                            if ui.radio_button_bool(name, cond) {
+                                self.vulkan_device = *device.uuid();
+                            }
+                        }
+
+                        self.set_shoot_button = ui.small_button(im_str!("Set shoot"));
                         ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility_input).build();
 
                         ui.text(format!("Shoot: {}", save.input(Input::Shoot)));
@@ -404,6 +467,20 @@ impl MenuState {
                         ui.text("Set input or escape");
                     });
             },
+            MenuStateState::Restart => {
+                ui.window(im_str!("Restart"))
+                    .collapsible(false)
+                    .size((::CONFIG.menu_width/2.0, ::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
+                    .position((width/2.0-::CONFIG.menu_width/4.0, height/2.0-::CONFIG.menu_height/4.0), ::imgui::ImGuiCond::Always)
+                    .resizable(false)
+                    .movable(false)
+                    .build(|| {
+                        ui.text("Setting needs to restart the game");
+                        self.restart_now_button = ui.button(im_str!("Restart now"), button_size);
+                        ui.same_line(0.0);
+                        self.restart_later_button = ui.button(im_str!("Restart later"), button_size);
+                    });
+            }
             _ => (),
         }
     }

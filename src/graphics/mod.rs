@@ -316,17 +316,24 @@ impl<'a> Graphics<'a> {
             imgui_descriptor_set,
         )
     }
-    pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) -> Graphics<'a> {
-        // TODO: read config and save device
+    pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) -> Graphics<'a> {
         let physical = PhysicalDevice::enumerate(&window.surface().instance())
-            .max_by_key(|device| match device.ty() {
-                PhysicalDeviceType::IntegratedGpu => 4,
-                PhysicalDeviceType::DiscreteGpu => 3,
-                PhysicalDeviceType::VirtualGpu => 2,
-                PhysicalDeviceType::Cpu => 1,
-                PhysicalDeviceType::Other => 0,
+            .max_by_key(|device| {
+                if let Some(uuid) = save.vulkan_device_uuid().as_ref() {
+                    if uuid == device.uuid() {
+                        return 100;
+                    }
+                }
+                match device.ty() {
+                    PhysicalDeviceType::IntegratedGpu => 4,
+                    PhysicalDeviceType::DiscreteGpu => 3,
+                    PhysicalDeviceType::VirtualGpu => 2,
+                    PhysicalDeviceType::Cpu => 1,
+                    PhysicalDeviceType::Other => 0,
+                }
             })
             .some_or_show("Failed to enumerate Vulkan devices");
+        save.set_vulkan_device_uuid_if_changed(physical.uuid());
 
         let queue_family = physical
             .queue_families()

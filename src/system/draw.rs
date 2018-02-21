@@ -25,6 +25,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         ::specs::FetchMut<'a, ::resource::MenuState>,
         ::specs::Fetch<'a, ::resource::FpsCounter>,
         ::specs::Fetch<'a, ::resource::Save>,
+        ::specs::Fetch<'a, ::resource::VulkanInstance>,
         ::specs::Fetch<'a, ::resource::UpdateTime>,
         ::specs::Fetch<'a, ::resource::DepthCoef>,
         ::specs::Fetch<'a, ::resource::Benchmarks>,
@@ -48,6 +49,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             mut menu_state,
             fps_counter,
             save,
+            vulkan_instance,
             update_time,
             depth_coef,
             benchmarks,
@@ -381,7 +383,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             rendering.size_pixels.take().unwrap(),
             ::CONFIG.dt(),
         );
-        menu_state.build_ui(&ui, &save);
+        menu_state.build_ui(&ui, &save, &vulkan_instance);
         if false {
             ui.window(im_str!("Debug"))
                 .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)

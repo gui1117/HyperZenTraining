@@ -4,8 +4,6 @@
 
 refonte du GUI:
 * control escape ?
-* fullscreen
-* vulkan device
 
 * son
 
