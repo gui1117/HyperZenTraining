@@ -1,6 +1,5 @@
 # FINAL
 
-refonte du GUI:
 * control escape ?
 
 * son

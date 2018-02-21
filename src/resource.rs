@@ -400,9 +400,7 @@ impl MenuState {
                     .movable(false)
                     .build(|| {
                         self.continue_button = ui.button(im_str!("Continue"), button_size);
-                        ui.separator();
                         self.return_hall_button = ui.button(im_str!("Return to hall"), button_size);
-                        ui.separator();
                         self.quit_button = ui.button(im_str!("Quit"), button_size);
                         ui.separator();
                         ui.text("Video:");
