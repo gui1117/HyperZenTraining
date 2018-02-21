@@ -380,7 +380,7 @@ impl MenuState {
 
     pub fn build_ui(&mut self, ui: &::imgui::Ui, save: &Save, vulkan_instance: &VulkanInstance) {
         let (width, height) = ui.imgui().display_size();
-        let button_size = (76.0, 30.0);
+        let button_size = (::CONFIG.menu_width - 16.0, 30.0);
 
         match self.state {
             MenuStateState::Pause | MenuStateState::Input(_) | MenuStateState::Restart => {
@@ -402,7 +402,9 @@ impl MenuState {
                         ui.separator();
                         self.return_hall_button = ui.button(im_str!("Return to hall"), button_size);
                         ui.separator();
-                        ui.text("Settings :");
+                        self.quit_button = ui.button(im_str!("Quit"), button_size);
+                        ui.separator();
+                        ui.text("Video:");
                         ui.separator();
 
                         self.fullscreen_checkbox = ui.checkbox(im_str!("Fullscreen"), &mut save.fullscreen());
@@ -424,18 +426,23 @@ impl MenuState {
                             }
                         }
 
-                        self.set_shoot_button = ui.small_button(im_str!("Set shoot"));
+                        ui.separator();
+                        ui.text("Inputs:");
+                        ui.same_line(0.0);
+                        self.reset_button = ui.small_button(im_str!("Reset"));
+                        ui.separator();
+
                         ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility_input).build();
 
-                        ui.text(format!("Shoot: {}", save.input(Input::Shoot)));
+                        ui.text(format!("Shoot   : {}", save.input(Input::Shoot)));
                         ui.same_line(0.0);
                         self.set_shoot_button = ui.small_button(im_str!("Set shoot"));
 
-                        ui.text(format!("Forward: {}", save.input(Input::Direction(Direction::Forward))));
+                        ui.text(format!("Forward : {}", save.input(Input::Direction(Direction::Forward))));
                         ui.same_line(0.0);
                         self.set_forward_button = ui.small_button(im_str!("Set forward"));
 
-                        ui.text(format!("Left: {}", save.input(Input::Direction(Direction::Left))));
+                        ui.text(format!("Left    : {}", save.input(Input::Direction(Direction::Left))));
                         ui.same_line(0.0);
                         self.set_left_button = ui.small_button(im_str!("Set left"));
 
@@ -443,13 +450,9 @@ impl MenuState {
                         ui.same_line(0.0);
                         self.set_backward_button = ui.small_button(im_str!("Set backward"));
 
-                        ui.text(format!("Right: {}", save.input(Input::Direction(Direction::Right))));
+                        ui.text(format!("Right   : {}", save.input(Input::Direction(Direction::Right))));
                         ui.same_line(0.0);
                         self.set_right_button = ui.small_button(im_str!("Set right"));
-
-                        self.reset_button = ui.button(im_str!("Reset"), button_size);
-                        ui.separator();
-                        self.quit_button = ui.button(im_str!("Quit"), button_size);
                     });
             },
             _ => (),

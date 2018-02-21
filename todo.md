@@ -1,12 +1,9 @@
 # FINAL
 
-* maybe add attracted random position inside vec
-
 refonte du GUI:
 * control escape ?
 
 * son
-
 plus trouver les sons
 
 ### programme:
