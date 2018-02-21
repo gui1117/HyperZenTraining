@@ -30,7 +30,7 @@ impl<'a> ::specs::System<'a> for AttractedSystem {
             let pos = body.get(&physic_world).position();
             attracted.last_update += update_time.0;
 
-            while attracted.last_update >= ::CONFIG.attracted_update_time {
+            while attracted.last_update >= 0.0 {
                 attracted.last_update -= ::CONFIG.attracted_update_time;
 
                 let ray = ::ncollide::query::Ray {
