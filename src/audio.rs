@@ -1,5 +1,6 @@
 use std::fs::File;
-use std::path::PathBuf;
+use std::io::Cursor;
+use std::io::Read;
 
 use rodio::decoder::Decoder;
 use rodio::Source;
@@ -18,7 +19,7 @@ pub enum Sound {
 pub struct Audio {
     endpoint: Option<::rodio::Endpoint>,
     spatial_sinks: Vec<::rodio::SpatialSink>,
-    sounds: Vec<::rodio::source::Buffered<Decoder<File>>>,
+    sounds: Vec<::rodio::source::Buffered<Decoder<Cursor<Vec<u8>>>>>,
     left_ear: [f32; 3],
     right_ear: [f32; 3],
 }
@@ -26,22 +27,38 @@ pub struct Audio {
 impl Audio {
     pub fn init() -> Self {
         let sound_filenames = [
-            ::CONFIG.shoot_sound.clone(),
-            ::CONFIG.kill_sound.clone(),
-            ::CONFIG.all_killed_sound.clone(),
-            ::CONFIG.portal_sound.clone(),
-            ::CONFIG.death_sound.clone(),
-
+            "assets/sounds/shoot.ogg",
+            "assets/sounds/kill.ogg",
+            "assets/sounds/death.ogg",
+            "assets/sounds/all_killed.ogg",
+            "assets/sounds/portal.ogg",
         ];
 
+        let mut sound_files = if cfg!(feature = "packed") {
+            vec![
+                Cursor::new(include_bytes!("../assets/sounds/shoot.ogg").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/kill.ogg").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/death.ogg").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/all_killed.ogg").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/portal.ogg").iter().cloned().collect::<Vec<_>>()),
+            ]
+        } else {
+            sound_filenames.iter()
+                .map(|s| {
+                    let mut buffer = vec![];
+                    let mut file = File::open(s)
+                        .ok_or_show(|e| format!("Failed to open sound {}: {}", s, e));
+                    file.read_to_end(&mut buffer)
+                        .ok_or_show(|e| format!("Failed to read sound {}: {}", s, e));
+                    Cursor::new(buffer)
+                })
+                .collect::<Vec<_>>()
+        };
+
         let mut sounds = vec![];
-        for filename in sound_filenames.iter() {
-            let mut path = PathBuf::from(::CONFIG.sound_dir.clone());
-            path.push(filename);
-            let file = File::open(path.clone())
-                .ok_or_show(|e| format!("Failed open sound {}: {}", path.to_string_lossy(), e));
+        for (file, filename) in sound_files.drain(..).zip(sound_filenames.iter()) {
             let sound = Decoder::new(file)
-                .ok_or_show(|e| format!("Failed to decode sound {}: {}", path.to_string_lossy(), e))
+                .ok_or_show(|e| format!("Failed to decode sound {}: {}", filename, e))
                 .buffered();
             sounds.push(sound);
         }

@@ -3,14 +3,22 @@ use rand::distributions::{IndependentSample, Range};
 use rand;
 
 use std::fs::File;
+use std::io::Cursor;
+use std::io::Read;
 use show_message::OkOrShow;
 
-const FILENAME: &str = "config.ron";
+const FILENAME: &str = "assets/config.ron";
 
 lazy_static! {
     pub static ref CONFIG: Config = {
-        let file = File::open(FILENAME)
-            .ok_or_show(|e| format!("Failed to open config file at {}: {}", FILENAME, e));
+        let file = if cfg!(feature = "packed") {
+            Box::new(Cursor::new(include_bytes!("../assets/config.ron").iter())) as Box<Read>
+        } else {
+            Box::new(File::open(FILENAME)
+                .ok_or_show(|e| format!("Failed to open config file at {}: {}", FILENAME, e)))
+                as Box<Read>
+        };
+
         ::ron::de::from_reader(file)
             .ok_or_show(|e| format!("Failed to parse config file {}: {}", FILENAME, e))
     };
@@ -18,15 +26,6 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
-    pub cursor_file: String,
-    pub assets_dir: String,
-
-    pub shoot_sound: String,
-    pub kill_sound: String,
-    pub all_killed_sound: String,
-    pub portal_sound: String,
-    pub death_sound: String,
-
     pub start_color: ::graphics::Color,
     pub end_color: ::graphics::Color,
     pub activated_color: ::graphics::Color,
@@ -45,7 +44,6 @@ pub struct Config {
     pub gen_color_white: f32,
     pub gen_color_delta: f32,
 
-    pub sound_dir: String,
     pub menu_width: f32,
     pub menu_height: f32,
     pub font_global_scale: f32,

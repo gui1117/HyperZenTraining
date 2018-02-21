@@ -22,7 +22,8 @@ use show_message::{OkOrShow, SomeOrShow};
 
 use std::sync::Arc;
 use std::fs::File;
-use std::path::PathBuf;
+use std::io::Cursor;
+use std::io::Read;
 
 pub mod shader;
 pub mod render_pass;
@@ -415,23 +416,27 @@ impl<'a> Graphics<'a> {
             ).expect("failed to create buffer");
 
         let (cursor_texture, cursor_tex_future) = {
-            let mut cursor_path = PathBuf::new();
-            cursor_path.push(::CONFIG.assets_dir.clone());
-            cursor_path.push(::CONFIG.cursor_file.clone());
+            let mut cursor_path = "assets/cursor.png";
 
-            let file = File::open(cursor_path.clone())
-                .ok_or_show(|e| format!("Failed to open cursor file {}: {}", cursor_path.to_string_lossy(), e));
+            let file = if cfg!(feature = "packed") {
+                Box::new(Cursor::new(include_bytes!("../../assets/cursor.png").iter())) as Box<Read>
+            } else {
+                Box::new(File::open(cursor_path)
+                    .ok_or_show(|e| format!("Failed to open cursor file cursor.png {}: {}", cursor_path, e)))
+                    as Box<Read>
+            };
+
             let (info, mut reader) = ::png::Decoder::new(file).read_info()
-                .ok_or_show(|e| format!("Failed to decode cursor image {}: {}", cursor_path.to_string_lossy(), e));
+                .ok_or_show(|e| format!("Failed to decode cursor image {}: {}", cursor_path, e));
 
             if info.color_type != ::png::ColorType::RGBA {
-                ::show_message::show(format!("Failed to cursor png image {} must be RGBA", cursor_path.to_string_lossy()));
+                ::show_message::show(format!("Failed to cursor png image {} must be RGBA", cursor_path));
                 ::std::process::exit(1);
             }
 
             let mut buf = vec![0; info.buffer_size()];
             reader.next_frame(&mut buf)
-                .ok_or_show(|e| format!("Failed to decode cursor png image {}: {}", cursor_path.to_string_lossy(), e));
+                .ok_or_show(|e| format!("Failed to decode cursor png image {}: {}", cursor_path, e));
 
             ImmutableImage::from_iter(
                 buf.into_iter(),

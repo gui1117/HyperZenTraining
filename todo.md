@@ -5,6 +5,11 @@ debug on level load maybe set world update a little to desactivate walls
 refonte du GUI:
 * son
 
+* control escape ?
+* fullscreen
+* vulkan device
+  and default sorting with info
+
 plus trouver les sons
 
 ### programme:

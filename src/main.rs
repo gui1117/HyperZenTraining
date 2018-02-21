@@ -49,7 +49,7 @@ use vulkano::sync::now;
 use vulkano::sync::GpuFuture;
 use vulkano::instance::Instance;
 
-use winit::{DeviceEvent, Event, WindowEvent};
+use winit::{DeviceEvent, Event, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode, ModifiersState};
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -234,6 +234,29 @@ fn main() {
 
             events_loop.poll_events(|ev| {
                 let retain = match ev {
+                    Event::WindowEvent {
+                        event: WindowEvent::KeyboardInput {
+                            input: KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                modifiers: ModifiersState {
+                                    ctrl: true,
+                                    ..
+                                },
+                                ..
+                            },
+                            ..
+                        },
+                        ..
+                    } => {
+                        // TODO: windows only
+                        let mut menu_state = world.write_resource::<::resource::MenuState>();
+                        if !menu_state.paused() {
+                            menu_state.state = ::resource::MenuStateState::Pause;
+                        }
+                        window.window().hide();
+                        false
+                    }
                     Event::WindowEvent {
                         event: WindowEvent::Focused(true),
                         ..

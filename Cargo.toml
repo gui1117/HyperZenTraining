@@ -3,6 +3,9 @@ name = "pepe"
 version = "0.1.0"
 authors = ["thiolliere <guillaume.thiolliere@opmbx.org>"]
 
+[features]
+packed = [] # standalone executable
+
 [dependencies]
 vulkano = "0.7"
 vulkano-shader-derive = "0.7"
