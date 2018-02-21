@@ -381,6 +381,7 @@ impl MenuState {
     pub fn build_ui(&mut self, ui: &::imgui::Ui, save: &Save, vulkan_instance: &VulkanInstance) {
         let (width, height) = ui.imgui().display_size();
         let button_size = (::CONFIG.menu_width - 16.0, 30.0);
+        let small_button_size = (80.0, 20.0);
 
         match self.state {
             MenuStateState::Pause | MenuStateState::Input(_) | MenuStateState::Restart => {
@@ -429,30 +430,30 @@ impl MenuState {
                         ui.separator();
                         ui.text("Inputs:");
                         ui.same_line(0.0);
-                        self.reset_button = ui.small_button(im_str!("Reset"));
+                        self.reset_button = ui.button(im_str!("Reset"), small_button_size);
                         ui.separator();
 
                         ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility_input).build();
 
-                        ui.text(format!("Shoot   : {}", save.input(Input::Shoot)));
+                        self.set_shoot_button = ui.button(im_str!("Shoot"), small_button_size);
                         ui.same_line(0.0);
-                        self.set_shoot_button = ui.small_button(im_str!("Set shoot"));
+                        ui.text(format!("[{}]", save.input(Input::Shoot)));
 
-                        ui.text(format!("Forward : {}", save.input(Input::Direction(Direction::Forward))));
+                        self.set_forward_button = ui.button(im_str!("Forward"), small_button_size);
                         ui.same_line(0.0);
-                        self.set_forward_button = ui.small_button(im_str!("Set forward"));
+                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Forward))));
 
-                        ui.text(format!("Left    : {}", save.input(Input::Direction(Direction::Left))));
+                        self.set_left_button = ui.button(im_str!("Left"), small_button_size);
                         ui.same_line(0.0);
-                        self.set_left_button = ui.small_button(im_str!("Set left"));
+                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Left))));
 
-                        ui.text(format!("Backward: {}", save.input(Input::Direction(Direction::Backward))));
+                        self.set_backward_button = ui.button(im_str!("Backward"), small_button_size);
                         ui.same_line(0.0);
-                        self.set_backward_button = ui.small_button(im_str!("Set backward"));
+                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Backward))));
 
-                        ui.text(format!("Right   : {}", save.input(Input::Direction(Direction::Right))));
+                        self.set_right_button = ui.button(im_str!("Right"), small_button_size);
                         ui.same_line(0.0);
-                        self.set_right_button = ui.small_button(im_str!("Set right"));
+                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Right))));
                     });
             },
             _ => (),
