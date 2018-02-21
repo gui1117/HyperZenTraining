@@ -1,3 +1,5 @@
+use rand::distributions::{IndependentSample, Range};
+
 pub fn create_attracted_w(pos: ::na::Vector3<f32>, eraser: bool, world: &::specs::World) {
     create_attracted(
         pos,
@@ -36,7 +38,14 @@ pub fn create_attracted<'a>(
     );
 
     let shape = ::ncollide::shape::Ball3::new(::CONFIG.attracted_size);
-    let pos = ::na::Isometry3::new(pos, ::na::zero());
+    let mut pos = ::na::Isometry3::new(pos, ::na::zero());
+
+    let mut rng = ::rand::thread_rng();
+    pos.translation.vector += ::na::Vector3::new(
+        Range::new(-0.5, 0.5).ind_sample(&mut rng),
+        Range::new(-0.5, 0.5).ind_sample(&mut rng),
+        Range::new(-0.4, 0.4).ind_sample(&mut rng),
+    );
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
     group.set_membership(&[super::ALIVE_GROUP, super::MONSTER_GROUP, super::KILLER_GROUP]);
