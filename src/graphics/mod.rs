@@ -14,7 +14,7 @@ use vulkano::descriptor::pipeline_layout::PipelineLayout;
 use vulkano::descriptor::descriptor_set::{FixedSizeDescriptorSetsPool, PersistentDescriptorSet,
                                           PersistentDescriptorSetBuf, PersistentDescriptorSetImg,
                                           PersistentDescriptorSetSampler};
-use vulkano::instance::PhysicalDevice;
+use vulkano::instance::{PhysicalDevice, PhysicalDeviceType};
 use vulkano::format;
 use vulkano::sync::{now, GpuFuture};
 
@@ -318,9 +318,14 @@ impl<'a> Graphics<'a> {
     }
     pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) -> Graphics<'a> {
         // TODO: read config and save device
-        // TODO: in save sort from intergrated to the last one
         let physical = PhysicalDevice::enumerate(&window.surface().instance())
-            .next()
+            .max_by_key(|device| match device.ty() {
+                PhysicalDeviceType::IntegratedGpu => 4,
+                PhysicalDeviceType::DiscreteGpu => 3,
+                PhysicalDeviceType::VirtualGpu => 2,
+                PhysicalDeviceType::Cpu => 1,
+                PhysicalDeviceType::Other => 0,
+            })
             .some_or_show("Failed to enumerate Vulkan devices");
 
         let queue_family = physical
