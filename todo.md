@@ -1,9 +1,10 @@
 # FINAL
 
+* settings:
+  * son
 * control escape ?
-
-* son
-plus trouver les sons
+* plus trouver les sons
+* faire niveaux
 
 ### programme:
 

@@ -264,7 +264,7 @@ fn new_game() -> ControlFlow {
                         },
                         ..
                     } => {
-                        // TODO: windows only
+                        // TODO: windows only ?
                         let mut menu_state = world.write_resource::<::resource::MenuState>();
                         if !menu_state.paused() {
                             menu_state.state = ::resource::MenuStateState::Pause;

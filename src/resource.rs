@@ -382,6 +382,7 @@ impl MenuState {
         let (width, height) = ui.imgui().display_size();
         let button_size = (::CONFIG.menu_width - 16.0, 30.0);
         let small_button_size = (80.0, 20.0);
+        let medium_button_size = (::CONFIG.menu_width/3.0-12.0, 30.0);
 
         match self.state {
             MenuStateState::Pause | MenuStateState::Input(_) | MenuStateState::Restart => {
@@ -472,15 +473,15 @@ impl MenuState {
             MenuStateState::Restart => {
                 ui.window(im_str!("Restart"))
                     .collapsible(false)
-                    .size((::CONFIG.menu_width/2.0, ::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
-                    .position((width/2.0-::CONFIG.menu_width/4.0, height/2.0-::CONFIG.menu_height/4.0), ::imgui::ImGuiCond::Always)
+                    .size((::CONFIG.menu_width/1.5, ::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
+                    .position((width/2.0-::CONFIG.menu_width/3.0, height/2.0-::CONFIG.menu_height/4.0), ::imgui::ImGuiCond::Always)
                     .resizable(false)
                     .movable(false)
                     .build(|| {
                         ui.text("Setting needs to restart the game");
-                        self.restart_now_button = ui.button(im_str!("Restart now"), button_size);
+                        self.restart_now_button = ui.button(im_str!("Restart now"), medium_button_size);
                         ui.same_line(0.0);
-                        self.restart_later_button = ui.button(im_str!("Restart later"), button_size);
+                        self.restart_later_button = ui.button(im_str!("Restart later"), medium_button_size);
                     });
             }
             _ => (),
