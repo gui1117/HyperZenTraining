@@ -19,13 +19,15 @@ pub enum Sound {
 pub struct Audio {
     endpoint: Option<::rodio::Endpoint>,
     spatial_sinks: Vec<::rodio::SpatialSink>,
+    sinks: Vec<::rodio::Sink>,
     sounds: Vec<::rodio::source::Buffered<Decoder<Cursor<Vec<u8>>>>>,
     left_ear: [f32; 3],
     right_ear: [f32; 3],
+    volume: f32,
 }
 
 impl Audio {
-    pub fn init() -> Self {
+    pub fn init(save: &::resource::Save) -> Self {
         let sound_filenames = [
             "assets/sounds/shoot.ogg",
             "assets/sounds/kill.ogg",
@@ -69,17 +71,18 @@ impl Audio {
             left_ear: [::std::f32::NAN; 3],
             right_ear: [::std::f32::NAN; 3],
             sounds,
+            sinks: vec![],
+            volume: save.volume(),
         }
     }
 
     pub fn play_unspatial(&mut self, sound: Sound) {
         if let Some(ref endpoint) = self.endpoint {
-            let sink = ::rodio::Sink::new(endpoint);
-            sink.append(self.sounds[sound as usize].clone());
-            sink.detach();
+            let mut sink = ::rodio::Sink::new(endpoint);
+            sink.append(self.sounds[sound as usize].clone().amplify(self.volume));
+            self.sinks.push(sink);
         }
     }
-
 
     pub fn play_on_emitter(&mut self, sound: Sound) {
         let pos = [
@@ -92,18 +95,18 @@ impl Audio {
 
     pub fn play(&mut self, sound: Sound, pos: [f32; 3]) {
         if let Some(ref endpoint) = self.endpoint {
-            let spatial_sink = ::rodio::SpatialSink::new(
+            let mut spatial_sink = ::rodio::SpatialSink::new(
                 endpoint,
                 pos,
                 self.left_ear,
                 self.right_ear,
                 );
-            spatial_sink.append(self.sounds[sound as usize].clone());
+            spatial_sink.append(self.sounds[sound as usize].clone().amplify(self.volume));
             self.spatial_sinks.push(spatial_sink);
         }
     }
 
-    pub fn set_emitter(&mut self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>) {
+    pub fn update(&mut self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>, volume: f32) {
         let local_left_ear = ::na::Point3::new(0.0, - ::CONFIG.ear_distance/2.0, 0.0);
         let local_right_ear = ::na::Point3::new(0.0, ::CONFIG.ear_distance/2.0, 0.0);
 
@@ -122,5 +125,8 @@ impl Audio {
             spatial_sink.set_left_ear_position(self.left_ear);
             spatial_sink.set_right_ear_position(self.right_ear);
         }
+
+        self.sinks.retain(|s| !s.empty());
+        self.volume = volume;
     }
 }

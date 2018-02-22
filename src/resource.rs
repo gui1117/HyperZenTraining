@@ -33,6 +33,7 @@ pub struct Save {
     input_settings: InputSettings,
     fullscreen: bool,
     vulkan_device_uuid: Option<[u8; 16]>,
+    volume: f32,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -148,11 +149,23 @@ impl Save {
                 input_settings: InputSettings::default(),
                 fullscreen: true,
                 vulkan_device_uuid: None,
+                volume: 0.5,
             })
     }
 
+    pub fn set_volume_lazy(&mut self, volume: f32) {
+        if self.volume != volume {
+            self.volume = volume;
+            self.save();
+        }
+    }
+
+    pub fn volume(&self) -> f32 {
+        self.volume
+    }
+
     /// Return if changed
-    pub fn set_vulkan_device_uuid_if_changed(&mut self, uuid: &[u8; 16]) -> bool {
+    pub fn set_vulkan_device_uuid_lazy(&mut self, uuid: &[u8; 16]) -> bool {
         if self.vulkan_device_uuid.map(|saved_uuid| *uuid != saved_uuid).unwrap_or(true) {
             self.vulkan_device_uuid = Some(uuid.clone());
             self.save();
@@ -226,7 +239,7 @@ impl Save {
     }
 
     /// Do nothing if sensibility hasn't changed
-    pub fn set_mouse_sensibility_if_changed(&mut self, mouse_sensibility: f32) {
+    pub fn set_mouse_sensibility_lazy(&mut self, mouse_sensibility: f32) {
         if self.mouse_sensibility != mouse_sensibility {
             self.mouse_sensibility = mouse_sensibility;
             self.save();
@@ -345,6 +358,7 @@ pub struct MenuState {
     pub quit_button: bool,
     pub levels_button: [bool; 16],
     pub vulkan_device: [u8; 16],
+    pub volume_slider: f32,
 }
 
 impl MenuState {
@@ -375,6 +389,7 @@ impl MenuState {
             return_hall_button: false,
             quit_button: false,
             levels_button: [false; 16],
+            volume_slider: save.volume(),
         }
     }
 
@@ -403,6 +418,12 @@ impl MenuState {
                         self.continue_button = ui.button(im_str!("Continue"), button_size);
                         self.return_hall_button = ui.button(im_str!("Return to hall"), button_size);
                         self.quit_button = ui.button(im_str!("Quit"), button_size);
+                        ui.separator();
+                        ui.text("Audio:");
+                        ui.separator();
+
+                        ui.slider_float(im_str!("Volume"), &mut self.volume_slider, 0.0, 1.0).build();
+
                         ui.separator();
                         ui.text("Video:");
                         ui.separator();

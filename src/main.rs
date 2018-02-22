@@ -168,7 +168,7 @@ fn new_game() -> ControlFlow {
     world.add_resource(::resource::UpdateTime(0.0));
     world.add_resource(::resource::GameDuration(Duration::new(0, 0)));
     world.add_resource(::resource::Activated(false));
-    world.add_resource(::resource::Audio::init());
+    world.add_resource(::resource::Audio::init(&save));
     world.add_resource(::resource::LevelActions(vec![]));
     let menu_state = ::resource::MenuState::new(&save);
     world.add_resource(save);

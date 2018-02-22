@@ -172,11 +172,13 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                     menu_state.state = ::resource::MenuStateState::Restart;
                 }
 
-                save.set_mouse_sensibility_if_changed(menu_state.mouse_sensibility_input);
+                save.set_mouse_sensibility_lazy(menu_state.mouse_sensibility_input);
 
-                if save.set_vulkan_device_uuid_if_changed(&menu_state.vulkan_device) {
+                if save.set_vulkan_device_uuid_lazy(&menu_state.vulkan_device) {
                     menu_state.state = ::resource::MenuStateState::Restart;
                 }
+
+                save.set_volume_lazy(menu_state.volume_slider);
             },
         }
     }

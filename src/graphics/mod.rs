@@ -333,7 +333,7 @@ impl<'a> Graphics<'a> {
                 }
             })
             .some_or_show("Failed to enumerate Vulkan devices");
-        save.set_vulkan_device_uuid_if_changed(physical.uuid());
+        save.set_vulkan_device_uuid_lazy(physical.uuid());
 
         let queue_family = physical
             .queue_families()
