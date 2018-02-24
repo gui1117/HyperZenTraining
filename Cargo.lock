@@ -1022,7 +1022,7 @@ dependencies = [
 [[package]]
 name = "show_message"
 version = "0.1.0"
-source = "git+https://github.com/thiolliere/show_message/#fd63fb708de66ebccc68119a1f97b5726b2a5354"
+source = "git+https://github.com/thiolliere/show_message/#037b9b4090d909f6ae06d72075518e6a0a9da123"
 dependencies = [
  "user32-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",

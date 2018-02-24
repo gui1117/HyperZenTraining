@@ -1,9 +1,9 @@
 # FINAL
 
-* settings:
-  * son
 * control escape ?
 * plus trouver les sons
+  + crédits
+  + laisser en wav si besoin
 * faire niveaux
 
 ### programme:
