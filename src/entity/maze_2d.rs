@@ -31,7 +31,7 @@ pub fn create_2d_maze_walls<'a>(
 ) {
     super::create_floor_ceil(
         0.0,
-        -1.0,
+        -0.1,
         true,
         bodies,
         static_draws,
@@ -41,7 +41,7 @@ pub fn create_2d_maze_walls<'a>(
     );
     super::create_floor_ceil(
         1.0,
-        2.0,
+        1.1,
         false,
         bodies,
         static_draws,
