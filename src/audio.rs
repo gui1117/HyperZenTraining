@@ -14,6 +14,7 @@ pub enum Sound {
     Death,
     AllKilled,
     Portal,
+    Bounce,
 }
 
 pub struct Audio {
@@ -34,6 +35,7 @@ impl Audio {
             "assets/sounds/death.ogg",
             "assets/sounds/all_killed.ogg",
             "assets/sounds/portal.ogg",
+            "assets/sounds/bounce.ogg",
         ];
 
         let mut sound_files = if cfg!(feature = "packed") {
@@ -43,6 +45,7 @@ impl Audio {
                 Cursor::new(include_bytes!("../assets/sounds/death.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/all_killed.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/portal.ogg").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/bounce.ogg").iter().cloned().collect::<Vec<_>>()),
             ]
         } else {
             sound_filenames.iter()

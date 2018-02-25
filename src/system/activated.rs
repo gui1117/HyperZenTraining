@@ -21,7 +21,7 @@ impl<'a> ::specs::System<'a> for ActivateSystem {
             && bouncer.join().next().is_none()
             && motionless.join().next().is_none()
         {
-            audio.play_on_emitter(::audio::Sound::AllKilled);
+            audio.play_unspatial(::audio::Sound::AllKilled);
             activated.0 = true;
             for (_, draw) in (&activateds, &mut static_draws).join() {
                 draw.color = ::CONFIG.activated_color;

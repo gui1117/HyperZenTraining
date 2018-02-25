@@ -1,6 +1,13 @@
 # FINAL
 
 * control escape ?
+
+* bug pour attracted en dehors de la map: regarder avec plein de attracted
+
+* faire son:
+  * pour bouncer qui rebondit
+  * pour avoider régulièrement ou alors lorsqu'ils collisionnent
+
 * plus trouver les sons
   + crédits
   + laisser en wav si besoin

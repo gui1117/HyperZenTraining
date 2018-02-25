@@ -41,10 +41,11 @@ pub fn create_attracted<'a>(
     let mut pos = ::na::Isometry3::new(pos, ::na::zero());
 
     let mut rng = ::rand::thread_rng();
+    let range = Range::new(-0.5 + ::CONFIG.attracted_size, 0.5 - ::CONFIG.attracted_size);
     pos.translation.vector += ::na::Vector3::new(
-        Range::new(-0.5, 0.5).ind_sample(&mut rng),
-        Range::new(-0.5, 0.5).ind_sample(&mut rng),
-        Range::new(-0.4, 0.4).ind_sample(&mut rng),
+        range.ind_sample(&mut rng),
+        range.ind_sample(&mut rng),
+        range.ind_sample(&mut rng),
     );
 
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();

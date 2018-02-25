@@ -30,7 +30,7 @@ impl<'a> ::specs::System<'a> for LifeSystem {
                 Life::DrawDead => {
                     let body = bodies.get_mut(entity).unwrap();
 
-                    audio.play(::audio::Sound::Kill, body.get(&physic_world).position().translation.vector.into());
+                    audio.play_unspatial(::audio::Sound::Kill);
 
                     let death_animation_assets = {
                         let assets = dynamic_graphics_assets.get(entity).unwrap();

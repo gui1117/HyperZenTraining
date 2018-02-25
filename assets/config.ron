@@ -139,7 +139,7 @@ Config(
                 bug: (1, 1),
                 scale: 1.0,
                 entities: {
-                    Attracted(eraser: false): 10,
+                    Bouncer(eraser: false): 2,
                 }
                 // turrets: 1,
                 // avoiders: 0,

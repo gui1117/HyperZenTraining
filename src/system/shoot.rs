@@ -121,7 +121,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     &entities,
                 );
 
-                audio.play(::audio::Sound::Shoot, ray.origin.coords.into());
+                audio.play_unspatial(::audio::Sound::Shoot);
             }
         }
     }
