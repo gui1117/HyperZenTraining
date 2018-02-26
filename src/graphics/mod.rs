@@ -34,7 +34,6 @@ pub mod font;
 pub use self::primitives::primitive::Primitive;
 pub use self::colors::Color;
 pub use self::primitives::primitive::GROUP_COUNTER_SIZE;
-pub use self::primitives::primitive::GROUP_COUNTER;
 
 pub fn resizer(x: f32, y: f32, z: f32) -> ::na::Transform3<f32> {
     let mut resizer: ::na::Transform3<f32> = ::na::one();
@@ -126,6 +125,13 @@ pub struct Data {
     pub eraser2_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser2_cs::Layout>>>, (((), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; GROUP_COUNTER_SIZE]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[f32; GROUP_COUNTER_SIZE]>>>)>>,
     pub draw2_descriptor_set_0: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
     pub draw2_descriptor_set_1: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetBuf<Arc<ImmutableBuffer<[[f32; 4]]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[f32; GROUP_COUNTER_SIZE]>>>)>>,
+}
+
+impl Data {
+    /// This command must be executed before next eraser_sound_system
+    pub fn reset_group(&self) {
+        primitives::primitive::GROUP_COUNTER.reset();
+    }
 }
 
 pub struct Graphics<'a> {

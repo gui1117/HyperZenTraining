@@ -19,6 +19,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         ::specs::ReadStorage<'a, ::component::PhysicBody>,
         ::specs::ReadStorage<'a, ::component::Player>,
         ::specs::ReadStorage<'a, ::component::Aim>,
+        ::specs::FetchMut<'a, ::resource::ErasedStatus>,
         ::specs::FetchMut<'a, ::resource::Rendering>,
         ::specs::FetchMut<'a, ::resource::ImGuiOption>,
         ::specs::FetchMut<'a, ::resource::Graphics>,
@@ -43,6 +44,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             bodies,
             players,
             aims,
+            mut erased_status,
             mut rendering,
             mut imgui,
             mut graphics,
@@ -306,14 +308,25 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             }
         }
 
-        assert!(::graphics::GROUP_COUNTER_SIZE % 64 == 0);
         command_buffer_builder = command_buffer_builder
             .end_render_pass()
-            .unwrap()
+            .unwrap();
+
+        if erased_status.need_buffer_clear {
+            erased_status.need_buffer_clear = false;
+            command_buffer_builder = command_buffer_builder
+                .fill_buffer(graphics.tmp_erased_buffer.clone(), 0u32)
+                .unwrap()
+        }
+
+        assert!(::graphics::GROUP_COUNTER_SIZE % 64 == 0);
+        let x_iteration = graphics.dim[0] / 64 + if graphics.dim[0] % 64 != 0 { 1 } else { 0 };
+        let y_iteration = graphics.dim[1] / 64 + if graphics.dim[1] % 64 != 0 { 1 } else { 0 };
+        command_buffer_builder = command_buffer_builder
             .fill_buffer(graphics.tmp_erased_buffer.clone(), 0u32)
             .unwrap()
             .dispatch(
-                [graphics.dim[0] / 64, graphics.dim[1] / 64, 1],
+                [x_iteration, y_iteration, 1],
                 graphics.eraser1_pipeline.clone(),
                 (
                     graphics.eraser1_descriptor_set_0.clone(),

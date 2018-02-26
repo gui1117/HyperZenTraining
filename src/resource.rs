@@ -288,6 +288,25 @@ impl Rendering {
     }
 }
 
+pub struct ErasedStatus {
+    pub need_buffer_clear: bool,
+    pub erase_amout: f32,
+}
+
+impl ErasedStatus {
+    pub fn new() -> Self {
+        ErasedStatus {
+            need_buffer_clear: false,
+            erase_amout: 0.0,
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.need_buffer_clear = true;
+        self.erase_amout = 0.0;
+    }
+}
+
 pub struct DebugMode(pub bool);
 
 pub struct DepthCoef(pub f32);
@@ -420,13 +439,10 @@ impl MenuState {
                         self.quit_button = ui.button(im_str!("Quit"), button_size);
                         ui.separator();
                         ui.text("Audio:");
-                        ui.separator();
-
                         ui.slider_float(im_str!("Volume"), &mut self.volume_slider, 0.0, 1.0).build();
 
                         ui.separator();
                         ui.text("Video:");
-                        ui.separator();
 
                         self.fullscreen_checkbox = ui.checkbox(im_str!("Fullscreen"), &mut save.fullscreen());
 
@@ -451,7 +467,6 @@ impl MenuState {
                         ui.text("Inputs:");
                         ui.same_line(0.0);
                         self.reset_button = ui.button(im_str!("Reset"), small_button_size);
-                        ui.separator();
 
                         ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility_input).build();
 
@@ -474,6 +489,10 @@ impl MenuState {
                         self.set_right_button = ui.button(im_str!("Right"), small_button_size);
                         ui.same_line(0.0);
                         ui.text(format!("[{}]", save.input(Input::Direction(Direction::Right))));
+
+                        ui.separator();
+                        ui.text("Credits:");
+                        ui.text("    Guillaume Thiolliere  http://thiolliere.org");
                     });
             },
             _ => (),

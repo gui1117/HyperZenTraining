@@ -170,6 +170,7 @@ fn new_game() -> ControlFlow {
     world.add_resource(::resource::Activated(false));
     world.add_resource(::resource::Audio::init(&save));
     world.add_resource(::resource::LevelActions(vec![]));
+    world.add_resource(::resource::ErasedStatus::new());
     let menu_state = ::resource::MenuState::new(&save);
     world.add_resource(save);
     world.add_resource(menu_state);
@@ -186,6 +187,7 @@ fn new_game() -> ControlFlow {
         .add(::system::AudioSystem, "audio", &[])
         .add(::system::MenuGameControlSystem, "menu_game", &[])
         .add(::system::PlayerControlSystem, "player_control", &[])
+        .add(::system::ErasedSoundSystem, "erased_sound", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::TeleportSystem, "teleport", &[])

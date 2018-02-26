@@ -21,6 +21,7 @@ mod hook;
 mod reducer;
 mod activated;
 mod player_death;
+mod erased_sound;
 
 pub use self::teleport::TeleportSystem;
 pub use self::menu_control::{MenuGameControlSystem, MenuPauseControlSystem};
@@ -45,3 +46,4 @@ pub use self::depth_ball::DepthBallSystem;
 pub use self::attracted::AttractedSystem;
 pub use self::activated::ActivateSystem;
 pub use self::player_death::PlayerDeathSystem;
+pub use self::erased_sound::ErasedSoundSystem;

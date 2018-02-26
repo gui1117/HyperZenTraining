@@ -746,8 +746,10 @@ pub mod primitive {
         }
 
         fn next(&self) -> u16 {
-            self.counter
-                .fetch_add(1, ::std::sync::atomic::Ordering::Relaxed) as u16
+            let next = self.counter
+                .fetch_add(1, ::std::sync::atomic::Ordering::Relaxed) as u16;
+            assert!(next < 4096);
+            next
         }
 
         fn instantiate(&self, n: usize) -> Vec<u16> {
