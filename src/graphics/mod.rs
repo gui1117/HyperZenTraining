@@ -96,14 +96,12 @@ pub struct Data {
     pub cursor_tex_dim: [u32; 2],
 
     pub primitives_vertex_buffers: Vec<Vec<Arc<ImmutableBuffer<[Vertex]>>>>,
-    pub debug_arrow_vertex_buffer: Arc<ImmutableBuffer<[DebugVertex]>>,
     pub fullscreen_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,
     pub cursor_vertex_buffer: Arc<ImmutableBuffer<[SecondVertex]>>,
 
     pub view_uniform_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::View>,
     pub world_uniform_static_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::World>,
     pub world_uniform_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::World>,
-    pub debug_arrow_world_uniform_buffer: CpuBufferPool<::graphics::shader::debug_vs::ty::World>,
     pub tmp_erased_buffer: Arc<DeviceLocalBuffer<[u32; 65536]>>,
     pub erased_buffer: Arc<CpuAccessibleBuffer<[f32; 65536]>>,
 
@@ -654,10 +652,6 @@ impl<'a> Graphics<'a> {
             BufferUsage::uniform_buffer(),
         );
 
-        let debug_arrow_world_uniform_buffer = CpuBufferPool::<
-            ::graphics::shader::debug_vs::ty::World,
-        >::new(device.clone(), BufferUsage::uniform_buffer());
-
         let (colors_buffer, colors_buf_future) = {
             let colors = colors::colors();
             ImmutableBuffer::from_iter(
@@ -726,16 +720,12 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
-        let (debug_arrow_vertex_buffer, debug_arrow_future) =
-            primitives::load_debug_arrow(queue.clone());
-
         now(device.clone())
             .join(cursor_tex_future)
             .join(colors_buf_future)
             .join(fullscreen_vertex_buffer_future)
             .join(cursor_vertex_buffer_future)
             .join(primitives_future)
-            .join(debug_arrow_future)
             .flush()
             .unwrap();
 
@@ -778,9 +768,7 @@ impl<'a> Graphics<'a> {
                 draw2_descriptor_set_1,
                 world_uniform_static_buffer,
                 world_uniform_buffer,
-                debug_arrow_world_uniform_buffer,
                 erased_buffer,
-                debug_arrow_vertex_buffer,
             },
         }
     }

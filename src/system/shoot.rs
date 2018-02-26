@@ -97,13 +97,20 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                 self.collided
                     .sort_by(|a, b| (a.1).partial_cmp(&b.1).unwrap());
                 let mut size = 1000.0; // infinite
+                let mut killed = false;
                 for collided in &self.collided {
                     if let Some(ref mut life) = lifes.get_mut(collided.0) {
                         life.kill();
+                        killed = true;
                     } else {
                         size = collided.1;
                         break;
                     }
+                }
+
+                audio.play_unspatial(::audio::Sound::Shoot);
+                if killed {
+                    audio.play_unspatial(::audio::Sound::Kill);
                 }
 
                 let ray_draw_origin = (body_pos.translation * aim.rotation * animation.weapon_trans
@@ -120,8 +127,6 @@ impl<'a> ::specs::System<'a> for ShootSystem {
                     &mut dynamic_assets,
                     &entities,
                 );
-
-                audio.play_unspatial(::audio::Sound::Shoot);
             }
         }
     }

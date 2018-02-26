@@ -2,15 +2,20 @@
 
 * control escape ?
 
-* bug pour attracted en dehors de la map: regarder avec plein de attracted
-
 * faire son:
-  * pour bouncer qui rebondit
   * pour avoider régulièrement ou alors lorsqu'ils collisionnent
 
-* plus trouver les sons
-  + crédits
-  + laisser en wav si besoin
+* trouver son:
+  * pour bouncer qui rebondit
+  * detph ball death
+
+* sink pool
+* son eraser: faire que lorsqu'un nouveau se fait effacer on joue un son et
+  s'il redevient visible son inverse ou autre son
+* réduire le nombre d'entité
+
+* crédits
+* laisser en wav si besoin
 * faire niveaux
 
 ### programme:

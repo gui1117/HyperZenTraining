@@ -15,6 +15,8 @@ pub enum Sound {
     AllKilled,
     Portal,
     Bounce,
+    DepthBallAttack,
+    DepthBallDeath,
 }
 
 pub struct Audio {
@@ -36,6 +38,8 @@ impl Audio {
             "assets/sounds/all_killed.ogg",
             "assets/sounds/portal.ogg",
             "assets/sounds/bounce.ogg",
+            "assets/sounds/depth_ball_attack.ogg",
+            "assets/sounds/depth_ball_death.ogg",
         ];
 
         let mut sound_files = if cfg!(feature = "packed") {
@@ -46,6 +50,8 @@ impl Audio {
                 Cursor::new(include_bytes!("../assets/sounds/all_killed.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/portal.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/bounce.ogg").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/depth_ball_attack.ogg").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/depth_ball_death.ogg").iter().cloned().collect::<Vec<_>>()),
             ]
         } else {
             sound_filenames.iter()
@@ -87,6 +93,7 @@ impl Audio {
         }
     }
 
+    #[allow(unused)]
     pub fn play_on_emitter(&mut self, sound: Sound) {
         let pos = [
             (self.left_ear[0] + self.right_ear[0])/2.0,

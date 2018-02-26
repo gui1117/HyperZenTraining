@@ -140,7 +140,6 @@ Config(
                 scale: 1.0,
                 entities: {
                     Bouncer(eraser: false): 1,
-                    Avoider(eraser: false): 1,
                     Attracted(eraser: false): 1,
                     Turret: 1,
                     MotionLess(eraser: false): 1,
