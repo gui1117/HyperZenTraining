@@ -3,8 +3,6 @@ use vulkano::buffer::{BufferUsage, ImmutableBuffer};
 use vulkano::sync::{now, GpuFuture};
 use std::sync::Arc;
 use super::Vertex;
-use super::DebugVertex;
-use wavefront_obj::obj;
 
 use std::f32::consts::PI;
 
@@ -727,12 +725,12 @@ pub mod primitive {
     }
 
     lazy_static! {
-        static ref GROUP_COUNTER: GroupCounter = GroupCounter::new();
+        pub static ref GROUP_COUNTER: GroupCounter = GroupCounter::new();
     }
 
-    pub const GROUP_COUNTER_SIZE: usize = 65536;
+    pub const GROUP_COUNTER_SIZE: usize = 4096;
 
-    struct GroupCounter {
+    pub struct GroupCounter {
         counter: ::std::sync::atomic::AtomicUsize,
     }
 
@@ -741,6 +739,10 @@ pub mod primitive {
             GroupCounter {
                 counter: ::std::sync::atomic::AtomicUsize::new(1),
             }
+        }
+
+        pub fn reset(&self) {
+            self.counter.store(1, ::std::sync::atomic::Ordering::Relaxed);
         }
 
         fn next(&self) -> u16 {

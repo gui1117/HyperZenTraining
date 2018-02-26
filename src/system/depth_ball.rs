@@ -8,11 +8,11 @@ impl<'a> ::specs::System<'a> for DepthBallSystem {
         ::specs::ReadStorage<'a, ::component::Player>,
         ::specs::ReadStorage<'a, ::component::DepthBall>,
         ::specs::WriteStorage<'a, ::component::Life>,
+        ::specs::Fetch<'a, ::resource::Audio>,
         ::specs::FetchMut<'a, ::resource::DepthCoef>,
-        ::specs::FetchMut<'a, ::resource::Audio>,
     );
 
-    fn run(&mut self, (contactors, players, depth_balls, mut lifes, mut depth_coef, mut audio): Self::SystemData) {
+    fn run(&mut self, (contactors, players, depth_balls, mut lifes, audio, mut depth_coef): Self::SystemData) {
         for (_, life, contactor) in (&depth_balls, &mut lifes, &contactors).join() {
             if contactor.contacts.is_empty() {
                 continue;

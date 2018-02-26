@@ -6,11 +6,11 @@ impl<'a> ::specs::System<'a> for PlayerDeathSystem {
     type SystemData = (
         ::specs::ReadStorage<'a, ::component::Proximitor>,
         ::specs::ReadStorage<'a, ::component::Player>,
+        ::specs::Fetch<'a, ::resource::Audio>,
         ::specs::FetchMut<'a, ::resource::LevelActions>,
-        ::specs::FetchMut<'a, ::resource::Audio>,
     );
 
-    fn run(&mut self, (proximitors, players, mut level_actions, mut audio): Self::SystemData) {
+    fn run(&mut self, (proximitors, players, audio, mut level_actions): Self::SystemData) {
         for (_, proximitor) in (&players, &proximitors).join() {
             if !proximitor.intersections.is_empty() {
                 audio.play_unspatial(::audio::Sound::Death);

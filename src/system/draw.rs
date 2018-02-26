@@ -306,6 +306,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             }
         }
 
+        assert!(::graphics::GROUP_COUNTER_SIZE % 64 == 0);
         command_buffer_builder = command_buffer_builder
             .end_render_pass()
             .unwrap()

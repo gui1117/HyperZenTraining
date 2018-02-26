@@ -1,13 +1,15 @@
 use std::fs::File;
 use std::io::Cursor;
 use std::io::Read;
-
+use std::time::Duration;
+use std::sync::{Arc, Mutex};
 use rodio::decoder::Decoder;
 use rodio::Source;
+use rodio::Sample;
 use show_message::OkOrShow;
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Sound {
     Shoot,
     Kill,
@@ -19,18 +21,159 @@ pub enum Sound {
     DepthBallDeath,
 }
 
-pub struct Audio {
-    endpoint: Option<::rodio::Endpoint>,
-    spatial_sinks: Vec<::rodio::SpatialSink>,
-    sinks: Vec<::rodio::Sink>,
-    sounds: Vec<::rodio::source::Buffered<Decoder<Cursor<Vec<u8>>>>>,
+/// Sounds must be 44100 Hz and stereo
+pub struct AudioMix<T>
+    where T: Source,
+          T::Item: Sample + ::std::fmt::Debug,
+{
+    spatial_source: Vec<(::rodio::source::Spatial<T>, [f32; 3])>,
+    unspatial_source: Vec<T>,
+    left_ear: [f32; 3],
+    right_ear: [f32; 3],
+    delete_indices_cache: Vec<usize>,
+}
+
+impl<T> AudioMix<T>
+    where T: Source,
+          T::Item: Sample + ::std::fmt::Debug,
+{
+    fn new(left_ear: [f32; 3], right_ear: [f32; 3]) -> Self {
+        AudioMix {
+            spatial_source: vec![],
+            unspatial_source: vec![],
+            left_ear,
+            right_ear,
+            delete_indices_cache: vec![],
+        }
+    }
+
+    fn set_listener(&mut self, left_ear: [f32; 3], right_ear: [f32; 3]) {
+        self.left_ear = left_ear;
+        self.right_ear = right_ear;
+
+        for &mut (ref mut source, position) in &mut self.spatial_source {
+            source.set_positions(
+                position,
+                left_ear,
+                right_ear,
+            );
+        }
+    }
+
+    fn add_spatial(&mut self, sound: T, position: [f32; 3]) {
+        assert!(sound.channels() == 2);
+        assert!(sound.samples_rate() == 44100);
+        self.spatial_source.push((::rodio::source::Spatial::new(
+            sound,
+            position,
+            self.left_ear,
+            self.right_ear,
+        ), position));
+    }
+
+    fn add_unspatial(&mut self, sound: T) {
+        assert!(sound.channels() == 2);
+        assert!(sound.samples_rate() == 44100);
+        self.unspatial_source.push(sound);
+    }
+}
+
+impl<T> Iterator for AudioMix<T>
+    where T: Source,
+          T::Item: Sample + ::std::fmt::Debug,
+{
+    type Item = T::Item;
+
+    #[inline]
+    fn next(&mut self) -> Option<T::Item> {
+        let mut next = T::Item::zero_value();
+
+        self.delete_indices_cache.clear();
+        for (i, &mut (ref mut source, _)) in self.spatial_source.iter_mut().enumerate() {
+            if let Some(sample) = source.next() {
+                next = next.saturating_add(sample);
+            } else {
+                self.delete_indices_cache.push(i);
+            }
+        }
+        for (i, indice) in self.delete_indices_cache.drain(..).enumerate() {
+            self.spatial_source.remove(indice - i);
+        }
+
+        self.delete_indices_cache.clear();
+        for (i, source) in self.unspatial_source.iter_mut().enumerate() {
+            if let Some(sample) = source.next() {
+                next = next.saturating_add(sample);
+            } else {
+                self.delete_indices_cache.push(i);
+            }
+        }
+        for (i, indice) in self.delete_indices_cache.drain(..).enumerate() {
+            self.unspatial_source.remove(indice - i);
+        }
+
+        Some(next)
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, None)
+    }
+}
+
+impl<T> ExactSizeIterator for AudioMix<T>
+    where T: Source + ExactSizeIterator,
+          T::Item: Sample + ::std::fmt::Debug,
+{
+}
+
+impl<T> Source for AudioMix<T>
+    where T: Source,
+          T::Item: Sample + ::std::fmt::Debug,
+{
+    #[inline]
+    fn current_frame_len(&self) -> Option<usize> {
+        None
+    }
+
+    #[inline]
+    fn channels(&self) -> u16 {
+        2
+    }
+
+    #[inline]
+    fn samples_rate(&self) -> u32 {
+        44100
+    }
+
+    #[inline]
+    fn total_duration(&self) -> Option<Duration> {
+        None
+    }
+}
+
+pub struct AudioSinkControl {
     left_ear: [f32; 3],
     right_ear: [f32; 3],
     volume: f32,
+    spatial_sounds_to_add: Vec<(Sound, [f32; 3])>,
+    sounds_to_add: Vec<Sound>,
 }
 
-impl Audio {
-    pub fn init(save: &::resource::Save) -> Self {
+impl AudioSinkControl {
+    fn new(volume: f32) -> Self {
+        AudioSinkControl {
+            left_ear: [0f32; 3],
+            right_ear: [0f32; 3],
+            volume: volume,
+            spatial_sounds_to_add: vec![],
+            sounds_to_add: vec![],
+        }
+    }
+}
+
+lazy_static! {
+    static ref SOUND_BUFFERS: Vec<::rodio::source::Buffered<Decoder<Cursor<Vec<u8>>>>> = {
         let sound_filenames = [
             "assets/sounds/shoot.ogg",
             "assets/sounds/kill.ogg",
@@ -66,77 +209,110 @@ impl Audio {
                 .collect::<Vec<_>>()
         };
 
-        let mut sounds = vec![];
+        let mut sound_buffers = vec![];
         for (file, filename) in sound_files.drain(..).zip(sound_filenames.iter()) {
             let sound = Decoder::new(file)
                 .ok_or_show(|e| format!("Failed to decode sound {}: {}", filename, e))
                 .buffered();
-            sounds.push(sound);
+
+            if sound.samples_rate() != 44100 {
+                ::show_message::show(format!("Invalid sound: {} must be 44100 Hz", filename));
+                ::std::process::exit(1)
+            }
+            if sound.channels() != 2 {
+                ::show_message::show(format!("Invalid sound: {} must be stereo", filename));
+                ::std::process::exit(1)
+            }
+
+            sound_buffers.push(sound);
         }
+        sound_buffers
+    };
+}
+
+pub struct Audio {
+    audio_sink_control: Option<Arc<Mutex<AudioSinkControl>>>,
+    // Used to drop sink
+    _sink: Option<::rodio::Sink>,
+}
+
+impl Audio {
+    pub fn init(save: &::resource::Save) -> Self {
+        let endpoint = ::rodio::default_endpoint();
+        if endpoint.is_none() {
+            return Audio {
+                audio_sink_control: None,
+                _sink: None,
+            };
+        }
+        let endpoint = endpoint.unwrap();
+
+        let control = Arc::new(Mutex::new(AudioSinkControl::new(save.volume())));
+        let audio_sink_control = Some(control.clone());
+
+        let source = AudioMix::new([0f32; 3], [0f32; 3])
+            .amplify(0f32)
+            .periodic_access(
+                Duration::from_millis(10),
+                move |source| {
+                    let mut control = control.lock().unwrap();
+
+                    source.set_factor(control.volume);
+
+                    let audio_mix = source.inner_mut();
+                    audio_mix.set_listener(control.left_ear, control.right_ear);
+
+                    for (sound, position) in control.spatial_sounds_to_add.drain(..) {
+                        audio_mix.add_spatial(SOUND_BUFFERS[sound as usize].clone(), position);
+                    }
+
+                    for sound in control.sounds_to_add.drain(..) {
+                        audio_mix.add_unspatial(SOUND_BUFFERS[sound as usize].clone());
+                    }
+                }
+            );
+
+        let sink = ::rodio::Sink::new(&endpoint);
+        sink.append(source);
 
         Audio {
-            endpoint: ::rodio::default_endpoint(),
-            spatial_sinks: vec![],
-            left_ear: [::std::f32::NAN; 3],
-            right_ear: [::std::f32::NAN; 3],
-            sounds,
-            sinks: vec![],
-            volume: save.volume(),
+            _sink: Some(sink),
+            audio_sink_control,
         }
     }
 
-    pub fn play_unspatial(&mut self, sound: Sound) {
-        if let Some(ref endpoint) = self.endpoint {
-            let mut sink = ::rodio::Sink::new(endpoint);
-            sink.append(self.sounds[sound as usize].clone().amplify(self.volume));
-            self.sinks.push(sink);
+    pub fn play_unspatial(&self, sound: Sound) {
+        if let Some(ref control) = self.audio_sink_control {
+            let mut control = control.lock().unwrap();
+            control.sounds_to_add.push(sound);
         }
     }
 
-    #[allow(unused)]
-    pub fn play_on_emitter(&mut self, sound: Sound) {
-        let pos = [
-            (self.left_ear[0] + self.right_ear[0])/2.0,
-            (self.left_ear[1] + self.right_ear[1])/2.0,
-            (self.left_ear[2] + self.right_ear[2])/2.0,
-        ];
-        self.play(sound, pos);
-    }
-
-    pub fn play(&mut self, sound: Sound, pos: [f32; 3]) {
-        if let Some(ref endpoint) = self.endpoint {
-            let mut spatial_sink = ::rodio::SpatialSink::new(
-                endpoint,
-                pos,
-                self.left_ear,
-                self.right_ear,
-                );
-            spatial_sink.append(self.sounds[sound as usize].clone().amplify(self.volume));
-            self.spatial_sinks.push(spatial_sink);
+    pub fn play(&self, sound: Sound, position: [f32; 3]) {
+        if let Some(ref control) = self.audio_sink_control {
+            let mut control = control.lock().unwrap();
+            control.spatial_sounds_to_add.push((sound, position));
         }
     }
 
-    pub fn update(&mut self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>, volume: f32) {
-        let local_left_ear = ::na::Point3::new(0.0, - ::CONFIG.ear_distance/2.0, 0.0);
-        let local_right_ear = ::na::Point3::new(0.0, ::CONFIG.ear_distance/2.0, 0.0);
+    pub fn update(&self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>, volume: f32) {
+        if let Some(ref control) = self.audio_sink_control {
+            let mut control = control.lock().unwrap();
+            control.volume = volume;
 
-        let world_trans = ::na::Isometry::from_parts(
-            ::na::Translation::from_vector(position),
-            aim,
-        );
+            let local_left_ear = ::na::Point3::new(0.0, - ::CONFIG.ear_distance/2.0, 0.0);
+            let local_right_ear = ::na::Point3::new(0.0, ::CONFIG.ear_distance/2.0, 0.0);
 
-        let left_ear = world_trans * local_left_ear;
-        let right_ear = world_trans * local_right_ear;
+            let world_trans = ::na::Isometry::from_parts(
+                ::na::Translation::from_vector(position),
+                aim,
+            );
 
-        self.left_ear = left_ear.coords.into();
-        self.right_ear = right_ear.coords.into();
-        self.spatial_sinks.retain(|s| !s.empty());
-        for spatial_sink in &mut self.spatial_sinks {
-            spatial_sink.set_left_ear_position(self.left_ear);
-            spatial_sink.set_right_ear_position(self.right_ear);
+            let left_ear = world_trans * local_left_ear;
+            let right_ear = world_trans * local_right_ear;
+
+            control.left_ear = left_ear.coords.into();
+            control.right_ear = right_ear.coords.into();
         }
-
-        self.sinks.retain(|s| !s.empty());
-        self.volume = volume;
     }
 }

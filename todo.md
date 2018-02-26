@@ -9,10 +9,9 @@
   * pour bouncer qui rebondit
   * detph ball death
 
-* sink pool
 * son eraser: faire que lorsqu'un nouveau se fait effacer on joue un son et
   s'il redevient visible son inverse ou autre son
-* réduire le nombre d'entité
+  just count tmp erased ?
 
 * crédits
 * laisser en wav si besoin

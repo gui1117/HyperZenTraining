@@ -37,7 +37,7 @@ pub fn create_motionless<'a>(
     let mut group = ::nphysics::object::RigidBodyCollisionGroups::new_dynamic();
     group.set_membership(&[super::ALIVE_GROUP, super::MONSTER_GROUP, super::KILLER_GROUP]);
 
-    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 1.0, 0.0, 0.0);
+    let mut body = ::nphysics::object::RigidBody::new_dynamic(shape, 10000.0, 0.0, 0.0);
 
     body.set_transformation(pos);
     body.set_collision_groups(group);

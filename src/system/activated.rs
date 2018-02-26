@@ -10,11 +10,11 @@ impl<'a> ::specs::System<'a> for ActivateSystem {
         ::specs::ReadStorage<'a, ::component::Bouncer>,
         ::specs::ReadStorage<'a, ::component::Motionless>,
         ::specs::WriteStorage<'a, ::component::StaticDraw>,
+        ::specs::Fetch<'a, ::resource::Audio>,
         ::specs::FetchMut<'a, ::resource::Activated>,
-        ::specs::FetchMut<'a, ::resource::Audio>,
     );
 
-    fn run(&mut self, (activateds, attracted, avoider, bouncer, motionless, mut static_draws, mut activated, mut audio): Self::SystemData) {
+    fn run(&mut self, (activateds, attracted, avoider, bouncer, motionless, mut static_draws, audio, mut activated): Self::SystemData) {
         if !activated.0
             && attracted.join().next().is_none()
             && avoider.join().next().is_none()

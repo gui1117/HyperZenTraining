@@ -63,6 +63,7 @@ impl GameSystem {
         };
 
         if let Some(level) = recreate_level {
+            ::graphics::GROUP_COUNTER.reset();
             world.write_resource::<::resource::GameDuration>().0 = Duration::new(0, 0);
             world.write_resource::<::resource::Activated>().0 = false;
             self.current_level = Some(level);

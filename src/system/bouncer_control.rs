@@ -7,10 +7,10 @@ impl<'a> ::specs::System<'a> for BouncerControlSystem {
         ::specs::ReadStorage<'a, ::component::Contactor>,
         ::specs::ReadStorage<'a, ::component::Bouncer>,
         ::specs::WriteStorage<'a, ::component::Momentum>,
-        ::specs::FetchMut<'a, ::resource::Audio>,
+        ::specs::Fetch<'a, ::resource::Audio>,
     );
 
-    fn run(&mut self, (contactors, bouncers, mut momentums, mut audio): Self::SystemData) {
+    fn run(&mut self, (contactors, bouncers, mut momentums, audio): Self::SystemData) {
         for (_, momentum, contactor) in (&bouncers, &mut momentums, &contactors).join() {
             if contactor.contacts.is_empty() {
                 continue;

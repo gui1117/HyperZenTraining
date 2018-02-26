@@ -22,7 +22,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
         ::specs::WriteStorage<'a, ::component::DynamicDraw>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
         ::specs::Fetch<'a, ::resource::UpdateTime>,
-        ::specs::FetchMut<'a, ::resource::Audio>,
+        ::specs::Fetch<'a, ::resource::Audio>,
         ::specs::Entities<'a>,
     );
 
@@ -39,7 +39,7 @@ impl<'a> ::specs::System<'a> for ShootSystem {
             mut dynamic_draws,
             physic_world,
             update_time,
-            mut audio,
+            audio,
             entities,
         ): Self::SystemData,
     ) {

@@ -258,9 +258,9 @@ impl Save {
     pub fn save(&self) {
         let string = ::ron::ser::to_string(&self).unwrap();
         let mut file = File::create(SAVE_PATH.as_path())
-            .ok_or_show(|e| format!("Failed to create save file at {}: {}", SAVE_PATH.to_string_lossy(), e));
+            .ok_or_show(|e| format!("Failed to create save file at {}: {}", SAVE_PATH.display(), e));
         file.write_all(string.as_bytes())
-            .ok_or_show(|e| format!("Failed to write to save file {}: {}", SAVE_PATH.to_string_lossy(), e));
+            .ok_or_show(|e| format!("Failed to write to save file {}: {}", SAVE_PATH.display(), e));
     }
 }
 
