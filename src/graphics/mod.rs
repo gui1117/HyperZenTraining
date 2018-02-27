@@ -31,9 +31,9 @@ mod primitives;
 mod colors;
 pub mod font;
 
-pub use self::primitives::primitive::Primitive;
+pub use self::primitives::Primitive;
 pub use self::colors::Color;
-pub use self::primitives::primitive::GROUP_COUNTER_SIZE;
+pub use self::primitives::GROUP_COUNTER_SIZE;
 
 pub fn resizer(x: f32, y: f32, z: f32) -> ::na::Transform3<f32> {
     let mut resizer: ::na::Transform3<f32> = ::na::one();
@@ -130,7 +130,7 @@ pub struct Data {
 impl Data {
     /// This command must be executed before next eraser_sound_system
     pub fn reset_group(&self) {
-        primitives::primitive::GROUP_COUNTER.reset();
+        primitives::GROUP_COUNTER.reset();
     }
 }
 

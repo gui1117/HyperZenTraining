@@ -10,11 +10,6 @@
   * detph ball death
   * erased / unerased
 
-* pour la distance de profondeur problèmatique regarder si c'est pas un erreur Unorm flottant ....
-
-* pour le HUD on peut aussi faire des groupes qui ne sont pas touché (group > 4096 ou d'autre choses)
-  c'est un peu comme si rien ne pouvait être devant HUD (donc pas d'effaceur)
-
 * son eraser
 
 * laisser en wav si besoin

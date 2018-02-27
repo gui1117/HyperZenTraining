@@ -29,6 +29,11 @@ void main() {
 
     uint percent = 0;
 
+    float erase_coef = 1.0;
+    if (group_index < 4096) {
+        erase_coef = erased.data[group_index];
+    }
+
     // Boundaries
     percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -2.0, gl_FragCoord.y -2.0)).rg);
     percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -2.0, gl_FragCoord.y +2.0)).rg);
@@ -41,7 +46,7 @@ void main() {
     percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +2.0, gl_FragCoord.y +0.0)).rg);
 
     if (percent == 0) {
-        out_color = out_color * erased.data[group_index];
+        out_color = out_color * erase_coef;
         return;
     }
 
@@ -65,7 +70,7 @@ void main() {
     percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x -1.0, gl_FragCoord.y +0.0)).rg);
     percent += uint(group != texture(tmp_image, vec2(gl_FragCoord.x +1.0, gl_FragCoord.y +0.0)).rg);
 
-    out_color = out_color * (1.0 - (float(percent) / percent_divider)) * erased.data[group_index];
+    out_color = out_color * (1.0 - (float(percent) / percent_divider)) * erase_coef;
 
     // // smallest square
     // if (group != texture(tmp_image, pos + vec2(-1.0, -1.0)).r) { out_color = out_color * 0.0; return; }

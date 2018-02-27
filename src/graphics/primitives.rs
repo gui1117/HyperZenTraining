@@ -2,6 +2,7 @@ use vulkano::device::Queue;
 use vulkano::buffer::{BufferUsage, ImmutableBuffer};
 use vulkano::sync::{now, GpuFuture};
 use std::sync::Arc;
+use std::time::Duration;
 use super::Vertex;
 
 use std::f32::consts::PI;
@@ -597,163 +598,177 @@ pub fn instance_primitives(
     (primitives_buffers, final_future)
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
 #[allow(unused)]
-pub mod primitive {
-    use std::time::Duration;
+pub enum Primitive {
+    Plane,
+    SquarePyramid,
+    TrianglePyramid,
+    Sphere,
+    Six,
+    Cube,
+    Cylinder,
+    PitCube,
+    Hook,
+    Text0,
+    Text1,
+    Text2,
+    Text3,
+    Text4,
+    Text5,
+    Text6,
+    Text7,
+    Text8,
+    Text9,
+    TextUnderScore,
+    TextColon,
+    TextALL,
+    TextLastScores,
+    TextBestScores,
+}
 
-    #[repr(C)]
-    #[derive(Copy, Clone)]
-    pub enum Primitive {
-        Plane,
-        SquarePyramid,
-        TrianglePyramid,
-        Sphere,
-        Six,
-        Cube,
-        Cylinder,
-        PitCube,
-        Hook,
-        Text0,
-        Text1,
-        Text2,
-        Text3,
-        Text4,
-        Text5,
-        Text6,
-        Text7,
-        Text8,
-        Text9,
-        TextUnderScore,
-        TextColon,
-        TextALL,
-        TextLastScores,
-        TextBestScores,
+impl Primitive {
+    pub fn index(&self) -> usize {
+        *self as usize
     }
 
-    impl Primitive {
-        pub fn index(&self) -> usize {
-            *self as usize
-        }
-
-        pub fn from_char(c: char) -> Self {
-            match c {
-                '0' => Primitive::Text0,
-                '1' => Primitive::Text1,
-                '2' => Primitive::Text2,
-                '3' => Primitive::Text3,
-                '4' => Primitive::Text4,
-                '5' => Primitive::Text5,
-                '6' => Primitive::Text6,
-                '7' => Primitive::Text7,
-                '8' => Primitive::Text8,
-                '9' => Primitive::Text9,
-                ':' => Primitive::TextColon,
-                _ => Primitive::TextUnderScore,
-            }
-        }
-
-        pub fn from_duration(duration: Option<Duration>) -> Vec<Self> {
-            if let Some(duration) = duration {
-                let sec = duration.as_secs();
-                let minute = sec / 60;
-                let remain_sec = sec % 60;
-                let cs = duration.subsec_nanos() / 10_000_000;
-
-                vec![
-                    ::graphics::Primitive::from_char(format!("{}", (minute / 10) % 10).chars().next().unwrap()),
-                    ::graphics::Primitive::from_char(format!("{}", (minute % 10)).chars().next().unwrap()),
-                    ::graphics::Primitive::TextColon,
-                    ::graphics::Primitive::from_char(format!("{}", (remain_sec / 10) % 10).chars().next().unwrap()),
-                    ::graphics::Primitive::from_char(format!("{}", (remain_sec % 10)).chars().next().unwrap()),
-                    ::graphics::Primitive::TextColon,
-                    ::graphics::Primitive::from_char(format!("{}", (cs / 10) % 10).chars().next().unwrap()),
-                    ::graphics::Primitive::from_char(format!("{}", (cs % 10)).chars().next().unwrap()),
-                ]
-            } else {
-                vec![
-                    ::graphics::Primitive::TextUnderScore,
-                    ::graphics::Primitive::TextUnderScore,
-                    ::graphics::Primitive::TextColon,
-                    ::graphics::Primitive::TextUnderScore,
-                    ::graphics::Primitive::TextUnderScore,
-                    ::graphics::Primitive::TextColon,
-                    ::graphics::Primitive::TextUnderScore,
-                    ::graphics::Primitive::TextUnderScore,
-                ]
-            }
-        }
-
-        fn groups_size(&self) -> usize {
-            match *self {
-                Primitive::Plane => 1,
-                Primitive::SquarePyramid => 5,
-                Primitive::TrianglePyramid => 4,
-                Primitive::Sphere => 1,
-                Primitive::Six => 8,
-                Primitive::Cube => 6,
-                Primitive::Cylinder => 1,
-                Primitive::PitCube => 11,
-                Primitive::Hook => 10*::CONFIG.hook_links,
-                Primitive::Text0 => 1,
-                Primitive::Text1 => 1,
-                Primitive::Text2 => 1,
-                Primitive::Text3 => 1,
-                Primitive::Text4 => 1,
-                Primitive::Text5 => 1,
-                Primitive::Text6 => 1,
-                Primitive::Text7 => 1,
-                Primitive::Text8 => 1,
-                Primitive::Text9 => 1,
-                Primitive::TextUnderScore => 1,
-                Primitive::TextColon => 1,
-                Primitive::TextALL => 1,
-                Primitive::TextLastScores => 1,
-                Primitive::TextBestScores => 1,
-            }
-        }
-
-        pub fn reserve(&self, size: usize) -> Vec<Vec<u16>> {
-            let groups_size = self.groups_size();
-            (0..size)
-                .map(|_| GROUP_COUNTER.instantiate(groups_size))
-                .collect()
-        }
-
-        pub fn instantiate(&self) -> (usize, Vec<u16>) {
-            (self.index(), GROUP_COUNTER.instantiate(self.groups_size()))
+    pub fn from_char(c: char) -> Self {
+        match c {
+            '0' => Primitive::Text0,
+            '1' => Primitive::Text1,
+            '2' => Primitive::Text2,
+            '3' => Primitive::Text3,
+            '4' => Primitive::Text4,
+            '5' => Primitive::Text5,
+            '6' => Primitive::Text6,
+            '7' => Primitive::Text7,
+            '8' => Primitive::Text8,
+            '9' => Primitive::Text9,
+            ':' => Primitive::TextColon,
+            _ => Primitive::TextUnderScore,
         }
     }
 
-    lazy_static! {
-        pub static ref GROUP_COUNTER: GroupCounter = GroupCounter::new();
+    pub fn from_duration(duration: Option<Duration>) -> Vec<Self> {
+        if let Some(duration) = duration {
+            let sec = duration.as_secs();
+            let minute = sec / 60;
+            let remain_sec = sec % 60;
+            let cs = duration.subsec_nanos() / 10_000_000;
+
+            vec![
+                ::graphics::Primitive::from_char(format!("{}", (minute / 10) % 10).chars().next().unwrap()),
+                ::graphics::Primitive::from_char(format!("{}", (minute % 10)).chars().next().unwrap()),
+                ::graphics::Primitive::TextColon,
+                ::graphics::Primitive::from_char(format!("{}", (remain_sec / 10) % 10).chars().next().unwrap()),
+                ::graphics::Primitive::from_char(format!("{}", (remain_sec % 10)).chars().next().unwrap()),
+                ::graphics::Primitive::TextColon,
+                ::graphics::Primitive::from_char(format!("{}", (cs / 10) % 10).chars().next().unwrap()),
+                ::graphics::Primitive::from_char(format!("{}", (cs % 10)).chars().next().unwrap()),
+            ]
+        } else {
+            vec![
+                ::graphics::Primitive::TextUnderScore,
+                ::graphics::Primitive::TextUnderScore,
+                ::graphics::Primitive::TextColon,
+                ::graphics::Primitive::TextUnderScore,
+                ::graphics::Primitive::TextUnderScore,
+                ::graphics::Primitive::TextColon,
+                ::graphics::Primitive::TextUnderScore,
+                ::graphics::Primitive::TextUnderScore,
+            ]
+        }
     }
 
-    pub const GROUP_COUNTER_SIZE: usize = 4096;
-
-    pub struct GroupCounter {
-        counter: ::std::sync::atomic::AtomicUsize,
+    fn groups_size(&self) -> usize {
+        match *self {
+            Primitive::Plane => 1,
+            Primitive::SquarePyramid => 5,
+            Primitive::TrianglePyramid => 4,
+            Primitive::Sphere => 1,
+            Primitive::Six => 8,
+            Primitive::Cube => 6,
+            Primitive::Cylinder => 1,
+            Primitive::PitCube => 11,
+            Primitive::Hook => 10*::CONFIG.hook_links,
+            Primitive::Text0 => 1,
+            Primitive::Text1 => 1,
+            Primitive::Text2 => 1,
+            Primitive::Text3 => 1,
+            Primitive::Text4 => 1,
+            Primitive::Text5 => 1,
+            Primitive::Text6 => 1,
+            Primitive::Text7 => 1,
+            Primitive::Text8 => 1,
+            Primitive::Text9 => 1,
+            Primitive::TextUnderScore => 1,
+            Primitive::TextColon => 1,
+            Primitive::TextALL => 1,
+            Primitive::TextLastScores => 1,
+            Primitive::TextBestScores => 1,
+        }
     }
 
-    impl GroupCounter {
-        fn new() -> Self {
-            GroupCounter {
-                counter: ::std::sync::atomic::AtomicUsize::new(1),
-            }
-        }
+    pub fn reserve(&self, size: usize) -> Vec<Vec<u16>> {
+        let groups_size = self.groups_size();
+        (0..size)
+            .map(|_| GROUP_COUNTER.instantiate(groups_size))
+            .collect()
+    }
 
-        pub fn reset(&self) {
-            self.counter.store(1, ::std::sync::atomic::Ordering::Relaxed);
-        }
+    pub fn instantiate(&self) -> (usize, Vec<u16>) {
+        (self.index(), GROUP_COUNTER.instantiate(self.groups_size()))
+    }
 
-        fn next(&self) -> u16 {
-            let next = self.counter
-                .fetch_add(1, ::std::sync::atomic::Ordering::Relaxed) as u16;
-            assert!(next < 4096);
-            next
-        }
+    pub fn instantiate_unerasable(&self) -> (usize, Vec<u16>) {
+        (self.index(), GROUP_COUNTER.instantiate_unerasable(self.groups_size()))
+    }
+}
 
-        fn instantiate(&self, n: usize) -> Vec<u16> {
-            (0..n).map(|_| self.next()).collect()
+lazy_static! {
+    pub static ref GROUP_COUNTER: GroupCounter = GroupCounter::new();
+}
+
+// WARNING: This value is hard coded in draw2_fs shader !
+pub const GROUP_COUNTER_SIZE: usize = 4096;
+
+pub struct GroupCounter {
+    counter: ::std::sync::atomic::AtomicUsize,
+    unerasable_counter: ::std::sync::atomic::AtomicUsize,
+}
+
+impl GroupCounter {
+    fn new() -> Self {
+        GroupCounter {
+            counter: ::std::sync::atomic::AtomicUsize::new(1),
+            unerasable_counter: ::std::sync::atomic::AtomicUsize::new(1),
         }
+    }
+
+    pub fn reset(&self) {
+        self.counter.store(1, ::std::sync::atomic::Ordering::Relaxed);
+        self.unerasable_counter.store(1, ::std::sync::atomic::Ordering::Relaxed);
+    }
+
+    fn next(&self) -> u16 {
+        let next = self.counter
+            .fetch_add(1, ::std::sync::atomic::Ordering::Relaxed) as u16;
+        assert!(next < 4096);
+        next
+    }
+
+    fn next_unerasable(&self) -> u16 {
+        self.counter
+            .fetch_add(1, ::std::sync::atomic::Ordering::Relaxed) as u16
+            + GROUP_COUNTER_SIZE as u16
+    }
+
+    fn instantiate(&self, n: usize) -> Vec<u16> {
+        (0..n).map(|_| self.next()).collect()
+    }
+
+    fn instantiate_unerasable(&self, n: usize) -> Vec<u16> {
+        (0..n).map(|_| self.next_unerasable()).collect()
     }
 }

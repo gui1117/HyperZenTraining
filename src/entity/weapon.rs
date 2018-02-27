@@ -10,7 +10,7 @@ pub fn create_light_ray<'a>(
     dynamic_graphics_assets: &mut ::specs::WriteStorage<'a, ::component::DynamicGraphicsAssets>,
     entities: &::specs::Entities,
 ) {
-    let (primitive, groups) = ::graphics::Primitive::Cylinder.instantiate();
+    let (primitive, groups) = ::graphics::Primitive::Cylinder.instantiate_unerasable();
     let color = ::graphics::Color::Yellow;
     let primitive_trans = {
         let i = ::na::Translation::from_vector((from + to) / 2.0)
@@ -65,7 +65,7 @@ pub fn create_weapon<'a>(
     let weapon_trans = ::na::Translation3::new(0.0, weapon_pos_y, weapon_pos_z);
 
     // Six
-    let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
+    let (primitive, groups) = ::graphics::Primitive::Six.instantiate_unerasable();
     let primitive_trans = weapon_trans
         * ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0))
         * ::graphics::resizer(six_radius, six_radius, six_length);
@@ -84,7 +84,7 @@ pub fn create_weapon<'a>(
 
     // Bullet
     for i in 0..bullet_nbr {
-        let (primitive, groups) = ::graphics::Primitive::Six.instantiate();
+        let (primitive, groups) = ::graphics::Primitive::Six.instantiate_unerasable();
         let primitive_trans = weapon_trans
             * ::na::Isometry3::new(
                 ::na::Vector3::new(bullet_x + bullet_dx * i as f32, 0.0, 0.0),
@@ -109,7 +109,7 @@ pub fn create_weapon<'a>(
 
     for angle in (0..3usize).map(|i| i as f32 * 2.0 * FRAC_PI_3) {
         // Bar
-        let (primitive, groups) = ::graphics::Primitive::Cube.instantiate();
+        let (primitive, groups) = ::graphics::Primitive::Cube.instantiate_unerasable();
         let primitive_trans = weapon_trans
             * ::na::Isometry3::new(
                 ::na::Vector3::new(
