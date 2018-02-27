@@ -40,7 +40,7 @@ pub fn create_weapon<'a>(
     entities: &::specs::Entities,
 ) {
     let coef = 3.0;
-    let shoot_pos_x = 0.08 * coef;
+    let shoot_pos_x = 0.1 * coef;
     let weapon_pos_y = -0.02 * coef;
     let weapon_pos_z = -0.016 * coef;
 

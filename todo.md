@@ -10,25 +10,12 @@
   * detph ball death
   * erased / unerased
 
-* there is an issue with depth buffer !!!!!!
-* son eraser: faire que lorsqu'un nouveau se fait effacer on joue un son et
-  s'il redevient visible son inverse ou autre son
-  just count tmp erased ?
-  un reset des erased !!
-  un reset en début de niveau plus un compteur
-  compter ceux qui commence et ceux qui termine !
+* pour la distance de profondeur problèmatique regarder si c'est pas un erreur Unorm flottant ....
 
-  les eraser erase sur le weapon!!!
+* pour le HUD on peut aussi faire des groupes qui ne sont pas touché (group > 4096 ou d'autre choses)
+  c'est un peu comme si rien ne pouvait être devant HUD (donc pas d'effaceur)
 
-  subpass 2 écrit sur quelque chose qui est lue par subpass 1 (color attachment écran) ?? normalement pas
-  NON c'est le compute shader 1 qui lie une mauvaise couleur
-
-  pourquoi est-ce qu'on fait une HUD différente du reste ?
-  pour avoir plus de marge par rapport à la distance de profondeur
-  au pire c'est sympa on GARDE!
-
-  * reste pb du bas en fait du au modulo.
-  * problème lorsque cursor proche ????
+* son eraser
 
 * laisser en wav si besoin
 * faire niveaux
