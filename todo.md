@@ -7,10 +7,11 @@
 
 * trouver son:
   * pour bouncer qui rebondit
-  * detph ball death
-  * erased / unerased
+  * detph ball death -> (same)
 
-* son eraser
+* son eraser: peut être faire un son généré avec des harmoniques qui s'ajoute pour chaque palier
+  * 0->1 une sinusoide
+  * 1->2 cette sinusoide deviens aigu et on rajoute une sinusoide grave ...
 
 * laisser en wav si besoin
 * faire niveaux

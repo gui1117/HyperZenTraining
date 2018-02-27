@@ -139,10 +139,10 @@ Config(
                 bug: (1, 1),
                 scale: 1.0,
                 entities: {
-                    // Bouncer(eraser: false): 1,
+                    Bouncer(eraser: false): 2,
                     // Attracted(eraser: false): 1,
                     // Turret: 1,
-                    MotionLess(eraser: true): 1,
+                    // MotionLess(eraser: true): 1,
                 }
             )),
         ],

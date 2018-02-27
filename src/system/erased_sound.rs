@@ -8,10 +8,11 @@ impl<'a> ::specs::System<'a> for ErasedSoundSystem {
     );
 
     fn run(&mut self, (audio, graphics, mut erased_status): Self::SystemData) {
-        let new_number_erased = graphics.erased_buffer.read().unwrap()
+        let sum: f32 = graphics.erased_buffer.read().unwrap()
             .iter()
-            .filter(|elt| **elt == 0.0)
-            .count();
+            .sum();
+
+        let new_erase_amount = ::graphics::GROUP_COUNTER_SIZE as f32 - sum;
 
 //         if new_number_erased > 0 {
 //             println!("todo");
