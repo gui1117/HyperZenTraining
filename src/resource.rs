@@ -34,7 +34,8 @@ pub struct Save {
     fullscreen: bool,
     vulkan_device_uuid: Option<[u8; 16]>,
     field_of_view: f32,
-    volume: f32,
+    effect_volume: f32,
+    music_volume: f32,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -150,7 +151,8 @@ impl Save {
                 input_settings: InputSettings::default(),
                 fullscreen: true,
                 vulkan_device_uuid: None,
-                volume: 0.5,
+                effect_volume: 0.5,
+                music_volume: 0.5,
                 field_of_view: ::CONFIG.field_of_view,
             })
     }
@@ -166,15 +168,26 @@ impl Save {
         self.field_of_view
     }
 
-    pub fn set_volume_lazy(&mut self, volume: f32) {
-        if self.volume != volume {
-            self.volume = volume;
+    pub fn set_effect_volume_lazy(&mut self, volume: f32) {
+        if self.effect_volume != volume {
+            self.effect_volume = volume;
             self.save();
         }
     }
 
-    pub fn volume(&self) -> f32 {
-        self.volume
+    pub fn effect_volume(&self) -> f32 {
+        self.effect_volume
+    }
+
+    pub fn set_music_volume_lazy(&mut self, volume: f32) {
+        if self.music_volume != volume {
+            self.music_volume = volume;
+            self.save();
+        }
+    }
+
+    pub fn music_volume(&self) -> f32 {
+        self.music_volume
     }
 
     /// Return if changed
@@ -391,7 +404,8 @@ pub struct MenuState {
     pub quit_button: bool,
     pub levels_button: [bool; 16],
     pub vulkan_device: [u8; 16],
-    pub volume_slider: f32,
+    pub effect_volume_slider: f32,
+    pub music_volume_slider: f32,
     pub field_of_view_slider: f32,
 }
 
@@ -424,7 +438,8 @@ impl MenuState {
             return_hall_button: false,
             quit_button: false,
             levels_button: [false; 16],
-            volume_slider: save.volume(),
+            music_volume_slider: save.effect_volume(),
+            effect_volume_slider: save.music_volume(),
         }
     }
 
@@ -455,7 +470,8 @@ impl MenuState {
                         self.quit_button = ui.button(im_str!("Quit"), button_size);
                         ui.separator();
                         ui.text("Audio:");
-                        ui.slider_float(im_str!("Volume"), &mut self.volume_slider, 0.0, 1.0).build();
+                        ui.slider_float(im_str!("Music volume"), &mut self.effect_volume_slider, 0.0, 1.0).build();
+                        ui.slider_float(im_str!("Effect volume"), &mut self.music_volume_slider, 0.0, 1.0).build();
 
                         ui.separator();
                         ui.text("Video:");

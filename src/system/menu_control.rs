@@ -179,7 +179,8 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                     menu_state.state = ::resource::MenuStateState::Restart;
                 }
 
-                save.set_volume_lazy(menu_state.volume_slider);
+                save.set_effect_volume_lazy(menu_state.music_volume_slider);
+                save.set_music_volume_lazy(menu_state.effect_volume_slider);
                 save.set_field_of_view_lazy(menu_state.field_of_view_slider);
             },
         }

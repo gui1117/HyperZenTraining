@@ -1,4 +1,5 @@
 Config(
+    max_distance_sound_2: 50.0,
     field_of_view: 1.0,
     cursor_file: "cursor.png",
     assets_dir: "assets",
@@ -140,9 +141,9 @@ Config(
                 bug: (1, 1),
                 scale: 1.0,
                 entities: {
-                    Bouncer(eraser: false): 30,
+                    Bouncer(eraser: false): 1,
                     // Attracted(eraser: false): 1,
-                    // Turret: 10,
+                    Turret: 10,
                     MotionLess(eraser: false): 1,
                 }
             )),
@@ -156,7 +157,7 @@ Config(
 
     font_global_scale: 1.0,
     menu_width: 390.0,
-    menu_height: 550.0,
+    menu_height: 640.0,
     style: ImGuiStyleSave(
         alpha: 1.0,
         window_padding: ImVec2Def(x: 8, y: 8),

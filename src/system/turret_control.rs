@@ -56,9 +56,9 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
             turret.last_shoot += update_time.0;
             let direction = player_pos.translation.vector - turret.position;
 
-            audio.play(::audio::Sound::DepthBallBirthDeath, turret.position.into());
 
             while turret.last_shoot > turret.reload_time {
+                audio.play(::audio::Sound::DepthBallBirthDeath, turret.position.into());
                 turret.last_shoot -= turret.reload_time;
                 self.shoots.push((turret.position, direction));
             }

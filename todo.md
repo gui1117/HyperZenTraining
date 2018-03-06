@@ -4,12 +4,14 @@
 
 * peut être faire que les sons s'estompe moins vite: en fait pas avec un bonne balance.
 * régler la distance des oreilles
+* max distance
 * balance sonore
 
 * son eraser: peut être faire un son généré avec des harmoniques qui s'ajoute pour chaque palier
   * 0->1 une sinusoide
   * 1->2 cette sinusoide deviens aigu et on rajoute une sinusoide grave ...
   utiliser music: on fait des multiply avec des octaves en sinewave et on retombe toujours sur le même son lorsque nombre entier ! (on monte vers le même son)
+  juste un bruit blanc avec une intensité variant selon cette valeure
 
 * faire niveaux
 

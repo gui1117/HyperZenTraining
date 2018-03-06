@@ -63,12 +63,18 @@ impl<T> AudioMix<T>
     fn add_spatial(&mut self, sound: T, position: [f32; 3]) {
         assert!(sound.channels() == 2);
         assert!(sound.samples_rate() == 44100);
-        self.spatial_source.push((::rodio::source::Spatial::new(
-            sound,
-            position,
-            self.left_ear,
-            self.right_ear,
-        ), position));
+        let distance_2 = (position[0]-self.left_ear[0]).powi(2)
+            + (position[1]-self.left_ear[1]).powi(2)
+            + (position[2]-self.left_ear[2]).powi(2);
+
+        if distance_2 < ::CONFIG.max_distance_sound_2 {
+            self.spatial_source.push((::rodio::source::Spatial::new(
+                sound,
+                position,
+                self.left_ear,
+                self.right_ear,
+            ), position));
+        }
     }
 
     fn add_unspatial(&mut self, sound: T) {
@@ -232,8 +238,9 @@ lazy_static! {
 
 pub struct Audio {
     audio_sink_control: Option<Arc<Mutex<AudioSinkControl>>>,
+    music_sink: Option<::rodio::Sink>,
     // Used to drop sink
-    _sink: Option<::rodio::Sink>,
+    _audio_sink: Option<::rodio::Sink>,
 }
 
 impl Audio {
@@ -242,12 +249,13 @@ impl Audio {
         if endpoint.is_none() {
             return Audio {
                 audio_sink_control: None,
-                _sink: None,
+                music_sink: None,
+                _audio_sink: None,
             };
         }
         let endpoint = endpoint.unwrap();
 
-        let control = Arc::new(Mutex::new(AudioSinkControl::new(save.volume())));
+        let control = Arc::new(Mutex::new(AudioSinkControl::new(save.effect_volume())));
         let audio_sink_control = Some(control.clone());
 
         let source = AudioMix::new([0f32; 3], [0f32; 3])
@@ -272,11 +280,32 @@ impl Audio {
                 }
             );
 
-        let sink = ::rodio::Sink::new(&endpoint);
-        sink.append(source);
+        let audio_sink = ::rodio::Sink::new(&endpoint);
+        audio_sink.append(source);
+
+        let music_filename = "assets/sounds/mm.ogg";
+        let music_file = if cfg!(feature = "packed") {
+            Cursor::new(include_bytes!("../assets/sounds/mm.ogg").iter().cloned().collect::<Vec<_>>())
+        } else {
+            let mut buffer = vec![];
+            let mut file = File::open(music_filename)
+                .ok_or_show(|e| format!("Failed to open sound {}: {}", music_filename, e));
+            file.read_to_end(&mut buffer)
+                .ok_or_show(|e| format!("Failed to read sound {}: {}", music_filename, e));
+            Cursor::new(buffer)
+        };
+        // TODO: buffered ?
+        let music = Decoder::new(music_file)
+            .ok_or_show(|e| format!("Failed to decode sound {}: {}", music_filename, e))
+            .repeat_infinite();
+
+        let mut music_sink = ::rodio::Sink::new(&endpoint);
+        music_sink.set_volume(save.music_volume());
+        music_sink.append(music);
 
         Audio {
-            _sink: Some(sink),
+            _audio_sink: Some(audio_sink),
+            music_sink: Some(music_sink),
             audio_sink_control,
         }
     }
@@ -295,10 +324,10 @@ impl Audio {
         }
     }
 
-    pub fn update(&self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>, volume: f32) {
+    pub fn update(&mut self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>, effect_volume: f32, music_volume: f32) {
         if let Some(ref control) = self.audio_sink_control {
             let mut control = control.lock().unwrap();
-            control.volume = volume;
+            control.volume = effect_volume;
 
             let local_left_ear = ::na::Point3::new(0.0, - ::CONFIG.ear_distance/2.0, 0.0);
             let local_right_ear = ::na::Point3::new(0.0, ::CONFIG.ear_distance/2.0, 0.0);
@@ -313,6 +342,9 @@ impl Audio {
 
             control.left_ear = left_ear.coords.into();
             control.right_ear = right_ear.coords.into();
+        }
+        if let Some(ref mut sink) = self.music_sink {
+            sink.set_volume(music_volume);
         }
     }
 }
