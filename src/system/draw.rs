@@ -88,7 +88,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
 
             let proj_matrix = ::na::Perspective3::new(
                 graphics.dim[0] as f32 / graphics.dim[1] as f32,
-                ::std::f32::consts::FRAC_PI_3,
+                save.field_of_view(),
                 // IDEA: change to 0.0001 it's funny
                 0.05 * depth_coef.0,
                 100.0,
@@ -111,7 +111,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
 
             let hud_proj_matrix = ::na::Perspective3::new(
                 graphics.dim[0] as f32 / graphics.dim[1] as f32,
-                ::std::f32::consts::FRAC_PI_3,
+                save.field_of_view(),
                 // IDEA: change to 0.0001 it's funny
                 0.001 * depth_coef.0,
                 0.3,
@@ -287,7 +287,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                     .unwrap(),
             );
 
-            debug_assert_eq!(
+            assert_eq!(
                 graphics.primitives_vertex_buffers[assets.primitive].len(),
                 assets.groups.len()
             );

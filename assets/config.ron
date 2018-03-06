@@ -1,4 +1,5 @@
 Config(
+    field_of_view: 1.0,
     cursor_file: "cursor.png",
     assets_dir: "assets",
 

@@ -33,6 +33,7 @@ pub struct Save {
     input_settings: InputSettings,
     fullscreen: bool,
     vulkan_device_uuid: Option<[u8; 16]>,
+    field_of_view: f32,
     volume: f32,
 }
 
@@ -150,7 +151,19 @@ impl Save {
                 fullscreen: true,
                 vulkan_device_uuid: None,
                 volume: 0.5,
+                field_of_view: ::CONFIG.field_of_view,
             })
+    }
+
+    pub fn set_field_of_view_lazy(&mut self, field_of_view: f32) {
+        if self.field_of_view != field_of_view {
+            self.field_of_view = field_of_view;
+            self.save();
+        }
+    }
+
+    pub fn field_of_view(&self) -> f32 {
+        self.field_of_view
     }
 
     pub fn set_volume_lazy(&mut self, volume: f32) {
@@ -179,8 +192,9 @@ impl Save {
         &self.vulkan_device_uuid
     }
 
-    pub fn reset_input_settings(&mut self) {
+    pub fn reset_controls(&mut self) {
         self.input_settings = InputSettings::default();
+        self.field_of_view = ::CONFIG.field_of_view;
         self.save();
     }
 
@@ -378,6 +392,7 @@ pub struct MenuState {
     pub levels_button: [bool; 16],
     pub vulkan_device: [u8; 16],
     pub volume_slider: f32,
+    pub field_of_view_slider: f32,
 }
 
 impl MenuState {
@@ -404,6 +419,7 @@ impl MenuState {
             set_forward_button: false,
             set_backward_button: false,
             set_left_button: false,
+            field_of_view_slider: save.field_of_view(),
             set_right_button: false,
             return_hall_button: false,
             quit_button: false,
@@ -464,10 +480,11 @@ impl MenuState {
                         }
 
                         ui.separator();
-                        ui.text("Inputs:");
+                        ui.text("Controls:");
                         ui.same_line(0.0);
                         self.reset_button = ui.button(im_str!("Reset"), small_button_size);
 
+                        ui.slider_float(im_str!("Field of view"), &mut self.field_of_view_slider, 0.1, 2.0).build();
                         ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility_input).build();
 
                         self.set_shoot_button = ui.button(im_str!("Shoot"), small_button_size);

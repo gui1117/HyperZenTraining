@@ -163,8 +163,9 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                 }
 
                 if menu_state.reset_button {
-                    save.reset_input_settings();
-                    menu_state.mouse_sensibility_input = ::CONFIG.mouse_sensibility;
+                    save.reset_controls();
+                    menu_state.mouse_sensibility_input = save.mouse_sensibility();
+                    menu_state.field_of_view_slider = save.field_of_view();
                 }
 
                 if menu_state.fullscreen_checkbox {
@@ -179,6 +180,7 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                 }
 
                 save.set_volume_lazy(menu_state.volume_slider);
+                save.set_field_of_view_lazy(menu_state.field_of_view_slider);
             },
         }
     }

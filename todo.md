@@ -4,7 +4,6 @@
 
 * peut être faire que les sons s'estompe moins vite: en fait pas avec un bonne balance.
 * régler la distance des oreilles
-
 * balance sonore
 
 * son eraser: peut être faire un son généré avec des harmoniques qui s'ajoute pour chaque palier
@@ -13,10 +12,6 @@
   utiliser music: on fait des multiply avec des octaves en sinewave et on retombe toujours sur le même son lorsque nombre entier ! (on monte vers le même son)
 
 * faire niveaux
-
-* peut être rajouter un son lorsque les boules sont tiré en réutilisant le son depth ball death
-
-* faire que FOV est configurable
 
 BOF
 * peut être rajouter son lorsque attracted commence a se déplacé
