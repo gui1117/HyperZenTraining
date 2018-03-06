@@ -24,6 +24,7 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
         ::specs::WriteStorage<'a, ::component::Life>,
         ::specs::WriteStorage<'a, ::component::Momentum>,
         ::specs::Fetch<'a, ::resource::UpdateTime>,
+        ::specs::Fetch<'a, ::resource::Audio>,
         ::specs::FetchMut<'a, ::resource::PhysicWorld>,
         ::specs::Entities<'a>,
     );
@@ -41,6 +42,7 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
             mut lifes,
             mut momentums,
             update_time,
+            audio,
             mut physic_world,
             entities,
         ): Self::SystemData,
@@ -53,6 +55,8 @@ impl<'a> ::specs::System<'a> for TurretControlSystem {
         for (turret, body) in (&mut turrets, &mut bodies).join() {
             turret.last_shoot += update_time.0;
             let direction = player_pos.translation.vector - turret.position;
+
+            audio.play(::audio::Sound::DepthBallBirthDeath, turret.position.into());
 
             while turret.last_shoot > turret.reload_time {
                 turret.last_shoot -= turret.reload_time;

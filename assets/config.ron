@@ -56,7 +56,7 @@ Config(
     bouncer_color: Pink,
     // bouncer_color: Gen5,
 
-    depth_ball_size: 0.1,
+    depth_ball_size: 0.05,
     depth_ball_velocity: 1.0,
     depth_ball_time_to_reach_vmax: 0.05,
     depth_ball_ang_damping: 0.8,
@@ -139,10 +139,10 @@ Config(
                 bug: (1, 1),
                 scale: 1.0,
                 entities: {
-                    Bouncer(eraser: false): 2,
+                    Bouncer(eraser: false): 30,
                     // Attracted(eraser: false): 1,
-                    // Turret: 1,
-                    // MotionLess(eraser: true): 1,
+                    // Turret: 10,
+                    MotionLess(eraser: false): 1,
                 }
             )),
         ],

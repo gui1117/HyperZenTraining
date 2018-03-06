@@ -18,7 +18,7 @@ pub enum Sound {
     Portal,
     Bounce,
     DepthBallAttack,
-    DepthBallDeath,
+    DepthBallBirthDeath,
 }
 
 /// Sounds must be 44100 Hz and stereo
@@ -182,7 +182,7 @@ lazy_static! {
             "assets/sounds/portal.ogg",
             "assets/sounds/bounce.ogg",
             "assets/sounds/depth_ball_attack.ogg",
-            "assets/sounds/depth_ball_death.ogg",
+            "assets/sounds/depth_ball_birth_death.ogg",
         ];
 
         let mut sound_files = if cfg!(feature = "packed") {
@@ -194,7 +194,7 @@ lazy_static! {
                 Cursor::new(include_bytes!("../assets/sounds/portal.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/bounce.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/depth_ball_attack.ogg").iter().cloned().collect::<Vec<_>>()),
-                Cursor::new(include_bytes!("../assets/sounds/depth_ball_death.ogg").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/depth_ball_birth_death.ogg").iter().cloned().collect::<Vec<_>>()),
             ]
         } else {
             sound_filenames.iter()

@@ -27,7 +27,7 @@ impl<'a> ::specs::System<'a> for DepthBallSystem {
             }
 
             if !attack {
-                audio.play(::audio::Sound::DepthBallDeath, contactor.contacts.first().unwrap().1.world1.coords.into());
+                audio.play(::audio::Sound::DepthBallBirthDeath, contactor.contacts.first().unwrap().1.world1.coords.into());
             }
         }
     }
