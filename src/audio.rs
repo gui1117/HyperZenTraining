@@ -301,6 +301,7 @@ impl Audio {
 
         let mut music_sink = ::rodio::Sink::new(&endpoint);
         music_sink.set_volume(save.music_volume());
+        music_sink.append(::rodio::source::Zero::<i16>::new(2, 44100).take_duration(Duration::from_secs(1)));
         music_sink.append(music);
 
         Audio {
