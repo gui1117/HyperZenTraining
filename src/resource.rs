@@ -315,22 +315,32 @@ impl Rendering {
     }
 }
 
+#[derive(Clone, Copy)]
+pub enum Trend {
+    Increase,
+    Stable,
+    Decrease,
+}
+
 pub struct ErasedStatus {
     pub need_buffer_clear: bool,
-    pub erase_amout: f32,
+    pub amount: f32,
+    pub trend: Trend,
 }
 
 impl ErasedStatus {
     pub fn new() -> Self {
         ErasedStatus {
             need_buffer_clear: false,
-            erase_amout: 0.0,
+            amount: 0.0,
+            trend: Trend::Stable,
         }
     }
 
     pub fn clear(&mut self) {
         self.need_buffer_clear = true;
-        self.erase_amout = 0.0;
+        self.amount = 0.0;
+        self.trend = Trend::Stable;
     }
 }
 

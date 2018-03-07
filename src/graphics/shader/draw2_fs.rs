@@ -31,7 +31,7 @@ void main() {
 
     float erase_coef = 1.0;
     if (group_index < 4096) {
-        erase_coef = erased.data[group_index];
+        erase_coef = 1.0 - erased.data[group_index];
     }
 
     // Boundaries

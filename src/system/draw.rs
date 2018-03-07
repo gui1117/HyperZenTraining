@@ -91,7 +91,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 save.field_of_view(),
                 // IDEA: change to 0.0001 it's funny
                 0.05 * depth_coef.0,
-                100.0,
+                50.0,
             ).unwrap();
 
             let view_uniform = ::graphics::shader::draw1_vs::ty::View {
@@ -315,7 +315,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         if erased_status.need_buffer_clear {
             erased_status.need_buffer_clear = false;
             command_buffer_builder = command_buffer_builder
-                .fill_buffer(graphics.tmp_erased_buffer.clone(), 0u32)
+                .fill_buffer(graphics.erased_buffer.clone(), 0u32)
                 .unwrap()
         }
 

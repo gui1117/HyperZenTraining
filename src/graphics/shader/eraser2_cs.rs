@@ -23,9 +23,9 @@ void main() {
     uint idx = gl_GlobalInvocationID.x;
 
     if (tmp_erased.data[idx] != 0) {
-        erased.data[idx] -= velocity.data;
-    } else {
         erased.data[idx] += velocity.data;
+    } else {
+        erased.data[idx] -= velocity.data;
     }
 
     if (erased.data[idx] > 1.0) {

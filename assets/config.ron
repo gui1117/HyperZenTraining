@@ -144,7 +144,7 @@ Config(
                     Bouncer(eraser: false): 1,
                     // Attracted(eraser: false): 1,
                     Turret: 10,
-                    MotionLess(eraser: false): 1,
+                    MotionLess(eraser: true): 1,
                 }
             )),
         ],

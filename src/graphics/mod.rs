@@ -652,7 +652,7 @@ impl<'a> Graphics<'a> {
         let erased_buffer = CpuAccessibleBuffer::from_data(
             device.clone(),
             BufferUsage::all(),
-            [1f32; GROUP_COUNTER_SIZE],
+            [0f32; GROUP_COUNTER_SIZE],
         ).unwrap();
 
         let eraser1_descriptor_set_1 = Arc::new(

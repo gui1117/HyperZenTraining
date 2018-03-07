@@ -1,3 +1,5 @@
+use resource::Trend::*;
+
 pub struct ErasedSoundSystem;
 
 impl<'a> ::specs::System<'a> for ErasedSoundSystem {
@@ -8,16 +10,31 @@ impl<'a> ::specs::System<'a> for ErasedSoundSystem {
     );
 
     fn run(&mut self, (audio, graphics, mut erased_status): Self::SystemData) {
-        let sum: f32 = graphics.erased_buffer.read().unwrap()
-            .iter()
-            .sum();
+        let new_amount = 0f32;
+        // TODO:
+        // let new_amount = graphics.erased_buffer.read().unwrap()
+        //     .iter()
+        //     .sum();
 
-        let new_erase_amount = ::graphics::GROUP_COUNTER_SIZE as f32 - sum;
+        let new_trend = if new_amount == erased_status.amount {
+            Stable
+        } else if new_amount > erased_status.amount {
+            Increase
+        } else {
+            Decrease
+        };
 
-//         if new_number_erased > 0 {
-//             println!("todo");
-//             // audio.play_unspatial(::audio::Sound::AllKilled);
-//             // number_erased.0 = new_number_erased;
-//         }
+        match (new_trend, erased_status.trend) {
+            (Increase, Stable) | (Increase, Decrease) => {
+                audio.play_unspatial(::audio::Sound::EraserIncrease)
+            }
+            (Decrease, Stable) | (Decrease, Increase) => {
+                audio.play_unspatial(::audio::Sound::EraserDecrease)
+            }
+            _ => (),
+        }
+
+        erased_status.amount = new_amount;
+        erased_status.trend = new_trend;
     }
 }
