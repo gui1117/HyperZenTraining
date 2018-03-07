@@ -14,6 +14,9 @@ layout(set = 0, binding = 1) uniform usampler2D tmp_erase_image;
 layout(set = 1, binding = 0) buffer TmpErased {
     uint data[];
 } tmp_erased;
+layout(set = 1, binding = 1) buffer ErasedAmount {
+    uint data;
+} erased_amount;
 
 void main() {
     uint erased = texture(tmp_erase_image, gl_GlobalInvocationID.xy).r;
@@ -21,6 +24,7 @@ void main() {
         uvec4 pixel = texture(tmp_image, gl_GlobalInvocationID.xy);
         uint group = pixel.r << 8 | pixel.g;
         tmp_erased.data[group] = 1;
+        erased_amount.data += 1;
     }
 }"]
 struct _Dummy;

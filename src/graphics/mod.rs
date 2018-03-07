@@ -96,6 +96,7 @@ pub struct Data {
     pub world_uniform_static_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::World>,
     pub world_uniform_buffer: CpuBufferPool<::graphics::shader::draw1_vs::ty::World>,
     pub tmp_erased_buffer: Arc<DeviceLocalBuffer<[u32; GROUP_COUNTER_SIZE]>>,
+    pub erased_amount_buffer: Arc<CpuAccessibleBuffer<[u32; 1]>>,
     pub erased_buffer: Arc<DeviceLocalBuffer<[f32; GROUP_COUNTER_SIZE]>>,
 
     pub render_pass: Arc<RenderPass<render_pass::CustomRenderPassDesc>>,
@@ -121,7 +122,7 @@ pub struct Data {
     pub imgui_descriptor_set: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
 
     pub eraser1_descriptor_set_0: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, (((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
-    pub eraser1_descriptor_set_1: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, ((), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; GROUP_COUNTER_SIZE]>>>)>>,
+    pub eraser1_descriptor_set_1: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, (((), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; 4096]>>>), PersistentDescriptorSetBuf<Arc<CpuAccessibleBuffer<[u32; 1]>>>)>>,
     pub eraser2_descriptor_set: Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser2_cs::Layout>>>, (((), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[u32; GROUP_COUNTER_SIZE]>>>), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[f32; GROUP_COUNTER_SIZE]>>>)>>,
     pub draw2_descriptor_set_0: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
     pub draw2_descriptor_set_1: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetBuf<Arc<ImmutableBuffer<[[f32; 4]]>>>), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[f32; GROUP_COUNTER_SIZE]>>>)>>,
@@ -648,6 +649,12 @@ impl<'a> Graphics<'a> {
             vec![queue.family()].into_iter(),
         ).unwrap();
 
+        let erased_amount_buffer = CpuAccessibleBuffer::from_data(
+             device.clone(),
+             BufferUsage::all(),
+             [0u32; 1],
+         ).unwrap();
+
         let erased_buffer = DeviceLocalBuffer::<[f32; GROUP_COUNTER_SIZE]>::new(
             device.clone(),
             BufferUsage::all(),
@@ -657,6 +664,8 @@ impl<'a> Graphics<'a> {
         let eraser1_descriptor_set_1 = Arc::new(
             PersistentDescriptorSet::start(eraser1_pipeline.clone(), 1)
                 .add_buffer(tmp_erased_buffer.clone())
+                .unwrap()
+                .add_buffer(erased_amount_buffer.clone())
                 .unwrap()
                 .build()
                 .unwrap(),
@@ -747,6 +756,7 @@ impl<'a> Graphics<'a> {
                 world_uniform_static_buffer,
                 world_uniform_buffer,
                 erased_buffer,
+                erased_amount_buffer,
             },
         }
     }

@@ -187,7 +187,6 @@ fn new_game() -> ControlFlow {
         .add(::system::AudioSystem, "audio", &[])
         .add(::system::MenuGameControlSystem, "menu_game", &[])
         .add(::system::PlayerControlSystem, "player_control", &[])
-        .add(::system::ErasedSoundSystem, "erased_sound", &[])
         .add(::system::AvoiderControlSystem, "avoider_control", &[])
         .add(::system::BouncerControlSystem, "bouncer_control", &[])
         .add(::system::TeleportSystem, "teleport", &[])
@@ -217,7 +216,8 @@ fn new_game() -> ControlFlow {
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::DrawSystem, "draw_system", &[])
+        .add(::system::ErasedSoundSystem, "erased_sound", &[])
+        .add(::system::DrawSystem, "draw_system", &["erased_sound"])
         .build();
 
     {

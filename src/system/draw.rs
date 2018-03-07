@@ -324,6 +324,8 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         let x_iteration = graphics.dim[0] / 32 + if graphics.dim[0] % 32 != 0 { 1 } else { 0 };
         let y_iteration = graphics.dim[1] / 32 + if graphics.dim[1] % 32 != 0 { 1 } else { 0 };
         command_buffer_builder = command_buffer_builder
+            .fill_buffer(graphics.erased_amount_buffer.clone(), 0u32)
+            .unwrap()
             .fill_buffer(graphics.tmp_erased_buffer.clone(), 0u32)
             .unwrap()
             .dispatch(
