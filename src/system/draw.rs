@@ -314,9 +314,10 @@ impl<'a> ::specs::System<'a> for DrawSystem {
 
         if erased_status.need_buffer_clear {
             erased_status.need_buffer_clear = false;
-            command_buffer_builder = command_buffer_builder
-                .fill_buffer(graphics.erased_buffer.clone(), 0u32)
-                .unwrap()
+            // TODO:
+            // command_buffer_builder = command_buffer_builder
+            //     .fill_buffer(graphics.erased_buffer.clone(), 0u32)
+            //     .unwrap();
         }
 
         assert!(::graphics::GROUP_COUNTER_SIZE % 64 == 0);
