@@ -151,8 +151,8 @@ impl Save {
                 input_settings: InputSettings::default(),
                 fullscreen: true,
                 vulkan_device_uuid: None,
-                effect_volume: 0.5,
-                music_volume: 0.5,
+                effect_volume: 1.0,
+                music_volume: 1.0,
                 field_of_view: ::CONFIG.field_of_view,
             })
     }
