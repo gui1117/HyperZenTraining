@@ -19,8 +19,7 @@ pub enum Sound {
     Bounce,
     DepthBallAttack,
     DepthBallBirthDeath,
-    EraserIncrease,
-    EraserDecrease,
+    Eraser,
 }
 
 /// Sounds must be 44100 Hz and stereo
@@ -191,8 +190,7 @@ lazy_static! {
             "assets/sounds/bounce.ogg",
             "assets/sounds/depth_ball_attack.ogg",
             "assets/sounds/depth_ball_birth_death.ogg",
-            "assets/sounds/eraser_increase.ogg",
-            "assets/sounds/eraser_decrease.ogg",
+            "assets/sounds/eraser.ogg",
         ];
 
         let mut sound_files = if cfg!(feature = "packed") {
@@ -205,8 +203,7 @@ lazy_static! {
                 Cursor::new(include_bytes!("../assets/sounds/bounce.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/depth_ball_attack.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/depth_ball_birth_death.ogg").iter().cloned().collect::<Vec<_>>()),
-                Cursor::new(include_bytes!("../assets/sounds/eraser_increase.ogg").iter().cloned().collect::<Vec<_>>()),
-                Cursor::new(include_bytes!("../assets/sounds/eraser_decrease.ogg").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/eraser.ogg").iter().cloned().collect::<Vec<_>>()),
             ]
         } else {
             sound_filenames.iter()
@@ -245,6 +242,7 @@ lazy_static! {
 pub struct Audio {
     audio_sink_control: Option<Arc<Mutex<AudioSinkControl>>>,
     music_sink: Option<::rodio::Sink>,
+    eraser_sink: Option<::rodio::Sink>,
     // Used to drop sink
     _audio_sink: Option<::rodio::Sink>,
 }
@@ -257,6 +255,7 @@ impl Audio {
                 audio_sink_control: None,
                 music_sink: None,
                 _audio_sink: None,
+                eraser_sink: None,
             };
         }
         let endpoint = endpoint.unwrap();
@@ -310,10 +309,16 @@ impl Audio {
         music_sink.append(::rodio::source::Zero::<i16>::new(2, 44100).take_duration(Duration::from_secs(1)));
         music_sink.append(music);
 
+        let mut eraser_sink = ::rodio::Sink::new(&endpoint);
+        eraser_sink.set_volume(0.0);
+        eraser_sink.append(::rodio::source::Zero::<i16>::new(2, 44100).take_duration(Duration::from_secs(1)));
+        eraser_sink.append(SOUND_BUFFERS[Sound::Eraser as usize].clone().repeat_infinite());
+
         Audio {
             _audio_sink: Some(audio_sink),
             music_sink: Some(music_sink),
             audio_sink_control,
+            eraser_sink: Some(eraser_sink),
         }
     }
 
@@ -331,7 +336,7 @@ impl Audio {
         }
     }
 
-    pub fn update(&mut self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>, effect_volume: f32, music_volume: f32) {
+    pub fn update(&mut self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>, effect_volume: f32, music_volume: f32, eraser_volume: f32) {
         if let Some(ref control) = self.audio_sink_control {
             let mut control = control.lock().unwrap();
             control.volume = effect_volume;
@@ -352,6 +357,15 @@ impl Audio {
         }
         if let Some(ref mut sink) = self.music_sink {
             sink.set_volume(music_volume);
+        }
+
+        if let Some(ref mut sink) = self.eraser_sink {
+            let goal = effect_volume * eraser_volume;
+            let volume = sink.volume();
+            if goal != volume {
+                let volume = (volume + 0.01*(goal-volume).signum()).max(0.0).min(1.0);
+                sink.set_volume(volume);
+            }
         }
     }
 }

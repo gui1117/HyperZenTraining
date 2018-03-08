@@ -85,7 +85,7 @@ where
                         && *cell != end_opening
                         && maze.is_neighbouring_wall(cell)
                     });
-                    if room.len() == 0 {
+                    if room.is_empty() {
                         None
                     } else {
                         let cell = room.iter()
@@ -119,6 +119,10 @@ where
             let mut entity_cells = vec![];
 
             for _ in 0..entities {
+                if cells.is_empty() {
+                    break
+                }
+
                 let index = Range::new(0, cells.len()).ind_sample(&mut rng);
                 let cell = cells.swap_remove(index);
                 entity_cells.push(cell);

@@ -137,14 +137,14 @@ Config(
         [
             KillAllKruskal2D((
                 size: (17, 17),
-                percent: 0.0,
+                percent: 10.0,
                 bug: (1, 1),
                 scale: 1.0,
                 entities: {
                     Bouncer(eraser: false): 1,
                     // Attracted(eraser: false): 1,
                     Turret: 10,
-                    MotionLess(eraser: true): 1,
+                    MotionLess(eraser: true): 100,
                 }
             )),
         ],

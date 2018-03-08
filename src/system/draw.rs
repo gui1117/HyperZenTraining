@@ -401,7 +401,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             ::CONFIG.dt(),
         );
         menu_state.build_ui(&ui, &save, &vulkan_instance);
-        if false {
+        if true {
             ui.window(im_str!("Debug"))
                 .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
                 .build(|| {

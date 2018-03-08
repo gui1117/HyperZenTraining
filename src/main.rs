@@ -46,6 +46,7 @@ use show_message::OkOrShow;
 
 use vulkano::swapchain;
 use vulkano::sync::now;
+use vulkano::sync::FenceSignalFuture;
 use vulkano::sync::GpuFuture;
 use vulkano::instance::Instance;
 
@@ -124,7 +125,7 @@ fn new_game() -> ControlFlow {
     let mut imgui = init_imgui();
     let mut graphics = graphics::Graphics::new(&window, &mut imgui, &mut save);
 
-    let mut previous_frame_end = Box::new(now(graphics.data.device.clone())) as Box<GpuFuture>;
+    let mut previous_frame_end: Option<FenceSignalFuture<Box<GpuFuture>>> = None;
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();
@@ -216,8 +217,7 @@ fn new_game() -> ControlFlow {
         .build();
 
     let mut draw_dispatcher = ::specs::DispatcherBuilder::new()
-        .add(::system::ErasedSoundSystem, "erased_sound", &[])
-        .add(::system::DrawSystem, "draw_system", &["erased_sound"])
+        .add(::system::DrawSystem, "draw_system", &[])
         .build();
 
     {
@@ -239,7 +239,6 @@ fn new_game() -> ControlFlow {
 
     loop {
         benchmarker.start("pre_update");
-        previous_frame_end.cleanup_finished();
 
         // Poll events
         {
@@ -405,7 +404,15 @@ fn new_game() -> ControlFlow {
             )
         };
 
-        let future = previous_frame_end
+        if let Some(previous_frame_end) = previous_frame_end {
+            if let Ok(()) = previous_frame_end.wait(None) {
+                let amount = graphics.data.erased_amount_buffer.read().unwrap()[0];
+                let total = graphics.data.dim[0] as f32 * graphics.data.dim[1] as f32;
+                world.write_resource::<::resource::ErasedStatus>().amount = amount as f32 / total;
+            }
+        }
+
+        let future = now(graphics.data.device.clone())
             .then_execute(graphics.data.queue.clone(), command_buffer)
             .unwrap()
             .join(acquire_future)
@@ -415,19 +422,21 @@ fn new_game() -> ControlFlow {
                 graphics.data.queue.clone(),
                 graphics.data.swapchain.clone(),
                 image_num,
-            )
-            .then_signal_fence_and_flush();
+            );
+
+        let future = Box::new(future) as Box<GpuFuture>;
+        let future = future.then_signal_fence_and_flush();
 
         match future {
             Ok(future) => {
-                previous_frame_end = Box::new(future) as Box<_>;
+                previous_frame_end = Some(future);
             }
             Err(vulkano::sync::FlushError::OutOfDate) => {
-                previous_frame_end = Box::new(vulkano::sync::now(graphics.data.device.clone())) as Box<_>;
+                previous_frame_end = None;
             }
             Err(e) => {
                 println!("ERROR: {:?}", e);
-                previous_frame_end = Box::new(vulkano::sync::now(graphics.data.device.clone())) as Box<_>;
+                previous_frame_end = None;
             }
         }
         benchmarker.end("draw");

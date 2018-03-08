@@ -620,6 +620,8 @@ where
     }
 
     pub fn random_free(&self) -> ::na::VectorN<isize, D> {
+        assert!(self.size.iter().all(|&s| s != 0));
+
         let ranges: Vec<_> = self.size.iter().map(|&s| Range::new(0, s)).collect();
         let mut rng = ::rand::thread_rng();
 
