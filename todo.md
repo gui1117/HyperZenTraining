@@ -13,6 +13,7 @@
   juste un bruit blanc avec une intensité variant selon cette valeure
 
   juste un bruit lors des transitions de crépitement fort
+  non un bruit d'atmosphere
 
 * faire niveaux
 
