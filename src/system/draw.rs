@@ -1,6 +1,7 @@
 use vulkano::command_buffer::{AutoCommandBufferBuilder, DynamicState};
 use vulkano::buffer::{BufferUsage, ImmutableBuffer};
 use vulkano::pipeline::viewport::Viewport;
+use vulkano::format::ClearValue;
 use specs::Join;
 use alga::general::SubsetOf;
 use util::{high_byte, low_byte};
@@ -169,7 +170,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             .begin_render_pass(
                 graphics.framebuffer.clone(),
                 false,
-                vec![0u32.into(), 0u32.into(), 1f32.into(), 1f32.into()],
+                vec![[0u32; 4].into(), [0u32; 1].into(), 1f32.into(), 1f32.into()],
             )
             .unwrap();
 
@@ -356,7 +357,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             .begin_render_pass(
                 graphics.second_framebuffers[rendering.image_num.take().unwrap()].clone(),
                 false,
-                vec![],
+                vec![ClearValue::None],
             )
             .unwrap()
             .draw(

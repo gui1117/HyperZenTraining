@@ -1,5 +1,5 @@
 use vulkano::device::{Device, DeviceExtensions, Queue};
-use vulkano::swapchain::{self, Swapchain};
+use vulkano::swapchain::{self, Swapchain, Surface};
 use vulkano::sampler::{Filter, MipmapMode, Sampler, SamplerAddressMode,
                        UnnormalizedSamplerAddressMode};
 use vulkano::image::{AttachmentImage, Dimensions, ImageUsage, ImmutableImage, SwapchainImage};
@@ -83,8 +83,8 @@ pub struct Data {
     pub device: Arc<Device>,
     pub queue: Arc<Queue>,
 
-    pub swapchain: Arc<Swapchain>,
-    pub images: Vec<Arc<SwapchainImage>>,
+    pub swapchain: Arc<Swapchain<::winit::Window>>,
+    pub images: Vec<Arc<SwapchainImage<::winit::Window>>>,
     pub dim: [u32; 2],
     pub cursor_tex_dim: [u32; 2],
 
@@ -103,7 +103,7 @@ pub struct Data {
     pub second_render_pass: Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>,
 
     pub framebuffer: Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, (((((), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
-    pub second_framebuffers: Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage>)>>>,
+    pub second_framebuffers: Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage<::winit::Window>>)>>>,
 
     pub draw1_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>,
     pub draw1_eraser_pipeline: Arc<GraphicsPipeline<SingleBufferDefinition<Vertex>, Box<PipelineLayoutAbstract + Sync + Send>, ::Arc<RenderPass<render_pass::CustomRenderPassDesc>>>>,
@@ -144,7 +144,7 @@ impl<'a> Graphics<'a> {
     pub fn framebuffers_and_descriptors(
         device: Arc<Device>,
         queue: Arc<Queue>,
-        images: &Vec<Arc<SwapchainImage>>,
+        images: &Vec<Arc<SwapchainImage<::winit::Window>>>,
         render_pass: &Arc<RenderPass<render_pass::CustomRenderPassDesc>>,
         second_render_pass: &Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>,
         eraser1_pipeline: &Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>,
@@ -153,7 +153,7 @@ impl<'a> Graphics<'a> {
         imgui: &mut ::imgui::ImGui,
     ) -> (
         Arc<Framebuffer<Arc<RenderPass<render_pass::CustomRenderPassDesc>>, (((((), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>), Arc<AttachmentImage>)>>,
-        Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage>)>>>,
+        Vec<Arc<Framebuffer<Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>, ((), Arc<SwapchainImage<::winit::Window>>)>>>,
         Arc<PersistentDescriptorSet<Arc<ComputePipeline<PipelineLayout<::graphics::shader::eraser1_cs::Layout>>>, (((((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
         Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
         Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
@@ -314,8 +314,8 @@ impl<'a> Graphics<'a> {
             imgui_descriptor_set,
         )
     }
-    pub fn new(window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) -> Graphics<'a> {
-        let physical = PhysicalDevice::enumerate(&window.surface().instance())
+    pub fn new(window: &'a Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) -> Graphics<'a> {
+        let physical = PhysicalDevice::enumerate(window.instance())
             .max_by_key(|device| {
                 if let Some(uuid) = save.vulkan_device_uuid().as_ref() {
                     if uuid == device.uuid() {
@@ -337,7 +337,7 @@ impl<'a> Graphics<'a> {
             .queue_families()
             .find(|&q| {
                 q.supports_graphics() && q.supports_compute()
-                    && window.surface().is_supported(q).unwrap_or(false)
+                    && window.is_supported(q).unwrap_or(false)
             })
             .some_or_show("Failed to find a vulkan graphical queue family");
 
@@ -360,7 +360,6 @@ impl<'a> Graphics<'a> {
 
         let (swapchain, images) = {
             let caps = window
-                .surface()
                 .capabilities(physical)
                 .expect("failed to get surface capabilities");
 
@@ -373,7 +372,7 @@ impl<'a> Graphics<'a> {
 
             Swapchain::new(
                 device.clone(),
-                window.surface().clone(),
+                window.clone(),
                 caps.min_image_count,
                 format::Format::B8G8R8A8Srgb,
                 dimensions,
@@ -761,11 +760,10 @@ impl<'a> Graphics<'a> {
         }
     }
 
-    pub fn recreate(&mut self, window: &'a ::vulkano_win::Window, imgui: &mut ::imgui::ImGui) {
+    pub fn recreate(&mut self, window: &'a Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui) {
         let mut try = 0;
         let recreate = loop {
             let dimensions = window
-                .surface()
                 .capabilities(self.physical)
                 .expect("failed to get surface capabilities")
                 .current_extent

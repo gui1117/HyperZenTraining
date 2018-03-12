@@ -7,9 +7,9 @@ authors = ["thiolliere <guillaume.thiolliere@opmbx.org>"]
 packed = [] # standalone executable
 
 [dependencies]
-vulkano = "0.7"
-vulkano-shader-derive = "0.7"
-vulkano-win = "0.7"
+vulkano = "0.8"
+vulkano-shader-derive = "0.8"
+vulkano-win = "0.8"
 winit = "0.7"
 nalgebra = "0.13"
 ncollide = { git = "https://github.com/thiolliere/ncollide/", branch = "send_sync_master" }
