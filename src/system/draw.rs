@@ -32,6 +32,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         ::specs::Fetch<'a, ::resource::DepthCoef>,
         ::specs::Fetch<'a, ::resource::Benchmarks>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
+        ::specs::Fetch<'a, ::resource::DebugMode>,
     );
 
     fn run(
@@ -57,6 +58,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             depth_coef,
             benchmarks,
             physic_world,
+            debug,
         ): Self::SystemData,
     ) {
         let mut future = Vec::new();
@@ -402,7 +404,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             ::CONFIG.dt(),
         );
         menu_state.build_ui(&ui, &save, &vulkan_instance);
-        if true {
+        if debug.0 {
             ui.window(im_str!("Debug"))
                 .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
                 .build(|| {

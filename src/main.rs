@@ -50,7 +50,7 @@ use vulkano::sync::FenceSignalFuture;
 use vulkano::sync::GpuFuture;
 use vulkano::instance::Instance;
 
-use winit::{DeviceEvent, Event, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode, ModifiersState};
+use winit::{DeviceEvent, Event, WindowEvent};
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -127,6 +127,8 @@ fn new_game() -> ControlFlow {
 
     let mut previous_frame_end: Option<FenceSignalFuture<Box<GpuFuture>>> = None;
 
+    let debug = ::std::env::var("PEPE_DEBUG").map(|v| v == "1").unwrap_or(false);
+
     let mut world = specs::World::new();
     world.register::<::component::Player>();
     world.register::<::component::Teleport>();
@@ -162,7 +164,7 @@ fn new_game() -> ControlFlow {
     world.add_resource(::resource::Events(vec![]));
     world.add_resource(instance.clone());
     world.add_resource(::resource::Rendering::new());
-    world.add_resource(::resource::DebugMode(false));
+    world.add_resource(::resource::DebugMode(debug));
     world.add_resource(::resource::FpsCounter(0));
     world.add_resource(::resource::PlayerControl::new());
     world.add_resource(::resource::Benchmarks::new());

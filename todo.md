@@ -1,6 +1,6 @@
 # FINAL
 
-* control escape
+* pas de control escape (regarder ce que ca fait par défault sur windows)
 
 * régler la distance des oreilles
 
