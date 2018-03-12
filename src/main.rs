@@ -251,29 +251,6 @@ fn new_game() -> ControlFlow {
             events_loop.poll_events(|ev| {
                 let retain = match ev {
                     Event::WindowEvent {
-                        event: WindowEvent::KeyboardInput {
-                            input: KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                modifiers: ModifiersState {
-                                    ctrl: true,
-                                    ..
-                                },
-                                ..
-                            },
-                            ..
-                        },
-                        ..
-                    } => {
-                        // TODO: windows only ?
-                        let mut menu_state = world.write_resource::<::resource::MenuState>();
-                        if !menu_state.paused() {
-                            menu_state.state = ::resource::MenuStateState::Pause;
-                        }
-                        window.window().hide();
-                        false
-                    }
-                    Event::WindowEvent {
                         event: WindowEvent::Focused(true),
                         ..
                     } => {

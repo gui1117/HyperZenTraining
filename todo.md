@@ -1,8 +1,10 @@
 # FINAL
 
-* control escape ?
+* control escape
 
 * régler la distance des oreilles
+
+* baisser un peu le son des shoots
 
 * faire niveaux
 
