@@ -212,17 +212,6 @@ Config(
     ),
 
     levels: [
-        [
-            KillAllKruskal2D((
-                size: (13, 13),
-                percent: 20.0,
-                bug: (1, 1),
-                scale: 1.0,
-                entities: {
-                    Avoider(eraser: false): 1,
-                },
-            )),
-        ],
         // intro
         [
             KillAllKruskal2D((
@@ -292,7 +281,6 @@ Config(
                 },
             )),
         ],
-        // ?
         [
             KillAllKruskal2D((
                 size: (9, 9),
@@ -505,7 +493,7 @@ Config(
                 bug: (1, 1),
                 scale: 1.0,
                 entities: {
-                    Avoider(eraser: true): 1,
+                    Bouncer(eraser: true): 1,
                     MotionLess(eraser: false): 80,
                 },
             )),
