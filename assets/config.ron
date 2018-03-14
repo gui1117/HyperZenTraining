@@ -48,21 +48,20 @@ Config(
     avoider_velocity: 2.5,
     avoider_time_to_reach_vmax: 1.0,
     avoider_ang_damping: 0.8,
-    avoider_color: Gen2,
-    avoider_avoid_norm: 1.0,
+    avoider_color: Gen3,
+    avoider_avoid_norm: 0.8,
 
     bouncer_size: 0.1,
     bouncer_velocity: 1.0,
     bouncer_time_to_reach_vmax: 0.05,
     bouncer_ang_damping: 0.8,
-    bouncer_color: Pink,
-    // bouncer_color: Gen5,
+    bouncer_color: Gen9,
 
     depth_ball_size: 0.05,
-    depth_ball_velocity: 1.0,
+    depth_ball_velocity: 4.0,
     depth_ball_time_to_reach_vmax: 0.05,
     depth_ball_ang_damping: 0.8,
-    depth_ball_color: Gen5,
+    depth_ball_color: Gen6,
 
     attracted_size: 0.1,
     attracted_velocity: 1.0,
@@ -101,12 +100,12 @@ Config(
 
     turret_size: 0.15,
     turret_density: 100.0,
-    turret_reload_time: 1.0,
-    turret_color: Purple,
+    turret_reload_time: 0.5,
+    turret_color: Gen1,
 
     motionless_size: 0.15,
     motionless_density: 100.0,
-    motionless_color: Purple,
+    motionless_color: Gen8,
 
     wall_color: [
         GenPale0,
@@ -213,6 +212,17 @@ Config(
     ),
 
     levels: [
+        [
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 20.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Avoider(eraser: false): 1,
+                },
+            )),
+        ],
         // intro
         [
             KillAllKruskal2D((
