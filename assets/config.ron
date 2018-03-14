@@ -133,23 +133,6 @@ Config(
     weapon_angle_color: GenWhite,
     weapon_light_ray_duration: 0.2,
 
-    levels: [
-        [
-            KillAllKruskal2D((
-                size: (17, 17),
-                percent: 10.0,
-                bug: (1, 1),
-                scale: 1.0,
-                entities: {
-                    Bouncer(eraser: false): 1,
-                    // Attracted(eraser: false): 1,
-                    Turret: 10,
-                    MotionLess(eraser: true): 100,
-                }
-            )),
-        ],
-    ],
-
     fps: 60,
     debug_fps_counter: 0,
     mouse_sensibility: 0.001,
@@ -228,4 +211,294 @@ Config(
             modal_window_darkening: ImVec4Def(x: 0.20, y: 0.20, z: 0.20, w: 0.35),
         ),
     ),
+
+    levels: [
+        // intro
+        [
+            KillAllKruskal2D((
+                size: (7, 7),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {},
+            )),
+            KillAllKruskal2D((
+                size: (9, 9),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: false): 1,
+                    Bouncer(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 20.0,
+                bug: (0, 0),
+                scale: 1.0,
+                entities: {
+                    Bouncer(eraser: false): 5,
+                    MotionLess(eraser: false): 2,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 20.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    Avoider(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 5,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Turret: 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (25, 25),
+                percent: 10.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Bouncer(eraser: false): 10,
+                    Attracted(eraser: false): 10,
+                    Turret: 10,
+                    MotionLess(eraser: false): 10,
+                },
+            )),
+        ],
+        // ?
+        [
+            KillAllKruskal2D((
+                size: (9, 9),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: false): 2,
+                    Bouncer(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (9, 9),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: false): 2,
+                    Bouncer(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (9, 9),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: false): 2,
+                    Bouncer(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (9, 9),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: true): 1,
+                    MotionLess(eraser: false): 1,
+                    Bouncer(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (9, 9),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: true): 2,
+                    Bouncer(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (25, 25),
+                percent: 10.0,
+                bug: (1, 0),
+                scale: 1.0,
+                entities: {
+                    Bouncer(eraser: false): 10,
+                    Turret: 10,
+                    MotionLess(eraser: true): 10,
+                },
+            )),
+        ],
+        // easy one eraser
+        [
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 20.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 20.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: true): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 20.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 20.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: true): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 20.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    Bouncer(eraser: false): 1,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (13, 13),
+                percent: 20.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    Bouncer(eraser: true): 1,
+                },
+            )),
+        ],
+        // easy large maze
+        [
+            KillAllKruskal2D((
+                size: (31, 31),
+                percent: 25.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: true): 10,
+                    Bouncer(eraser: false): 5,
+                    Attracted(eraser: false): 10,
+                    Avoider(eraser: false): 2,
+                },
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (27, 27),
+                percent: 0.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: true): 7,
+                    MotionLess(eraser: false): 13,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (27, 27),
+                percent: 0.0,
+                bug: (0, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: true): 7,
+                    Attracted(eraser: false): 13,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (27, 27),
+                percent: 15.0,
+                bug: (0, 0),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: true): 7,
+                    MotionLess(eraser: false): 13,
+                },
+            )),
+            KillAllKruskal2D((
+                size: (27, 27),
+                percent: 15.0,
+                bug: (0, 0),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: true): 7,
+                    Attracted(eraser: false): 13,
+                },
+            )),
+        ],
+        // hard large maze
+        [
+            KillAllKruskal2D((
+                size: (31, 31),
+                percent: 35.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: true): 20,
+                    Bouncer(eraser: false): 10,
+                    Attracted(eraser: true): 20,
+                    Avoider(eraser: false): 4,
+                },
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (31, 31),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: true): 20,
+                    Attracted(eraser: true): 20,
+                },
+            )),
+        ],
+        [
+            KillAllKruskal2D((
+                size: (25, 25),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Avoider(eraser: true): 1,
+                    MotionLess(eraser: false): 80,
+                },
+            )),
+        ],
+    ],
 )

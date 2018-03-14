@@ -6,6 +6,12 @@
 
 * baisser un peu le son des shoots
 
+* peut être faire un son régulier pour les attracted
+
+* faire que les avoider ne se déplace que si en ligne de mire ou alors pas trop loin
+
+* peut être faire un son pour les choc des avoider
+
 * faire niveaux
 
 BOF
