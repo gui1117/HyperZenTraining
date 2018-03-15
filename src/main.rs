@@ -110,7 +110,7 @@ fn new_game() -> ControlFlow {
     let mut window_builder = winit::WindowBuilder::new();
 
     if save.fullscreen() {
-        window_builder = window_builder.with_fullscreen(None);
+        window_builder = window_builder.with_fullscreen(Some(events_loop.get_primary_monitor()));
     }
 
     let window = window_builder
@@ -314,7 +314,8 @@ fn new_game() -> ControlFlow {
                 }
             });
             if done {
-                break ControlFlow::Quit;
+                // FIXME: breaking with ControlFLow::Quit bugs on X11: function never ends
+                ::std::process::exit(0);
             }
         }
         if world.write_resource::<::resource::MenuState>().quit_button {
