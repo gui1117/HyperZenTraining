@@ -64,15 +64,12 @@ impl<'a> ::specs::System<'a> for PlayerControlSystem {
                     inputs.extend(save.convert_keycode_input(keycode).iter().map(|c| (c.clone(), state.clone())));
                 }
                 Event::DeviceEvent {
-                    event: DeviceEvent::Motion { axis: 0, value: dx },
+                    event: DeviceEvent::MouseMotion {
+                        delta: (dx, dy)
+                    },
                     ..
                 } => {
                     player_control.pointer[0] += dx as f32 * save.mouse_sensibility();
-                }
-                Event::DeviceEvent {
-                    event: DeviceEvent::Motion { axis: 1, value: dy },
-                    ..
-                } => {
                     player_control.pointer[1] += dy as f32 * save.mouse_sensibility();
                     player_control.pointer[1] = player_control.pointer[1]
                         .min(::std::f32::consts::FRAC_PI_2)

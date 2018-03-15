@@ -29,7 +29,7 @@ impl<'a> ::specs::System<'a> for MenuGameControlSystem {
                 },
                 Event::WindowEvent {
                     event:
-                        WindowEvent::MouseMoved {
+                        WindowEvent::CursorMoved {
                             position: (x, y), ..
                         },
                     ..
@@ -210,7 +210,7 @@ fn send_events_to_imgui(events: &::resource::Events, imgui: &mut ::imgui::ImGui,
             }
             Event::WindowEvent {
                 event:
-                    WindowEvent::MouseMoved {
+                    WindowEvent::CursorMoved {
                         position: (x, y), ..
                     },
                 ..

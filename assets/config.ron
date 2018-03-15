@@ -55,7 +55,7 @@ Config(
     bouncer_velocity: 1.0,
     bouncer_time_to_reach_vmax: 0.05,
     bouncer_ang_damping: 0.8,
-    bouncer_color: Gen9,
+    bouncer_color: Gen8,
 
     depth_ball_size: 0.05,
     depth_ball_velocity: 4.0,
@@ -105,7 +105,7 @@ Config(
 
     motionless_size: 0.15,
     motionless_density: 100.0,
-    motionless_color: Gen8,
+    motionless_color: Gen9,
 
     wall_color: [
         GenPale0,

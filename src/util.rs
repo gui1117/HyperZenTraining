@@ -252,6 +252,7 @@ pub enum VirtualKeyCodeDef {
     Return,
     Space,
     Compose,
+    Caret,
     Numlock,
     Numpad0,
     Numpad1,

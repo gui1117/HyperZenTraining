@@ -110,7 +110,7 @@ fn new_game() -> ControlFlow {
     let mut window_builder = winit::WindowBuilder::new();
 
     if save.fullscreen() {
-        window_builder = window_builder.with_fullscreen(winit::get_primary_monitor())
+        window_builder = window_builder.with_fullscreen(None);
     }
 
     let window = window_builder
@@ -286,15 +286,11 @@ fn new_game() -> ControlFlow {
                         ..
                     }
                     | Event::DeviceEvent {
-                        event: DeviceEvent::Motion { .. },
+                        event: DeviceEvent::MouseMotion { .. },
                         ..
                     }
                     | Event::WindowEvent {
-                        event: WindowEvent::AxisMotion { .. },
-                        ..
-                    }
-                    | Event::WindowEvent {
-                        event: WindowEvent::MouseMoved { .. },
+                        event: WindowEvent::CursorMoved { .. },
                         ..
                     } => true,
                     _ => false,
@@ -371,7 +367,7 @@ fn new_game() -> ControlFlow {
         world.write_resource::<::resource::Rendering>().size_points =
             window.window().get_inner_size_points();
         world.write_resource::<::resource::Rendering>().size_pixels =
-            window.window().get_inner_size_pixels();
+            window.window().get_inner_size();
 
         draw_dispatcher.dispatch(&mut world.res);
 

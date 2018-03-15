@@ -1,5 +1,9 @@
 # FINAL
 
+* update:
+  check fullscreen work
+  device events motion ??
+
 * pas de control escape (regarder ce que ca fait par défault sur windows)
 
 * régler la distance des oreilles
