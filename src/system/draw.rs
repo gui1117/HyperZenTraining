@@ -94,7 +94,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 save.field_of_view(),
                 // IDEA: change to 0.0001 it's funny
                 0.05 * depth_coef.0,
-                50.0,
+                70.0,
             ).unwrap();
 
             let view_uniform = ::graphics::shader::draw1_vs::ty::View {

@@ -463,7 +463,7 @@ Config(
         [
             KillAllKruskal2D((
                 size: (31, 31),
-                percent: 35.0,
+                percent: 30.0,
                 bug: (1, 1),
                 scale: 1.0,
                 entities: {
@@ -495,6 +495,21 @@ Config(
                 entities: {
                     Bouncer(eraser: true): 1,
                     MotionLess(eraser: false): 80,
+                },
+            )),
+        ],
+        // hard hard large maze
+        [
+            KillAllKruskal2D((
+                size: (41, 41),
+                percent: 5.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    MotionLess(eraser: true): 10,
+                    Bouncer(eraser: true): 4,
+                    Attracted(eraser: true): 10,
+                    MotionLess(eraser: false): 400,
                 },
             )),
         ],
