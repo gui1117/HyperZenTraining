@@ -119,6 +119,8 @@ fn new_game() -> ControlFlow {
 
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
 
+    let current_window_id = window.window().id();
+
     try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10)
         .ok_or_show(|e| format!("Failed to grab cursor: {}", e));
 
@@ -251,6 +253,17 @@ fn new_game() -> ControlFlow {
             let mut done = false;
 
             events_loop.poll_events(|ev| {
+                // Filter out old window event
+                match ev {
+                    Event::WindowEvent {
+                        window_id,
+                        ..
+                    } => if window_id != current_window_id {
+                        return
+                    }
+                    _ => (),
+                }
+
                 let retain = match ev {
                     Event::WindowEvent {
                         event: WindowEvent::Focused(true),
