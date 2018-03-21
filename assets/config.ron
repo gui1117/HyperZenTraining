@@ -55,7 +55,7 @@ Config(
     bouncer_velocity: 1.0,
     bouncer_time_to_reach_vmax: 0.05,
     bouncer_ang_damping: 0.8,
-    bouncer_color: Gen8,
+    bouncer_color: Gen9,
 
     depth_ball_size: 0.05,
     depth_ball_velocity: 4.0,
@@ -101,11 +101,11 @@ Config(
     turret_size: 0.15,
     turret_density: 100.0,
     turret_reload_time: 0.5,
-    turret_color: Gen1,
+    turret_color: Gen8,
 
     motionless_size: 0.15,
     motionless_density: 100.0,
-    motionless_color: Gen9,
+    motionless_color: Gen1,
 
     wall_color: [
         GenPale0,
@@ -134,7 +134,7 @@ Config(
 
     fps: 60,
     debug_fps_counter: 0,
-    mouse_sensibility: 0.005,
+    mouse_sensibility: 0.003,
     eraser_time: 0.3,
 
     font_global_scale: 1.0,
@@ -213,15 +213,6 @@ Config(
 
     levels: [
         [
-            KillAllKruskal2D((
-                size: (17, 17),
-                percent: 5.0,
-                bug: (1, 1),
-                scale: 1.0,
-                entities: {
-                    Attracted(eraser: false): 1,
-                },
-            )),
         ],
         // intro
         [
@@ -508,6 +499,16 @@ Config(
                     MotionLess(eraser: false): 80,
                 },
             )),
+            KillAllKruskal2D((
+                size: (29, 29),
+                percent: 0.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Bouncer(eraser: true): 3,
+                    MotionLess(eraser: false): 100,
+                },
+            )),
         ],
         // hard hard large maze
         [
@@ -520,7 +521,7 @@ Config(
                     MotionLess(eraser: true): 10,
                     Bouncer(eraser: true): 4,
                     Attracted(eraser: true): 10,
-                    MotionLess(eraser: false): 400,
+                    MotionLess(eraser: false): 200,
                 },
             )),
         ],

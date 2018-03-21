@@ -33,7 +33,7 @@ impl GameSystem {
                     Some(Level::Level(level, 0))
                 } else {
                     let mut game_duration = world.write_resource::<::resource::GameDuration>();
-                    world.write_resource::<::resource::Save>().insert_score(level, game_duration.0);
+                    world.write_resource::<::resource::Save>().insert_score(level, Duration::new(0, 0));
                     game_duration.0 = Duration::new(0, 0);
                     Some(Level::Hall)
                 }
