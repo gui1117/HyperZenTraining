@@ -212,8 +212,6 @@ Config(
     ),
 
     levels: [
-        [
-        ],
         // intro
         [
             KillAllKruskal2D((
@@ -416,6 +414,18 @@ Config(
                     Bouncer(eraser: false): 5,
                     Attracted(eraser: false): 10,
                     Avoider(eraser: false): 2,
+                },
+            )),
+        ],
+        // almost empty large maze
+        [
+            KillAllKruskal2D((
+                size: (41, 41),
+                percent: 35.0,
+                bug: (0, 0),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: true): 4,
                 },
             )),
         ],
