@@ -437,7 +437,7 @@ where
         pos: ::na::VectorN<isize, D>,
         goal: ::na::VectorN<isize, D>,
     ) -> Option<Vec<::na::VectorN<isize, D>>> {
-        ::pathfinding::astar(
+        ::pathfinding::astar::astar(
             &pos,
             |cell| {
                 let mut res = vec![];

@@ -134,7 +134,7 @@ Config(
 
     fps: 60,
     debug_fps_counter: 0,
-    mouse_sensibility: 0.001,
+    mouse_sensibility: 0.005,
     eraser_time: 0.3,
 
     font_global_scale: 1.0,
@@ -212,6 +212,17 @@ Config(
     ),
 
     levels: [
+        [
+            KillAllKruskal2D((
+                size: (17, 17),
+                percent: 5.0,
+                bug: (1, 1),
+                scale: 1.0,
+                entities: {
+                    Attracted(eraser: false): 1,
+                },
+            )),
+        ],
         // intro
         [
             KillAllKruskal2D((

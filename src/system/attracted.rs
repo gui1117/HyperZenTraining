@@ -18,9 +18,10 @@ impl<'a> ::specs::System<'a> for AttractedSystem {
         ::specs::WriteStorage<'a, ::component::Momentum>,
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
         ::specs::Fetch<'a, ::resource::UpdateTime>,
+        ::specs::Fetch<'a, ::resource::Audio>,
     );
 
-    fn run(&mut self, (players, bodies, mut attracteds, mut momentums, physic_world, update_time): Self::SystemData) {
+    fn run(&mut self, (players, bodies, mut attracteds, mut momentums, physic_world, update_time, audio): Self::SystemData) {
         let player_pos = {
             let (_, player_body) = (&players, &bodies).join().next().unwrap();
             player_body.get(&physic_world).position().clone()
@@ -56,6 +57,7 @@ impl<'a> ::specs::System<'a> for AttractedSystem {
                 self.collided.sort_by(|a, b| (a.1).partial_cmp(&b.1).unwrap());
                 if self.collided.first().iter().any(|&&(e, _)| players.get(e).is_some()) {
                     momentum.direction = ray.dir;
+                    audio.play(::audio::Sound::Attracted, pos.translation.vector.into());
                 } else {
                     momentum.direction = ::na::zero();
                 }

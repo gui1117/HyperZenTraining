@@ -20,6 +20,7 @@ pub enum Sound {
     DepthBallAttack,
     DepthBallBirthDeath,
     Eraser,
+    Attracted,
 }
 
 /// Sounds must be 44100 Hz and stereo
@@ -191,6 +192,7 @@ lazy_static! {
             "assets/sounds/depth_ball_attack.ogg",
             "assets/sounds/depth_ball_birth_death.ogg",
             "assets/sounds/eraser.wav",
+            "assets/sounds/attracted.ogg",
         ];
 
         let mut sound_files = if cfg!(feature = "packed") {
@@ -204,6 +206,7 @@ lazy_static! {
                 Cursor::new(include_bytes!("../assets/sounds/depth_ball_attack.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/depth_ball_birth_death.ogg").iter().cloned().collect::<Vec<_>>()),
                 Cursor::new(include_bytes!("../assets/sounds/eraser.wav").iter().cloned().collect::<Vec<_>>()),
+                Cursor::new(include_bytes!("../assets/sounds/attracted.ogg").iter().cloned().collect::<Vec<_>>()),
             ]
         } else {
             sound_filenames.iter()
