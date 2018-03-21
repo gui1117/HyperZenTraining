@@ -158,6 +158,7 @@ impl<'a> Graphics<'a> {
         Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<AttachmentImage>>), PersistentDescriptorSetSampler)>>,
         Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertexImgui>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<::graphics::render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetImg<Arc<ImmutableImage<format::R8G8B8A8Unorm>>>), PersistentDescriptorSetSampler)>>,
 ){
+        println!("{}", line!());
         let imgui_texture = imgui
             .prepare_texture(|handle| {
                 ImmutableImage::from_iter(
@@ -306,6 +307,7 @@ impl<'a> Graphics<'a> {
                 .unwrap(),
         );
 
+        println!("{}", line!());
         (
             framebuffer,
             second_framebuffers,
@@ -472,6 +474,7 @@ impl<'a> Graphics<'a> {
             0.0,
         ).unwrap();
 
+        println!("{}", line!());
         let cursor_tex_dim = cursor_texture.dimensions().width_height();
 
         let draw1_vs =
@@ -706,6 +709,7 @@ impl<'a> Graphics<'a> {
                 .build()
                 .unwrap(),
         );
+        println!("{}", line!());
 
         now(device.clone())
             .join(cursor_tex_future)
