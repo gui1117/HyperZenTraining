@@ -87,7 +87,10 @@ fn init_imgui() -> ::imgui::ImGui {
 }
 
 fn main() {
-    while let ControlFlow::Restart = new_game() {}
+    // On windows stack is overflowed otherwise
+    ::std::thread::Builder::new().stack_size(32 * 1024 * 1024).spawn(|| {
+        while let ControlFlow::Restart = new_game() {}
+    }).unwrap().join().unwrap();
 }
 
 enum ControlFlow {
