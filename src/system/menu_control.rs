@@ -273,7 +273,10 @@ fn send_events_to_imgui(events: &::resource::Events, imgui: &mut ::imgui::ImGui,
             Event::WindowEvent {
                 event: WindowEvent::ReceivedCharacter(c),
                 ..
-            } => imgui.add_input_character(c),
+            } => {
+                println!("character: {}", c);
+                imgui.add_input_character(c);
+            }
             _ => (),
         }
     }
