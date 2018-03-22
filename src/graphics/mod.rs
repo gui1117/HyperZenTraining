@@ -711,7 +711,6 @@ impl<'a> Graphics<'a> {
         );
         println!("{}", line!());
 
-        cursor_tex_future.flush().unwrap();
         println!("{}", line!());
         colors_buf_future.flush().unwrap();
         println!("{}", line!());
@@ -721,6 +720,7 @@ impl<'a> Graphics<'a> {
         println!("{}", line!());
         primitives_future.flush().unwrap();
         println!("{}", line!());
+        cursor_tex_future.flush().unwrap();
 
         Graphics {
             physical,
