@@ -711,14 +711,16 @@ impl<'a> Graphics<'a> {
         );
         println!("{}", line!());
 
-        now(device.clone())
-            .join(cursor_tex_future)
-            .join(colors_buf_future)
-            .join(fullscreen_vertex_buffer_future)
-            .join(cursor_vertex_buffer_future)
-            .join(primitives_future)
-            .flush()
-            .unwrap();
+        cursor_tex_future.flush().unwrap();
+        println!("{}", line!());
+        colors_buf_future.flush().unwrap();
+        println!("{}", line!());
+        fullscreen_vertex_buffer_future.flush().unwrap();
+        println!("{}", line!());
+        cursor_vertex_buffer_future.flush().unwrap();
+        println!("{}", line!());
+        primitives_future.flush().unwrap();
+        println!("{}", line!());
 
         Graphics {
             physical,
