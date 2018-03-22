@@ -1,7 +1,7 @@
 use vulkano::command_buffer::AutoCommandBuffer;
 use vulkano::instance::Instance;
 use vulkano::instance::PhysicalDevice;
-use app_dirs::{AppInfo, app_root, AppDataType};
+use app_dirs2::{AppInfo, app_root, AppDataType};
 
 pub use graphics::Data as Graphics;
 use std::io::Write;
@@ -109,7 +109,7 @@ impl Score {
     }
 }
 
-const APP_INFO: AppInfo = AppInfo { name: "pepe", author: "thiolliere" };
+const APP_INFO: AppInfo = AppInfo { name: "HyperZen Training", author: "thiolliere" };
 const FILENAME: &str = "save.ron";
 
 lazy_static! {

@@ -23,7 +23,7 @@ extern crate vulkano_shader_derive;
 extern crate vulkano_win;
 extern crate wavefront_obj;
 extern crate winit;
-extern crate app_dirs;
+extern crate app_dirs2;
 extern crate rodio;
 extern crate show_message;
 
@@ -132,7 +132,7 @@ fn new_game() -> ControlFlow {
 
     let mut previous_frame_end: Option<FenceSignalFuture<Box<GpuFuture>>> = None;
 
-    let debug = ::std::env::var("PEPE_DEBUG").map(|v| v == "1").unwrap_or(false);
+    let debug = ::std::env::var("HYPERZEN_TRAINING_DEBUG").map(|v| v == "1").unwrap_or(false);
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();
