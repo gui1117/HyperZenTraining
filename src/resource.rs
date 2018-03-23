@@ -3,7 +3,7 @@ use vulkano::instance::Instance;
 use vulkano::instance::PhysicalDevice;
 use app_dirs2::{AppInfo, app_root, AppDataType};
 
-pub use graphics::Data as Graphics;
+pub use graphics::Graphics;
 use std::io::Write;
 use std::sync::Arc;
 use std::fs::File;

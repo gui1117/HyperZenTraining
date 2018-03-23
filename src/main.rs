@@ -164,7 +164,7 @@ fn new_game() -> ControlFlow {
     world.register::<::component::Proximitor>();
     world.register::<::component::FollowPlayer>();
     world.register::<::component::PhysicSensor>();
-    world.add_resource(graphics.data.clone());
+    world.add_resource(graphics.clone());
     world.add_resource(Some(imgui));
     world.add_resource(::resource::Events(vec![]));
     world.add_resource(instance.clone());
@@ -359,7 +359,7 @@ fn new_game() -> ControlFlow {
 
         // On X with Xmonad and intel HD graphics the acquire stay sometimes forever
         let timeout = Duration::from_secs(2);
-        let mut next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), Some(timeout));
+        let mut next_image = swapchain::acquire_next_image(graphics.swapchain.clone(), Some(timeout));
         loop {
             match next_image {
                 Err(vulkano::swapchain::AcquireError::OutOfDate)
@@ -368,10 +368,10 @@ fn new_game() -> ControlFlow {
                     *world.write_resource::<::resource::ImGuiOption>() = None;
 
                     let mut imgui = init_imgui();
-                    graphics.recreate(&window, &mut imgui);
+                    graphics.recreate(&window, &mut imgui, &mut world.write_resource());
                     *world.write_resource::<::resource::ImGuiOption>() = Some(imgui);
-                    *world.write_resource() = graphics.data.clone();
-                    next_image = swapchain::acquire_next_image(graphics.data.swapchain.clone(), Some(timeout));
+                    *world.write_resource() = graphics.clone();
+                    next_image = swapchain::acquire_next_image(graphics.swapchain.clone(), Some(timeout));
                 }
                 _ => break
             }
@@ -398,21 +398,21 @@ fn new_game() -> ControlFlow {
 
         if let Some(previous_frame_end) = previous_frame_end {
             if let Ok(()) = previous_frame_end.wait(None) {
-                let amount = graphics.data.erased_amount_buffer.read().unwrap()[0];
-                let total = graphics.data.dim[0] as f32 * graphics.data.dim[1] as f32;
+                let amount = graphics.erased_amount_buffer.read().unwrap()[0];
+                let total = graphics.dim[0] as f32 * graphics.dim[1] as f32;
                 world.write_resource::<::resource::ErasedStatus>().amount = amount as f32 / total;
             }
         }
 
-        let future = now(graphics.data.device.clone())
-            .then_execute(graphics.data.queue.clone(), command_buffer)
+        let future = now(graphics.device.clone())
+            .then_execute(graphics.queue.clone(), command_buffer)
             .unwrap()
             .join(acquire_future)
-            .then_execute(graphics.data.queue.clone(), second_command_buffer)
+            .then_execute(graphics.queue.clone(), second_command_buffer)
             .unwrap()
             .then_swapchain_present(
-                graphics.data.queue.clone(),
-                graphics.data.swapchain.clone(),
+                graphics.queue.clone(),
+                graphics.swapchain.clone(),
                 image_num,
             );
 

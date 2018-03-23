@@ -79,7 +79,7 @@ impl From<::imgui::ImDrawVert> for SecondVertexImgui {
 
 #[derive(Clone)]
 // FIXME: use abstract types instead
-pub struct Data {
+pub struct Graphics {
     pub device: Arc<Device>,
     pub queue: Arc<Queue>,
 
@@ -128,20 +128,12 @@ pub struct Data {
     pub draw2_descriptor_set_1: Arc<PersistentDescriptorSet<Arc<GraphicsPipeline<SingleBufferDefinition<::graphics::SecondVertex>, Box<PipelineLayoutAbstract + Sync + Send>, Arc<RenderPass<render_pass::SecondCustomRenderPassDesc>>>>, (((), PersistentDescriptorSetBuf<Arc<ImmutableBuffer<[[f32; 4]]>>>), PersistentDescriptorSetBuf<Arc<DeviceLocalBuffer<[f32; GROUP_COUNTER_SIZE]>>>)>>,
 }
 
-impl Data {
+impl Graphics {
     /// This command must be executed before next eraser_sound_system
     pub fn reset_group(&self) {
         primitives::GROUP_COUNTER.reset();
     }
-}
 
-// FIXME: do not use physical device and use saved uuid instead
-pub struct Graphics<'a> {
-    pub physical: PhysicalDevice<'a>,
-    pub data: Data,
-}
-
-impl<'a> Graphics<'a> {
     pub fn framebuffers_and_descriptors(
         device: Arc<Device>,
         queue: Arc<Queue>,
@@ -316,7 +308,7 @@ impl<'a> Graphics<'a> {
         )
     }
 
-    pub fn new(window: &'a Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) -> Graphics<'a> {
+    fn physical_device<'a>(window: &'a Arc<Surface<::winit::Window>>, save: &mut ::resource::Save) -> PhysicalDevice<'a> {
         let physical = PhysicalDevice::enumerate(window.instance())
             .max_by_key(|device| {
                 if let Some(uuid) = save.vulkan_device_uuid().as_ref() {
@@ -334,6 +326,11 @@ impl<'a> Graphics<'a> {
             })
             .some_or_show("Failed to enumerate Vulkan devices");
         save.set_vulkan_device_uuid_lazy(physical.uuid());
+        physical
+    }
+
+    pub fn new(window: &Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) -> Graphics {
+        let physical = Graphics::physical_device(window, save);
 
         let queue_family = physical
             .queue_families()
@@ -719,59 +716,57 @@ impl<'a> Graphics<'a> {
             .unwrap();
 
         Graphics {
-            physical,
-            data: Data {
-                fullscreen_vertex_buffer,
-                swapchain,
-                images,
-                device,
-                queue,
-                render_pass,
-                second_render_pass,
-                draw1_pipeline,
-                draw1_eraser_pipeline,
-                draw1_hud_pipeline,
-                draw2_pipeline,
-                framebuffer,
-                second_framebuffers,
-                dim,
-                cursor_tex_dim,
-                view_uniform_buffer,
-                primitives_vertex_buffers,
-                cursor_descriptor_set,
-                cursor_pipeline,
-                imgui_pipeline,
-                cursor_vertex_buffer,
-                imgui_descriptor_set,
-                draw1_view_descriptor_set_pool,
-                draw1_dynamic_descriptor_set_pool,
-                imgui_matrix_descriptor_set_pool,
-                eraser1_pipeline,
-                eraser2_pipeline,
-                eraser1_descriptor_set_0,
-                eraser1_descriptor_set_1,
-                eraser2_descriptor_set,
-                tmp_erased_buffer,
-                draw2_descriptor_set_0,
-                draw2_descriptor_set_1,
-                world_uniform_static_buffer,
-                world_uniform_buffer,
-                erased_buffer,
-                erased_amount_buffer,
-            },
+            fullscreen_vertex_buffer,
+            swapchain,
+            images,
+            device,
+            queue,
+            render_pass,
+            second_render_pass,
+            draw1_pipeline,
+            draw1_eraser_pipeline,
+            draw1_hud_pipeline,
+            draw2_pipeline,
+            framebuffer,
+            second_framebuffers,
+            dim,
+            cursor_tex_dim,
+            view_uniform_buffer,
+            primitives_vertex_buffers,
+            cursor_descriptor_set,
+            cursor_pipeline,
+            imgui_pipeline,
+            cursor_vertex_buffer,
+            imgui_descriptor_set,
+            draw1_view_descriptor_set_pool,
+            draw1_dynamic_descriptor_set_pool,
+            imgui_matrix_descriptor_set_pool,
+            eraser1_pipeline,
+            eraser2_pipeline,
+            eraser1_descriptor_set_0,
+            eraser1_descriptor_set_1,
+            eraser2_descriptor_set,
+            tmp_erased_buffer,
+            draw2_descriptor_set_0,
+            draw2_descriptor_set_1,
+            world_uniform_static_buffer,
+            world_uniform_buffer,
+            erased_buffer,
+            erased_amount_buffer,
         }
     }
 
-    pub fn recreate(&mut self, window: &'a Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui) {
+    pub fn recreate(&mut self, window: &Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) {
+        let physical = Graphics::physical_device(window, save);
         let mut try = 0;
         let recreate = loop {
             let dimensions = window
-                .capabilities(self.physical)
+                .capabilities(physical)
                 .expect("failed to get surface capabilities")
                 .current_extent
                 .unwrap_or([1024, 768]);
 
-            let res = self.data.swapchain.recreate_with_dimension(dimensions);
+            let res = self.swapchain.recreate_with_dimension(dimensions);
 
             if let Err(::vulkano::swapchain::SwapchainCreationError::UnsupportedDimensions) = res {
                 if try < 10 {
@@ -786,27 +781,27 @@ impl<'a> Graphics<'a> {
         let (new_swapchain, new_images) = recreate
             .ok_or_show(|e| format!("Failed to recreate swapchain: {}", e));
 
-        self.data.dim = new_images[0].dimensions();
-        self.data.images = new_images;
-        self.data.swapchain = new_swapchain;
+        self.dim = new_images[0].dimensions();
+        self.images = new_images;
+        self.swapchain = new_swapchain;
 
         let (framebuffer, second_framebuffers, eraser1_descriptor_set_0, draw2_descriptor_set_0, imgui_descriptor_set) =
             Graphics::framebuffers_and_descriptors(
-                self.data.device.clone(),
-                self.data.queue.clone(),
-                &self.data.images,
-                &self.data.render_pass,
-                &self.data.second_render_pass,
-                &self.data.eraser1_pipeline,
-                &self.data.draw2_pipeline,
-                &self.data.imgui_pipeline,
+                self.device.clone(),
+                self.queue.clone(),
+                &self.images,
+                &self.render_pass,
+                &self.second_render_pass,
+                &self.eraser1_pipeline,
+                &self.draw2_pipeline,
+                &self.imgui_pipeline,
                 imgui,
             );
 
-        self.data.framebuffer = framebuffer;
-        self.data.second_framebuffers = second_framebuffers;
-        self.data.eraser1_descriptor_set_0 = eraser1_descriptor_set_0;
-        self.data.draw2_descriptor_set_0 = draw2_descriptor_set_0;
-        self.data.imgui_descriptor_set = imgui_descriptor_set;
+        self.framebuffer = framebuffer;
+        self.second_framebuffers = second_framebuffers;
+        self.eraser1_descriptor_set_0 = eraser1_descriptor_set_0;
+        self.draw2_descriptor_set_0 = draw2_descriptor_set_0;
+        self.imgui_descriptor_set = imgui_descriptor_set;
     }
 }
