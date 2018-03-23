@@ -135,6 +135,7 @@ impl Data {
     }
 }
 
+// FIXME: do not use physical device and use saved uuid instead
 pub struct Graphics<'a> {
     pub physical: PhysicalDevice<'a>,
     pub data: Data,
@@ -314,6 +315,7 @@ impl<'a> Graphics<'a> {
             imgui_descriptor_set,
         )
     }
+
     pub fn new(window: &'a Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) -> Graphics<'a> {
         let physical = PhysicalDevice::enumerate(window.instance())
             .max_by_key(|device| {
