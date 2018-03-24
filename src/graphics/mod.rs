@@ -308,7 +308,7 @@ impl Graphics {
         )
     }
 
-    fn physical_device<'a>(window: &'a Arc<Surface<::winit::Window>>, save: &mut ::resource::Save) -> PhysicalDevice<'a> {
+    pub fn new(window: &Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) -> Graphics {
         let physical = PhysicalDevice::enumerate(window.instance())
             .max_by_key(|device| {
                 if let Some(uuid) = save.vulkan_device_uuid().as_ref() {
@@ -326,11 +326,6 @@ impl Graphics {
             })
             .some_or_show("Failed to enumerate Vulkan devices");
         save.set_vulkan_device_uuid_lazy(physical.uuid());
-        physical
-    }
-
-    pub fn new(window: &Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) -> Graphics {
-        let physical = Graphics::physical_device(window, save);
 
         let queue_family = physical
             .queue_families()
@@ -756,12 +751,11 @@ impl Graphics {
         }
     }
 
-    pub fn recreate(&mut self, window: &Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui, save: &mut ::resource::Save) {
-        let physical = Graphics::physical_device(window, save);
+    pub fn recreate(&mut self, window: &Arc<Surface<::winit::Window>>, imgui: &mut ::imgui::ImGui) {
         let mut try = 0;
         let recreate = loop {
             let dimensions = window
-                .capabilities(physical)
+                .capabilities(self.device.physical_device())
                 .expect("failed to get surface capabilities")
                 .current_extent
                 .unwrap_or([1024, 768]);

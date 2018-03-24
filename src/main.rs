@@ -368,7 +368,7 @@ fn new_game() -> ControlFlow {
                     *world.write_resource::<::resource::ImGuiOption>() = None;
 
                     let mut imgui = init_imgui();
-                    graphics.recreate(&window, &mut imgui, &mut world.write_resource());
+                    graphics.recreate(&window, &mut imgui);
                     *world.write_resource::<::resource::ImGuiOption>() = Some(imgui);
                     *world.write_resource() = graphics.clone();
                     next_image = swapchain::acquire_next_image(graphics.swapchain.clone(), Some(timeout));
