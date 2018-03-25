@@ -32,6 +32,3 @@ fps_counter = "1"
 app_dirs2 = "2"
 rodio = "0.6"
 show_message = { git = "https://github.com/thiolliere/show_message/" }
-
-[patch.crates-io]
-winit = { git = "https://github.com/francesca64/winit", branch = "x11-drop-window" }
