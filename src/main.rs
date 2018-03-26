@@ -246,6 +246,9 @@ fn new_game() -> ControlFlow {
 
     loop {
         benchmarker.start("pre_update");
+        if let Some(ref mut previous_frame_end) = previous_frame_end {
+            previous_frame_end.cleanup_finished();
+        }
 
         // Poll events
         {
