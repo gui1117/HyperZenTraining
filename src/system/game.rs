@@ -1,5 +1,6 @@
 use nphysics::resolution::{AccumulatedImpulseSolver, CorrectionMode};
 use std::time::Duration;
+use std::collections::HashMap;
 
 pub struct GameSystem {
     current_level: Option<Level>,
@@ -8,6 +9,7 @@ pub struct GameSystem {
 #[derive(Clone, Copy)]
 enum Level {
     Hall,
+    Custom,
     Level(usize, usize),
 }
 
@@ -50,13 +52,21 @@ impl GameSystem {
                 }
             },
             (current_level, Some(::resource::LevelAction::Reset)) => current_level,
+            (_, Some(::resource::LevelAction::Custom)) => Some(Level::Custom),
             (_, Some(::resource::LevelAction::ReturnHall)) => Some(Level::Hall),
             (Some(_), None) => None,
+
             (Some(Level::Hall), Some(::resource::LevelAction::Next)) => {
                 println!("INTERNAL ERROR: called next in hall");
                 Some(Level::Hall)
             },
-            (Some(Level::Level(..)), Some(::resource::LevelAction::Level(..))) => {
+            (Some(Level::Custom), Some(::resource::LevelAction::Next)) => {
+                println!("INTERNAL ERROR: called next in custom");
+                Some(Level::Hall)
+            },
+            (Some(Level::Level(..)), Some(::resource::LevelAction::Level(..)))
+            | (Some(Level::Custom), Some(::resource::LevelAction::Level(..)))
+            => {
                 println!("INTERNAL ERROR: called go to level outside hall");
                 Some(Level::Hall)
             },
@@ -96,6 +106,30 @@ impl GameSystem {
             match level {
                 Level::Hall => ::level::create_hall(world),
                 Level::Level(level, part) => ::CONFIG.levels[level][part].create(world),
+                Level::Custom => {
+                    let conf = world.read_resource::<::resource::Save>().custom_level_conf();
+
+                    let mut entities = HashMap::new();
+                    entities.insert(::entity::EntityConf::MotionLess { eraser: false }, conf.motion_less as usize);
+                    entities.insert(::entity::EntityConf::MotionLess { eraser: true }, conf.motion_less_eraser as usize);
+                    entities.insert(::entity::EntityConf::Attracted { eraser: false }, conf.attracted as usize);
+                    entities.insert(::entity::EntityConf::Attracted { eraser: true }, conf.attracted_eraser as usize);
+                    entities.insert(::entity::EntityConf::Bouncer { eraser: false }, conf.attracted as usize);
+                    entities.insert(::entity::EntityConf::Bouncer { eraser: true }, conf.attracted_eraser as usize);
+                    entities.insert(::entity::EntityConf::Avoider { eraser: false }, conf.attracted as usize);
+                    entities.insert(::entity::EntityConf::Avoider { eraser: true }, conf.attracted_eraser as usize);
+                    entities.insert(::entity::EntityConf::Turret, conf.turret as usize);
+
+                    ::level::Level::KillAllKruskal2D(::level::kill_all_kruskal::Conf2D {
+                        size: (conf.maze_size as isize * 2+1, conf.maze_size as isize * 2+1),
+                        percent: conf.percent as f64,
+                        bug: (
+                            if conf.x_shift { 1 } else { 0 },
+                            if conf.y_shift { 1 } else { 0 },
+                        ),
+                        entities,
+                    }).create(world);
+                },
             }
 
             world.maintain();

@@ -2,8 +2,7 @@
 
 * faire avoider max distance et si pas en ligne de mir alors pas bouger
 
-* faire un bouton dans le menu pour créer un niveau custom: custom level
-  avec sauvegarde du dernier custom
+###
 
 * update:
   check fullscreen work

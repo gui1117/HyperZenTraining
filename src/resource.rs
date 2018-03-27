@@ -36,6 +36,7 @@ pub struct Save {
     field_of_view: f32,
     effect_volume: f32,
     music_volume: f32,
+    custom_level_conf: CustomLevelConf,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -154,7 +155,19 @@ impl Save {
                 effect_volume: 1.0,
                 music_volume: 1.0,
                 field_of_view: ::CONFIG.field_of_view,
+                custom_level_conf: CustomLevelConf::default(),
             })
+    }
+
+    pub fn set_custom_level_conf_lazy(&mut self, custom_level_conf: CustomLevelConf) {
+        if self.custom_level_conf != custom_level_conf {
+            self.custom_level_conf = custom_level_conf;
+            self.save();
+        }
+    }
+
+    pub fn custom_level_conf(&self) -> CustomLevelConf {
+        self.custom_level_conf.clone()
     }
 
     pub fn set_field_of_view_lazy(&mut self, field_of_view: f32) {
@@ -356,6 +369,7 @@ pub struct LevelActions(pub Vec<LevelAction>);
 
 #[derive(Clone)]
 pub enum LevelAction {
+    Custom,
     Next,
     Reset,
     ReturnHall,
@@ -385,6 +399,44 @@ pub enum MenuStateState {
     Input(Input),
     Game,
     Restart,
+    CreateCustom,
+}
+
+#[derive(PartialEq, Deserialize, Serialize, Clone)]
+pub struct CustomLevelConf {
+    pub maze_size: i32,
+    pub x_shift: bool,
+    pub y_shift: bool,
+    pub percent: f32,
+    pub motion_less: i32,
+    pub motion_less_eraser: i32,
+    pub attracted: i32,
+    pub attracted_eraser: i32,
+    pub bouncer: i32,
+    pub bouncer_eraser: i32,
+    pub avoider: i32,
+    pub avoider_eraser: i32,
+    pub turret: i32,
+}
+
+impl CustomLevelConf {
+    pub fn default() -> Self {
+        CustomLevelConf {
+            maze_size: 10,
+            x_shift: false,
+            y_shift: false,
+            percent: 5.0,
+            motion_less: 3,
+            motion_less_eraser: 3,
+            attracted: 0,
+            attracted_eraser: 0,
+            bouncer: 0,
+            bouncer_eraser: 0,
+            avoider: 0,
+            avoider_eraser: 0,
+            turret: 0,
+        }
+    }
 }
 
 pub struct MenuState {
@@ -407,6 +459,11 @@ pub struct MenuState {
     pub effect_volume_slider: f32,
     pub music_volume_slider: f32,
     pub field_of_view_slider: f32,
+
+    pub create_custom_button: bool,
+    pub custom_return_button: bool,
+    pub custom_play_button: bool,
+    pub custom_level_conf: CustomLevelConf,
 }
 
 impl MenuState {
@@ -415,6 +472,7 @@ impl MenuState {
             MenuStateState::Input(_) => true,
             MenuStateState::Pause => true,
             MenuStateState::Restart => true,
+            MenuStateState::CreateCustom => true,
             MenuStateState::Game => false,
         }
     }
@@ -440,6 +498,11 @@ impl MenuState {
             levels_button: [false; 16],
             music_volume_slider: save.effect_volume(),
             effect_volume_slider: save.music_volume(),
+
+            create_custom_button: false,
+            custom_return_button: false,
+            custom_play_button: false,
+            custom_level_conf: save.custom_level_conf(),
         }
     }
 
@@ -467,6 +530,7 @@ impl MenuState {
                     .build(|| {
                         self.continue_button = ui.button(im_str!("Continue"), button_size);
                         self.return_hall_button = ui.button(im_str!("Return to hall"), button_size);
+                        self.create_custom_button = ui.button(im_str!("Create Custom level"), button_size);
                         self.quit_button = ui.button(im_str!("Quit"), button_size);
                         ui.separator();
                         ui.text("Audio:");
@@ -528,6 +592,36 @@ impl MenuState {
                         ui.text("    Guillaume Thiolliere  http://thiolliere.org");
                     });
             },
+            MenuStateState::CreateCustom => {
+                ui.window(im_str!("Custom"))
+                    .collapsible(false)
+                    .size((::CONFIG.menu_width, ::CONFIG.menu_height), ::imgui::ImGuiCond::Always)
+                    .position((width/2.0-::CONFIG.menu_width/2.0, height/2.0-::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
+                    .resizable(false)
+                    .movable(false)
+                    .build(|| {
+                        self.custom_play_button = ui.button(im_str!("Play"), button_size);
+                        self.custom_return_button = ui.button(im_str!("Return"), button_size);
+                        ui.separator();
+                        ui.text("Configuration:");
+
+                        ui.slider_int(im_str!("size"), &mut self.custom_level_conf.maze_size, 5, 30).build();
+                        ui.checkbox(im_str!("X shift"), &mut self.custom_level_conf.x_shift);
+                        ui.same_line(0.0);
+                        ui.checkbox(im_str!("Y shift"), &mut self.custom_level_conf.y_shift);
+
+                        ui.slider_float(im_str!("filling"), &mut self.custom_level_conf.percent, 0.0, 30.0).build();
+                        ui.slider_int(im_str!("motionless"), &mut self.custom_level_conf.motion_less, 0, 100).build();
+                        ui.slider_int(im_str!("motionless eraser"), &mut self.custom_level_conf.motion_less_eraser, 0, 100).build();
+                        ui.slider_int(im_str!("attracted"), &mut self.custom_level_conf.attracted, 0, 100).build();
+                        ui.slider_int(im_str!("attracted eraser"), &mut self.custom_level_conf.attracted_eraser, 0, 100).build();
+                        ui.slider_int(im_str!("bouncer"), &mut self.custom_level_conf.bouncer, 0, 100).build();
+                        ui.slider_int(im_str!("bouncer eraser"), &mut self.custom_level_conf.bouncer_eraser, 0, 100).build();
+                        ui.slider_int(im_str!("avoider"), &mut self.custom_level_conf.avoider, 0, 100).build();
+                        ui.slider_int(im_str!("avoider eraser"), &mut self.custom_level_conf.avoider_eraser, 0, 100).build();
+                        ui.slider_int(im_str!("turret"), &mut self.custom_level_conf.turret, 0, 100).build();
+                    });
+            }
             _ => (),
         }
 

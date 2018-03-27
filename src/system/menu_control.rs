@@ -73,6 +73,18 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                     menu_state.state = ::resource::MenuStateState::Pause;
                 }
             }
+            ::resource::MenuStateState::CreateCustom => {
+                save.set_custom_level_conf_lazy(menu_state.custom_level_conf.clone());
+
+                if menu_state.custom_return_button {
+                    menu_state.state = ::resource::MenuStateState::Pause;
+                }
+
+                if menu_state.custom_play_button {
+                    menu_state.state = ::resource::MenuStateState::Game;
+                    level_actions.0.push(::resource::LevelAction::Custom);
+                }
+            }
             ::resource::MenuStateState::Input(input) => {
                 for ev in events.0.iter() {
                     let received_input = match *ev {
@@ -131,6 +143,10 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                         },
                         _ => (),
                     }
+                }
+
+                if menu_state.create_custom_button {
+                    menu_state.state = ::resource::MenuStateState::CreateCustom;
                 }
 
                 if menu_state.continue_button {
