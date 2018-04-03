@@ -139,7 +139,7 @@ Config(
 
     font_global_scale: 1.0,
     menu_width: 390.0,
-    menu_height: 640.0,
+    menu_height: 660.0,
     style: ImGuiStyleSave(
         alpha: 1.0,
         window_padding: ImVec2Def(x: 8, y: 8),
