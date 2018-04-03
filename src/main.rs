@@ -117,6 +117,7 @@ fn new_game() -> ControlFlow {
     }
 
     let window = window_builder
+        .with_title("HyperZen Training")
         .build_vk_surface(&events_loop, instance.clone())
         .ok_or_show(|e| format!("Failed to build vulkan window: {}\n\n{:#?}", e, e));
 

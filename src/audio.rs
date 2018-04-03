@@ -180,8 +180,104 @@ impl AudioSinkControl {
     }
 }
 
+// 44100 Hz stereo buffer
+struct SoundBuffer {
+    samples: Arc<Vec<i16>>,
+}
+
+impl SoundBuffer {
+    fn new(sound: Decoder<Cursor<Vec<u8>>>) -> Result<Self, String> {
+        if sound.samples_rate() != 44100 {
+            return Err("invalid samples rate: must be 44100 Hz".into());
+        }
+        if sound.channels() != 2 {
+            return Err("invalid channels: must be stereo".into());
+        }
+
+        Ok(SoundBuffer {
+            samples: Arc::new(sound.collect::<Vec<_>>()),
+        })
+    }
+
+    fn source(&self) -> SoundSource {
+        SoundSource {
+            samples: self.samples.clone(),
+            cursor: 0,
+        }
+    }
+
+    fn infinite_source(&self) -> InfiniteSoundSource {
+        InfiniteSoundSource {
+            samples: self.samples.clone(),
+            cursor: 0,
+            len: self.samples.len(),
+        }
+    }
+}
+
+// infinite sound soure from a 44100 Hz stereo buffer
+struct InfiniteSoundSource {
+    samples: Arc<Vec<i16>>,
+    cursor: usize,
+    len: usize,
+}
+
+impl Iterator for InfiniteSoundSource {
+    type Item = i16;
+    fn next(&mut self) -> Option<Self::Item> {
+        let sample = self.samples.get(self.cursor).cloned();
+        self.cursor = (self.cursor + 1) % self.len;
+        sample
+    }
+}
+
+impl Source for InfiniteSoundSource {
+    fn current_frame_len(&self) -> Option<usize> {
+        None
+    }
+    fn channels(&self) -> u16 {
+        2
+    }
+    fn samples_rate(&self) -> u32 {
+        44100
+    }
+    fn total_duration(&self) -> Option<Duration> {
+        None
+    }
+}
+
+// sound soure from a 44100 Hz stereo buffer
+struct SoundSource {
+    samples: Arc<Vec<i16>>,
+    cursor: usize,
+}
+
+impl Iterator for SoundSource {
+    type Item = i16;
+    fn next(&mut self) -> Option<Self::Item> {
+        let sample = self.samples.get(self.cursor).cloned();
+        self.cursor += 1;
+        sample
+    }
+}
+
+impl Source for SoundSource {
+    fn current_frame_len(&self) -> Option<usize> {
+        None
+    }
+    fn channels(&self) -> u16 {
+        2
+    }
+    fn samples_rate(&self) -> u32 {
+        44100
+    }
+    fn total_duration(&self) -> Option<Duration> {
+        None
+    }
+}
+
 lazy_static! {
-    static ref SOUND_BUFFERS: Vec<::rodio::source::Buffered<Decoder<Cursor<Vec<u8>>>>> = {
+    static ref SOUND_BUFFERS: Vec<SoundBuffer> = {
         let sound_filenames = [
             "assets/sounds/shoot.ogg",
             "assets/sounds/kill.ogg",
@@ -224,17 +320,10 @@ lazy_static! {
         let mut sound_buffers = vec![];
         for (file, filename) in sound_files.drain(..).zip(sound_filenames.iter()) {
             let sound = Decoder::new(file)
-                .ok_or_show(|e| format!("Failed to decode sound {}: {}", filename, e))
-                .buffered();
+                .ok_or_show(|e| format!("Failed to decode sound {}: {}", filename, e));
 
-            if sound.samples_rate() != 44100 {
-                ::show_message::show(format!("Invalid sound: {} must be 44100 Hz", filename));
-                ::std::process::exit(1)
-            }
-            if sound.channels() != 2 {
-                ::show_message::show(format!("Invalid sound: {} must be stereo", filename));
-                ::std::process::exit(1)
-            }
+            let sound = SoundBuffer::new(sound)
+                .ok_or_show(|e| format!("Invalid sound: {}: {}", filename, e));
 
             sound_buffers.push(sound);
         }
@@ -279,11 +368,11 @@ impl Audio {
                     audio_mix.set_listener(control.left_ear, control.right_ear);
 
                     for (sound, position) in control.spatial_sounds_to_add.drain(..) {
-                        audio_mix.add_spatial(SOUND_BUFFERS[sound as usize].clone(), position);
+                        audio_mix.add_spatial(SOUND_BUFFERS[sound as usize].source(), position);
                     }
 
                     for sound in control.sounds_to_add.drain(..) {
-                        audio_mix.add_unspatial(SOUND_BUFFERS[sound as usize].clone());
+                        audio_mix.add_unspatial(SOUND_BUFFERS[sound as usize].source());
                     }
                 }
             );
@@ -302,10 +391,13 @@ impl Audio {
                 .ok_or_show(|e| format!("Failed to read sound {}: {}", music_filename, e));
             Cursor::new(buffer)
         };
-        // TODO: buffered ?
+
         let music = Decoder::new(music_file)
-            .ok_or_show(|e| format!("Failed to decode sound {}: {}", music_filename, e))
-            .repeat_infinite();
+            .ok_or_show(|e| format!("Failed to decode sound {}: {}", music_filename, e));
+
+        let music = SoundBuffer::new(music)
+            .ok_or_show(|e| format!("Invalid music {}: {}", music_filename, e))
+            .infinite_source();
 
         let mut music_sink = ::rodio::Sink::new(&endpoint);
         music_sink.set_volume(save.music_volume());
@@ -315,7 +407,7 @@ impl Audio {
         let mut eraser_sink = ::rodio::Sink::new(&endpoint);
         eraser_sink.set_volume(0.0);
         eraser_sink.append(::rodio::source::Zero::<i16>::new(2, 44100).take_duration(Duration::from_secs(1)));
-        eraser_sink.append(SOUND_BUFFERS[Sound::Eraser as usize].clone().repeat_infinite());
+        eraser_sink.append(SOUND_BUFFERS[Sound::Eraser as usize].infinite_source());
 
         Audio {
             _audio_sink: Some(audio_sink),
