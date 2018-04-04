@@ -401,11 +401,11 @@ impl Audio {
 
         let mut music_sink = ::rodio::Sink::new(&endpoint);
         music_sink.set_volume(save.music_volume());
+        music_sink.append(::rodio::source::Zero::<i16>::new(2, 44100).take_duration(Duration::from_secs(1)));
         music_sink.append(music);
 
         let mut eraser_sink = ::rodio::Sink::new(&endpoint);
         eraser_sink.set_volume(0.0);
-        eraser_sink.append(::rodio::source::Zero::<i16>::new(2, 44100).take_duration(Duration::from_secs(1)));
         eraser_sink.append(SOUND_BUFFERS[Sound::Eraser as usize].infinite_source());
 
         Audio {
@@ -432,9 +432,6 @@ impl Audio {
 
     pub fn update(&mut self, position: ::na::Vector3<f32>, aim: ::na::UnitQuaternion<f32>, effect_volume: f32, music_volume: f32, eraser_volume: f32) {
         if let Some(ref control) = self.audio_sink_control {
-            let mut control = control.lock().unwrap();
-            control.volume = effect_volume;
-
             let local_left_ear = ::na::Point3::new(0.0, - ::CONFIG.ear_distance/2.0, 0.0);
             let local_right_ear = ::na::Point3::new(0.0, ::CONFIG.ear_distance/2.0, 0.0);
 
@@ -446,6 +443,8 @@ impl Audio {
             let left_ear = world_trans * local_left_ear;
             let right_ear = world_trans * local_right_ear;
 
+            let mut control = control.lock().unwrap();
+            control.volume = effect_volume;
             control.left_ear = left_ear.coords.into();
             control.right_ear = right_ear.coords.into();
         }
