@@ -24,28 +24,28 @@ pub enum Sound {
 }
 
 /// Sounds must be 44100 Hz and stereo
-pub struct AudioMix<T>
-    where T: Source,
-          T::Item: Sample + ::std::fmt::Debug,
-{
-    spatial_source: Vec<(::rodio::source::Spatial<T>, [f32; 3])>,
-    unspatial_source: Vec<T>,
+pub struct AudioMix {
+    spatial_source: Vec<(::rodio::source::Spatial<SoundSource>, [f32; 3])>,
+    unspatial_source: Vec<SoundSource>,
     left_ear: [f32; 3],
     right_ear: [f32; 3],
     delete_indices_cache: Vec<usize>,
+    effect_volume: f32,
+    eraser_volume: f32,
+    eraser_sound_source: InfiniteSoundSource,
 }
 
-impl<T> AudioMix<T>
-    where T: Source,
-          T::Item: Sample + ::std::fmt::Debug,
-{
-    fn new(left_ear: [f32; 3], right_ear: [f32; 3]) -> Self {
+impl AudioMix {
+    fn new(left_ear: [f32; 3], right_ear: [f32; 3], effect_volume: f32) -> Self {
         AudioMix {
             spatial_source: vec![],
             unspatial_source: vec![],
             left_ear,
             right_ear,
             delete_indices_cache: vec![],
+            effect_volume: effect_volume,
+            eraser_volume: 0.0,
+            eraser_sound_source: SOUND_BUFFERS[Sound::Eraser as usize].infinite_source(),
         }
     }
 
@@ -62,7 +62,7 @@ impl<T> AudioMix<T>
         }
     }
 
-    fn add_spatial(&mut self, sound: T, position: [f32; 3]) {
+    fn add_spatial(&mut self, sound: SoundSource, position: [f32; 3]) {
         assert!(sound.channels() == 2);
         assert!(sound.samples_rate() == 44100);
         let distance_2 = (position[0]-self.left_ear[0]).powi(2)
@@ -79,22 +79,19 @@ impl<T> AudioMix<T>
         }
     }
 
-    fn add_unspatial(&mut self, sound: T) {
+    fn add_unspatial(&mut self, sound: SoundSource) {
         assert!(sound.channels() == 2);
         assert!(sound.samples_rate() == 44100);
         self.unspatial_source.push(sound);
     }
 }
 
-impl<T> Iterator for AudioMix<T>
-    where T: Source,
-          T::Item: Sample + ::std::fmt::Debug,
-{
-    type Item = T::Item;
+impl Iterator for AudioMix {
+    type Item = i16;
 
     #[inline]
-    fn next(&mut self) -> Option<T::Item> {
-        let mut next = T::Item::zero_value();
+    fn next(&mut self) -> Option<i16> {
+        let mut next = self.eraser_sound_source.next().unwrap().amplify(self.eraser_volume);
 
         self.delete_indices_cache.clear();
         for (i, &mut (ref mut source, _)) in self.spatial_source.iter_mut().enumerate() {
@@ -120,7 +117,7 @@ impl<T> Iterator for AudioMix<T>
             self.unspatial_source.remove(indice - i);
         }
 
-        Some(next)
+        Some(next.amplify(self.effect_volume))
     }
 
     #[inline]
@@ -129,16 +126,9 @@ impl<T> Iterator for AudioMix<T>
     }
 }
 
-impl<T> ExactSizeIterator for AudioMix<T>
-    where T: Source + ExactSizeIterator,
-          T::Item: Sample + ::std::fmt::Debug,
-{
-}
+impl ExactSizeIterator for AudioMix { }
 
-impl<T> Source for AudioMix<T>
-    where T: Source,
-          T::Item: Sample + ::std::fmt::Debug,
-{
+impl Source for AudioMix {
     #[inline]
     fn current_frame_len(&self) -> Option<usize> {
         None
@@ -163,7 +153,8 @@ impl<T> Source for AudioMix<T>
 pub struct AudioSinkControl {
     left_ear: [f32; 3],
     right_ear: [f32; 3],
-    volume: f32,
+    effect_volume: f32,
+    eraser_volume: f32,
     spatial_sounds_to_add: Vec<(Sound, [f32; 3])>,
     sounds_to_add: Vec<Sound>,
 }
@@ -173,7 +164,8 @@ impl AudioSinkControl {
         AudioSinkControl {
             left_ear: [0f32; 3],
             right_ear: [0f32; 3],
-            volume: volume,
+            effect_volume: volume,
+            eraser_volume: 0.0,
             spatial_sounds_to_add: vec![],
             sounds_to_add: vec![],
         }
@@ -334,7 +326,6 @@ lazy_static! {
 pub struct Audio {
     audio_sink_control: Option<Arc<Mutex<AudioSinkControl>>>,
     music_sink: Option<::rodio::Sink>,
-    eraser_sink: Option<::rodio::Sink>,
     // Used to drop sink
     _audio_sink: Option<::rodio::Sink>,
 }
@@ -347,7 +338,6 @@ impl Audio {
                 audio_sink_control: None,
                 music_sink: None,
                 _audio_sink: None,
-                eraser_sink: None,
             };
         }
         let endpoint = endpoint.unwrap();
@@ -355,16 +345,15 @@ impl Audio {
         let control = Arc::new(Mutex::new(AudioSinkControl::new(save.effect_volume())));
         let audio_sink_control = Some(control.clone());
 
-        let source = AudioMix::new([0f32; 3], [0f32; 3])
-            .amplify(0f32)
+        let source = AudioMix::new([0f32; 3], [0f32; 3], save.effect_volume())
             .periodic_access(
                 Duration::from_millis(10),
-                move |source| {
+                move |audio_mix| {
                     let mut control = control.lock().unwrap();
 
-                    source.set_factor(control.volume);
+                    audio_mix.effect_volume = control.effect_volume;
+                    audio_mix.eraser_volume = control.eraser_volume;
 
-                    let audio_mix = source.inner_mut();
                     audio_mix.set_listener(control.left_ear, control.right_ear);
 
                     for (sound, position) in control.spatial_sounds_to_add.drain(..) {
@@ -393,26 +382,18 @@ impl Audio {
         };
 
         let music = Decoder::new(music_file)
-            .ok_or_show(|e| format!("Failed to decode sound {}: {}", music_filename, e));
-
-        let music = SoundBuffer::new(music)
-            .ok_or_show(|e| format!("Invalid music {}: {}", music_filename, e))
-            .infinite_source();
+            .ok_or_show(|e| format!("Failed to decode sound {}: {}", music_filename, e))
+            .repeat_infinite();
 
         let mut music_sink = ::rodio::Sink::new(&endpoint);
         music_sink.set_volume(save.music_volume());
         music_sink.append(::rodio::source::Zero::<i16>::new(2, 44100).take_duration(Duration::from_secs(1)));
         music_sink.append(music);
 
-        let mut eraser_sink = ::rodio::Sink::new(&endpoint);
-        eraser_sink.set_volume(0.0);
-        eraser_sink.append(SOUND_BUFFERS[Sound::Eraser as usize].infinite_source());
-
         Audio {
             _audio_sink: Some(audio_sink),
             music_sink: Some(music_sink),
             audio_sink_control,
-            eraser_sink: Some(eraser_sink),
         }
     }
 
@@ -444,21 +425,17 @@ impl Audio {
             let right_ear = world_trans * local_right_ear;
 
             let mut control = control.lock().unwrap();
-            control.volume = effect_volume;
+            control.effect_volume = effect_volume;
             control.left_ear = left_ear.coords.into();
             control.right_ear = right_ear.coords.into();
+            if eraser_volume != control.eraser_volume {
+                let current = control.eraser_volume;
+                let goal = eraser_volume;
+                control.eraser_volume = (current + 0.01*(goal-current).signum()).max(0.0).min(1.0);
+            }
         }
         if let Some(ref mut sink) = self.music_sink {
             sink.set_volume(music_volume);
-        }
-
-        if let Some(ref mut sink) = self.eraser_sink {
-            let goal = effect_volume * eraser_volume;
-            let volume = sink.volume();
-            if goal != volume {
-                let volume = (volume + 0.01*(goal-volume).signum()).max(0.0).min(1.0);
-                sink.set_volume(volume);
-            }
         }
     }
 }
