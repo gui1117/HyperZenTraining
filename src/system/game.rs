@@ -114,10 +114,10 @@ impl GameSystem {
                     entities.insert(::entity::EntityConf::MotionLess { eraser: true }, conf.motion_less_eraser as usize);
                     entities.insert(::entity::EntityConf::Attracted { eraser: false }, conf.attracted as usize);
                     entities.insert(::entity::EntityConf::Attracted { eraser: true }, conf.attracted_eraser as usize);
-                    entities.insert(::entity::EntityConf::Bouncer { eraser: false }, conf.attracted as usize);
-                    entities.insert(::entity::EntityConf::Bouncer { eraser: true }, conf.attracted_eraser as usize);
-                    entities.insert(::entity::EntityConf::Avoider { eraser: false }, conf.attracted as usize);
-                    entities.insert(::entity::EntityConf::Avoider { eraser: true }, conf.attracted_eraser as usize);
+                    entities.insert(::entity::EntityConf::Bouncer { eraser: false }, conf.bouncer as usize);
+                    entities.insert(::entity::EntityConf::Bouncer { eraser: true }, conf.bouncer_eraser as usize);
+                    entities.insert(::entity::EntityConf::Avoider { eraser: false }, conf.avoider as usize);
+                    entities.insert(::entity::EntityConf::Avoider { eraser: true }, conf.avoider_eraser as usize);
                     entities.insert(::entity::EntityConf::Turret, conf.turret as usize);
 
                     ::level::Level::KillAllKruskal2D(::level::kill_all_kruskal::Conf2D {
