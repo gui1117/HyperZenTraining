@@ -19,8 +19,18 @@ lazy_static! {
                 as Box<Read>
         };
 
-        ::ron::de::from_reader(file)
-            .ok_or_show(|e| format!("Failed to parse config file {}: {}", FILENAME, e))
+        let mut config: Config = ::ron::de::from_reader(file)
+            .ok_or_show(|e| format!("Failed to parse config file {}: {}", FILENAME, e));
+
+        if let Ok(Ok(val)) = ::std::env::var("HYPERZEN_TRAINING_SHOW_WEAPON").map(|val| val.parse::<bool>()) {
+            config.player_show_weapon = val;
+        }
+
+        if let Ok(Ok(val)) = ::std::env::var("HYPERZEN_TRAINING_VELOCITY").map(|val| val.parse::<f32>()) {
+            config.player_velocity = val;
+        }
+
+        config
     };
 }
 
@@ -115,6 +125,7 @@ pub struct Config {
     pub player_hook_force: f32,
     pub player_hook_color: ::graphics::Color,
     pub player_hook_size: f32,
+    pub player_show_weapon: bool,
 
     pub teleport_dl: f32,
 

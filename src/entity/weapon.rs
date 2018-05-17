@@ -64,74 +64,76 @@ pub fn create_weapon<'a>(
 
     let weapon_trans = ::na::Translation3::new(0.0, weapon_pos_y, weapon_pos_z);
 
-    // Six
-    let (primitive, groups) = ::graphics::Primitive::Six.instantiate_unerasable();
-    let primitive_trans = weapon_trans
-        * ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0))
-        * ::graphics::resizer(six_radius, six_radius, six_length);
-
-    let entity = entities.create();
-    dynamic_huds.insert(entity, ::component::DynamicHud);
-    dynamic_graphics_assets.insert(
-        entity,
-        ::component::DynamicGraphicsAssets::new(
-            primitive,
-            groups,
-            ::CONFIG.weapon_six_color,
-            primitive_trans,
-        ),
-    );
-
-    // Bullet
-    for i in 0..bullet_nbr {
+    if ::CONFIG.player_show_weapon {
+        // Six
         let (primitive, groups) = ::graphics::Primitive::Six.instantiate_unerasable();
         let primitive_trans = weapon_trans
-            * ::na::Isometry3::new(
-                ::na::Vector3::new(bullet_x + bullet_dx * i as f32, 0.0, 0.0),
-                ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
-            )
-            * ::graphics::resizer(bullet_radius, bullet_radius, bullet_length);
+            * ::na::Rotation3::new(::na::Vector3::new(0.0, FRAC_PI_2, 0.0))
+            * ::graphics::resizer(six_radius, six_radius, six_length);
 
         let entity = entities.create();
-        bullets.push(entity);
         dynamic_huds.insert(entity, ::component::DynamicHud);
         dynamic_graphics_assets.insert(
             entity,
             ::component::DynamicGraphicsAssets::new(
                 primitive,
                 groups,
-                ::CONFIG.weapon_bullet_color,
+                ::CONFIG.weapon_six_color,
                 primitive_trans,
             ),
         );
-    }
-    bullets.reverse();
 
-    for angle in (0..3usize).map(|i| i as f32 * 2.0 * FRAC_PI_3) {
-        // Bar
-        let (primitive, groups) = ::graphics::Primitive::Cube.instantiate_unerasable();
-        let primitive_trans = weapon_trans
-            * ::na::Isometry3::new(
-                ::na::Vector3::new(
-                    bar_x_pos,
-                    (center_radius + bar_y_radius) * angle.cos(),
-                    (center_radius + bar_y_radius) * angle.sin(),
+        // Bullet
+        for i in 0..bullet_nbr {
+            let (primitive, groups) = ::graphics::Primitive::Six.instantiate_unerasable();
+            let primitive_trans = weapon_trans
+                * ::na::Isometry3::new(
+                    ::na::Vector3::new(bullet_x + bullet_dx * i as f32, 0.0, 0.0),
+                    ::na::Vector3::new(0.0, FRAC_PI_2, 0.0),
+                )
+                * ::graphics::resizer(bullet_radius, bullet_radius, bullet_length);
+
+            let entity = entities.create();
+            bullets.push(entity);
+            dynamic_huds.insert(entity, ::component::DynamicHud);
+            dynamic_graphics_assets.insert(
+                entity,
+                ::component::DynamicGraphicsAssets::new(
+                    primitive,
+                    groups,
+                    ::CONFIG.weapon_bullet_color,
+                    primitive_trans,
                 ),
-                ::na::Vector3::new(angle, 0.0, 0.0),
-            )
-            * ::graphics::resizer(bar_x_radius, bar_y_radius, bar_z_radius);
+            );
+        }
+        bullets.reverse();
 
-        let entity = entities.create();
-        dynamic_huds.insert(entity, ::component::DynamicHud);
-        dynamic_graphics_assets.insert(
-            entity,
-            ::component::DynamicGraphicsAssets::new(
-                primitive,
-                groups,
-                ::CONFIG.weapon_angle_color,
-                primitive_trans,
-            ),
-        );
+        for angle in (0..3usize).map(|i| i as f32 * 2.0 * FRAC_PI_3) {
+            // Bar
+            let (primitive, groups) = ::graphics::Primitive::Cube.instantiate_unerasable();
+            let primitive_trans = weapon_trans
+                * ::na::Isometry3::new(
+                    ::na::Vector3::new(
+                        bar_x_pos,
+                        (center_radius + bar_y_radius) * angle.cos(),
+                        (center_radius + bar_y_radius) * angle.sin(),
+                    ),
+                    ::na::Vector3::new(angle, 0.0, 0.0),
+                )
+                * ::graphics::resizer(bar_x_radius, bar_y_radius, bar_z_radius);
+
+            let entity = entities.create();
+            dynamic_huds.insert(entity, ::component::DynamicHud);
+            dynamic_graphics_assets.insert(
+                entity,
+                ::component::DynamicGraphicsAssets::new(
+                    primitive,
+                    groups,
+                    ::CONFIG.weapon_angle_color,
+                    primitive_trans,
+                ),
+            );
+        }
     }
 
     weapon_animations.insert(

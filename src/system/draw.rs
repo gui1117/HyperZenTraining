@@ -352,7 +352,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         rendering.command_buffer = Some(command_buffer_builder.build().unwrap());
 
         // Compute second command
-        let second_command_buffer_builder = AutoCommandBufferBuilder::primary_one_time_submit(
+        let mut second_command_buffer_builder = AutoCommandBufferBuilder::primary_one_time_submit(
             graphics.device.clone(),
             graphics.queue.family(),
         ).unwrap()
@@ -372,8 +372,10 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 ),
                 (),
             )
-            .unwrap()
-            .draw(
+            .unwrap();
+
+        if ::CONFIG.player_show_weapon {
+            second_command_buffer_builder = second_command_buffer_builder.draw(
                 graphics.cursor_pipeline.clone(),
                 DynamicState {
                     viewports: Some(vec![
@@ -395,7 +397,8 @@ impl<'a> ::specs::System<'a> for DrawSystem {
                 graphics.cursor_descriptor_set.clone(),
                 (),
             )
-            .unwrap();
+                .unwrap();
+        }
 
         // Build imgui
         let ui = imgui.as_mut().unwrap().frame(
