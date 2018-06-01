@@ -10,7 +10,7 @@ packed = [] # standalone executable
 vulkano = "0.9"
 vulkano-shader-derive = "0.9"
 vulkano-win = "0.9"
-winit = "0.11"
+winit = "0.15"
 nalgebra = "0.13"
 ncollide = { git = "https://github.com/thiolliere/ncollide/", branch = "send_sync_master" }
 nphysics3d = { git = "https://github.com/thiolliere/nphysics/", branch = "send_sync_master" }
@@ -32,3 +32,8 @@ fps_counter = "1"
 app_dirs2 = "2"
 rodio = "0.6"
 show_message = { git = "https://github.com/thiolliere/show_message/" }
+
+[replace]
+"vulkano-win:0.9.0" = { git = "https://github.com/thiolliere/vulkano" }
+"vulkano:0.9.0" = { git = "https://github.com/thiolliere/vulkano" }
+"vulkano-shader-derive:0.9.0" = { git = "https://github.com/thiolliere/vulkano" }

@@ -1,10 +1,10 @@
 # FINAL
 
-* faire avoider max distance et si pas en ligne de mir alors pas bouger
-* refaire sons en plus efficace:
-  est ce que ça bug sans la musique
-  mettre sons en RAM
-  est ce que c'est mieux si musique en RAM
+* [x] mettre winit 0.15
+* [ ] faire icon
+* [ ] faire fullscreen sans redémarrage
+* [ ] faire control echap
+* [ ] faire port macos
 
 ###
 

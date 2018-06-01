@@ -283,7 +283,7 @@ fn new_game() -> ControlFlow {
                         false
                     }
                     Event::WindowEvent {
-                        event: WindowEvent::Closed,
+                        event: WindowEvent::ClosedRequested,
                         ..
                     } => {
                         done = true;
@@ -321,8 +321,7 @@ fn new_game() -> ControlFlow {
                 }
             });
             if done {
-                // FIXME: breaking with ControlFLow::Quit bugs on X11: function never ends
-                ::std::process::exit(0);
+                break ControlFlow::Quit;
             }
         }
         if world.write_resource::<::resource::MenuState>().quit_button {
