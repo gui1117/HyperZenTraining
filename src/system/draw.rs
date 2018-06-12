@@ -401,9 +401,10 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         }
 
         // Build imgui
+        let size = rendering.size.take().unwrap();
         let ui = imgui.as_mut().unwrap().frame(
-            rendering.size_points.take().unwrap(),
-            rendering.size_pixels.take().unwrap(),
+            size,
+            size,
             ::CONFIG.dt(),
         );
         menu_state.build_ui(&ui, &save, &vulkan_instance);

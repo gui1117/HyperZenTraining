@@ -2,9 +2,11 @@
 
 * [x] mettre winit 0.15
 * [ ] faire icon
-* [ ] faire fullscreen sans redémarrage
 * [ ] faire control echap
 * [ ] faire port macos
+* [x] résolution du menu problème wayland
+
+* [ ] faire fullscreen sans redémarrage
 
 ###
 

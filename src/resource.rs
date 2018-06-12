@@ -312,8 +312,7 @@ pub struct Rendering {
     pub image_num: Option<usize>,
     pub command_buffer: Option<AutoCommandBuffer>,
     pub second_command_buffer: Option<AutoCommandBuffer>,
-    pub size_points: Option<(u32, u32)>,
-    pub size_pixels: Option<(u32, u32)>,
+    pub size: Option<(u32, u32)>,
 }
 
 impl Rendering {
@@ -322,8 +321,7 @@ impl Rendering {
             image_num: None,
             command_buffer: None,
             second_command_buffer: None,
-            size_points: None,
-            size_pixels: None,
+            size: None,
         }
     }
 }

@@ -283,7 +283,7 @@ fn new_game() -> ControlFlow {
                         false
                     }
                     Event::WindowEvent {
-                        event: WindowEvent::ClosedRequested,
+                        event: WindowEvent::CloseRequested,
                         ..
                     } => {
                         done = true;
@@ -384,10 +384,7 @@ fn new_game() -> ControlFlow {
             .ok_or_show(|e| format!("Failed to acquire next image: {}", e));
 
         world.write_resource::<::resource::Rendering>().image_num = Some(image_num);
-        world.write_resource::<::resource::Rendering>().size_points =
-            window.window().get_inner_size_points();
-        world.write_resource::<::resource::Rendering>().size_pixels =
-            window.window().get_inner_size();
+        world.write_resource::<::resource::Rendering>().size = window.window().get_inner_size();
 
         draw_dispatcher.dispatch(&mut world.res);
 

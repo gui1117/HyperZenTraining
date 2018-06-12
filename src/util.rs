@@ -334,6 +334,9 @@ pub enum VirtualKeyCodeDef {
     WebSearch,
     WebStop,
     Yen,
+    Copy,
+    Paste,
+    Cut,
 }
 
 #[allow(unused)]
