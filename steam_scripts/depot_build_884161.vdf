@@ -1,0 +1,15 @@
+"DepotBuildConfig"
+{
+	"DepotID" "884161"
+
+	"ContentRoot"	"/home/thiolliere/Developpement/pepe/"
+
+	"FileMapping"
+	{
+	"LocalPath" "target/artefact/hyperzen-training-win64.exe"
+	"DepotPath" "."
+	"recursive" "1"
+	}
+
+	"FileExclusion" "*.pdb"
+}

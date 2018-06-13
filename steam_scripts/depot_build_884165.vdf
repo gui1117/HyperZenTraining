@@ -1,0 +1,15 @@
+"DepotBuildConfig"
+{
+	"DepotID" "884165"
+
+	"ContentRoot"	"/home/thiolliere/Developpement/pepe/"
+
+	"FileMapping"
+	{
+	"LocalPath" "assets/*"
+	"DepotPath" "assets/"
+	"recursive" "1"
+	}
+
+	"FileExclusion" "*.pdb"
+}
