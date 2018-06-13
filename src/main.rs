@@ -50,12 +50,15 @@ use vulkano::sync::FenceSignalFuture;
 use vulkano::sync::GpuFuture;
 use vulkano::instance::Instance;
 
-use winit::{DeviceEvent, Event, WindowEvent};
+use winit::{DeviceEvent, Event, WindowEvent, Icon};
 
 use std::sync::Arc;
 use std::time::Duration;
 use std::time::Instant;
 use std::thread;
+use std::fs::File;
+use std::io::Read;
+
 
 fn init_imgui() -> ::imgui::ImGui {
     let mut imgui = ::imgui::ImGui::init();
@@ -116,7 +119,23 @@ fn new_game() -> ControlFlow {
         window_builder = window_builder.with_fullscreen(Some(events_loop.get_primary_monitor()));
     }
 
+    let icon = {
+        let icon_data = if cfg!(feature = "packed") {
+            include_bytes!("../assets/icon.png").iter().cloned().collect::<Vec<_>>()
+        } else {
+            let mut data = vec![];
+            let mut file = File::open("assets/icon.png")
+                .ok_or_show(|e| format!("Failed to open \"assets/icon.png\": {}", e));
+            file.read_to_end(&mut data)
+                .ok_or_show(|e| format!("Failed to read \"assets/icon.png\": {}", e));
+            data
+        };
+        Icon::from_bytes(&icon_data)
+            .ok_or_show(|e| format!("Failed to load icon: {}", e))
+    };
+
     let window = window_builder
+        .with_window_icon(Some(icon))
         .with_title("HyperZen Training")
         .build_vk_surface(&events_loop, instance.clone())
         .ok_or_show(|e| format!("Failed to build vulkan window: {}\n\n{:#?}", e, e));

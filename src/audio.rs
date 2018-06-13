@@ -64,7 +64,7 @@ impl AudioMix {
 
     fn add_spatial(&mut self, sound: SoundSource, position: [f32; 3]) {
         assert!(sound.channels() == 2);
-        assert!(sound.samples_rate() == 44100);
+        assert!(sound.sample_rate() == 44100);
         let distance_2 = (position[0]-self.left_ear[0]).powi(2)
             + (position[1]-self.left_ear[1]).powi(2)
             + (position[2]-self.left_ear[2]).powi(2);
@@ -81,7 +81,7 @@ impl AudioMix {
 
     fn add_unspatial(&mut self, sound: SoundSource) {
         assert!(sound.channels() == 2);
-        assert!(sound.samples_rate() == 44100);
+        assert!(sound.sample_rate() == 44100);
         self.unspatial_source.push(sound);
     }
 }
@@ -140,7 +140,7 @@ impl Source for AudioMix {
     }
 
     #[inline]
-    fn samples_rate(&self) -> u32 {
+    fn sample_rate(&self) -> u32 {
         44100
     }
 
@@ -179,7 +179,7 @@ struct SoundBuffer {
 
 impl SoundBuffer {
     fn new(sound: Decoder<Cursor<Vec<u8>>>) -> Result<Self, String> {
-        if sound.samples_rate() != 44100 {
+        if sound.sample_rate() != 44100 {
             return Err("invalid samples rate: must be 44100 Hz".into());
         }
         if sound.channels() != 2 {
@@ -230,7 +230,7 @@ impl Source for InfiniteSoundSource {
     fn channels(&self) -> u16 {
         2
     }
-    fn samples_rate(&self) -> u32 {
+    fn sample_rate(&self) -> u32 {
         44100
     }
     fn total_duration(&self) -> Option<Duration> {
@@ -260,7 +260,7 @@ impl Source for SoundSource {
     fn channels(&self) -> u16 {
         2
     }
-    fn samples_rate(&self) -> u32 {
+    fn sample_rate(&self) -> u32 {
         44100
     }
     fn total_duration(&self) -> Option<Duration> {
@@ -332,7 +332,7 @@ pub struct Audio {
 
 impl Audio {
     pub fn init(save: &::resource::Save) -> Self {
-        let endpoint = ::rodio::default_endpoint();
+        let endpoint = ::rodio::default_output_device();
         if endpoint.is_none() {
             return Audio {
                 audio_sink_control: None,
