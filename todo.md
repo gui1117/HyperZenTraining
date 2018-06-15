@@ -2,8 +2,9 @@
 
 * [x] mettre winit 0.15
 * [x] faire icon
-* [ ] faire control echap
 * [x] résolution du menu problème wayland
+* [ ] faire control echap
+* [ ] debug windows: mode plein écran est ce qui semble bugger
 
 * [ ] faire fullscreen sans redémarrage
 * [ ] faire port macos
