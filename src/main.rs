@@ -102,8 +102,9 @@ enum ControlFlow {
 }
 
 fn new_game() -> ControlFlow {
-    ::std::env::set_var("WINIT_UNIX_BACKEND", "x11");
+    // ::std::env::set_var("WINIT_UNIX_BACKEND", "x11");
     let mut save = ::resource::Save::new();
+    println!("{}", line!());
 
     let instance = {
         let extensions = vulkano_win::required_extensions();
@@ -112,12 +113,15 @@ fn new_game() -> ControlFlow {
             .ok_or_show(|e| format!("Failed to create Vulkan instance.\nPlease see if you graphic cards support Vulkan and if so update your drivers\n\n{}", e))
     };
 
+    println!("{}", line!());
     let mut events_loop = winit::EventsLoop::new();
     let mut window_builder = winit::WindowBuilder::new();
 
-    if save.fullscreen() {
-        window_builder = window_builder.with_fullscreen(Some(events_loop.get_primary_monitor()));
-    }
+    println!("{}", line!());
+    // if save.fullscreen() {
+    //     window_builder = window_builder.with_fullscreen(Some(events_loop.get_primary_monitor()));
+    // }
+    println!("{}", line!());
 
     // let icon = {
     //     let icon_data = if cfg!(feature = "packed") {
@@ -134,25 +138,33 @@ fn new_game() -> ControlFlow {
     //         .ok_or_show(|e| format!("Failed to load icon: {}", e))
     // };
 
+    println!("{}", line!());
     let window = window_builder
         // .with_window_icon(Some(icon))
         .with_title("HyperZen Training")
         .build_vk_surface(&events_loop, instance.clone())
         .ok_or_show(|e| format!("Failed to build vulkan window: {}\n\n{:#?}", e, e));
+    println!("{}", line!());
 
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
 
+    println!("{}", line!());
     let current_window_id = window.window().id();
+    println!("{}", line!());
 
     try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10)
         .ok_or_show(|e| format!("Failed to grab cursor: {}", e));
 
+    println!("{}", line!());
     let mut imgui = init_imgui();
     let mut graphics = graphics::Graphics::new(&window, &mut imgui, &mut save);
 
+    println!("{}", line!());
     let mut previous_frame_end: Option<FenceSignalFuture<Box<GpuFuture>>> = None;
 
+    println!("{}", line!());
     let debug = ::std::env::var("HYPERZEN_TRAINING_DEBUG").map(|v| v == "1").unwrap_or(false);
+    println!("{}", line!());
 
     let mut world = specs::World::new();
     world.register::<::component::Player>();
@@ -204,6 +216,7 @@ fn new_game() -> ControlFlow {
     world.add_resource(menu_state);
     world.maintain();
 
+    println!("{}", line!());
     let mut game_system = ::system::GameSystem::new();
     game_system.run(&mut world);
 
