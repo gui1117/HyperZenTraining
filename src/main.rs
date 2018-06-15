@@ -134,11 +134,11 @@ fn new_game() -> ControlFlow {
     //         .ok_or_show(|e| format!("Failed to load icon: {}", e))
     // };
 
-    // let window = window_builder
-    //     .with_window_icon(Some(icon))
-    //     .with_title("HyperZen Training")
-    //     .build_vk_surface(&events_loop, instance.clone())
-    //     .ok_or_show(|e| format!("Failed to build vulkan window: {}\n\n{:#?}", e, e));
+    let window = window_builder
+        // .with_window_icon(Some(icon))
+        .with_title("HyperZen Training")
+        .build_vk_surface(&events_loop, instance.clone())
+        .ok_or_show(|e| format!("Failed to build vulkan window: {}\n\n{:#?}", e, e));
 
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
 
