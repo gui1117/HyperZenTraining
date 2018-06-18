@@ -144,9 +144,6 @@ fn new_game() -> ControlFlow {
 
     let current_window_id = window.window().id();
 
-    try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10)
-        .ok_or_show(|e| format!("Failed to grab cursor: {}", e));
-
     let mut imgui = init_imgui();
     let mut graphics = graphics::Graphics::new(&window, &mut imgui, &mut save);
 
@@ -343,6 +340,7 @@ fn new_game() -> ControlFlow {
                 break ControlFlow::Quit;
             }
         }
+
         if world.write_resource::<::resource::MenuState>().quit_button {
             break ControlFlow::Quit;
         }

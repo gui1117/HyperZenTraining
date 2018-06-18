@@ -10,7 +10,7 @@ packed = [] # standalone executable
 vulkano = "0.9"
 vulkano-shader-derive = "0.9"
 vulkano-win = "0.9"
-winit = { version = "0.15", features = ["icon_loading"] }
+winit = { version = "0.14", features = ["icon_loading"] }
 nalgebra = "0.13"
 ncollide = { git = "https://github.com/thiolliere/ncollide/", branch = "send_sync_master" }
 nphysics3d = { git = "https://github.com/thiolliere/nphysics/", branch = "send_sync_master" }

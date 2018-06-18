@@ -4,7 +4,7 @@
 * [x] faire icon
 * [x] résolution du menu problème wayland
 * [ ] faire control echap
-* [ ] debug windows: mode plein écran est ce qui semble bugger
+* [ ] taskbar icon windows ?
 
 * [ ] faire fullscreen sans redémarrage
 * [ ] faire port macos
