@@ -570,10 +570,10 @@ pub fn instance_primitives(
     primitives_buffers_def.push(vec![super::font::build_text("8".to_string())]);
     primitives_buffers_def.push(vec![super::font::build_text("9".to_string())]);
     primitives_buffers_def.push(vec![super::font::build_text("_".to_string())]);
-    primitives_buffers_def.push(vec![super::font::build_text("".to_string())]);
-    primitives_buffers_def.push(vec![super::font::build_text("".to_string())]);
-    primitives_buffers_def.push(vec![super::font::build_text("HYPERZEN TRAINING".to_string())]);
-    primitives_buffers_def.push(vec![super::font::build_text("".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text(":".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("ALL".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("LAST SCORES".to_string())]);
+    primitives_buffers_def.push(vec![super::font::build_text("BEST SCORES".to_string())]);
 
     let mut final_future = Box::new(now(queue.device().clone())) as Box<GpuFuture>;
     let mut primitives_buffers = vec![];

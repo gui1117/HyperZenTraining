@@ -3,6 +3,7 @@
 * [x] mettre winit 0.15
 * [x] faire icon
 * [x] résolution du menu problème wayland
+* [x] faire que le volume change bien pendant qu'on le bouge dans le menu
 * [ ] faire control echap
 * [ ] taskbar icon windows ?
 

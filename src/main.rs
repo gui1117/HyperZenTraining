@@ -206,6 +206,7 @@ fn new_game() -> ControlFlow {
 
     let mut pause_update_dispatcher = ::specs::DispatcherBuilder::new()
         .add(::system::MenuPauseControlSystem::new(), "menu_pause", &[])
+        .add(::system::AudioSystem, "audio", &[])
         .build();
 
     let mut game_update_dispatcher = ::specs::DispatcherBuilder::new()
