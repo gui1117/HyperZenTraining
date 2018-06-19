@@ -109,7 +109,7 @@ fn new_game() -> ControlFlow {
         let extensions = vulkano_win::required_extensions();
         let info = app_info_from_cargo_toml!();
         Instance::new(Some(&info), &extensions, None)
-            .ok_or_show(|e| format!("Failed to create Vulkan instance.\nPlease see if you graphic cards support Vulkan and if so update your drivers\n\n{}", e))
+            .ok_or_show(|e| format!("Failed to create Vulkan instance.\nPlease check if you graphic cards support Vulkan and if so install the driver\n\n{}", e))
     };
 
     let mut events_loop = winit::EventsLoop::new();
