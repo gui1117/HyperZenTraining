@@ -1,5 +1,5 @@
 use vulkano::device::{Device, DeviceExtensions, Queue};
-use vulkano::swapchain::{self, Swapchain, Surface};
+use vulkano::swapchain::{self, ColorSpace, Swapchain, Surface};
 use vulkano::sampler::{Filter, MipmapMode, Sampler, SamplerAddressMode,
                        UnnormalizedSamplerAddressMode};
 use vulkano::image::{AttachmentImage, Dimensions, ImageUsage, ImmutableImage, SwapchainImage};
@@ -355,7 +355,7 @@ impl Graphics {
         let (swapchain, images) = {
             let caps = window
                 .capabilities(physical)
-                .expect("failed to get surface capabilities");
+                .ok_or_show(|e| format!("Failed to get surface capabilities: {}", e));
 
             let dimensions = caps.current_extent.unwrap_or([1280, 1024]);
             let image_usage = ImageUsage {
@@ -364,11 +364,27 @@ impl Graphics {
                 ..ImageUsage::none()
             };
 
+            // TODO: warn if colorspace if different from SrgbNonLinear
+            let format = caps.supported_formats.iter()
+                .max_by_key(|format| {
+                    match format {
+                        (format::Format::B8G8R8A8Unorm, ColorSpace::SrgbNonLinear) => 6,
+                        (format::Format::B8G8R8A8Srgb, ColorSpace::SrgbNonLinear) => 5,
+                        (_, ColorSpace::SrgbNonLinear) => 4,
+                        // I don't know anything about following color spaces
+                        (_, ColorSpace::ExtendedSrgbLinear) => 3,
+                        (_, ColorSpace::AdobeRgbNonLinear) => 2,
+                        (_, ColorSpace::AdobeRgbLinear) => 1,
+                        _ => 0,
+                    }
+                })
+                .some_or_show("Failed: No Vulkan format supported");
+
             Swapchain::new(
                 device.clone(),
                 window.clone(),
                 caps.min_image_count,
-                format::Format::B8G8R8A8Srgb,
+                format.0,
                 dimensions,
                 1,
                 image_usage,
@@ -378,7 +394,7 @@ impl Graphics {
                 swapchain::PresentMode::Fifo,
                 true,
                 None,
-            ).expect("failed to create swapchain")
+            ).ok_or_show(|e| format!("Failed to create swapchain: {}", e))
         };
 
         let dim = images[0].dimensions();
@@ -400,7 +416,7 @@ impl Graphics {
                     .map(|position| SecondVertex { position }),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
-            ).expect("failed to create buffer");
+            ).ok_or_show(|e| format!("Failed to create buffer: {}", e));
 
         let (cursor_vertex_buffer, cursor_vertex_buffer_future) =
             ImmutableBuffer::from_iter(
@@ -416,7 +432,7 @@ impl Graphics {
                     .map(|position| SecondVertex { position }),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
-            ).expect("failed to create buffer");
+            ).ok_or_show(|e| format!("Failed to create buffer: {}", e));
 
         let (cursor_texture, cursor_tex_future) = {
             let mut cursor_path = "assets/cursor.png";
@@ -469,31 +485,31 @@ impl Graphics {
         let cursor_tex_dim = cursor_texture.dimensions().width_height();
 
         let draw1_vs =
-            shader::draw1_vs::Shader::load(device.clone()).expect("failed to create shader module");
+            shader::draw1_vs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
         let draw1_fs =
-            shader::draw1_fs::Shader::load(device.clone()).expect("failed to create shader module");
+            shader::draw1_fs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
         let draw1_eraser_fs = shader::draw1_eraser_fs::Shader::load(device.clone())
-            .expect("failed to create shader module");
+            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
 
         let eraser1_cs = shader::eraser1_cs::Shader::load(device.clone())
-            .expect("failed to create shader module");
+            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
         let eraser2_cs = shader::eraser2_cs::Shader::load(device.clone())
-            .expect("failed to create shader module");
+            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
 
         let draw2_vs =
-            shader::draw2_vs::Shader::load(device.clone()).expect("failed to create shader module");
+            shader::draw2_vs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
         let draw2_fs =
-            shader::draw2_fs::Shader::load(device.clone()).expect("failed to create shader module");
+            shader::draw2_fs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
 
         let cursor_vs = shader::cursor_vs::Shader::load(device.clone())
-            .expect("failed to create shader module");
+            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
         let cursor_fs = shader::cursor_fs::Shader::load(device.clone())
-            .expect("failed to create shader module");
+            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
 
         let imgui_vs =
-            shader::imgui_vs::Shader::load(device.clone()).expect("failed to create shader module");
+            shader::imgui_vs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
         let imgui_fs =
-            shader::imgui_fs::Shader::load(device.clone()).expect("failed to create shader module");
+            shader::imgui_fs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
 
         let render_pass = Arc::new(
             render_pass::CustomRenderPassDesc
@@ -502,7 +518,7 @@ impl Graphics {
         );
 
         let second_render_pass = Arc::new(
-            render_pass::SecondCustomRenderPassDesc
+            render_pass::SecondCustomRenderPassDesc::new(swapchain.format())
                 .build_render_pass(device.clone())
                 .ok_or_show(|e| format!("Failed to build second render pass: {}", e))
         );
@@ -627,7 +643,19 @@ impl Graphics {
         );
 
         let (colors_buffer, colors_buf_future) = {
-            let colors = colors::colors();
+            let mut colors = colors::colors();
+
+            if swapchain.format() == format::Format::B8G8R8A8Unorm {
+                // Well this is because I made coloe on Srgb surface...
+                for color in &mut colors {
+                    let lin_color = ::palette::LinSrgb::new(color[0], color[1], color[2]);
+                    let srgb_color = ::palette::Srgb::from_encoding(lin_color);
+                    color[0] = srgb_color.red;
+                    color[1] = srgb_color.green;
+                    color[2] = srgb_color.blue;
+                }
+            }
+
             ImmutableBuffer::from_iter(
                 colors.into_iter(),
                 // TODO: not all buffer usage
@@ -756,7 +784,7 @@ impl Graphics {
         let recreate = loop {
             let dimensions = window
                 .capabilities(self.device.physical_device())
-                .expect("failed to get surface capabilities")
+                .ok_or_show(|e| format!("Failed to get surface capabilities: {}", e))
                 .current_extent
                 .unwrap_or([1024, 768]);
 

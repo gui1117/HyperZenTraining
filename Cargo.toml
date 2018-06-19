@@ -32,6 +32,7 @@ fps_counter = "1"
 app_dirs2 = "2"
 rodio = "0.7"
 show_message = { git = "https://github.com/thiolliere/show_message/" }
+palette = "0.4"
 
 [replace]
 "vulkano-win:0.9.0" = { git = "https://github.com/thiolliere/vulkano" }

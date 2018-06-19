@@ -16,7 +16,7 @@ layout(set = 1, binding = 1) buffer Erased {
     float data[];
 } erased;
 
-float percent_divider = 23.0;
+float percent_divider = 33.0;
 
 void main() {
     uvec2 group = texture(tmp_image, gl_FragCoord.xy).rg;
@@ -25,7 +25,7 @@ void main() {
 
     vec2 pos = vec2(float(gl_FragCoord.x), float(gl_FragCoord.y));
 
-    out_color = colors.data[color];
+    out_color.rgba = colors.data[color];
 
     uint percent = 0;
 

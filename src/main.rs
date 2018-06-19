@@ -26,6 +26,7 @@ extern crate winit;
 extern crate app_dirs2;
 extern crate rodio;
 extern crate show_message;
+extern crate palette;
 
 #[macro_use]
 mod util;

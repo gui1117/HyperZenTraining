@@ -185,7 +185,7 @@ Config(
             scrollbar_grab_hovered: ImVec4Def(x: 0.40, y: 0.40, z: 0.80, w: 0.40),
             scrollbar_grab_active:  ImVec4Def(x: 0.80, y: 0.50, z: 0.50, w: 0.40),
             combo_bg:               ImVec4Def(x: 0.20, y: 0.20, z: 0.20, w: 0.99),
-            check_mark:             ImVec4Def(x: 0.90, y: 0.90, z: 0.90, w: 0.50),
+            check_mark:             ImVec4Def(x: 0.90, y: 0.90, z: 0.90, w: 1.00),
             slider_grab:            ImVec4Def(x: 1.00, y: 1.00, z: 1.00, w: 0.30),
             slider_grab_active:     ImVec4Def(x: 0.80, y: 0.50, z: 0.50, w: 1.00),
             button:                 ImVec4Def(x: 0.67, y: 0.40, z: 0.40, w: 0.60),

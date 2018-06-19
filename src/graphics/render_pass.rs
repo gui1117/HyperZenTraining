@@ -165,7 +165,17 @@ unsafe impl RenderPassDescClearValues<Vec<ClearValue>> for CustomRenderPassDesc 
     }
 }
 
-pub struct SecondCustomRenderPassDesc;
+pub struct SecondCustomRenderPassDesc {
+    swapchain_format: Format
+}
+
+impl SecondCustomRenderPassDesc {
+    pub fn new(swapchain_format: Format) -> Self {
+        SecondCustomRenderPassDesc {
+            swapchain_format,
+        }
+    }
+}
 
 unsafe impl RenderPassDesc for SecondCustomRenderPassDesc {
     #[inline]
@@ -177,7 +187,7 @@ unsafe impl RenderPassDesc for SecondCustomRenderPassDesc {
     fn attachment_desc(&self, id: usize) -> Option<LayoutAttachmentDescription> {
         match id {
             0 => Some(LayoutAttachmentDescription {
-                format: Format::B8G8R8A8Srgb,
+                format: self.swapchain_format,
                 samples: 1,
                 load: LoadOp::DontCare,
                 store: StoreOp::Store,

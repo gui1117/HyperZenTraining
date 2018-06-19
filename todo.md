@@ -5,7 +5,12 @@
 * [x] résolution du menu problème wayland
 * [x] faire que le volume change bien pendant qu'on le bouge dans le menu
 * [x] faire unwrap pour graphics avec message
+* [x] faire expect ...
+* [x] problème format robin:
+
 * [ ] faire control echap
+* [ ] enlever la gravité et mettre tout le temps au milieu ?
+* [ ] couleurs menu ?
 * [ ] taskbar icon windows ?
 
 * [ ] faire fullscreen sans redémarrage
