@@ -4,6 +4,7 @@
 * [x] faire icon
 * [x] résolution du menu problème wayland
 * [x] faire que le volume change bien pendant qu'on le bouge dans le menu
+* [x] faire unwrap pour graphics avec message
 * [ ] faire control echap
 * [ ] taskbar icon windows ?
 

@@ -163,7 +163,7 @@ impl Graphics {
                     queue.clone(),
                 )
             })
-            .unwrap().0;
+            .ok_or_show(|e| format!("Failed to create imgui texture: {}", e)).0;
 
         let imgui_descriptor_set = {
             Arc::new(
@@ -194,13 +194,13 @@ impl Graphics {
             device.clone(),
             images[0].dimensions(),
             format::Format::D16Unorm,
-        ).unwrap();
+        ).ok_or_show(|e| format!("Failed to create depth attachment image: {}", e));
 
         let hud_depth_buffer_attachment = AttachmentImage::transient(
             device.clone(),
             images[0].dimensions(),
             format::Format::D16Unorm,
-        ).unwrap();
+        ).ok_or_show(|e| format!("Failed to create hud depth attachment image: {}", e));
 
         let tmp_image_attachment = {
             let usage = ImageUsage {
@@ -213,7 +213,7 @@ impl Graphics {
                 images[0].dimensions(),
                 format::Format::R8G8B8A8Uint,
                 usage,
-            ).unwrap()
+            ).ok_or_show(|e| format!("Failed to create tmp swapchain attachment image: {}", e))
         };
 
         let tmp_erase_image_attachment = {
@@ -227,7 +227,7 @@ impl Graphics {
                 images[0].dimensions(),
                 format::Format::R8Uint,
                 usage,
-            ).unwrap()
+            ).ok_or_show(|e| format!("Failed to crate tmp erase attachment image: {}", e))
         };
 
         let framebuffer = Arc::new(
@@ -449,7 +449,7 @@ impl Graphics {
                 },
                 format::R8G8B8A8Unorm,
                 queue.clone(),
-            ).unwrap()
+            ).ok_or_show(|e| format!("Failed to create cursor image: {}", e))
         };
 
         let cursor_sampler = Sampler::new(
@@ -464,7 +464,7 @@ impl Graphics {
             1.0,
             0.0,
             0.0,
-        ).unwrap();
+        ).ok_or_show(|e| format!("Failed to create cursor sampler: {}", e));
 
         let cursor_tex_dim = cursor_texture.dimensions().width_height();
 
@@ -498,13 +498,13 @@ impl Graphics {
         let render_pass = Arc::new(
             render_pass::CustomRenderPassDesc
                 .build_render_pass(device.clone())
-                .unwrap(),
+                .ok_or_show(|e| format!("Failed to build render pass: {}", e))
         );
 
         let second_render_pass = Arc::new(
             render_pass::SecondCustomRenderPassDesc
                 .build_render_pass(device.clone())
-                .unwrap(),
+                .ok_or_show(|e| format!("Failed to build second render pass: {}", e))
         );
 
         let draw1_pipeline = Arc::new(
