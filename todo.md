@@ -7,7 +7,7 @@
 * [x] faire unwrap pour graphics avec message
 * [x] faire expect ...
 * [x] problème format robin:
-* [ ] HELP: dit ce qui est présent (sans préciser effaceur ou pas)
+* [x] HELP: dit ce qui est présent (sans préciser effaceur ou pas)
 
 * [ ] faire control echap
 * [ ] enlever la gravité et mettre tout le temps au milieu ?
