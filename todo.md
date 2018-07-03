@@ -7,14 +7,22 @@
 * [x] faire unwrap pour graphics avec message
 * [x] faire expect ...
 * [x] problème format robin:
+* [ ] HELP: dit ce qui est présent (sans préciser effaceur ou pas)
 
 * [ ] faire control echap
 * [ ] enlever la gravité et mettre tout le temps au milieu ?
-* [ ] couleurs menu ?
 * [ ] taskbar icon windows ?
 
 * [ ] faire fullscreen sans redémarrage
 * [ ] faire port macos
+
+### BETA
+
+* regarder si les teleporteurs on doive sortir puis rerentrer
+* niveau 5 rend pas mal fou ?
+* peut être mieux expliquer le principe des murs invisibles
+* les traits clair sur l'arme ne se voient pas assez
+* peut être changer la musique
 
 ###
 

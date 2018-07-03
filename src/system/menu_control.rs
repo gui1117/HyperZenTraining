@@ -73,6 +73,11 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                     menu_state.state = ::resource::MenuStateState::Pause;
                 }
             }
+            ::resource::MenuStateState::Help => {
+                if menu_state.help_ok_button {
+                    menu_state.state = ::resource::MenuStateState::Pause;
+                }
+            }
             ::resource::MenuStateState::CreateCustom => {
                 save.set_custom_level_conf_lazy(menu_state.custom_level_conf.clone());
 
@@ -187,6 +192,10 @@ impl<'a> ::specs::System<'a> for MenuPauseControlSystem {
                 if menu_state.fullscreen_checkbox {
                     save.toggle_fullscreen();
                     menu_state.state = ::resource::MenuStateState::Restart;
+                }
+
+                if menu_state.help_button {
+                    menu_state.state = ::resource::MenuStateState::Help;
                 }
 
                 save.set_mouse_sensibility_lazy(menu_state.mouse_sensibility_input);

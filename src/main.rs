@@ -182,6 +182,7 @@ fn new_game() -> ControlFlow {
     world.register::<::component::Proximitor>();
     world.register::<::component::FollowPlayer>();
     world.register::<::component::PhysicSensor>();
+    world.add_resource(::resource::Help(String::new()));
     world.add_resource(graphics.clone());
     world.add_resource(Some(imgui));
     world.add_resource(::resource::Events(vec![]));
@@ -207,6 +208,7 @@ fn new_game() -> ControlFlow {
 
     let mut pause_update_dispatcher = ::specs::DispatcherBuilder::new()
         .add(::system::MenuPauseControlSystem::new(), "menu_pause", &[])
+        .add(::system::HelpSystem, "help", &[])
         .add(::system::AudioSystem, "audio", &[])
         .build();
 

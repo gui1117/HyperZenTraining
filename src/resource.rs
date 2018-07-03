@@ -396,6 +396,7 @@ pub enum MenuStateState {
     Pause,
     Input(Input),
     Game,
+    Help,
     Restart,
     CreateCustom,
 }
@@ -450,6 +451,8 @@ pub struct MenuState {
     pub set_left_button: bool,
     pub restart_now_button: bool,
     pub restart_later_button: bool,
+    pub help_ok_button: bool,
+    pub help_button: bool,
     pub set_right_button: bool,
     pub quit_button: bool,
     pub levels_button: [bool; 16],
@@ -472,6 +475,7 @@ impl MenuState {
             MenuStateState::Restart => true,
             MenuStateState::CreateCustom => true,
             MenuStateState::Game => false,
+            MenuStateState::Help => true,
         }
     }
 
@@ -486,6 +490,8 @@ impl MenuState {
             set_shoot_button: false,
             restart_now_button: false,
             restart_later_button: false,
+            help_ok_button: false,
+            help_button: false,
             set_forward_button: false,
             set_backward_button: false,
             set_left_button: false,
@@ -504,14 +510,15 @@ impl MenuState {
         }
     }
 
-    pub fn build_ui(&mut self, ui: &::imgui::Ui, save: &Save, vulkan_instance: &VulkanInstance) {
+    pub fn build_ui(&mut self, ui: &::imgui::Ui, save: &Save, vulkan_instance: &VulkanInstance, help: &String) {
         let (width, height) = ui.imgui().display_size();
         let button_size = (::CONFIG.menu_width - 16.0, 30.0);
         let small_button_size = (80.0, 20.0);
         let medium_button_size = (::CONFIG.menu_width/3.0-12.0, 30.0);
+        let medium_button_size_2 = (::CONFIG.menu_width*2.0/3.0 - 16.0, 30.0);
 
         match self.state {
-            MenuStateState::Pause | MenuStateState::Input(_) | MenuStateState::Restart => {
+            MenuStateState::Pause | MenuStateState::Input(_) | MenuStateState::Restart | MenuStateState::Help => {
                 let inputs = if let MenuStateState::Pause = self.state {
                     true
                 } else {
@@ -529,6 +536,7 @@ impl MenuState {
                         self.continue_button = ui.button(im_str!("Continue"), button_size);
                         self.return_hall_button = ui.button(im_str!("Return to hall"), button_size);
                         self.create_custom_button = ui.button(im_str!("Create Custom level"), button_size);
+                        self.help_button = ui.button(im_str!("Help"), button_size);
                         self.quit_button = ui.button(im_str!("Quit"), button_size);
                         ui.separator();
                         ui.text("Audio:");
@@ -649,7 +657,21 @@ impl MenuState {
                         self.restart_later_button = ui.button(im_str!("Restart later"), medium_button_size);
                     });
             }
+            MenuStateState::Help=> {
+                ui.window(im_str!("Help"))
+                    .collapsible(false)
+                    .size((::CONFIG.menu_width/1.5, ::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
+                    .position((width/2.0-::CONFIG.menu_width/3.0, height/2.0-::CONFIG.menu_height/4.0), ::imgui::ImGuiCond::Always)
+                    .resizable(false)
+                    .movable(false)
+                    .build(|| {
+                        ui.text(help);
+                        self.help_ok_button = ui.button(im_str!("OK"), medium_button_size_2);
+                    });
+            }
             _ => (),
         }
     }
 }
+
+pub struct Help(pub String);

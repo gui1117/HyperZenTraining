@@ -20,6 +20,7 @@ mod teleport;
 mod hook;
 mod reducer;
 mod activated;
+mod help;
 mod player_death;
 
 pub use self::teleport::TeleportSystem;
@@ -45,3 +46,4 @@ pub use self::depth_ball::DepthBallSystem;
 pub use self::attracted::AttractedSystem;
 pub use self::activated::ActivateSystem;
 pub use self::player_death::PlayerDeathSystem;
+pub use self::help::HelpSystem;
