@@ -1,3 +1,5 @@
+set -e
+
 APPVEYOR_WIN64_ARTEFACT=$1
 APPVEYOR_WIN32_ARTEFACT=$2
 STEAM_CMD=/home/thiolliere/steam-sdk/tools/ContentBuilder/builder_linux/steamcmd.sh
@@ -11,11 +13,8 @@ mv hyperzen-training-x86_64-pc-windows-msvc.exe hyperzen-training-win64.exe
 mv hyperzen-training-i686-pc-windows-msvc.exe hyperzen-training-win32.exe
 cd ../..
 
-cargo build --release
-cargo build --release --target i686-unknown-linux-gnu
-
-cp target/release/hyperzen-training target/artefact/hyperzen-training-linux64
-cp target/i686-unknown-linux-gnu/release/hyperzen-training target/artefact/hyperzen-training-linux32
+cp hyperzen-training-linux64 target/artefact/
+cp hyperzen-training-linux32 target/artefact/
 
 rm -rf target/steam/
 mkdir -p target/steam/output/
