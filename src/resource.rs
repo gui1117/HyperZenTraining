@@ -81,6 +81,28 @@ impl fmt::Display for PossibleInput {
     }
 }
 
+impl PossibleInput {
+    fn text(&self, text: &Text) -> String {
+        match *self {
+            PossibleInput::VirtualKeyCode(code) => {
+                format!("{} {:?}", text.key, code)
+            },
+            PossibleInput::MouseButton(MouseButton::Other(n)) => {
+                format!("{} {:?}", text.mouse_other, n)
+            },
+            PossibleInput::MouseButton(MouseButton::Middle) => {
+                format!("{}", text.mouse_middle)
+            },
+            PossibleInput::MouseButton(MouseButton::Left) => {
+                format!("{}", text.mouse_left)
+            },
+            PossibleInput::MouseButton(MouseButton::Right) => {
+                format!("{}", text.mouse_right)
+            },
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub enum Input {
     Shoot,
@@ -675,3 +697,56 @@ impl MenuState {
 }
 
 pub struct Help(pub String);
+
+pub struct Text {
+    pause: String,
+    continue_: String,
+    return_to_hall: String,
+    create_custom_level: String,
+    help: String,
+    quit: String,
+    audio: String,
+    music_volume: String,
+    effect_volume: String,
+    video: String,
+    fullscreen: String,
+    controls: String,
+    reset: String,
+    field_of_view: String,
+    mouse_sensibility: String,
+    shoot: String,
+    forward: String,
+    backward: String,
+    right: String,
+    left: String,
+    credits: String,
+    custom: String,
+    configuration: String,
+    size: String,
+    x_shift: String,
+    y_shift: String,
+    filling: String,
+    attracted_eraser: String,
+    avoider_eraser: String,
+    bouncer_eraser: String,
+    motionless_eraser: String,
+    turret: String,
+    input: String,
+    set_input_or_escape: String,
+    restart: String,
+    setting_needs_to_restart_the_game: String,
+    restart_now: String,
+    restart_later: String,
+    ok: String,
+    attracted: String,
+    avoider: String,
+    bouncer: String,
+    motionless: String,
+    go_to_portal: String,
+    remains: String,
+    mouse_middle: String,
+    mouse_left: String,
+    mouse_right: String,
+    mouse_other: String,
+    key: String,
+};

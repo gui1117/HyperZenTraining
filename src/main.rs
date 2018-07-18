@@ -27,6 +27,8 @@ extern crate app_dirs2;
 extern crate rodio;
 extern crate show_message;
 extern crate palette;
+extern crate locale_config;
+extern crate fluent_locale;
 
 #[macro_use]
 mod util;
