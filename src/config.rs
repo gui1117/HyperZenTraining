@@ -5,7 +5,7 @@ use rand;
 use std::fs::File;
 use std::io::Cursor;
 use std::io::Read;
-use show_message::OkOrShow;
+use show_message::UnwrapOrShow;
 
 const FILENAME: &str = "assets/config.ron";
 
@@ -15,12 +15,12 @@ lazy_static! {
             Box::new(Cursor::new(include_bytes!("../assets/config.ron").iter())) as Box<Read>
         } else {
             Box::new(File::open(FILENAME)
-                .ok_or_show(|e| format!("Failed to open config file at {}: {}", FILENAME, e)))
+                .unwrap_or_else_show(|e| format!("Failed to open config file at {}: {}", FILENAME, e)))
                 as Box<Read>
         };
 
         let mut config: Config = ::ron::de::from_reader(file)
-            .ok_or_show(|e| format!("Failed to parse config file {}: {}", FILENAME, e));
+            .unwrap_or_else_show(|e| format!("Failed to parse config file {}: {}", FILENAME, e));
 
         if let Ok(Ok(val)) = ::std::env::var("HYPERZEN_TRAINING_SHOW_WEAPON").map(|val| val.parse::<bool>()) {
             config.player_show_weapon = val;

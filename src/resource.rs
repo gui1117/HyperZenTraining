@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::fmt;
 use util::Direction;
 pub use audio::Audio;
-use show_message::OkOrShow;
+use show_message::UnwrapOrShow;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub struct Events(pub Vec<::winit::Event>);
@@ -298,9 +298,9 @@ impl Save {
     pub fn save(&self) {
         let string = ::ron::ser::to_string(&self).unwrap();
         let mut file = File::create(SAVE_PATH.as_path())
-            .ok_or_show(|e| format!("Failed to create save file at {}: {}", SAVE_PATH.display(), e));
+            .unwrap_or_else_show(|e| format!("Failed to create save file at {}: {}", SAVE_PATH.display(), e));
         file.write_all(string.as_bytes())
-            .ok_or_show(|e| format!("Failed to write to save file {}: {}", SAVE_PATH.display(), e));
+            .unwrap_or_else_show(|e| format!("Failed to write to save file {}: {}", SAVE_PATH.display(), e));
     }
 }
 

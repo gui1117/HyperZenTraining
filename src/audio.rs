@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use rodio::decoder::Decoder;
 use rodio::Source;
 use rodio::Sample;
-use show_message::OkOrShow;
+use show_message::UnwrapOrShow;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -301,9 +301,9 @@ lazy_static! {
                 .map(|s| {
                     let mut buffer = vec![];
                     let mut file = File::open(s)
-                        .ok_or_show(|e| format!("Failed to open sound {}: {}", s, e));
+                        .unwrap_or_else_show(|e| format!("Failed to open sound {}: {}", s, e));
                     file.read_to_end(&mut buffer)
-                        .ok_or_show(|e| format!("Failed to read sound {}: {}", s, e));
+                        .unwrap_or_else_show(|e| format!("Failed to read sound {}: {}", s, e));
                     Cursor::new(buffer)
                 })
                 .collect::<Vec<_>>()
@@ -312,10 +312,10 @@ lazy_static! {
         let mut sound_buffers = vec![];
         for (file, filename) in sound_files.drain(..).zip(sound_filenames.iter()) {
             let sound = Decoder::new(file)
-                .ok_or_show(|e| format!("Failed to decode sound {}: {}", filename, e));
+                .unwrap_or_else_show(|e| format!("Failed to decode sound {}: {}", filename, e));
 
             let sound = SoundBuffer::new(sound)
-                .ok_or_show(|e| format!("Invalid sound: {}: {}", filename, e));
+                .unwrap_or_else_show(|e| format!("Invalid sound: {}: {}", filename, e));
 
             sound_buffers.push(sound);
         }
@@ -375,14 +375,14 @@ impl Audio {
         } else {
             let mut buffer = vec![];
             let mut file = File::open(music_filename)
-                .ok_or_show(|e| format!("Failed to open sound {}: {}", music_filename, e));
+                .unwrap_or_else_show(|e| format!("Failed to open sound {}: {}", music_filename, e));
             file.read_to_end(&mut buffer)
-                .ok_or_show(|e| format!("Failed to read sound {}: {}", music_filename, e));
+                .unwrap_or_else_show(|e| format!("Failed to read sound {}: {}", music_filename, e));
             Cursor::new(buffer)
         };
 
         let music = Decoder::new(music_file)
-            .ok_or_show(|e| format!("Failed to decode sound {}: {}", music_filename, e))
+            .unwrap_or_else_show(|e| format!("Failed to decode sound {}: {}", music_filename, e))
             .repeat_infinite();
 
         let mut music_sink = ::rodio::Sink::new(&endpoint);

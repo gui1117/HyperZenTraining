@@ -18,7 +18,7 @@ use vulkano::instance::{PhysicalDevice, PhysicalDeviceType};
 use vulkano::format;
 use vulkano::sync::{now, GpuFuture};
 
-use show_message::{OkOrShow, SomeOrShow};
+use show_message::UnwrapOrShow;
 
 use std::sync::Arc;
 use std::fs::File;
@@ -163,7 +163,7 @@ impl Graphics {
                     queue.clone(),
                 )
             })
-            .ok_or_show(|e| format!("Failed to create imgui texture: {}", e)).0;
+            .unwrap_or_else_show(|e| format!("Failed to create imgui texture: {}", e)).0;
 
         let imgui_descriptor_set = {
             Arc::new(
@@ -194,13 +194,13 @@ impl Graphics {
             device.clone(),
             images[0].dimensions(),
             format::Format::D16Unorm,
-        ).ok_or_show(|e| format!("Failed to create depth attachment image: {}", e));
+        ).unwrap_or_else_show(|e| format!("Failed to create depth attachment image: {}", e));
 
         let hud_depth_buffer_attachment = AttachmentImage::transient(
             device.clone(),
             images[0].dimensions(),
             format::Format::D16Unorm,
-        ).ok_or_show(|e| format!("Failed to create hud depth attachment image: {}", e));
+        ).unwrap_or_else_show(|e| format!("Failed to create hud depth attachment image: {}", e));
 
         let tmp_image_attachment = {
             let usage = ImageUsage {
@@ -213,7 +213,7 @@ impl Graphics {
                 images[0].dimensions(),
                 format::Format::R8G8B8A8Uint,
                 usage,
-            ).ok_or_show(|e| format!("Failed to create tmp swapchain attachment image: {}", e))
+            ).unwrap_or_else_show(|e| format!("Failed to create tmp swapchain attachment image: {}", e))
         };
 
         let tmp_erase_image_attachment = {
@@ -227,7 +227,7 @@ impl Graphics {
                 images[0].dimensions(),
                 format::Format::R8Uint,
                 usage,
-            ).ok_or_show(|e| format!("Failed to crate tmp erase attachment image: {}", e))
+            ).unwrap_or_else_show(|e| format!("Failed to crate tmp erase attachment image: {}", e))
         };
 
         let framebuffer = Arc::new(
@@ -324,7 +324,7 @@ impl Graphics {
                     PhysicalDeviceType::Other => 0,
                 }
             })
-            .some_or_show("Failed to enumerate Vulkan devices");
+            .unwrap_or_show("Failed to enumerate Vulkan devices");
         save.set_vulkan_device_uuid_lazy(physical.uuid());
 
         let queue_family = physical
@@ -333,7 +333,7 @@ impl Graphics {
                 q.supports_graphics() && q.supports_compute()
                     && window.is_supported(q).unwrap_or(false)
             })
-            .some_or_show("Failed to find a vulkan graphical queue family");
+            .unwrap_or_show("Failed to find a vulkan graphical queue family");
 
         let (device, mut queues) = {
             let device_ext = DeviceExtensions {
@@ -346,16 +346,16 @@ impl Graphics {
                 physical.supported_features(),
                 &device_ext,
                 [(queue_family, 0.5)].iter().cloned(),
-            ).ok_or_show(|e| format!("Failed to create vulkan device: {}", e))
+            ).unwrap_or_else_show(|e| format!("Failed to create vulkan device: {}", e))
         };
 
         let queue = queues.next()
-            .some_or_show("Failed to find queue with supported features");
+            .unwrap_or_show("Failed to find queue with supported features");
 
         let (swapchain, images) = {
             let caps = window
                 .capabilities(physical)
-                .ok_or_show(|e| format!("Failed to get surface capabilities: {}", e));
+                .unwrap_or_else_show(|e| format!("Failed to get surface capabilities: {}", e));
 
             let dimensions = caps.current_extent.unwrap_or([1280, 1024]);
             let image_usage = ImageUsage {
@@ -378,7 +378,7 @@ impl Graphics {
                         _ => 0,
                     }
                 })
-                .some_or_show("Failed: No Vulkan format supported");
+                .unwrap_or_show("Failed: No Vulkan format supported");
 
             Swapchain::new(
                 device.clone(),
@@ -394,7 +394,7 @@ impl Graphics {
                 swapchain::PresentMode::Fifo,
                 true,
                 None,
-            ).ok_or_show(|e| format!("Failed to create swapchain: {}", e))
+            ).unwrap_or_else_show(|e| format!("Failed to create swapchain: {}", e))
         };
 
         let dim = images[0].dimensions();
@@ -416,7 +416,7 @@ impl Graphics {
                     .map(|position| SecondVertex { position }),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
-            ).ok_or_show(|e| format!("Failed to create buffer: {}", e));
+            ).unwrap_or_else_show(|e| format!("Failed to create buffer: {}", e));
 
         let (cursor_vertex_buffer, cursor_vertex_buffer_future) =
             ImmutableBuffer::from_iter(
@@ -432,7 +432,7 @@ impl Graphics {
                     .map(|position| SecondVertex { position }),
                 BufferUsage::vertex_buffer(),
                 queue.clone(),
-            ).ok_or_show(|e| format!("Failed to create buffer: {}", e));
+            ).unwrap_or_else_show(|e| format!("Failed to create buffer: {}", e));
 
         let (cursor_texture, cursor_tex_future) = {
             let mut cursor_path = "assets/cursor.png";
@@ -441,12 +441,12 @@ impl Graphics {
                 Box::new(Cursor::new(include_bytes!("../../assets/cursor.png").iter())) as Box<Read>
             } else {
                 Box::new(File::open(cursor_path)
-                    .ok_or_show(|e| format!("Failed to open cursor file cursor.png {}: {}", cursor_path, e)))
+                    .unwrap_or_else_show(|e| format!("Failed to open cursor file cursor.png {}: {}", cursor_path, e)))
                     as Box<Read>
             };
 
             let (info, mut reader) = ::png::Decoder::new(file).read_info()
-                .ok_or_show(|e| format!("Failed to decode cursor image {}: {}", cursor_path, e));
+                .unwrap_or_else_show(|e| format!("Failed to decode cursor image {}: {}", cursor_path, e));
 
             if info.color_type != ::png::ColorType::RGBA {
                 ::show_message::show(format!("Failed to cursor png image {} must be RGBA", cursor_path));
@@ -455,7 +455,7 @@ impl Graphics {
 
             let mut buf = vec![0; info.buffer_size()];
             reader.next_frame(&mut buf)
-                .ok_or_show(|e| format!("Failed to decode cursor png image {}: {}", cursor_path, e));
+                .unwrap_or_else_show(|e| format!("Failed to decode cursor png image {}: {}", cursor_path, e));
 
             ImmutableImage::from_iter(
                 buf.into_iter(),
@@ -465,7 +465,7 @@ impl Graphics {
                 },
                 format::R8G8B8A8Unorm,
                 queue.clone(),
-            ).ok_or_show(|e| format!("Failed to create cursor image: {}", e))
+            ).unwrap_or_else_show(|e| format!("Failed to create cursor image: {}", e))
         };
 
         let cursor_sampler = Sampler::new(
@@ -480,47 +480,47 @@ impl Graphics {
             1.0,
             0.0,
             0.0,
-        ).ok_or_show(|e| format!("Failed to create cursor sampler: {}", e));
+        ).unwrap_or_else_show(|e| format!("Failed to create cursor sampler: {}", e));
 
         let cursor_tex_dim = cursor_texture.dimensions().width_height();
 
         let draw1_vs =
-            shader::draw1_vs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            shader::draw1_vs::Shader::load(device.clone()).unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
         let draw1_fs =
-            shader::draw1_fs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            shader::draw1_fs::Shader::load(device.clone()).unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
         let draw1_eraser_fs = shader::draw1_eraser_fs::Shader::load(device.clone())
-            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            .unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
 
         let eraser1_cs = shader::eraser1_cs::Shader::load(device.clone())
-            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            .unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
         let eraser2_cs = shader::eraser2_cs::Shader::load(device.clone())
-            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            .unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
 
         let draw2_vs =
-            shader::draw2_vs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            shader::draw2_vs::Shader::load(device.clone()).unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
         let draw2_fs =
-            shader::draw2_fs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            shader::draw2_fs::Shader::load(device.clone()).unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
 
         let cursor_vs = shader::cursor_vs::Shader::load(device.clone())
-            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            .unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
         let cursor_fs = shader::cursor_fs::Shader::load(device.clone())
-            .ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            .unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
 
         let imgui_vs =
-            shader::imgui_vs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            shader::imgui_vs::Shader::load(device.clone()).unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
         let imgui_fs =
-            shader::imgui_fs::Shader::load(device.clone()).ok_or_show(|e| format!("Failed to create shader module: {}", e));
+            shader::imgui_fs::Shader::load(device.clone()).unwrap_or_else_show(|e| format!("Failed to create shader module: {}", e));
 
         let render_pass = Arc::new(
             render_pass::CustomRenderPassDesc
                 .build_render_pass(device.clone())
-                .ok_or_show(|e| format!("Failed to build render pass: {}", e))
+                .unwrap_or_else_show(|e| format!("Failed to build render pass: {}", e))
         );
 
         let second_render_pass = Arc::new(
             render_pass::SecondCustomRenderPassDesc::new(swapchain.format())
                 .build_render_pass(device.clone())
-                .ok_or_show(|e| format!("Failed to build second render pass: {}", e))
+                .unwrap_or_else_show(|e| format!("Failed to build second render pass: {}", e))
         );
 
         let draw1_pipeline = Arc::new(
@@ -784,7 +784,7 @@ impl Graphics {
         let recreate = loop {
             let dimensions = window
                 .capabilities(self.device.physical_device())
-                .ok_or_show(|e| format!("Failed to get surface capabilities: {}", e))
+                .unwrap_or_else_show(|e| format!("Failed to get surface capabilities: {}", e))
                 .current_extent
                 .unwrap_or([1024, 768]);
 
@@ -801,7 +801,7 @@ impl Graphics {
         };
 
         let (new_swapchain, new_images) = recreate
-            .ok_or_show(|e| format!("Failed to recreate swapchain: {}", e));
+            .unwrap_or_else_show(|e| format!("Failed to recreate swapchain: {}", e));
 
         self.dim = new_images[0].dimensions();
         self.images = new_images;

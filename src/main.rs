@@ -43,7 +43,7 @@ mod level;
 pub use config::CONFIG;
 
 use vulkano_win::VkSurfaceBuild;
-use show_message::OkOrShow;
+use show_message::UnwrapOrShow;
 
 use vulkano::swapchain;
 use vulkano::sync::now;
@@ -110,7 +110,7 @@ fn new_game() -> ControlFlow {
         let extensions = vulkano_win::required_extensions();
         let info = app_info_from_cargo_toml!();
         Instance::new(Some(&info), &extensions, None)
-            .ok_or_show(|e| format!("Failed to create Vulkan instance.\nPlease check if you graphic cards support Vulkan and if so install the driver\n\n{}", e))
+            .unwrap_or_else_show(|e| format!("Failed to create Vulkan instance.\nPlease check if you graphic cards support Vulkan and if so install the driver\n\n{}", e))
     };
 
     let mut events_loop = winit::EventsLoop::new();
@@ -126,20 +126,20 @@ fn new_game() -> ControlFlow {
         } else {
             let mut data = vec![];
             let mut file = File::open("assets/icon.png")
-                .ok_or_show(|e| format!("Failed to open \"assets/icon.png\": {}", e));
+                .unwrap_or_else_show(|e| format!("Failed to open \"assets/icon.png\": {}", e));
             file.read_to_end(&mut data)
-                .ok_or_show(|e| format!("Failed to read \"assets/icon.png\": {}", e));
+                .unwrap_or_else_show(|e| format!("Failed to read \"assets/icon.png\": {}", e));
             data
         };
         Icon::from_bytes(&icon_data)
-            .ok_or_show(|e| format!("Failed to load icon: {}", e))
+            .unwrap_or_else_show(|e| format!("Failed to load icon: {}", e))
     };
 
     let window = window_builder
         .with_window_icon(Some(icon))
         .with_title("HyperZen Training")
         .build_vk_surface(&events_loop, instance.clone())
-        .ok_or_show(|e| format!("Failed to build vulkan window: {}\n\n{:#?}", e, e));
+        .unwrap_or_else_show(|e| format!("Failed to build vulkan window: {}\n\n{:#?}", e, e));
 
     window.window().set_cursor(winit::MouseCursor::NoneCursor);
 
@@ -297,9 +297,9 @@ fn new_game() -> ControlFlow {
                         ..
                     } => {
                         try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Normal), 100, 10)
-                            .ok_or_show(|e| format!("Failed to reset cursor: {}", e));
+                            .unwrap_or_else_show(|e| format!("Failed to reset cursor: {}", e));
                         try_multiple_time!(window.window().set_cursor_state(winit::CursorState::Grab), 100, 10)
-                            .ok_or_show(|e| format!("Failed to grab cursor: {}", e));
+                            .unwrap_or_else_show(|e| format!("Failed to grab cursor: {}", e));
                         false
                     }
                     Event::WindowEvent {
@@ -402,7 +402,7 @@ fn new_game() -> ControlFlow {
         }
 
         let (image_num, acquire_future) = next_image
-            .ok_or_show(|e| format!("Failed to acquire next image: {}", e));
+            .unwrap_or_else_show(|e| format!("Failed to acquire next image: {}", e));
 
         world.write_resource::<::resource::Rendering>().image_num = Some(image_num);
         world.write_resource::<::resource::Rendering>().size = window.window().get_inner_size();
