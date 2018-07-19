@@ -11,7 +11,6 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::time::Duration;
 use std::collections::HashMap;
-use std::fmt;
 use std::fs;
 use std::ffi::OsStr;
 use std::io::Read;

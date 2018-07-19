@@ -109,7 +109,6 @@ fn new_game() -> ControlFlow {
     let mut save = ::resource::Save::new();
 
     let text = ::resource::Text::load();
-    show_message::show(&text.vulkan_error);
 
     let instance = {
         let extensions = vulkano_win::required_extensions();
