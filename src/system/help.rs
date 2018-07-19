@@ -9,14 +9,15 @@ impl<'a> ::specs::System<'a> for HelpSystem {
         ::specs::ReadStorage<'a, ::component::Bouncer>,
         ::specs::ReadStorage<'a, ::component::Motionless>,
         ::specs::FetchMut<'a, ::resource::Help>,
+        ::specs::Fetch<'a, ::resource::Text>,
     );
 
-    fn run(&mut self, (attracted, avoider, bouncer, motionless, mut help): Self::SystemData) {
+    fn run(&mut self, (attracted, avoider, bouncer, motionless, mut help, text): Self::SystemData) {
         let r = [
-            (attracted.join().count(), "Attracted"),
-            (avoider.join().count(), "Avoider"),
-            (bouncer.join().count(), "Bouncer"),
-            (motionless.join().count(), "Motionless"),
+            (attracted.join().count(), &text.attracted),
+            (avoider.join().count(), &text.avoider),
+            (bouncer.join().count(), &text.bouncer),
+            (motionless.join().count(), &text.motionless),
         ];
 
         let remaining = r
@@ -25,11 +26,11 @@ impl<'a> ::specs::System<'a> for HelpSystem {
             .collect::<Vec<_>>();
 
         if remaining.len() == 0 {
-            help.0 = "Go to the portal".into();
+            help.0 = text.go_to_portal.clone();
         } else {
-            help.0 = String::from("Remains:");
+            help.0 = text.remains.clone();
             for (count, name) in remaining {
-                help.0.push_str(&format!("\n- {}: {}", name, count));
+                help.0.push_str(&format!("\n  {} - {}", name, count));
             }
         }
     }

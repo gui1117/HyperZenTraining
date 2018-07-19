@@ -108,11 +108,14 @@ fn new_game() -> ControlFlow {
     ::std::env::set_var("WINIT_UNIX_BACKEND", "x11");
     let mut save = ::resource::Save::new();
 
+    let text = ::resource::Text::load();
+    show_message::show(&text.vulkan_error);
+
     let instance = {
         let extensions = vulkano_win::required_extensions();
         let info = app_info_from_cargo_toml!();
         Instance::new(Some(&info), &extensions, None)
-            .unwrap_or_else_show(|e| format!("Failed to create Vulkan instance.\nPlease check if you graphic cards support Vulkan and if so install the driver\n\n{}", e))
+            .unwrap_or_else_show(|e| format!("{}\n\n{}", text.vulkan_error, e))
     };
 
     let mut events_loop = winit::EventsLoop::new();
@@ -185,6 +188,7 @@ fn new_game() -> ControlFlow {
     world.register::<::component::FollowPlayer>();
     world.register::<::component::PhysicSensor>();
     world.add_resource(::resource::Help(String::new()));
+    world.add_resource(text);
     world.add_resource(graphics.clone());
     world.add_resource(Some(imgui));
     world.add_resource(::resource::Events(vec![]));

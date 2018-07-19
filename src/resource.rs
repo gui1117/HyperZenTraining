@@ -3,6 +3,7 @@ use vulkano::instance::Instance;
 use vulkano::instance::PhysicalDevice;
 use app_dirs2::{AppInfo, app_root, AppDataType};
 
+use imgui::ImString;
 pub use graphics::Graphics;
 use std::io::Write;
 use std::sync::Arc;
@@ -11,9 +12,14 @@ use std::path::PathBuf;
 use std::time::Duration;
 use std::collections::HashMap;
 use std::fmt;
+use std::fs;
+use std::ffi::OsStr;
+use std::io::Read;
+use std::io::Cursor;
 use util::Direction;
 pub use audio::Audio;
 use show_message::UnwrapOrShow;
+use winit::MouseButton;
 
 pub type PhysicWorld = ::nphysics::world::World<f32>;
 pub struct Events(pub Vec<::winit::Event>);
@@ -66,19 +72,6 @@ pub enum PossibleInput {
     VirtualKeyCode(::winit::VirtualKeyCode),
     #[serde(with = "::util::MouseButtonDef")]
     MouseButton(::winit::MouseButton),
-}
-
-impl fmt::Display for PossibleInput {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            PossibleInput::VirtualKeyCode(code) => {
-                write!(f, "key {:?}", code)
-            },
-            PossibleInput::MouseButton(bouton) => {
-                write!(f, "mouse {:?}", bouton)
-            },
-        }
-    }
 }
 
 impl PossibleInput {
@@ -532,7 +525,7 @@ impl MenuState {
         }
     }
 
-    pub fn build_ui(&mut self, ui: &::imgui::Ui, save: &Save, vulkan_instance: &VulkanInstance, help: &String) {
+    pub fn build_ui(&mut self, ui: &::imgui::Ui, save: &Save, vulkan_instance: &VulkanInstance, text: &Text, help: &String) {
         let (width, height) = ui.imgui().display_size();
         let button_size = (::CONFIG.menu_width - 16.0, 30.0);
         let small_button_size = (80.0, 20.0);
@@ -547,7 +540,7 @@ impl MenuState {
                     false
                 };
 
-                ui.window(im_str!("Pause"))
+                ui.window(&ImString::new(text.pause.clone()))
                     .collapsible(false)
                     .inputs(inputs)
                     .size((::CONFIG.menu_width, ::CONFIG.menu_height), ::imgui::ImGuiCond::Always)
@@ -555,20 +548,20 @@ impl MenuState {
                     .resizable(false)
                     .movable(false)
                     .build(|| {
-                        self.continue_button = ui.button(im_str!("Continue"), button_size);
-                        self.return_hall_button = ui.button(im_str!("Return to hall"), button_size);
-                        self.create_custom_button = ui.button(im_str!("Create Custom level"), button_size);
-                        self.help_button = ui.button(im_str!("Help"), button_size);
-                        self.quit_button = ui.button(im_str!("Quit"), button_size);
+                        self.continue_button = ui.button(&ImString::new(text.continue_.clone()), button_size);
+                        self.return_hall_button = ui.button(&ImString::new(text.return_to_hall.clone()), button_size);
+                        self.create_custom_button = ui.button(&ImString::new(text.create_custom_level.clone()), button_size);
+                        self.help_button = ui.button(&ImString::new(text.help.clone()), button_size);
+                        self.quit_button = ui.button(&ImString::new(text.quit.clone()), button_size);
                         ui.separator();
-                        ui.text("Audio:");
-                        ui.slider_float(im_str!("Music volume"), &mut self.effect_volume_slider, 0.0, 1.0).build();
-                        ui.slider_float(im_str!("Effect volume"), &mut self.music_volume_slider, 0.0, 1.0).build();
+                        ui.text(&ImString::new(text.audio.clone()));
+                        ui.slider_float(&ImString::new(text.music_volume.clone()), &mut self.effect_volume_slider, 0.0, 1.0).build();
+                        ui.slider_float(&ImString::new(text.effect_volume.clone()), &mut self.music_volume_slider, 0.0, 1.0).build();
 
                         ui.separator();
-                        ui.text("Video:");
+                        ui.text(&ImString::new(text.video.clone()));
 
-                        self.fullscreen_checkbox = ui.checkbox(im_str!("Fullscreen"), &mut save.fullscreen());
+                        self.fullscreen_checkbox = ui.checkbox(&ImString::new(text.fullscreen.clone()), &mut save.fullscreen());
 
                         for device in PhysicalDevice::enumerate(vulkan_instance) {
                             let cond = save.vulkan_device_uuid()
@@ -588,66 +581,66 @@ impl MenuState {
                         }
 
                         ui.separator();
-                        ui.text("Controls:");
+                        ui.text(&ImString::new(text.controls.clone()));
                         ui.same_line(0.0);
-                        self.reset_button = ui.button(im_str!("Reset"), small_button_size);
+                        self.reset_button = ui.button(&ImString::new(text.reset.clone()), small_button_size);
 
-                        ui.slider_float(im_str!("Field of view"), &mut self.field_of_view_slider, 0.1, 2.0).build();
-                        ui.input_float(im_str!("Mouse sensibility"), &mut self.mouse_sensibility_input).build();
+                        ui.slider_float(&ImString::new(text.field_of_view.clone()), &mut self.field_of_view_slider, 0.1, 2.0).build();
+                        ui.input_float(&ImString::new(text.mouse_sensibility.clone()), &mut self.mouse_sensibility_input).build();
 
-                        self.set_shoot_button = ui.button(im_str!("Shoot"), small_button_size);
+                        self.set_shoot_button = ui.button(&ImString::new(text.shoot.clone()), small_button_size);
                         ui.same_line(0.0);
-                        ui.text(format!("[{}]", save.input(Input::Shoot)));
+                        ui.text(format!("[{}]", save.input(Input::Shoot).text(text)));
 
-                        self.set_forward_button = ui.button(im_str!("Forward"), small_button_size);
+                        self.set_forward_button = ui.button(&ImString::new(text.forward.clone()), small_button_size);
                         ui.same_line(0.0);
-                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Forward))));
+                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Forward)).text(text)));
 
-                        self.set_left_button = ui.button(im_str!("Left"), small_button_size);
+                        self.set_left_button = ui.button(&ImString::new(text.left.clone()), small_button_size);
                         ui.same_line(0.0);
-                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Left))));
+                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Left)).text(text)));
 
-                        self.set_backward_button = ui.button(im_str!("Backward"), small_button_size);
+                        self.set_backward_button = ui.button(&ImString::new(text.backward.clone()), small_button_size);
                         ui.same_line(0.0);
-                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Backward))));
+                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Backward)).text(text)));
 
-                        self.set_right_button = ui.button(im_str!("Right"), small_button_size);
+                        self.set_right_button = ui.button(&ImString::new(text.right.clone()), small_button_size);
                         ui.same_line(0.0);
-                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Right))));
+                        ui.text(format!("[{}]", save.input(Input::Direction(Direction::Right)).text(text)));
 
                         ui.separator();
-                        ui.text("Credits:");
+                        ui.text(&ImString::new(text.credits.clone()));
                         ui.text("    Guillaume Thiolliere  http://thiolliere.org");
                     });
             },
             MenuStateState::CreateCustom => {
-                ui.window(im_str!("Custom"))
+                ui.window(&ImString::new(text.custom.clone()))
                     .collapsible(false)
                     .size((::CONFIG.menu_width, ::CONFIG.menu_height), ::imgui::ImGuiCond::Always)
                     .position((width/2.0-::CONFIG.menu_width/2.0, height/2.0-::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
                     .resizable(false)
                     .movable(false)
                     .build(|| {
-                        self.custom_play_button = ui.button(im_str!("Play"), button_size);
-                        self.custom_return_button = ui.button(im_str!("Return"), button_size);
+                        self.custom_play_button = ui.button(&ImString::new(text.play.clone()), button_size);
+                        self.custom_return_button = ui.button(&ImString::new(text.return_.clone()), button_size);
                         ui.separator();
-                        ui.text("Configuration:");
+                        ui.text(&ImString::new(text.configuration.clone()));
 
-                        ui.slider_int(im_str!("size"), &mut self.custom_level_conf.maze_size, 5, 30).build();
-                        ui.checkbox(im_str!("X shift"), &mut self.custom_level_conf.x_shift);
+                        ui.slider_int(&ImString::new(text.size.clone()), &mut self.custom_level_conf.maze_size, 5, 30).build();
+                        ui.checkbox(&ImString::new(text.x_shift.clone()), &mut self.custom_level_conf.x_shift);
                         ui.same_line(0.0);
-                        ui.checkbox(im_str!("Y shift"), &mut self.custom_level_conf.y_shift);
+                        ui.checkbox(&ImString::new(text.y_shift.clone()), &mut self.custom_level_conf.y_shift);
 
-                        ui.slider_float(im_str!("filling"), &mut self.custom_level_conf.percent, 0.0, 30.0).build();
-                        ui.slider_int(im_str!("motionless"), &mut self.custom_level_conf.motion_less, 0, 100).build();
-                        ui.slider_int(im_str!("motionless eraser"), &mut self.custom_level_conf.motion_less_eraser, 0, 100).build();
-                        ui.slider_int(im_str!("attracted"), &mut self.custom_level_conf.attracted, 0, 100).build();
-                        ui.slider_int(im_str!("attracted eraser"), &mut self.custom_level_conf.attracted_eraser, 0, 100).build();
-                        ui.slider_int(im_str!("bouncer"), &mut self.custom_level_conf.bouncer, 0, 100).build();
-                        ui.slider_int(im_str!("bouncer eraser"), &mut self.custom_level_conf.bouncer_eraser, 0, 100).build();
-                        ui.slider_int(im_str!("avoider"), &mut self.custom_level_conf.avoider, 0, 100).build();
-                        ui.slider_int(im_str!("avoider eraser"), &mut self.custom_level_conf.avoider_eraser, 0, 100).build();
-                        ui.slider_int(im_str!("turret"), &mut self.custom_level_conf.turret, 0, 100).build();
+                        ui.slider_float(&ImString::new(text.filling.clone()), &mut self.custom_level_conf.percent, 0.0, 30.0).build();
+                        ui.slider_int(&ImString::new(text.motionless.clone()), &mut self.custom_level_conf.motion_less, 0, 100).build();
+                        ui.slider_int(&ImString::new(text.motionless_eraser.clone()), &mut self.custom_level_conf.motion_less_eraser, 0, 100).build();
+                        ui.slider_int(&ImString::new(text.attracted.clone()), &mut self.custom_level_conf.attracted, 0, 100).build();
+                        ui.slider_int(&ImString::new(text.attracted_eraser.clone()), &mut self.custom_level_conf.attracted_eraser, 0, 100).build();
+                        ui.slider_int(&ImString::new(text.bouncer.clone()), &mut self.custom_level_conf.bouncer, 0, 100).build();
+                        ui.slider_int(&ImString::new(text.bouncer_eraser.clone()), &mut self.custom_level_conf.bouncer_eraser, 0, 100).build();
+                        ui.slider_int(&ImString::new(text.avoider.clone()), &mut self.custom_level_conf.avoider, 0, 100).build();
+                        ui.slider_int(&ImString::new(text.avoider_eraser.clone()), &mut self.custom_level_conf.avoider_eraser, 0, 100).build();
+                        ui.slider_int(&ImString::new(text.turret.clone()), &mut self.custom_level_conf.turret, 0, 100).build();
                     });
             }
             _ => (),
@@ -655,32 +648,32 @@ impl MenuState {
 
         match self.state {
             MenuStateState::Input(_) => {
-                ui.window(im_str!("Input"))
+                ui.window(&ImString::new(text.input.clone()))
                     .collapsible(false)
                     .size((::CONFIG.menu_width/2.0, ::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
                     .position((width/2.0-::CONFIG.menu_width/4.0, height/2.0-::CONFIG.menu_height/4.0), ::imgui::ImGuiCond::Always)
                     .resizable(false)
                     .movable(false)
                     .build(|| {
-                        ui.text("Set input or escape");
+                        ui.text(&ImString::new(text.set_input_or_escape.clone()));
                     });
             },
             MenuStateState::Restart => {
-                ui.window(im_str!("Restart"))
+                ui.window(&ImString::new(text.restart.clone()))
                     .collapsible(false)
                     .size((::CONFIG.menu_width/1.5, ::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
                     .position((width/2.0-::CONFIG.menu_width/3.0, height/2.0-::CONFIG.menu_height/4.0), ::imgui::ImGuiCond::Always)
                     .resizable(false)
                     .movable(false)
                     .build(|| {
-                        ui.text("Setting needs to restart the game");
-                        self.restart_now_button = ui.button(im_str!("Restart now"), medium_button_size);
+                        ui.text(&ImString::new(text.setting_needs_to_restart_the_game.clone()));
+                        self.restart_now_button = ui.button(&ImString::new(text.restart_now.clone()), medium_button_size);
                         ui.same_line(0.0);
-                        self.restart_later_button = ui.button(im_str!("Restart later"), medium_button_size);
+                        self.restart_later_button = ui.button(&ImString::new(text.restart_later.clone()), medium_button_size);
                     });
             }
             MenuStateState::Help=> {
-                ui.window(im_str!("Help"))
+                ui.window(&ImString::new(text.help.clone()))
                     .collapsible(false)
                     .size((::CONFIG.menu_width/1.5, ::CONFIG.menu_height/2.0), ::imgui::ImGuiCond::Always)
                     .position((width/2.0-::CONFIG.menu_width/3.0, height/2.0-::CONFIG.menu_height/4.0), ::imgui::ImGuiCond::Always)
@@ -688,7 +681,7 @@ impl MenuState {
                     .movable(false)
                     .build(|| {
                         ui.text(help);
-                        self.help_ok_button = ui.button(im_str!("OK"), medium_button_size_2);
+                        self.help_ok_button = ui.button(&ImString::new(text.ok.clone()), medium_button_size_2);
                     });
             }
             _ => (),
@@ -698,55 +691,118 @@ impl MenuState {
 
 pub struct Help(pub String);
 
+#[derive(Deserialize)]
 pub struct Text {
-    pause: String,
-    continue_: String,
-    return_to_hall: String,
-    create_custom_level: String,
-    help: String,
-    quit: String,
-    audio: String,
-    music_volume: String,
-    effect_volume: String,
-    video: String,
-    fullscreen: String,
-    controls: String,
-    reset: String,
-    field_of_view: String,
-    mouse_sensibility: String,
-    shoot: String,
-    forward: String,
-    backward: String,
-    right: String,
-    left: String,
-    credits: String,
-    custom: String,
-    configuration: String,
-    size: String,
-    x_shift: String,
-    y_shift: String,
-    filling: String,
-    attracted_eraser: String,
-    avoider_eraser: String,
-    bouncer_eraser: String,
-    motionless_eraser: String,
-    turret: String,
-    input: String,
-    set_input_or_escape: String,
-    restart: String,
-    setting_needs_to_restart_the_game: String,
-    restart_now: String,
-    restart_later: String,
-    ok: String,
-    attracted: String,
-    avoider: String,
-    bouncer: String,
-    motionless: String,
-    go_to_portal: String,
-    remains: String,
-    mouse_middle: String,
-    mouse_left: String,
-    mouse_right: String,
-    mouse_other: String,
-    key: String,
-};
+    pub pause: String,
+    pub continue_: String,
+    pub return_to_hall: String,
+    pub create_custom_level: String,
+    pub help: String,
+    pub quit: String,
+    pub audio: String,
+    pub music_volume: String,
+    pub effect_volume: String,
+    pub video: String,
+    pub fullscreen: String,
+    pub controls: String,
+    pub reset: String,
+    pub field_of_view: String,
+    pub mouse_sensibility: String,
+    pub shoot: String,
+    pub forward: String,
+    pub backward: String,
+    pub right: String,
+    pub left: String,
+    pub credits: String,
+    pub custom: String,
+    pub play: String,
+    pub return_: String,
+    pub configuration: String,
+    pub size: String,
+    pub x_shift: String,
+    pub y_shift: String,
+    pub filling: String,
+    pub attracted_eraser: String,
+    pub avoider_eraser: String,
+    pub bouncer_eraser: String,
+    pub motionless_eraser: String,
+    pub turret: String,
+    pub input: String,
+    pub set_input_or_escape: String,
+    pub restart: String,
+    pub setting_needs_to_restart_the_game: String,
+    pub restart_now: String,
+    pub restart_later: String,
+    pub ok: String,
+    pub attracted: String,
+    pub avoider: String,
+    pub bouncer: String,
+    pub motionless: String,
+    pub go_to_portal: String,
+    pub remains: String,
+    pub mouse_middle: String,
+    pub mouse_left: String,
+    pub mouse_right: String,
+    pub mouse_other: String,
+    pub key: String,
+    pub vulkan_error: String,
+}
+
+impl Text {
+    pub fn load() -> Self {
+        let mut texts: Vec<(String, _)> = if cfg!(feature = "packed") {
+            vec![
+                ("en-US".into(), Box::new(Cursor::new(include_str!("../assets/lang/en-US.ron"))) as Box<Read>),
+            ]
+        } else {
+            let mut texts = vec![];
+            let read_dir = fs::read_dir("assets/lang")
+                .unwrap_or_else_show(|e| format!("Failed to open \"assets/lang\": {}", e));
+            for entry in read_dir {
+                let path = entry
+                    .unwrap_or_else_show(|e| format!("Failed to open \"assets/lang\" entry: {}", e))
+                    .path();
+                if path.extension() == Some(OsStr::new("ron")) {
+                    let lang = path.file_stem()
+                        .unwrap_or_show(format!("Failed to get stem of {:?}", path))
+                        .to_str()
+                        .unwrap_or_show(format!("Failed to get stem of {:?}: Invalid UTF-8", path))
+                        .into();
+                    let mut file = File::open(&path)
+                        .unwrap_or_else_show(|e| format!("Failed to open \"{}\": {}", path.to_string_lossy(), e));
+                    texts.push((lang, Box::new(file) as Box<Read>));
+                } else {
+                    eprintln!("Invalid file: {}", path.to_string_lossy());
+                }
+            }
+            texts
+        };
+
+        let requested = ::locale_config::Locale::user_default();
+        let requested = requested.tags().map(|tag| tag.1).collect::<Vec<_>>();
+        let available = texts.iter().map(|t| t.0.clone()).collect::<Vec<_>>();
+
+        let supported = ::fluent_locale::negotiate_languages(
+            &requested.iter().map(|tag| tag.as_ref()).collect::<Vec<_>>(),
+            &available.iter().map(|t| t.as_str()).collect::<Vec<_>>(),
+            Some("en-US"),
+            &::fluent_locale::negotiate::NegotiationStrategy::Filtering
+        );
+
+        let file = texts.drain(..).find(|(lang, _)| lang == supported[0]).unwrap().1;
+        ::ron::de::from_reader(file)
+            .unwrap_or_else_show(|e| format!("Failed to parse lang file {}: {}", supported[0], e))
+    }
+}
+
+#[test]
+fn test_text() {
+    for entry in fs::read_dir("assets/lang").unwrap() {
+        let path = entry.unwrap().path();
+        println!("{}", path.to_string_lossy());
+        if path.extension() == Some(OsStr::new("ron")) {
+            let mut file = File::open(&path).unwrap();
+            let _: Text = ::ron::de::from_reader(file).unwrap();
+        }
+    }
+}

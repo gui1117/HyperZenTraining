@@ -34,6 +34,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
         ::specs::Fetch<'a, ::resource::PhysicWorld>,
         ::specs::Fetch<'a, ::resource::DebugMode>,
         ::specs::Fetch<'a, ::resource::Help>,
+        ::specs::Fetch<'a, ::resource::Text>,
     );
 
     fn run(
@@ -61,6 +62,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             physic_world,
             debug,
             help,
+            text,
         ): Self::SystemData,
     ) {
         let mut future = Vec::new();
@@ -409,7 +411,7 @@ impl<'a> ::specs::System<'a> for DrawSystem {
             size,
             ::CONFIG.dt(),
         );
-        menu_state.build_ui(&ui, &save, &vulkan_instance, &help.0);
+        menu_state.build_ui(&ui, &save, &vulkan_instance, &text, &help.0);
         if debug.0 {
             ui.window(im_str!("Debug"))
                 .size((100.0, 100.0), ::imgui::ImGuiCond::FirstUseEver)
