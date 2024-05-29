@@ -1,4 +1,4 @@
 # HyperZen Training
 
-This code is not open sourced yet.
-But the architecture is the same as [airjump-multi](https://github.com/thiolliere/airjump-multi) which is APACHE or MIT
+This code is free to use, licensed as MIT/APACHE
+But the architecture is the same as [airjump-multi](https://github.com/thiolliere/airjump-multi)
